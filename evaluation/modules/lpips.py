@@ -1,20 +1,21 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
 import torch
+
+from ..context import EvaluationContext
+from ..video_io import build_evaluation_context
 
 try:
     import lpips
 except ImportError:
     lpips = None
 
-from .video_io import EvaluationContext, build_evaluation_context
 
-
-def ensure_device(device: str | None = None) -> torch.device:
+def ensure_device(device: Optional[str] = None) -> torch.device:
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     return torch.device(device)
@@ -39,7 +40,7 @@ def frame_bgr_to_lpips_tensor(frame_bgr: np.ndarray, device: torch.device) -> to
     return tensor.unsqueeze(0).to(device)
 
 
-def summarize_scores(scores: Sequence[float]) -> Dict[str, float | None]:
+def summarize_scores(scores: Sequence[float]) -> Dict[str, Optional[float]]:
     if not scores:
         return {
             "lpips_mean": None,
@@ -91,7 +92,7 @@ def compute_lpips_scores(
 
 def analyze_lpips_from_context(
     context: EvaluationContext,
-    device: str | None = None,
+    device: Optional[str] = None,
 ) -> Dict[str, Any]:
     device_obj = ensure_device(device)
 
@@ -140,7 +141,7 @@ def compute_lpips_video_pair(
     candidate_video: str,
     eval_fps: float = 4.0,
     max_pairs: int = 32,
-    device: str | None = None,
+    device: Optional[str] = None,
     text_prompt: str = "",
 ) -> Dict[str, Any]:
     context = build_evaluation_context(

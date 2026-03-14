@@ -10,12 +10,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from metrics.registry import get_available_metric_modules
-from metrics.runner import run_world_model_metrics
+from evaluation.registry import get_available_modules
+from evaluation.runner import run_world_model_evaluation
 
 
 def main() -> None:
-    available_modules = get_available_metric_modules()
+    available_modules = get_available_modules()
     ap = argparse.ArgumentParser(
         description=(
             "Compute world-model video metrics with a selectable --modules list "
@@ -46,7 +46,7 @@ def main() -> None:
     args = ap.parse_args()
 
     modules = [module for module in args.modules.split(",") if module.strip()]
-    report = run_world_model_metrics(
+    report = run_world_model_evaluation(
         video_path=args.video,
         ref_video_path=args.ref_video,
         text_prompt=args.text_prompt,

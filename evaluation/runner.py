@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable, Optional
 
 import torch
 
-from .registry import normalize_modules, run_metric_modules
+from .registry import normalize_modules, run_modules
 from .video_io import build_evaluation_context
 
 
@@ -14,7 +14,7 @@ def ensure_device(device: Optional[str] = None) -> str:
     return "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def run_world_model_metrics(
+def run_world_model_evaluation(
     video_path: str,
     ref_video_path: Optional[str],
     text_prompt: str = "",
@@ -66,7 +66,7 @@ def run_world_model_metrics(
             "num_pairs_sampled": context.num_pairs,
         }
     )
-    report["results"] = run_metric_modules(
+    report["results"] = run_modules(
         context=context,
         modules=normalized_modules,
         device=resolved_device,

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
-from .lpips_vgg import analyze_lpips_from_context
-from .video_io import EvaluationContext
+from .context import EvaluationContext
+from .modules.lpips import analyze_lpips_from_context
 
-MetricFn = Callable[[EvaluationContext, Optional[str]], Dict[str, Any]]
+EvaluationModule = Callable[[EvaluationContext, Optional[str]], Dict[str, Any]]
 
 
 def _run_lpips(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
@@ -17,13 +17,13 @@ def _run_lpips(context: EvaluationContext, device: Optional[str] = None) -> Dict
     return analyze_lpips_from_context(context=context, device=device)
 
 
-METRIC_REGISTRY: Dict[str, MetricFn] = {
+MODULE_REGISTRY: Dict[str, EvaluationModule] = {
     "lpips": _run_lpips,
 }
 
 
-def get_available_metric_modules() -> List[str]:
-    return sorted(METRIC_REGISTRY.keys())
+def get_available_modules() -> List[str]:
+    return sorted(MODULE_REGISTRY.keys())
 
 
 def normalize_modules(modules: Iterable[str]) -> List[str]:
@@ -35,7 +35,7 @@ def normalize_modules(modules: Iterable[str]) -> List[str]:
     return normalized
 
 
-def run_metric_modules(
+def run_modules(
     context: EvaluationContext,
     modules: Iterable[str],
     device: Optional[str] = None,
@@ -44,13 +44,13 @@ def run_metric_modules(
     results: Dict[str, Any] = {}
 
     for module_name in requested:
-        runner = METRIC_REGISTRY.get(module_name)
+        runner = MODULE_REGISTRY.get(module_name)
         if runner is None:
             results[module_name] = {
                 "module": module_name,
                 "error": (
                     f"unsupported module: {module_name}. "
-                    f"Available modules: {', '.join(get_available_metric_modules())}"
+                    f"Available modules: {', '.join(get_available_modules())}"
                 ),
             }
             continue

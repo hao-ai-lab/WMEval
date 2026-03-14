@@ -9,7 +9,7 @@ The current layout is organized around:
 
 - one orchestrator that accepts a comma-separated `--modules` list
 - one JSON report with a top-level `results` dictionary
-- reusable metric implementations under `metrics/`
+- reusable evaluation modules under `evaluation/`
 
 Today the only implemented module is `lpips`, but the structure is designed so
 future modules such as `grounding` and `bytetrack` can plug into the same
@@ -17,10 +17,10 @@ runner.
 
 ## Layout
 
-- `metrics/video_io.py`: shared video metadata, aligned frame sampling, and evaluation context
-- `metrics/lpips_vgg.py`: LPIPS metric implementation
-- `metrics/registry.py`: module registry for the orchestrator
-- `metrics/runner.py`: shared report builder used by CLI tools
+- `evaluation/video_io.py`: shared video metadata, aligned frame sampling, and evaluation context
+- `evaluation/modules/lpips.py`: LPIPS evaluation module
+- `evaluation/registry.py`: module registry for the orchestrator
+- `evaluation/runner.py`: shared report builder used by CLI tools
 - `tools/evaluate_world_model_metrics.py`: per-video-pair runner
 - `tools/evaluate_world_model_lpips.py`: JSONL batch runner for LPIPS-only experiments
 - `scripts/evaluate_world_model_lpips.sh`: runnable batch command template

@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from metrics.runner import run_world_model_metrics
+from evaluation.runner import run_world_model_evaluation
 
 
 def load_manifest_rows(path: str) -> Iterable[Dict[str, Any]]:
@@ -117,7 +117,7 @@ def main() -> None:
             flush=True,
         )
 
-        report = run_world_model_metrics(
+        report = run_world_model_evaluation(
             video_path=row["world_model_video"],
             ref_video_path=row["reference_video"],
             text_prompt=row["prompt"],
