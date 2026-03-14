@@ -12,6 +12,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from metrics.runner import run_world_model_metrics
+
 
 def load_manifest_rows(path: str) -> Iterable[Dict[str, Any]]:
     with open(path, "r", encoding="utf-8") as handle:
@@ -91,8 +93,8 @@ def write_summary_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(
         description=(
-            "Compute LPIPS (VGG backbone) between reference videos and world-model "
-            "generated videos from a JSONL manifest."
+            "Compute LPIPS over a JSONL manifest using the shared world-model "
+            "metrics orchestrator."
         )
     )
     ap.add_argument("--manifest_jsonl", required=True, help="Input JSONL manifest")
@@ -103,8 +105,6 @@ def main() -> None:
     ap.add_argument("--device", default=None, help="cuda / cpu (default: auto)")
 
     args = ap.parse_args()
-
-    from metrics.lpips_vgg import compute_lpips_video_pair
 
     results: List[Dict[str, Any]] = []
     rows = [normalize_manifest_row(row) for row in load_manifest_rows(args.manifest_jsonl)]
@@ -117,13 +117,16 @@ def main() -> None:
             flush=True,
         )
 
-        result = compute_lpips_video_pair(
-            reference_video=row["reference_video"],
-            candidate_video=row["world_model_video"],
+        report = run_world_model_metrics(
+            video_path=row["world_model_video"],
+            ref_video_path=row["reference_video"],
+            text_prompt=row["prompt"],
+            modules=["lpips"],
             eval_fps=args.eval_fps,
             max_pairs=args.max_pairs,
             device=args.device,
         )
+        lpips_result = dict(report["results"].get("lpips", {}))
         results.append(
             {
                 "sample_id": row["sample_id"],
@@ -132,7 +135,7 @@ def main() -> None:
                 "prompt": row["prompt"],
                 "reference_video": row["reference_video"],
                 "world_model_video": row["world_model_video"],
-                **result,
+                **lpips_result,
             }
         )
 

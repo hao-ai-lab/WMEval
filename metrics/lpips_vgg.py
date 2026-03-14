@@ -11,7 +11,7 @@ try:
 except ImportError:
     lpips = None
 
-from .video_io import build_sample_timestamps, get_video_metadata, sample_video_frames
+from .video_io import EvaluationContext, build_evaluation_context
 
 
 def ensure_device(device: str | None = None) -> torch.device:
@@ -89,71 +89,65 @@ def compute_lpips_scores(
     return scores
 
 
+def analyze_lpips_from_context(
+    context: EvaluationContext,
+    device: str | None = None,
+) -> Dict[str, Any]:
+    device_obj = ensure_device(device)
+
+    if context.num_pairs == 0:
+        return {
+            "module": "lpips",
+            "error": "no overlapping timestamps available",
+            "reference_video": context.reference_video,
+            "candidate_video": context.candidate_video,
+            "reference_metadata": context.reference.metadata.to_dict(),
+            "candidate_metadata": context.candidate.metadata.to_dict(),
+            "shared_duration_sec": context.shared_duration_sec,
+            "eval_fps": context.eval_fps,
+            "max_pairs": context.max_pairs,
+            "alignment_mode": context.alignment_mode,
+            "device": str(device_obj),
+        }
+
+    scores = compute_lpips_scores(
+        reference_frames=context.reference.frames[:context.num_pairs],
+        candidate_frames=context.candidate.frames[:context.num_pairs],
+        device=device_obj,
+    )
+    return {
+        "module": "lpips",
+        "reference_video": context.reference_video,
+        "candidate_video": context.candidate_video,
+        "reference_metadata": context.reference.metadata.to_dict(),
+        "candidate_metadata": context.candidate.metadata.to_dict(),
+        "shared_duration_sec": context.shared_duration_sec,
+        "eval_fps": context.eval_fps,
+        "max_pairs": context.max_pairs,
+        "alignment_mode": context.alignment_mode,
+        "device": str(device_obj),
+        "num_pairs": len(scores),
+        "timestamps_sec": context.reference.timestamps_sec[:len(scores)],
+        "reference_frame_indices": context.reference.frame_indices[:len(scores)],
+        "candidate_frame_indices": context.candidate.frame_indices[:len(scores)],
+        "lpips_per_pair": scores,
+        **summarize_scores(scores),
+    }
+
+
 def compute_lpips_video_pair(
     reference_video: str,
     candidate_video: str,
     eval_fps: float = 4.0,
     max_pairs: int = 32,
     device: str | None = None,
+    text_prompt: str = "",
 ) -> Dict[str, Any]:
-    reference_metadata = get_video_metadata(reference_video)
-    candidate_metadata = get_video_metadata(candidate_video)
-    device_obj = ensure_device(device)
-
-    if reference_metadata.frame_count <= 0:
-        raise RuntimeError(f"Reference video has no frames: {reference_video}")
-    if candidate_metadata.frame_count <= 0:
-        raise RuntimeError(f"Candidate video has no frames: {candidate_video}")
-
-    reference_duration = reference_metadata.duration_sec or 0.0
-    candidate_duration = candidate_metadata.duration_sec or 0.0
-    shared_duration_sec = min(reference_duration, candidate_duration)
-    timestamps_sec = build_sample_timestamps(
-        duration_sec=shared_duration_sec,
+    context = build_evaluation_context(
+        reference_video=reference_video,
+        candidate_video=candidate_video,
         eval_fps=eval_fps,
         max_pairs=max_pairs,
+        text_prompt=text_prompt,
     )
-
-    if not timestamps_sec:
-        return {
-            "metric": "lpips_vgg",
-            "error": "no overlapping timestamps available",
-            "reference_video": reference_video,
-            "candidate_video": candidate_video,
-            "reference_metadata": reference_metadata.to_dict(),
-            "candidate_metadata": candidate_metadata.to_dict(),
-            "eval_fps": eval_fps,
-            "max_pairs": max_pairs,
-            "device": str(device_obj),
-        }
-
-    reference_sample = sample_video_frames(reference_video, timestamps_sec)
-    candidate_sample = sample_video_frames(candidate_video, timestamps_sec)
-    used_count = min(
-        len(reference_sample["frames"]),
-        len(candidate_sample["frames"]),
-        len(timestamps_sec),
-    )
-    scores = compute_lpips_scores(
-        reference_frames=reference_sample["frames"][:used_count],
-        candidate_frames=candidate_sample["frames"][:used_count],
-        device=device_obj,
-    )
-
-    return {
-        "metric": "lpips_vgg",
-        "reference_video": reference_video,
-        "candidate_video": candidate_video,
-        "reference_metadata": reference_metadata.to_dict(),
-        "candidate_metadata": candidate_metadata.to_dict(),
-        "shared_duration_sec": shared_duration_sec,
-        "eval_fps": eval_fps,
-        "max_pairs": max_pairs,
-        "device": str(device_obj),
-        "num_pairs": len(scores),
-        "timestamps_sec": reference_sample["timestamps_sec"][:len(scores)],
-        "reference_frame_indices": reference_sample["frame_indices"][:len(scores)],
-        "candidate_frame_indices": candidate_sample["frame_indices"][:len(scores)],
-        "lpips_per_pair": scores,
-        **summarize_scores(scores),
-    }
+    return analyze_lpips_from_context(context=context, device=device)

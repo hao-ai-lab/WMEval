@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
 
@@ -19,6 +19,57 @@ class VideoMetadata:
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
+
+@dataclass
+class SampledVideoFrames:
+    metadata: VideoMetadata
+    timestamps_sec: List[float]
+    frame_indices: List[int]
+    frames: List[np.ndarray]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "metadata": self.metadata.to_dict(),
+            "timestamps_sec": list(self.timestamps_sec),
+            "frame_indices": list(self.frame_indices),
+            "num_frames": len(self.frames),
+        }
+
+
+@dataclass
+class EvaluationContext:
+    reference_video: str
+    candidate_video: str
+    reference: SampledVideoFrames
+    candidate: SampledVideoFrames
+    shared_duration_sec: float
+    eval_fps: float
+    max_pairs: int
+    alignment_mode: str = "shared_duration"
+    text_prompt: str = ""
+    artifacts: Dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def num_pairs(self) -> int:
+        return min(len(self.reference.frames), len(self.candidate.frames))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "reference_video": self.reference_video,
+            "candidate_video": self.candidate_video,
+            "reference_metadata": self.reference.metadata.to_dict(),
+            "candidate_metadata": self.candidate.metadata.to_dict(),
+            "shared_duration_sec": self.shared_duration_sec,
+            "eval_fps": self.eval_fps,
+            "max_pairs": self.max_pairs,
+            "alignment_mode": self.alignment_mode,
+            "text_prompt": self.text_prompt,
+            "num_pairs": self.num_pairs,
+            "timestamps_sec": self.reference.timestamps_sec[:self.num_pairs],
+            "reference_frame_indices": self.reference.frame_indices[:self.num_pairs],
+            "candidate_frame_indices": self.candidate.frame_indices[:self.num_pairs],
+        }
 
 
 def get_video_metadata(video_path: str) -> VideoMetadata:
@@ -97,15 +148,62 @@ def load_frames_by_indices(video_path: str, frame_indices: Sequence[int]) -> Lis
 def sample_video_frames(
     video_path: str,
     timestamps_sec: Sequence[float],
-) -> Dict[str, Any]:
+) -> SampledVideoFrames:
     metadata = get_video_metadata(video_path)
     frame_indices = [timestamp_to_frame_index(t, metadata) for t in timestamps_sec]
     frames = load_frames_by_indices(video_path, frame_indices)
 
     used_count = min(len(frames), len(frame_indices), len(timestamps_sec))
-    return {
-        "metadata": metadata,
-        "timestamps_sec": list(timestamps_sec[:used_count]),
-        "frame_indices": frame_indices[:used_count],
-        "frames": frames[:used_count],
-    }
+    return SampledVideoFrames(
+        metadata=metadata,
+        timestamps_sec=list(timestamps_sec[:used_count]),
+        frame_indices=frame_indices[:used_count],
+        frames=frames[:used_count],
+    )
+
+
+def build_evaluation_context(
+    reference_video: str,
+    candidate_video: str,
+    eval_fps: float = 4.0,
+    max_pairs: int = 32,
+    alignment_mode: str = "shared_duration",
+    text_prompt: str = "",
+) -> EvaluationContext:
+    if alignment_mode != "shared_duration":
+        raise ValueError(
+            f"Unsupported alignment_mode={alignment_mode!r}. "
+            "Only 'shared_duration' is currently implemented."
+        )
+
+    reference_metadata = get_video_metadata(reference_video)
+    candidate_metadata = get_video_metadata(candidate_video)
+
+    if reference_metadata.frame_count <= 0:
+        raise RuntimeError(f"Reference video has no frames: {reference_video}")
+    if candidate_metadata.frame_count <= 0:
+        raise RuntimeError(f"Candidate video has no frames: {candidate_video}")
+
+    reference_duration = reference_metadata.duration_sec or 0.0
+    candidate_duration = candidate_metadata.duration_sec or 0.0
+    shared_duration_sec = min(reference_duration, candidate_duration)
+    timestamps_sec = build_sample_timestamps(
+        duration_sec=shared_duration_sec,
+        eval_fps=eval_fps,
+        max_pairs=max_pairs,
+    )
+
+    reference_sample = sample_video_frames(reference_video, timestamps_sec)
+    candidate_sample = sample_video_frames(candidate_video, timestamps_sec)
+
+    return EvaluationContext(
+        reference_video=reference_video,
+        candidate_video=candidate_video,
+        reference=reference_sample,
+        candidate=candidate_sample,
+        shared_duration_sec=shared_duration_sec,
+        eval_fps=eval_fps,
+        max_pairs=max_pairs,
+        alignment_mode=alignment_mode,
+        text_prompt=text_prompt,
+    )
