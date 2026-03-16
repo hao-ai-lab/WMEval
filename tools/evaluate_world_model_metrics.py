@@ -42,6 +42,16 @@ def main() -> None:
     ap.add_argument("--eval_fps", type=float, default=4.0, help="Timestamp sampling rate")
     ap.add_argument("--max_pairs", type=int, default=32, help="Maximum aligned frame pairs")
     ap.add_argument("--device", default=None, help="torch device (default: cuda if available else cpu)")
+    ap.add_argument("--unity_log_json", default=None, help="Unity per-frame log JSON with light/object states")
+    ap.add_argument("--camera_intrinsics_json", default=None, help="Optional camera intrinsics JSON")
+    ap.add_argument("--unity_flow_dir", default=None, help="Optional Unity optical-flow ground-truth directory")
+    ap.add_argument("--unity_shadow_dir", default=None, help="Optional Unity shadow mask directory")
+    ap.add_argument("--diffusionlight_repo", default="/workspace/unity/DiffusionLight", help="DiffusionLight repo path")
+    ap.add_argument("--run_diffusionlight", action="store_true", help="Run DiffusionLight pipeline on sampled frames")
+    ap.add_argument("--diffusionlight_output_root", default=None, help="Optional output root for DiffusionLight runs")
+    ap.add_argument("--diffusionlight_ref_hdr_dir", default=None, help="Precomputed DiffusionLight HDR dir for reference video")
+    ap.add_argument("--diffusionlight_candidate_hdr_dir", default=None, help="Precomputed DiffusionLight HDR dir for candidate video")
+    ap.add_argument("--sam2_model", default="facebook/sam2.1-hiera-small", help="SAM2 model ID for shadow module")
 
     args = ap.parse_args()
 
@@ -54,6 +64,16 @@ def main() -> None:
         eval_fps=args.eval_fps,
         max_pairs=args.max_pairs,
         device=args.device,
+        unity_log_json=args.unity_log_json,
+        camera_intrinsics_json=args.camera_intrinsics_json,
+        unity_flow_dir=args.unity_flow_dir,
+        unity_shadow_dir=args.unity_shadow_dir,
+        diffusionlight_repo=args.diffusionlight_repo,
+        run_diffusionlight=args.run_diffusionlight,
+        diffusionlight_output_root=args.diffusionlight_output_root,
+        diffusionlight_ref_hdr_dir=args.diffusionlight_ref_hdr_dir,
+        diffusionlight_candidate_hdr_dir=args.diffusionlight_candidate_hdr_dir,
+        sam2_model=args.sam2_model,
     )
 
     out_path = Path(args.output_json)

@@ -11,14 +11,20 @@ The current layout is organized around:
 - one JSON report with a top-level `results` dictionary
 - reusable evaluation modules under `evaluation/`
 
-Today the only implemented module is `lpips`, but the structure is designed so
-future modules such as `grounding` and `bytetrack` can plug into the same
-runner.
+Implemented modules today:
+
+- `lpips`: perceptual similarity
+- `lighting`: DiffusionLight HDR envmap direction consistency
+- `motion`: RAFT optical-flow consistency between reference/candidate videos
+- `shadow`: SAM2-based shadow mask tracking consistency
 
 ## Layout
 
 - `evaluation/video_io.py`: shared video metadata, aligned frame sampling, and evaluation context
 - `evaluation/modules/lpips.py`: LPIPS evaluation module
+- `evaluation/modules/lighting.py`: light-direction evaluation module
+- `evaluation/modules/motion.py`: flow-based motion evaluation module
+- `evaluation/modules/shadow.py`: SAM2 shadow evaluation module
 - `evaluation/registry.py`: module registry for the orchestrator
 - `evaluation/runner.py`: shared report builder used by CLI tools
 - `tools/evaluate_world_model_metrics.py`: per-video-pair runner
@@ -27,10 +33,13 @@ runner.
 
 ## Dependencies
 
-Install the minimal dependencies needed for LPIPS evaluation:
+Install the minimal dependencies needed for LPIPS + proxy mechanics evaluation:
 
 ```bash
 pip install numpy opencv-python torch torchvision lpips
+
+# for shadow module
+pip install sam2
 ```
 
 ## Single-Pair Usage
@@ -40,7 +49,10 @@ python tools/evaluate_world_model_metrics.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --text_prompt "A ball rolls down a ramp" \
-  --modules lpips \
+  --modules lpips,lighting,motion,shadow \
+  --unity_log_json /path/to/ground_truth_log.json \
+  --diffusionlight_ref_hdr_dir /path/to/ref_diffusionlight/hdr \
+  --diffusionlight_candidate_hdr_dir /path/to/cand_diffusionlight/hdr \
   --output_json reports/world_model_metrics/report.json \
   --eval_fps 4 \
   --max_pairs 32
