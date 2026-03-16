@@ -49,6 +49,35 @@ def run_world_model_evaluation(
     }
 
     if not ref_video_path:
+        # clip4clip does not need ref_video; run it with candidate as both ref and candidate
+        clip4clip_only = set(normalized_modules) <= {"clip4clip"}
+        if clip4clip_only:
+            context = build_evaluation_context(
+                reference_video=video_path,
+                candidate_video=video_path,
+                eval_fps=eval_fps,
+                max_pairs=max_pairs,
+                text_prompt=text_prompt,
+            )
+            report.update(
+                {
+                    "reference_video": context.reference_video,
+                    "candidate_video": context.candidate_video,
+                    "reference_metadata": context.reference.metadata.to_dict(),
+                    "candidate_metadata": context.candidate.metadata.to_dict(),
+                    "shared_duration_sec": context.shared_duration_sec,
+                    "eval_fps": context.eval_fps,
+                    "max_pairs": context.max_pairs,
+                    "alignment_mode": context.alignment_mode,
+                    "num_pairs_sampled": context.num_pairs,
+                }
+            )
+            report["results"] = run_modules(
+                context=context,
+                modules=normalized_modules,
+                device=resolved_device,
+            )
+            return report
         report["results"] = {
             module_name: {
                 "module": module_name,

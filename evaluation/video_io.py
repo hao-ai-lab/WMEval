@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Sequence
+from typing import List, Sequence, Tuple
 
 import cv2
 import numpy as np
 
 from .context import EvaluationContext, SampledVideoFrames, VideoMetadata
+
+SAMPLE_MODE_TIMESTAMP = "timestamp"
+SAMPLE_MODE_FRAME_STEP = "frame_step"
 
 
 def get_video_metadata(video_path: str) -> VideoMetadata:
@@ -99,6 +102,40 @@ def sample_video_frames(
     )
 
 
+def build_frame_step_indices(
+    metadata: VideoMetadata,
+    target_fps: float,
+    max_pairs: int,
+) -> Tuple[List[int], List[float]]:
+
+    if metadata.frame_count <= 0:
+        return [], []
+    fps = metadata.fps if metadata.fps > 0 else 1.0
+    step = max(1, int(round(fps / target_fps)))
+    indices = list(range(0, metadata.frame_count, step))
+    if len(indices) > max_pairs:
+        step2 = max(1, len(indices) // max_pairs)
+        indices = indices[::step2][:max_pairs]
+    timestamps_sec = [i / fps for i in indices]
+    return indices, timestamps_sec
+
+
+def sample_video_frames_by_indices(
+    video_path: str,
+    frame_indices: Sequence[int],
+    metadata: VideoMetadata,
+    timestamps_sec: Sequence[float],
+) -> SampledVideoFrames:
+    frames = load_frames_by_indices(video_path, frame_indices)
+    used = min(len(frames), len(frame_indices), len(timestamps_sec))
+    return SampledVideoFrames(
+        metadata=metadata,
+        timestamps_sec=list(timestamps_sec[:used]),
+        frame_indices=list(frame_indices[:used]),
+        frames=frames[:used],
+    )
+
+
 def build_evaluation_context(
     reference_video: str,
     candidate_video: str,
@@ -106,11 +143,17 @@ def build_evaluation_context(
     max_pairs: int = 32,
     alignment_mode: str = "shared_duration",
     text_prompt: str = "",
+    sample_mode: str = SAMPLE_MODE_TIMESTAMP,
 ) -> EvaluationContext:
     if alignment_mode != "shared_duration":
         raise ValueError(
             f"Unsupported alignment_mode={alignment_mode!r}. "
             "Only 'shared_duration' is currently implemented."
+        )
+    if sample_mode not in (SAMPLE_MODE_TIMESTAMP, SAMPLE_MODE_FRAME_STEP):
+        raise ValueError(
+            f"Unsupported sample_mode={sample_mode!r}. "
+            f"Use {SAMPLE_MODE_TIMESTAMP!r} or {SAMPLE_MODE_FRAME_STEP!r}."
         )
 
     reference_metadata = get_video_metadata(reference_video)
@@ -124,14 +167,31 @@ def build_evaluation_context(
     reference_duration = reference_metadata.duration_sec or 0.0
     candidate_duration = candidate_metadata.duration_sec or 0.0
     shared_duration_sec = min(reference_duration, candidate_duration)
-    timestamps_sec = build_sample_timestamps(
-        duration_sec=shared_duration_sec,
-        eval_fps=eval_fps,
-        max_pairs=max_pairs,
-    )
 
-    reference_sample = sample_video_frames(reference_video, timestamps_sec)
-    candidate_sample = sample_video_frames(candidate_video, timestamps_sec)
+    if sample_mode == SAMPLE_MODE_TIMESTAMP:
+        timestamps_sec = build_sample_timestamps(
+            duration_sec=shared_duration_sec,
+            eval_fps=eval_fps,
+            max_pairs=max_pairs,
+        )
+        reference_sample = sample_video_frames(reference_video, timestamps_sec)
+        candidate_sample = sample_video_frames(candidate_video, timestamps_sec)
+    else:
+        ref_indices, ref_ts = build_frame_step_indices(
+            reference_metadata, eval_fps, max_pairs
+        )
+        cand_indices, cand_ts = build_frame_step_indices(
+            candidate_metadata, eval_fps, max_pairs
+        )
+        n = min(len(ref_indices), len(cand_indices))
+        if n == 0:
+            raise RuntimeError("frame_step sampling produced no frames")
+        reference_sample = sample_video_frames_by_indices(
+            reference_video, ref_indices[:n], reference_metadata, ref_ts[:n]
+        )
+        candidate_sample = sample_video_frames_by_indices(
+            candidate_video, cand_indices[:n], candidate_metadata, cand_ts[:n]
+        )
 
     return EvaluationContext(
         reference_video=reference_video,
