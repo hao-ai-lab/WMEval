@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, Optional
 
-import torch
-
 from .registry import normalize_modules, run_modules
 from .video_io import build_evaluation_context
 
@@ -11,7 +9,12 @@ from .video_io import build_evaluation_context
 def ensure_device(device: Optional[str] = None) -> str:
     if device is not None:
         return device
-    return "cuda" if torch.cuda.is_available() else "cpu"
+    try:
+        import torch
+
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except Exception:
+        return "cpu"
 
 
 def run_world_model_evaluation(
@@ -22,6 +25,16 @@ def run_world_model_evaluation(
     eval_fps: float = 4.0,
     max_pairs: int = 32,
     device: Optional[str] = None,
+    unity_log_json: Optional[str] = None,
+    camera_intrinsics_json: Optional[str] = None,
+    unity_flow_dir: Optional[str] = None,
+    unity_shadow_dir: Optional[str] = None,
+    diffusionlight_repo: Optional[str] = None,
+    run_diffusionlight: bool = False,
+    diffusionlight_output_root: Optional[str] = None,
+    diffusionlight_ref_hdr_dir: Optional[str] = None,
+    diffusionlight_candidate_hdr_dir: Optional[str] = None,
+    sam2_model: Optional[str] = None,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -52,6 +65,20 @@ def run_world_model_evaluation(
         max_pairs=max_pairs,
         text_prompt=text_prompt,
     )
+    context.artifacts.update(
+        {
+            "unity_log_json": unity_log_json,
+            "camera_intrinsics_json": camera_intrinsics_json,
+            "unity_flow_dir": unity_flow_dir,
+            "unity_shadow_dir": unity_shadow_dir,
+            "diffusionlight_repo": diffusionlight_repo,
+            "run_diffusionlight": run_diffusionlight,
+            "diffusionlight_output_root": diffusionlight_output_root,
+            "diffusionlight_ref_hdr_dir": diffusionlight_ref_hdr_dir,
+            "diffusionlight_candidate_hdr_dir": diffusionlight_candidate_hdr_dir,
+            "sam2_model": sam2_model,
+        }
+    )
 
     report.update(
         {
@@ -64,6 +91,7 @@ def run_world_model_evaluation(
             "max_pairs": context.max_pairs,
             "alignment_mode": context.alignment_mode,
             "num_pairs_sampled": context.num_pairs,
+            "artifacts": context.artifacts,
         }
     )
     report["results"] = run_modules(
