@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .context import EvaluationContext
+from .modules.clip4clip import run_clip4clip
 from .modules.lpips import analyze_lpips_from_context
 
 EvaluationModule = Callable[[EvaluationContext, Optional[str]], Dict[str, Any]]
@@ -17,7 +18,12 @@ def _run_lpips(context: EvaluationContext, device: Optional[str] = None) -> Dict
     return analyze_lpips_from_context(context=context, device=device)
 
 
+def _run_clip4clip(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+    return run_clip4clip(context=context, device=device)
+
+
 MODULE_REGISTRY: Dict[str, EvaluationModule] = {
+    "clip4clip": _run_clip4clip,
     "lpips": _run_lpips,
 }
 
