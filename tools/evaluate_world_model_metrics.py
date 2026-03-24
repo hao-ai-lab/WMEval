@@ -52,10 +52,43 @@ def main() -> None:
     ap.add_argument("--diffusionlight_ref_hdr_dir", default=None, help="Precomputed DiffusionLight HDR dir for reference video")
     ap.add_argument("--diffusionlight_candidate_hdr_dir", default=None, help="Precomputed DiffusionLight HDR dir for candidate video")
     ap.add_argument("--sam2_model", default="facebook/sam2.1-hiera-small", help="SAM2 model ID for shadow module")
+    ap.add_argument(
+        "--disable_control_camera_compensation",
+        action="store_true",
+        help="Disable camera-motion compensation for control_motion",
+    )
+    ap.add_argument(
+        "--control_global_motion_mode",
+        choices=["affine_ransac", "median_translation", "mean_translation"],
+        default="median_translation",
+        help="Global camera-motion estimator for control_motion",
+    )
+    ap.add_argument(
+        "--control_motion_mask_threshold",
+        type=float,
+        default=0.5,
+        help="Reference-flow magnitude threshold for dynamic-pixel control metrics",
+    )
+    ap.add_argument(
+        "--control_motion_mask_percentile",
+        type=float,
+        default=75.0,
+        help="Adaptive percentile for selecting dynamic pixels in control_motion",
+    )
+    ap.add_argument(
+        "--control_bad_pixel_thresholds",
+        default="1.0,3.0",
+        help="Comma-separated bad-pixel EPE thresholds for control_motion",
+    )
 
     args = ap.parse_args()
 
     modules = [module for module in args.modules.split(",") if module.strip()]
+    control_bad_pixel_thresholds = [
+        float(value.strip())
+        for value in args.control_bad_pixel_thresholds.split(",")
+        if value.strip()
+    ]
     report = run_world_model_evaluation(
         video_path=args.video,
         ref_video_path=args.ref_video,
@@ -74,6 +107,11 @@ def main() -> None:
         diffusionlight_ref_hdr_dir=args.diffusionlight_ref_hdr_dir,
         diffusionlight_candidate_hdr_dir=args.diffusionlight_candidate_hdr_dir,
         sam2_model=args.sam2_model,
+        control_camera_compensation=not args.disable_control_camera_compensation,
+        control_global_motion_mode=args.control_global_motion_mode,
+        control_motion_mask_threshold=args.control_motion_mask_threshold,
+        control_motion_mask_percentile=args.control_motion_mask_percentile,
+        control_bad_pixel_thresholds=control_bad_pixel_thresholds,
     )
 
     out_path = Path(args.output_json)

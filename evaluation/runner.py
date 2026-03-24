@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Dict, Iterable, Optional, Sequence
 
 from .registry import normalize_modules, run_modules
 from .video_io import build_evaluation_context
@@ -35,6 +35,11 @@ def run_world_model_evaluation(
     diffusionlight_ref_hdr_dir: Optional[str] = None,
     diffusionlight_candidate_hdr_dir: Optional[str] = None,
     sam2_model: Optional[str] = None,
+    control_camera_compensation: bool = True,
+    control_global_motion_mode: str = "median_translation",
+    control_motion_mask_threshold: float = 0.5,
+    control_motion_mask_percentile: float = 75.0,
+    control_bad_pixel_thresholds: Optional[Sequence[float]] = None,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -106,6 +111,15 @@ def run_world_model_evaluation(
             "diffusionlight_ref_hdr_dir": diffusionlight_ref_hdr_dir,
             "diffusionlight_candidate_hdr_dir": diffusionlight_candidate_hdr_dir,
             "sam2_model": sam2_model,
+            "control_camera_compensation": control_camera_compensation,
+            "control_global_motion_mode": control_global_motion_mode,
+            "control_motion_mask_threshold": control_motion_mask_threshold,
+            "control_motion_mask_percentile": control_motion_mask_percentile,
+            "control_bad_pixel_thresholds": (
+                list(control_bad_pixel_thresholds)
+                if control_bad_pixel_thresholds is not None
+                else [1.0, 3.0]
+            ),
         }
     )
 
