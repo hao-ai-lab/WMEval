@@ -16,8 +16,10 @@ from evaluation.runner import run_world_model_evaluation
 def main() -> None:
     ap = argparse.ArgumentParser(
         description=(
-            "Compute RAFT-based controllability metrics by comparing flow derived "
-            "from a Unity reference video against a world-model video."
+            "Compute RAFT-based controllability metrics (Unity ref vs world-model), "
+            "optionally plus Longuet-Higgins synthetic flow (from actions or inferred "
+            "from RAFT on the reference) vs RAFT on the candidate — metrics aligned "
+            "with ptlflow eval_flow_divergence synthetic mode."
         )
     )
     ap.add_argument("--video", required=True, help="Path to the generated / candidate video")
@@ -63,6 +65,44 @@ def main() -> None:
         default="1.0,3.0",
         help="Comma-separated EPE thresholds for bad-pixel rates",
     )
+    ap.add_argument(
+        "--synthetic_calibration",
+        default=None,
+        help=(
+            "Path to calibration.json (e.g. from ptlflow repo). Enables synthetic-vs-RAFT "
+            "block in the report when combined with --synthetic_action_file or "
+            "--synthetic_infer_actions."
+        ),
+    )
+    ap.add_argument(
+        "--synthetic_action_file",
+        default=None,
+        help="Optional .npy with item()['keyboard'] and ['mouse'] (Unity-style log)",
+    )
+    ap.add_argument(
+        "--synthetic_infer_actions",
+        action="store_true",
+        help=(
+            "Infer continuous action vectors by fitting synthetic flow to RAFT flow on "
+            "the reference (proxy when no action npy is available; slower)."
+        ),
+    )
+    ap.add_argument(
+        "--synthetic_use_depth",
+        action="store_true",
+        help="Use Depth Anything via transformers for translation term (heavier deps).",
+    )
+    ap.add_argument(
+        "--ptlflow_root",
+        default="/workspace/ptlflow",
+        help="Directory containing synthetic_flow.py (default: /workspace/ptlflow)",
+    )
+    ap.add_argument(
+        "--synthetic_grid_size",
+        type=int,
+        default=8,
+        help="Grid size for flow_divergence-style grid_epe metrics",
+    )
 
     args = ap.parse_args()
     control_bad_pixel_thresholds = [
@@ -84,6 +124,12 @@ def main() -> None:
         control_motion_mask_threshold=args.control_motion_mask_threshold,
         control_motion_mask_percentile=args.control_motion_mask_percentile,
         control_bad_pixel_thresholds=control_bad_pixel_thresholds,
+        synthetic_calibration=args.synthetic_calibration,
+        synthetic_action_file=args.synthetic_action_file,
+        synthetic_infer_actions=args.synthetic_infer_actions,
+        synthetic_use_depth=args.synthetic_use_depth,
+        ptlflow_root=args.ptlflow_root,
+        synthetic_grid_size=args.synthetic_grid_size,
     )
 
     out_path = Path(args.output_json)

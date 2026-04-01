@@ -1,6 +1,8 @@
-# RAFT Controllability Evaluation
+# Controllability Evaluation (RAFT + optional synthetic flow)
 
-This document describes the RAFT-only controllability path added to `WMEval`.
+This document describes the RAFT controllability path in `WMEval`, plus an optional
+**synthetic reference flow** branch compatible with the synthetic mode in
+[ptlflow `eval_flow_divergence.py`](https://github.com/shaoxiongduan/ptlflow/blob/main/eval_flow_divergence.py).
 
 ## Scope
 
@@ -130,6 +132,42 @@ python tools/evaluate_world_model_metrics.py \
   estimated camera motion.
 - Large gaps between raw and compensated scores are a signal to inspect camera
   motion and framing before drawing strong conclusions about controllability.
+
+## Synthetic flow vs RAFT (action-conditioned proxy)
+
+When you pass a calibration file and either an action recording or **inferred**
+actions, `control_motion` additionally reports `synthetic_vs_candidate`:
+
+- **Reference motion**: Longuet-Higgins field from `synthetic_flow.py` (loaded
+  from your `ptlflow` checkout: default `--ptlflow_root /workspace/ptlflow`).
+- **Candidate motion**: **same RAFT model** as the main block (consistent with
+  the RAFT ref vs RAFT gen comparison).
+- **Per-pair / temporal metrics**: same families as ptlflow (`mf_epe`, `pixel_epe_mean`,
+  `flow_kl_2d`, FOE distance, `fl_all`, divergence onset, etc.) via
+  `evaluation/modules/flow_divergence_metrics.py`.
+
+### CLI flags
+
+- `--synthetic_calibration /path/to/calibration.json` — required to enable the block
+- `--synthetic_action_file /path/to/actions.npy` — dict with `keyboard` `(T,6)` and
+  `mouse` `(T,2)`; rows indexed by sampled candidate frame indices
+- `--synthetic_infer_actions` — if no npy is available, fit continuous
+  keyboard+mouse so synthetic flow matches **RAFT on the Unity reference** for
+  each sampled pair (approximate; slower).
+- `--synthetic_use_depth` — translation term uses Depth Anything (optional;
+  needs `transformers` + download).
+- `--synthetic_grid_size` — grid EPE binning (default 8).
+
+Example:
+
+```bash
+python tools/evaluate_world_model_controllability.py \
+  --ref_video /abs/unity.mp4 \
+  --video /abs/world_model.mp4 \
+  --synthetic_calibration /abs/ptlflow/calibration.json \
+  --synthetic_infer_actions \
+  --output_json reports/world_model_controllability/report_synth.json
+```
 
 ## Future Extensions
 

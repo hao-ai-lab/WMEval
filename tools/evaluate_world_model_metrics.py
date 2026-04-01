@@ -80,6 +80,24 @@ def main() -> None:
         default="1.0,3.0",
         help="Comma-separated bad-pixel EPE thresholds for control_motion",
     )
+    ap.add_argument(
+        "--synthetic_calibration",
+        default=None,
+        help="calibration.json path for control_motion synthetic-vs-RAFT block",
+    )
+    ap.add_argument("--synthetic_action_file", default=None, help="Optional action .npy")
+    ap.add_argument(
+        "--synthetic_infer_actions",
+        action="store_true",
+        help="Infer actions from RAFT on reference for synthetic flow",
+    )
+    ap.add_argument(
+        "--synthetic_use_depth",
+        action="store_true",
+        help="Depth Anything for synthetic translation term",
+    )
+    ap.add_argument("--ptlflow_root", default="/workspace/ptlflow")
+    ap.add_argument("--synthetic_grid_size", type=int, default=8)
 
     args = ap.parse_args()
 
@@ -112,6 +130,12 @@ def main() -> None:
         control_motion_mask_threshold=args.control_motion_mask_threshold,
         control_motion_mask_percentile=args.control_motion_mask_percentile,
         control_bad_pixel_thresholds=control_bad_pixel_thresholds,
+        synthetic_calibration=args.synthetic_calibration,
+        synthetic_action_file=args.synthetic_action_file,
+        synthetic_infer_actions=args.synthetic_infer_actions,
+        synthetic_use_depth=args.synthetic_use_depth,
+        ptlflow_root=args.ptlflow_root,
+        synthetic_grid_size=args.synthetic_grid_size,
     )
 
     out_path = Path(args.output_json)

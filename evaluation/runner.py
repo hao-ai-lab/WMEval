@@ -40,6 +40,12 @@ def run_world_model_evaluation(
     control_motion_mask_threshold: float = 0.5,
     control_motion_mask_percentile: float = 75.0,
     control_bad_pixel_thresholds: Optional[Sequence[float]] = None,
+    synthetic_calibration: Optional[str] = None,
+    synthetic_action_file: Optional[str] = None,
+    synthetic_infer_actions: bool = False,
+    synthetic_use_depth: bool = False,
+    ptlflow_root: Optional[str] = None,
+    synthetic_grid_size: int = 8,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -120,6 +126,12 @@ def run_world_model_evaluation(
                 if control_bad_pixel_thresholds is not None
                 else [1.0, 3.0]
             ),
+            "synthetic_calibration": synthetic_calibration,
+            "synthetic_action_file": synthetic_action_file,
+            "synthetic_infer_actions": synthetic_infer_actions,
+            "synthetic_use_depth": synthetic_use_depth,
+            "ptlflow_root": ptlflow_root if ptlflow_root is not None else "/workspace/ptlflow",
+            "synthetic_grid_size": synthetic_grid_size,
         }
     )
 

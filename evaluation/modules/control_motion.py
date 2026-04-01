@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Sequence
+import importlib.util
+import sys
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
@@ -8,6 +11,11 @@ import torch
 from torchvision.models.optical_flow import Raft_Large_Weights, raft_large
 
 from ..context import EvaluationContext
+from .flow_divergence_metrics import (
+    compute_frame_metrics,
+    compute_temporal_metrics,
+    json_safe_floats,
+)
 from .motion import _center_crop_to_common, _flow_raft
 
 
@@ -266,6 +274,242 @@ def _build_section(
     }
 
 
+def _import_synthetic_flow_generator(ptlflow_root: str) -> Tuple[Any, Any]:
+    root = Path(ptlflow_root).resolve()
+    mod_path = root / "synthetic_flow.py"
+    if not mod_path.is_file():
+        raise FileNotFoundError(f"synthetic_flow.py not found under {root}")
+    spec = importlib.util.spec_from_file_location("wm_synthetic_flow", mod_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load synthetic_flow from {mod_path}")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod.SyntheticFlowGenerator, mod.load_calibration
+
+
+def _scale_calibration(calibration: Dict[str, Any], h: int, w: int) -> Dict[str, Any]:
+    del h  # height unused; focal length scaled by width like pinhole fx
+    out = dict(calibration)
+    fs = out.get("frame_shape", [352, 640])
+    if isinstance(fs, (list, tuple)) and len(fs) == 2:
+        _, fw = int(fs[0]), int(fs[1])
+    else:
+        fw = 640
+    f = float(out["focal_length"])
+    out["focal_length"] = f * (float(w) / float(fw))
+    return out
+
+
+def _load_action_npy(path: str) -> Dict[str, np.ndarray]:
+    data = np.load(path, allow_pickle=True).item()
+    if "keyboard" not in data or "mouse" not in data:
+        raise ValueError(f"action npy must contain 'keyboard' and 'mouse' keys: {path}")
+    return data
+
+
+def _infer_actions_coordinate_descent(
+    gen: Any,
+    flow_target: np.ndarray,
+    frame_bgr: np.ndarray,
+    num_rounds: int = 48,
+    initial_step: float = 0.2,
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Fit continuous keyboard(6)+mouse(2) to approximate RAFT flow with synthetic field."""
+
+    h, w = flow_target.shape[:2]
+    sy = max(1, h // 24)
+    sx = max(1, w // 24)
+    tgt = flow_target[::sy, ::sx, :].astype(np.float64)
+
+    def mse_kb_ms(kb: np.ndarray, ms: np.ndarray) -> float:
+        syn = gen.generate_flow(
+            kb.astype(np.float32),
+            ms.astype(np.float32),
+            frame_bgr=frame_bgr,
+        )
+        s = syn[::sy, ::sx, :].astype(np.float64)
+        return float(np.mean((s - tgt) ** 2))
+
+    x = np.zeros(8, dtype=np.float32)
+    best = mse_kb_ms(x[:6], x[6:8])
+    step = initial_step
+    for _ in range(num_rounds):
+        improved = False
+        for j in range(8):
+            for sign in (-1.0, 1.0):
+                delta = np.zeros(8, dtype=np.float32)
+                delta[j] = sign * step
+                kb2 = np.clip(x[:6] + delta[:6], -2.0, 2.0)
+                ms2 = np.clip(x[6:8] + delta[6:8], -2.0, 2.0)
+                err = mse_kb_ms(kb2, ms2)
+                if err < best - 1e-10:
+                    best = err
+                    x[:6] = kb2
+                    x[6:8] = ms2
+                    improved = True
+        if not improved:
+            step *= 0.5
+            if step < 1e-3:
+                break
+    return x[:6].copy(), x[6:8].copy()
+
+
+def _metric_dict_for_temporal(row: Dict[str, Any]) -> Dict[str, float]:
+    skip = {"pair_index", "candidate_frame_index", "inferred_actions"}
+    out: Dict[str, float] = {}
+    for k, v in row.items():
+        if k in skip:
+            continue
+        if isinstance(v, bool):
+            continue
+        if isinstance(v, (int, float)) and np.isfinite(v):
+            out[k] = float(v)
+    return out
+
+
+def _build_synthetic_branch(
+    context: EvaluationContext,
+    flow_refs: List[np.ndarray],
+    flow_gens: List[np.ndarray],
+    device_obj: torch.device,
+    *,
+    ptlflow_root: str,
+    calibration_path: str,
+    action_path: Optional[str],
+    infer_actions: bool,
+    use_depth: bool,
+    synthetic_grid_size: int,
+) -> Dict[str, Any]:
+    del device_obj
+    if len(flow_refs) != len(flow_gens):
+        return {
+            "enabled": False,
+            "error": "internal: flow list length mismatch",
+        }
+
+    SyntheticFlowGenerator, load_calibration = _import_synthetic_flow_generator(ptlflow_root)
+    calibration = load_calibration(calibration_path)
+    num_frames = context.num_pairs
+    if num_frames < 2:
+        return {"enabled": False, "error": "not enough frames"}
+
+    _, gen_prev0 = _center_crop_to_common(
+        context.reference.frames[0],
+        context.candidate.frames[0],
+    )
+    h, w = gen_prev0.shape[:2]
+    cal_scaled = _scale_calibration(calibration, h, w)
+
+    gen_model = SyntheticFlowGenerator(
+        cal_scaled,
+        frame_shape=(h, w),
+        use_depth=use_depth,
+    )
+    if use_depth:
+        try:
+            gen_model.load_depth_model()
+        except Exception as exc:
+            return {
+                "enabled": False,
+                "error": f"synthetic_use_depth requires transformers & depth model: {exc}",
+            }
+
+    actions_loaded: Optional[Dict[str, np.ndarray]] = None
+    idx_needed = context.candidate.frame_indices[: num_frames - 1]
+    max_idx_needed = max(idx_needed) if idx_needed else 0
+
+    if action_path:
+        actions_loaded = _load_action_npy(action_path)
+        kb_len = len(actions_loaded["keyboard"])
+        if kb_len <= max_idx_needed:
+            return {
+                "enabled": False,
+                "error": (
+                    f"action length {kb_len} <= max sampled frame index {max_idx_needed}; "
+                    "use a full-sequence action npy or enable synthetic_infer_actions"
+                ),
+            }
+
+    per_pair: List[Dict[str, Any]] = []
+    n_pairs = len(flow_gens)
+
+    for p in range(n_pairs):
+        gen_prev, _ = _center_crop_to_common(
+            context.reference.frames[p],
+            context.candidate.frames[p],
+        )
+        frame_idx = int(context.candidate.frame_indices[p])
+
+        if actions_loaded is not None:
+            kb = actions_loaded["keyboard"][frame_idx].astype(np.float32)
+            ms = actions_loaded["mouse"][frame_idx].astype(np.float32)
+            flow_synth = gen_model.generate_flow(kb, ms, frame_bgr=gen_prev)
+            inferred = False
+        elif infer_actions:
+            kb, ms = _infer_actions_coordinate_descent(
+                gen_model,
+                flow_refs[p],
+                gen_prev,
+            )
+            flow_synth = gen_model.generate_flow(kb, ms, frame_bgr=gen_prev)
+            inferred = True
+        else:
+            return {
+                "enabled": False,
+                "error": "provide synthetic_action_file or enable synthetic_infer_actions",
+            }
+
+        metrics = compute_frame_metrics(
+            flow_synth,
+            flow_gens[p],
+            grid_size=synthetic_grid_size,
+        )
+        metrics["pair_index"] = p
+        metrics["candidate_frame_index"] = frame_idx
+        metrics["inferred_actions"] = inferred
+        per_pair.append(json_safe_floats(metrics))
+
+    temporal = compute_temporal_metrics(
+        [_metric_dict_for_temporal(m) for m in per_pair]
+    )
+    temporal_clean: Dict[str, Any] = {}
+    for k, v in temporal.items():
+        if isinstance(v, float) and not np.isfinite(v):
+            temporal_clean[k] = None
+        else:
+            temporal_clean[k] = v
+
+    highlight_keys = (
+        "mf_epe_mean",
+        "mf_angle_err_mean",
+        "mf_cosine_mean",
+        "pixel_epe_mean_mean",
+        "fl_all_mean",
+        "flow_kl_2d_mean",
+        "divergence_onset_frame",
+    )
+
+    return {
+        "enabled": True,
+        "reference_motion_source": (
+            "longuet_higgins_synthetic_from_actions"
+            if actions_loaded is not None
+            else "longuet_higgins_synthetic_inferred_from_raft_reference"
+        ),
+        "candidate_motion_source": "raft_from_candidate_video",
+        "flow_estimator": "torchvision RAFT large",
+        "ptlflow_root": str(Path(ptlflow_root).resolve()),
+        "calibration": str(Path(calibration_path).resolve()),
+        "action_file": str(Path(action_path).resolve()) if action_path else None,
+        "synthetic_use_depth": use_depth,
+        "synthetic_infer_actions": infer_actions and actions_loaded is None,
+        "per_pair_metrics": per_pair,
+        "temporal_summary": temporal_clean,
+        "highlights": {k: temporal_clean[k] for k in highlight_keys if k in temporal_clean},
+    }
+
+
 def analyze_control_motion_from_context(
     context: EvaluationContext,
     device: str | None = None,
@@ -293,6 +537,12 @@ def analyze_control_motion_from_context(
     global_motion_mode = str(
         artifacts.get("control_global_motion_mode", "median_translation")
     )
+    synthetic_calibration = artifacts.get("synthetic_calibration")
+    synthetic_action_file = artifacts.get("synthetic_action_file")
+    synthetic_infer_actions = bool(artifacts.get("synthetic_infer_actions", False))
+    synthetic_use_depth = bool(artifacts.get("synthetic_use_depth", False))
+    ptlflow_root = str(artifacts.get("ptlflow_root", "/workspace/ptlflow"))
+    synthetic_grid_size = int(artifacts.get("synthetic_grid_size", 8))
 
     weights = Raft_Large_Weights.DEFAULT
     transform = weights.transforms()
@@ -302,6 +552,8 @@ def analyze_control_motion_from_context(
     compensated_metrics_per_pair: List[Dict[str, Any]] = []
     reference_camera_model_per_pair: List[Dict[str, Any]] = []
     candidate_camera_model_per_pair: List[Dict[str, Any]] = []
+    flow_refs: List[np.ndarray] = []
+    flow_gens: List[np.ndarray] = []
 
     for idx in range(1, num_frames):
         ref_prev, gen_prev = _center_crop_to_common(
@@ -315,6 +567,8 @@ def analyze_control_motion_from_context(
 
         flow_ref = _flow_raft(model, transform, ref_prev, ref_next, device_obj)
         flow_gen = _flow_raft(model, transform, gen_prev, gen_next, device_obj)
+        flow_refs.append(flow_ref)
+        flow_gens.append(flow_gen)
 
         raw_metrics_per_pair.append(
             _compute_metrics(
@@ -373,5 +627,36 @@ def analyze_control_motion_from_context(
         result["camera_compensated"] = _build_section(
             compensated_metrics_per_pair, bad_pixel_thresholds
         )
+
+    run_synthetic = bool(synthetic_calibration) and (
+        bool(synthetic_action_file) or synthetic_infer_actions
+    )
+    if run_synthetic:
+        try:
+            result["synthetic_vs_candidate"] = _build_synthetic_branch(
+                context,
+                flow_refs,
+                flow_gens,
+                device_obj,
+                ptlflow_root=ptlflow_root,
+                calibration_path=str(synthetic_calibration),
+                action_path=str(synthetic_action_file) if synthetic_action_file else None,
+                infer_actions=synthetic_infer_actions,
+                use_depth=synthetic_use_depth,
+                synthetic_grid_size=synthetic_grid_size,
+            )
+        except Exception as exc:
+            result["synthetic_vs_candidate"] = {
+                "enabled": False,
+                "error": str(exc),
+            }
+    else:
+        result["synthetic_vs_candidate"] = {
+            "enabled": False,
+            "note": (
+                "set artifacts synthetic_calibration and (synthetic_action_file or "
+                "synthetic_infer_actions) to run Longuet-Higgins synthetic flow vs RAFT candidate"
+            ),
+        }
 
     return result
