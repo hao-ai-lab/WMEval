@@ -49,6 +49,17 @@ def _run_motion(context: EvaluationContext, device: Optional[str] = None) -> Dic
     return analyze_motion_from_context(context=context, device=device)
 
 
+def _run_control_motion(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+    try:
+        from .modules.control_motion import analyze_control_motion_from_context
+    except Exception as exc:
+        return {
+            "module": "control_motion",
+            "error": f"failed to import control_motion module: {exc}",
+        }
+    return analyze_control_motion_from_context(context=context, device=device)
+
+
 def _run_shadow(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
     try:
         from .modules.shadow import analyze_shadow_from_context
@@ -65,6 +76,7 @@ def _run_clip4clip(context: EvaluationContext, device: Optional[str] = None) -> 
 
 MODULE_REGISTRY: Dict[str, EvaluationModule] = {
     "clip4clip": _run_clip4clip,
+    "control_motion": _run_control_motion,
     "lpips": _run_lpips,
     "lighting": _run_lighting,
     "motion": _run_motion,
