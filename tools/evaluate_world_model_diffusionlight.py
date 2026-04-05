@@ -52,10 +52,61 @@ def main() -> None:
     ap.add_argument("--diffusionlight_ref_hdr_dir", default=None, help="Precomputed DiffusionLight HDR dir for reference video")
     ap.add_argument("--diffusionlight_candidate_hdr_dir", default=None, help="Precomputed DiffusionLight HDR dir for candidate video")
     ap.add_argument("--sam2_model", default="facebook/sam2.1-hiera-small", help="SAM2 model ID for shadow module")
+    ap.add_argument(
+        "--disable_control_camera_compensation",
+        action="store_true",
+        help="Disable camera-motion compensation for control_motion",
+    )
+    ap.add_argument(
+        "--control_global_motion_mode",
+        choices=["affine_ransac", "median_translation", "mean_translation"],
+        default="median_translation",
+        help="Global camera-motion estimator for control_motion",
+    )
+    ap.add_argument(
+        "--control_motion_mask_threshold",
+        type=float,
+        default=0.5,
+        help="Reference-flow magnitude threshold for dynamic-pixel control metrics",
+    )
+    ap.add_argument(
+        "--control_motion_mask_percentile",
+        type=float,
+        default=75.0,
+        help="Adaptive percentile for selecting dynamic pixels in control_motion",
+    )
+    ap.add_argument(
+        "--control_bad_pixel_thresholds",
+        default="1.0,3.0",
+        help="Comma-separated bad-pixel EPE thresholds for control_motion",
+    )
+    ap.add_argument(
+        "--synthetic_calibration",
+        default=None,
+        help="calibration.json path for control_motion synthetic-vs-RAFT block",
+    )
+    ap.add_argument("--synthetic_action_file", default=None, help="Optional action .npy")
+    ap.add_argument(
+        "--synthetic_infer_actions",
+        action="store_true",
+        help="Infer actions from RAFT on reference for synthetic flow",
+    )
+    ap.add_argument(
+        "--synthetic_use_depth",
+        action="store_true",
+        help="Depth Anything for synthetic translation term",
+    )
+    ap.add_argument("--ptlflow_root", default="/workspace/ptlflow")
+    ap.add_argument("--synthetic_grid_size", type=int, default=8)
 
     args = ap.parse_args()
 
     modules = [module for module in args.modules.split(",") if module.strip()]
+    control_bad_pixel_thresholds = [
+        float(value.strip())
+        for value in args.control_bad_pixel_thresholds.split(",")
+        if value.strip()
+    ]
     report = run_world_model_evaluation(
         video_path=args.video,
         ref_video_path=args.ref_video,
@@ -74,6 +125,17 @@ def main() -> None:
         diffusionlight_ref_hdr_dir=args.diffusionlight_ref_hdr_dir,
         diffusionlight_candidate_hdr_dir=args.diffusionlight_candidate_hdr_dir,
         sam2_model=args.sam2_model,
+        control_camera_compensation=not args.disable_control_camera_compensation,
+        control_global_motion_mode=args.control_global_motion_mode,
+        control_motion_mask_threshold=args.control_motion_mask_threshold,
+        control_motion_mask_percentile=args.control_motion_mask_percentile,
+        control_bad_pixel_thresholds=control_bad_pixel_thresholds,
+        synthetic_calibration=args.synthetic_calibration,
+        synthetic_action_file=args.synthetic_action_file,
+        synthetic_infer_actions=args.synthetic_infer_actions,
+        synthetic_use_depth=args.synthetic_use_depth,
+        ptlflow_root=args.ptlflow_root,
+        synthetic_grid_size=args.synthetic_grid_size,
     )
 
     out_path = Path(args.output_json)
