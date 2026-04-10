@@ -46,6 +46,18 @@ def run_world_model_evaluation(
     synthetic_use_depth: bool = False,
     ptlflow_root: Optional[str] = None,
     synthetic_grid_size: int = 8,
+    lpips_sampling: str = "temporal",
+    lpips_vlm_model: str = "gpt-4o",
+    lpips_vlm_max_grid_frames: int = 24,
+    lpips_vlm_prompt_version: str = "causal_collision_v1",
+    lpips_event_frames_before: int = 2,
+    lpips_event_frames_after: int = 2,
+    lpips_event_offsets: Optional[Sequence[int]] = None,
+    causal_match_mode: str = "strict_fallback_order",
+    save_inspection_artifacts: bool = False,
+    inspection_root: str = "reports/world_model_lpips/qa",
+    inspection_run_id: str = "run",
+    inspection_sample_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -132,6 +144,18 @@ def run_world_model_evaluation(
             "synthetic_use_depth": synthetic_use_depth,
             "ptlflow_root": ptlflow_root if ptlflow_root is not None else "/workspace/ptlflow",
             "synthetic_grid_size": synthetic_grid_size,
+            "lpips_sampling": lpips_sampling,
+            "lpips_vlm_model": lpips_vlm_model,
+            "lpips_vlm_max_grid_frames": lpips_vlm_max_grid_frames,
+            "lpips_vlm_prompt_version": lpips_vlm_prompt_version,
+            "lpips_event_frames_before": lpips_event_frames_before,
+            "lpips_event_frames_after": lpips_event_frames_after,
+            "lpips_event_offsets": lpips_event_offsets,
+            "causal_match_mode": causal_match_mode,
+            "save_inspection_artifacts": save_inspection_artifacts,
+            "inspection_root": inspection_root,
+            "inspection_run_id": inspection_run_id,
+            "inspection_sample_id": inspection_sample_id,
         }
     )
 

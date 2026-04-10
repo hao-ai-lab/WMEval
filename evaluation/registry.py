@@ -4,14 +4,17 @@ from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .context import EvaluationContext
 from .modules.clip4clip import run_clip4clip
-from .modules.lpips import analyze_lpips_from_context
-
 EvaluationModule = Callable[[EvaluationContext, Optional[str]], Dict[str, Any]]
+
+_CAUSAL_LPIPS_ALIASES = frozenset(
+    {"causal_vlm_collision", "causal", "vlm_collision", "causal_collision"}
+)
 
 
 def _run_lpips(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
     try:
-        from .modules.lpips import analyze_lpips_from_context
+        from .modules.lpips import analyze_lpips_from_context, ensure_device
+        from .modules.lpips_causal_vlm import analyze_causal_vlm_lpips
     except Exception as exc:
         return {
             "module": "lpips",
@@ -23,6 +26,11 @@ def _run_lpips(context: EvaluationContext, device: Optional[str] = None) -> Dict
             "module": "lpips",
             "error": "reference_video is required for LPIPS",
         }
+
+    sampling = str(context.artifacts.get("lpips_sampling", "temporal")).strip().lower()
+    if sampling in _CAUSAL_LPIPS_ALIASES:
+        device_obj = ensure_device(device)
+        return analyze_causal_vlm_lpips(context, device_obj, context.artifacts)
     return analyze_lpips_from_context(context=context, device=device)
 
 

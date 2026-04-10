@@ -98,6 +98,30 @@ def main() -> None:
     )
     ap.add_argument("--ptlflow_root", default="/workspace/ptlflow")
     ap.add_argument("--synthetic_grid_size", type=int, default=8)
+    ap.add_argument(
+        "--lpips_sampling",
+        default="temporal",
+        choices=["temporal", "causal_vlm_collision"],
+        help="temporal: uniform time samples; causal_vlm_collision: VLM collision events plus temporal LPIPS baseline",
+    )
+    ap.add_argument("--lpips_vlm_model", default="gpt-4o", help="OpenAI vision model for causal LPIPS")
+    ap.add_argument(
+        "--lpips_vlm_max_grid_frames",
+        type=int,
+        default=24,
+        help="Max keyframes sent to the VLM per video",
+    )
+    ap.add_argument(
+        "--lpips_vlm_prompt_version",
+        default="causal_collision_v1",
+        help="Prompt version tag (stored in report; must match judge training)",
+    )
+    ap.add_argument(
+        "--causal_match_mode",
+        default="strict_fallback_order",
+        choices=["strict_fallback_order", "strict", "order", "side_agnostic", "auto"],
+        help="Pairing for causal LPIPS: auto is an alias for strict_fallback_order",
+    )
 
     args = ap.parse_args()
 
@@ -107,6 +131,11 @@ def main() -> None:
         for value in args.control_bad_pixel_thresholds.split(",")
         if value.strip()
     ]
+
+    causal_match_mode = (
+        "strict_fallback_order" if args.causal_match_mode == "auto" else args.causal_match_mode
+    )
+
     report = run_world_model_evaluation(
         video_path=args.video,
         ref_video_path=args.ref_video,
@@ -136,6 +165,11 @@ def main() -> None:
         synthetic_use_depth=args.synthetic_use_depth,
         ptlflow_root=args.ptlflow_root,
         synthetic_grid_size=args.synthetic_grid_size,
+        lpips_sampling=args.lpips_sampling,
+        lpips_vlm_model=args.lpips_vlm_model,
+        lpips_vlm_max_grid_frames=args.lpips_vlm_max_grid_frames,
+        lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,
+        causal_match_mode=causal_match_mode,
     )
 
     out_path = Path(args.output_json)
