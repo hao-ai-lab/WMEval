@@ -68,6 +68,33 @@ def timestamp_to_frame_index(timestamp_sec: float, metadata: VideoMetadata) -> i
     return min(max(frame_idx, 0), metadata.frame_count - 1)
 
 
+def build_default_event_offsets(before: int, after: int) -> List[int]:
+    """Integer frame offsets around an event, e.g. before=2, after=2 → [-2, -1, 0, 1, 2]."""
+    b = int(before)
+    a = int(after)
+    return list(range(-b, a + 1))
+
+
+def build_vlm_keyframe_indices(frame_count: int, max_grid_frames: int) -> List[int]:
+    """Evenly spaced frame indices (inclusive of first and last) for VLM grids."""
+    fc = int(frame_count)
+    if fc <= 0:
+        return []
+    m = min(int(max_grid_frames), fc)
+    if m <= 1:
+        return [0]
+    raw = np.linspace(0, fc - 1, num=m)
+    out: List[int] = []
+    seen: set[int] = set()
+    for x in raw:
+        idx = int(round(float(x)))
+        idx = min(max(idx, 0), fc - 1)
+        if idx not in seen:
+            seen.add(idx)
+            out.append(idx)
+    return out
+
+
 def load_frames_by_indices(video_path: str, frame_indices: Sequence[int]) -> List[np.ndarray]:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
