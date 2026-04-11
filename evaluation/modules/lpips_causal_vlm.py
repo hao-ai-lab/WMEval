@@ -19,7 +19,10 @@ from ..video_io import (
 
 from .lpips import analyze_lpips_from_context, compute_lpips_scores, summarize_scores
 
-PROMPT_VERSION_DEFAULT = "causal_collision_v1"
+PROMPT_VERSION_DEFAULT = "causal_collision_v2"
+
+# Lateral + depth contact labels; strict pairing requires exact match.
+_DIRECTIONAL_SIDES = frozenset({"left", "right", "front", "back"})
 
 JUDGE_SYSTEM_PROMPT = (
     "You are a careful video analyst for physics-style evaluation clips. "
@@ -37,13 +40,17 @@ Follow this checklist and put concise notes in reasoning_steps (string array):
 A) Scene and camera (fixed or moving).
 B) Main moving object(s) and relevant static boundaries visible.
 C) Scan in time order; flag visually unambiguous contact/impact episodes; cite frame indices from the allowed list.
-D) For each episode assign side: "left" or "right" for contact with the image-left vs image-right boundary (screen coordinates), or "unknown".
+D) For each episode assign side (choose the best single label):
+   - "left" or "right": contact is primarily lateral in the image (screen-left vs screen-right half / boundary).
+   - "front": the moving object is contacting another object or surface **toward the viewer** (depth: approaching the camera / foreground contact), e.g. rolling toward camera into a ball ahead of it.
+   - "back": contact primarily **away from the viewer** (into the far side of the scene or rear boundary).
+   - "unknown": use only if none of the above is clear from the keyframes.
 E) Deduplicate: one event per distinct contact episode.
 F) Abstain with "events": [] if quality is insufficient.
 
 For EACH event object include:
 - type: e.g. "collision"
-- side: "left" | "right" | "unknown"
+- side: "left" | "right" | "front" | "back" | "unknown"
 - frame: integer, must be one of the allowed indices (best contact frame)
 - confidence: number 0-1 (optional)
 - evidence_frame_indices: non-empty array of allowed integers (typically 2-4 frames around contact)
@@ -154,7 +161,7 @@ def pair_collision_events_strict_with_log(
     for r in ref_sorted:
         rs = str(r.get("side", "unknown")).lower()
         found: Optional[int] = None
-        if rs in ("left", "right"):
+        if rs in _DIRECTIONAL_SIDES:
             for j, c in enumerate(cand_sorted):
                 if cand_used[j]:
                     continue
@@ -187,7 +194,7 @@ def pair_collision_events_strict_with_log(
             elif all(cand_used):
                 reason = "no_candidates_remaining"
                 detail = {}
-            elif rs in ("left", "right"):
+            elif rs in _DIRECTIONAL_SIDES:
                 unused_sides = [
                     str(cand_sorted[j].get("side", "unknown")).lower()
                     for j in range(len(cand_sorted))

@@ -49,7 +49,7 @@ def run_world_model_evaluation(
     lpips_sampling: str = "temporal",
     lpips_vlm_model: str = "gpt-4o",
     lpips_vlm_max_grid_frames: int = 24,
-    lpips_vlm_prompt_version: str = "causal_collision_v1",
+    lpips_vlm_prompt_version: str = "causal_collision_v2",
     lpips_event_frames_before: int = 2,
     lpips_event_frames_after: int = 2,
     lpips_event_offsets: Optional[Sequence[int]] = None,

@@ -40,6 +40,13 @@ class TestCausalPairing(unittest.TestCase):
         self.assertEqual(log[0]["status"], "matched")
         self.assertEqual(log[0]["match_rule"], "strict_side")
 
+    def test_strict_match_front(self) -> None:
+        ref = [_ev(10, "front")]
+        cand = [_ev(12, "front")]
+        matched, ur, uc, log = pair_collision_events_strict_with_log(ref, cand)
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(log[0]["match_rule"], "strict_side")
+
     def test_order_pairs_despite_side(self) -> None:
         ref = [_ev(10, "left"), _ev(30, "right")]
         cand = [_ev(11, "right"), _ev(31, "left")]

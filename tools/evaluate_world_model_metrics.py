@@ -113,8 +113,8 @@ def main() -> None:
     )
     ap.add_argument(
         "--lpips_vlm_prompt_version",
-        default="causal_collision_v1",
-        help="Prompt version tag (stored in report; must match judge training)",
+        default="causal_collision_v2",
+        help="Prompt version tag (stored in report; v2 adds front/back contact labels)",
     )
     ap.add_argument(
         "--causal_match_mode",
