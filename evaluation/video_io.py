@@ -12,6 +12,53 @@ SAMPLE_MODE_TIMESTAMP = "timestamp"
 SAMPLE_MODE_FRAME_STEP = "frame_step"
 
 
+def normalized_anchor_indices_from_fractions(
+    frame_count: int,
+    fractions: Sequence[float],
+) -> List[int]:
+    """Map each fraction in [0, 1] to a frame index in [0, frame_count - 1]."""
+    if frame_count <= 0:
+        return []
+    if not fractions:
+        return []
+    last = frame_count - 1
+    indices: List[int] = []
+    for f in fractions:
+        if f < 0.0 or f > 1.0:
+            raise ValueError(f"fraction out of [0,1]: {f!r}")
+        if last <= 0:
+            indices.append(0)
+        else:
+            indices.append(int(round(float(f) * last)))
+    return [min(max(i, 0), last) for i in indices]
+
+
+def build_default_event_offsets(
+    frames_before: int = 2,
+    frames_after: int = 2,
+) -> List[int]:
+    """Default causal window: -before, ..., -1, 0, 1, ..., +after (inclusive)."""
+    if frames_before < 0 or frames_after < 0:
+        raise ValueError("frames_before and frames_after must be non-negative")
+    offsets: List[int] = []
+    for k in range(-frames_before, 0):
+        offsets.append(k)
+    offsets.append(0)
+    for k in range(1, frames_after + 1):
+        offsets.append(k)
+    return offsets
+
+
+def build_vlm_keyframe_indices(frame_count: int, max_frames: int) -> List[int]:
+    """Evenly spaced frame indices for sending a grid to the VLM (inclusive ends)."""
+    if frame_count <= 0 or max_frames <= 0:
+        return []
+    if frame_count <= max_frames:
+        return list(range(frame_count))
+    xs = np.linspace(0, frame_count - 1, num=max_frames, dtype=float)
+    return sorted({int(round(float(x))) for x in xs})
+
+
 def get_video_metadata(video_path: str) -> VideoMetadata:
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
@@ -66,6 +113,42 @@ def timestamp_to_frame_index(timestamp_sec: float, metadata: VideoMetadata) -> i
 
     frame_idx = int(round(timestamp_sec * metadata.fps))
     return min(max(frame_idx, 0), metadata.frame_count - 1)
+
+
+def build_default_event_offsets(before: int, after: int) -> List[int]:
+    """Integer frame offsets around an event, e.g. before=2, after=2 → [-2, -1, 0, 1, 2]."""
+    b = int(before)
+    a = int(after)
+    return list(range(-b, a + 1))
+
+
+def build_vlm_keyframe_indices(frame_count: int, max_grid_frames: int) -> List[int]:
+    """Frame indices for VLM judge grids.
+
+    If ``max_grid_frames <= 0``, uses **every** frame in the clip (``0 .. frame_count-1``).
+    That is evaluated **per video**, so a 496-frame reference and a 176-frame candidate each
+    get their own full index list. Otherwise returns up to ``max_grid_frames`` evenly spaced
+    indices (inclusive of first and last).
+    """
+    fc = int(frame_count)
+    if fc <= 0:
+        return []
+    mg = int(max_grid_frames)
+    if mg <= 0:
+        return list(range(fc))
+    m = min(mg, fc)
+    if m <= 1:
+        return [0]
+    raw = np.linspace(0, fc - 1, num=m)
+    out: List[int] = []
+    seen: set[int] = set()
+    for x in raw:
+        idx = int(round(float(x)))
+        idx = min(max(idx, 0), fc - 1)
+        if idx not in seen:
+            seen.add(idx)
+            out.append(idx)
+    return out
 
 
 def load_frames_by_indices(video_path: str, frame_indices: Sequence[int]) -> List[np.ndarray]:
