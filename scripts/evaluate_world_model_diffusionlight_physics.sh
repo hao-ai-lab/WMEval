@@ -1,11 +1,12 @@
-python tools/evaluate_world_model_metrics.py \
+python tools/evaluate_world_model_diffusionlight.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
-  --text_prompt "A ball rolls down a ramp" \
-  --modules lpips,lighting,motion,shadow \
+  --modules lighting,motion,shadow \
   --unity_log_json /path/to/ground_truth_log.json \
   --diffusionlight_ref_hdr_dir /path/to/ref_diffusionlight/hdr \
   --diffusionlight_candidate_hdr_dir /path/to/cand_diffusionlight/hdr \
-  --output_json reports/world_model_metrics/report.json \
-  --eval_fps 4 \
+  --sam2_model facebook/sam2.1-hiera-small \
+  --device cuda \
+  --output_json reports/world_model_physics/report.json \
+  --eval_fps 1 \
   --max_pairs 32
