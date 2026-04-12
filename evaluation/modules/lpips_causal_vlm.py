@@ -89,6 +89,34 @@ Output JSON shape:
 {{"reasoning_steps": ["..."], "events": [...]}}
 """
 
+HIGH_RECALL_DETECTION_USER_PROMPT_TEMPLATE = """Analyze these keyframes from ONE video. Keyframe order matches image order.
+Allowed frame indices (only these may appear in JSON): {idx_str}
+{extra_instructions}
+Your only job is to recover as many distinct contact/impact episodes as are plausibly supported by the keyframes.
+Prefer recall over precision in this pass: if two episodes are temporally distinct, list both rather than collapsing them into one summary event.
+Do not spend effort on left/right/front/back semantics in this pass. Use side="unknown" unless the side is completely unavoidable from the local evidence.
+
+Follow this checklist and put concise notes in reasoning_steps (string array):
+A) Identify the main moving object and the nearby obstacles/targets it contacts.
+B) Scan in time order and list every temporally distinct contact episode you can support from the frames.
+C) If contact stops and later resumes, treat that as a new event.
+D) If a later contact looks brief, grazing, or rebound-like, still include it when it is temporally separate from earlier contact.
+E) Do not collapse multiple contacts into one event just because they involve nearby obstacles or similar motion.
+F) Cite only allowed frame indices.
+G) Abstain with "events": [] only if the frames truly do not support any contact episode.
+
+For EACH event object include:
+- type: usually "collision"
+- side: set to "unknown" unless truly unambiguous
+- frame: integer, must be one of the allowed indices (best contact frame)
+- confidence: number 0-1 (optional)
+- evidence_frame_indices: non-empty array of allowed integers (prefer 3-8 frames spanning approach/contact/separation when available)
+- evidence_summary: 1-3 sentences describing visible contact evidence only
+
+Output JSON shape:
+{{"reasoning_steps": ["..."], "events": [...]}}
+"""
+
 SIDE_RELABEL_USER_PROMPT_TEMPLATE = """Analyze these keyframes from ONE video around a single already-detected contact episode.
 Allowed frame indices (only these may appear in JSON): {idx_str}
 Event anchor frame: {anchor_frame}
@@ -206,10 +234,13 @@ def build_detection_user_prompt(
     artifacts: Optional[Mapping[str, Any]] = None,
     *,
     max_events: Optional[int] = None,
+    high_recall: bool = False,
 ) -> str:
     local_artifacts = dict(artifacts or {})
     local_artifacts["lpips_vlm_judge_user_prompt_template"] = (
-        DETECTION_ONLY_USER_PROMPT_TEMPLATE
+        HIGH_RECALL_DETECTION_USER_PROMPT_TEMPLATE
+        if high_recall
+        else DETECTION_ONLY_USER_PROMPT_TEMPLATE
     )
     return build_judge_user_prompt(
         allowed_indices,
@@ -333,6 +364,63 @@ def extract_json_object(text: str) -> Dict[str, Any]:
     if not isinstance(obj, dict):
         raise ValueError("judge output is not a JSON object")
     return obj
+
+
+def repair_json_object_with_model(
+    *,
+    client: Any,
+    model: str,
+    raw_text: str,
+    timeout_sec: float,
+) -> Dict[str, Any]:
+    repair_prompt = (
+        "The following model output was intended to be a single JSON object, but it is malformed. "
+        "Return only a repaired JSON object with the same intended fields and values. "
+        "Do not add markdown fences or commentary.\n\n"
+        "Malformed output:\n"
+        f"{raw_text}"
+    )
+    create_kwargs: Dict[str, Any] = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": DEFAULT_JUDGE_SYSTEM_PROMPT},
+            {"role": "user", "content": repair_prompt},
+        ],
+    }
+    if str(model).startswith("gpt-5"):
+        create_kwargs["reasoning_effort"] = "none"
+        create_kwargs["temperature"] = 0
+    else:
+        create_kwargs["temperature"] = 0
+
+    client = client.with_options(timeout=timeout_sec, max_retries=1)
+    resp = client.chat.completions.create(**create_kwargs)
+    repaired_text = (resp.choices[0].message.content or "").strip()
+    return extract_json_object(repaired_text)
+
+
+def parse_or_repair_judge_output(
+    text: str,
+    *,
+    repair_json: Optional[Any] = None,
+    retry_json: Optional[Any] = None,
+) -> Dict[str, Any]:
+    try:
+        return extract_json_object(text)
+    except Exception as parse_exc:
+        repair_exc: Optional[Exception] = None
+        if repair_json is not None:
+            try:
+                return repair_json(text)
+            except Exception as exc:
+                repair_exc = exc
+        if retry_json is not None:
+            return retry_json(text, parse_exc, repair_exc)
+        if repair_exc is not None:
+            raise RuntimeError(
+                f"json_parse_failed: {parse_exc}; json_repair_failed: {repair_exc}"
+            ) from repair_exc
+        raise
 
 
 def sanitize_events_to_grid(
@@ -1014,32 +1102,111 @@ def call_openai_vision_judge(
         ) from exc
 
     client = OpenAI(api_key=api_key, timeout=timeout_sec, max_retries=2)
-    content: List[Dict[str, Any]] = [{"type": "text", "text": user_text}]
+    image_parts: List[Dict[str, Any]] = []
     for bgr in frames_bgr:
-        content.append(
+        image_parts.append(
             {
                 "type": "image_url",
                 "image_url": {"url": bgr_to_data_url_jpeg(bgr)},
             }
         )
 
-    # GPT-5.x: temperature is only valid with reasoning_effort "none" (OpenAI API).
-    create_kwargs: Dict[str, Any] = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": content},
-        ],
-    }
-    if str(model).startswith("gpt-5"):
-        create_kwargs["reasoning_effort"] = "none"
-        create_kwargs["temperature"] = 0
-    else:
-        create_kwargs["temperature"] = 0
+    def _build_create_kwargs(user_prompt_text: str) -> Dict[str, Any]:
+        create_kwargs: Dict[str, Any] = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": user_prompt_text}, *image_parts],
+                },
+            ],
+        }
+        if str(model).startswith("gpt-5"):
+            create_kwargs["reasoning_effort"] = "none"
+            create_kwargs["temperature"] = 0
+        else:
+            create_kwargs["temperature"] = 0
+        return create_kwargs
 
-    resp = client.chat.completions.create(**create_kwargs)
-    text = (resp.choices[0].message.content or "").strip()
-    return extract_json_object(text)
+    def _run_chat(user_prompt_text: str, *, call_timeout_sec: float) -> str:
+        run_client = client.with_options(timeout=call_timeout_sec, max_retries=2)
+        resp = run_client.chat.completions.create(**_build_create_kwargs(user_prompt_text))
+        return (resp.choices[0].message.content or "").strip()
+
+    text = _run_chat(user_text, call_timeout_sec=timeout_sec)
+
+    def _repair_json(raw_text: str) -> Dict[str, Any]:
+        _log_causal(
+            "judge_json_repair_start",
+            model=model,
+            error="malformed_judge_json",
+        )
+        repaired_payload = repair_json_object_with_model(
+            client=client,
+            model=model,
+            raw_text=raw_text,
+            timeout_sec=min(timeout_sec, 120.0),
+        )
+        _log_causal(
+            "judge_json_repair_done",
+            model=model,
+        )
+        return repaired_payload
+
+    def _retry_json(
+        raw_text: str,
+        parse_exc: Exception,
+        repair_exc: Optional[Exception],
+    ) -> Dict[str, Any]:
+        _log_causal(
+            "judge_json_retry_start",
+            model=model,
+            parse_error=str(parse_exc),
+            repair_error=str(repair_exc) if repair_exc is not None else None,
+        )
+        retry_text = _run_chat(
+            (
+                "Your previous response was malformed JSON. "
+                "Re-answer the original task and return ONLY one valid JSON object. "
+                "Do not include markdown fences or commentary.\n\n"
+                "Original instructions:\n"
+                f"{user_text}"
+            ),
+            call_timeout_sec=min(timeout_sec, 120.0),
+        )
+        payload = extract_json_object(retry_text)
+        _log_causal(
+            "judge_json_retry_done",
+            model=model,
+        )
+        return payload
+
+    return parse_or_repair_judge_output(
+        text,
+        repair_json=_repair_json,
+        retry_json=_retry_json,
+    )
+
+
+def resolve_detection_max_events(
+    artifacts: Mapping[str, Any],
+    *,
+    prompt_mode: str,
+) -> Optional[int]:
+    key = (
+        "lpips_vlm_fine_max_events"
+        if prompt_mode == "detection_high_recall"
+        else "lpips_vlm_detection_max_events"
+    )
+    raw = artifacts.get(key)
+    if raw is None:
+        raw = 12 if prompt_mode == "detection_high_recall" else 6
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
 
 
 def run_vlm_judge_on_video(
@@ -1193,7 +1360,7 @@ def run_vlm_judge_on_video(
             model,
             artifacts,
             phase="fine",
-            prompt_mode="detection_only",
+            prompt_mode="detection_high_recall",
         )
         if side_relabel_enabled:
             fine_events_raw = fine_payload.get("events")
@@ -1315,8 +1482,16 @@ def run_vlm_judge_on_indices(
         elapsed_sec=round(perf_counter() - prep_start, 3),
     )
     system_prompt = resolve_judge_system_prompt(artifacts)
-    if prompt_mode == "detection_only":
-        user_text = build_detection_user_prompt(indices, artifacts)
+    if prompt_mode in {"detection_only", "detection_high_recall"}:
+        user_text = build_detection_user_prompt(
+            indices,
+            artifacts,
+            max_events=resolve_detection_max_events(
+                artifacts,
+                prompt_mode=prompt_mode,
+            ),
+            high_recall=(prompt_mode == "detection_high_recall"),
+        )
     else:
         user_text = build_judge_user_prompt(indices, artifacts)
     raw_timeout = artifacts.get("lpips_vlm_timeout_sec")

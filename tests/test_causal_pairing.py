@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
 
 from evaluation.modules.lpips_causal_vlm import (
     build_windowed_keyframe_groups,
@@ -12,6 +13,9 @@ from evaluation.modules.lpips_causal_vlm import (
     compute_first_divergence,
     filter_events_by_contact_types,
     merge_nearby_events,
+    parse_or_repair_judge_output,
+    repair_json_object_with_model,
+    resolve_detection_max_events,
     split_events_by_evidence_gaps,
     pair_collision_events_monotonic_with_log,
     pair_collision_events_order_with_log,
@@ -31,6 +35,57 @@ def _ev(frame: int, side: str) -> dict:
 
 
 class TestCausalPairing(unittest.TestCase):
+    def test_parse_or_repair_judge_output_uses_retry_after_failed_repair(self) -> None:
+        calls: list[str] = []
+
+        def _repair(_: str) -> dict:
+            calls.append("repair")
+            raise ValueError("repair failed")
+
+        def _retry(_: str, parse_exc: Exception, repair_exc: Exception | None) -> dict:
+            calls.append("retry")
+            self.assertIn("delimiter", str(parse_exc))
+            self.assertEqual(str(repair_exc), "repair failed")
+            return {"reasoning_steps": ["ok"], "events": []}
+
+        payload = parse_or_repair_judge_output(
+            '{"reasoning_steps":["bad"] "events":[]}',
+            repair_json=_repair,
+            retry_json=_retry,
+        )
+        self.assertEqual(payload["events"], [])
+        self.assertEqual(calls, ["repair", "retry"])
+
+    def test_repair_json_object_with_model_returns_fixed_object(self) -> None:
+        repaired_text = '{"reasoning_steps":["ok"],"events":[]}'
+
+        class _FakeCompletions:
+            def create(self, **_: object) -> object:
+                return SimpleNamespace(
+                    choices=[
+                        SimpleNamespace(
+                            message=SimpleNamespace(content=repaired_text)
+                        )
+                    ]
+                )
+
+        class _FakeClient:
+            def with_options(self, **_: object) -> "_FakeClient":
+                return self
+
+            @property
+            def chat(self) -> object:
+                return SimpleNamespace(completions=_FakeCompletions())
+
+        payload = repair_json_object_with_model(
+            client=_FakeClient(),
+            model="gpt-5.4-mini",
+            raw_text='{"reasoning_steps":["bad"] "events":[]}',
+            timeout_sec=30.0,
+        )
+        self.assertEqual(payload["events"], [])
+        self.assertEqual(payload["reasoning_steps"], ["ok"])
+
     def test_strict_log_side_mismatch_no_match(self) -> None:
         ref = [_ev(10, "left"), _ev(20, "left")]
         cand = [_ev(12, "right")]
@@ -148,6 +203,12 @@ class TestCausalPairing(unittest.TestCase):
         self.assertIn('side="unknown"', text)
         self.assertIn("distinct contact/impact episodes", text)
 
+    def test_build_detection_user_prompt_high_recall_prefers_recall(self) -> None:
+        text = build_detection_user_prompt([0, 5, 10], {}, max_events=12, high_recall=True)
+        self.assertIn("Prefer recall over precision", text)
+        self.assertIn("Return at most 12 events", text)
+        self.assertIn("grazing", text)
+
     def test_build_side_relabel_user_prompt_mentions_all_directional_sides(self) -> None:
         text = build_side_relabel_user_prompt(
             [8, 10, 12],
@@ -210,6 +271,16 @@ class TestCausalPairing(unittest.TestCase):
         )
         self.assertEqual(len(split), 1)
         self.assertEqual(split[0]["evidence_frame_indices"], [10, 12, 14])
+
+    def test_resolve_detection_max_events_uses_fine_default(self) -> None:
+        self.assertEqual(
+            resolve_detection_max_events({}, prompt_mode="detection_high_recall"),
+            12,
+        )
+        self.assertEqual(
+            resolve_detection_max_events({}, prompt_mode="detection_only"),
+            6,
+        )
 
     def test_infer_scene_key_from_paths(self) -> None:
         key = infer_scene_key(
