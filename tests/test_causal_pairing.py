@@ -12,6 +12,7 @@ from evaluation.modules.lpips_causal_vlm import (
     build_side_relabel_user_prompt,
     compute_first_divergence,
     filter_events_by_contact_types,
+    merge_fine_and_coarse_events,
     merge_nearby_events,
     parse_or_repair_judge_output,
     repair_json_object_with_model,
@@ -271,6 +272,18 @@ class TestCausalPairing(unittest.TestCase):
         )
         self.assertEqual(len(split), 1)
         self.assertEqual(split[0]["evidence_frame_indices"], [10, 12, 14])
+
+    def test_merge_fine_and_coarse_events_preserves_unmatched_coarse(self) -> None:
+        merged = merge_fine_and_coarse_events(
+            [_ev(100, "unknown") | {"confidence": 0.6}],
+            [
+                _ev(20, "unknown") | {"confidence": 0.7},
+                _ev(104, "unknown") | {"confidence": 0.9},
+            ],
+            frame_gap=6,
+        )
+        self.assertEqual([event["frame"] for event in merged], [20, 104])
+        self.assertEqual(merged[1]["confidence"], 0.9)
 
     def test_resolve_detection_max_events_uses_fine_default(self) -> None:
         self.assertEqual(

@@ -633,6 +633,45 @@ def split_events_by_evidence_gaps(
     return split_events
 
 
+def merge_fine_and_coarse_events(
+    fine_events: Sequence[Dict[str, Any]],
+    coarse_events: Sequence[Dict[str, Any]],
+    *,
+    frame_gap: int,
+) -> List[Dict[str, Any]]:
+    merged: List[Dict[str, Any]] = [dict(event) for event in fine_events]
+    for coarse in sorted(coarse_events, key=lambda e: int(e.get("frame", 0))):
+        coarse_frame = int(coarse.get("frame", 0))
+        matched = False
+        for index, fine in enumerate(merged):
+            fine_frame = int(fine.get("frame", 0))
+            if abs(fine_frame - coarse_frame) > int(frame_gap):
+                continue
+            matched = True
+            fine_conf = float(fine.get("confidence", 0.0) or 0.0)
+            coarse_conf = float(coarse.get("confidence", 0.0) or 0.0)
+            chosen = dict(fine)
+            if coarse_conf > fine_conf:
+                chosen.update(dict(coarse))
+            evidence = {
+                int(value)
+                for value in fine.get("evidence_frame_indices", [])
+                if isinstance(value, (int, np.integer))
+            }
+            evidence.update(
+                int(value)
+                for value in coarse.get("evidence_frame_indices", [])
+                if isinstance(value, (int, np.integer))
+            )
+            if evidence:
+                chosen["evidence_frame_indices"] = sorted(evidence)
+            merged[index] = chosen
+            break
+        if not matched:
+            merged.append(dict(coarse))
+    return sorted(merged, key=lambda e: int(e.get("frame", 0)))
+
+
 def build_refine_window_indices(
     *,
     coarse_events: List[Dict[str, Any]],
@@ -1382,6 +1421,13 @@ def run_vlm_judge_on_video(
                     ),
                     min_cluster_size=int(
                         artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
+                    ),
+                )
+                fine_events_clean = merge_fine_and_coarse_events(
+                    fine_events_clean,
+                    coarse_events,
+                    frame_gap=int(
+                        artifacts.get("lpips_vlm_fine_coarse_merge_gap_frames", 18)
                     ),
                 )
                 relabeled_events, relabel_logs = relabel_event_sides_on_video(
