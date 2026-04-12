@@ -12,8 +12,8 @@ a reference Unity video using:
 - `evaluation/modules/lighting.py`: DiffusionLight-based lighting module
 - `evaluation/modules/motion.py`: RAFT-based motion module
 - `evaluation/modules/shadow.py`: SAM2-based shadow module
-- `tools/evaluate_world_model_metrics.py`: single-pair orchestrator
-- `tools/evaluate_world_model_diffusionlight.py`: compatibility wrapper for older commands
+- `tools/evaluate_world_model_diffusionlight.py`: single-pair orchestrator
+- `tools/evaluate_world_model_metrics.py`: standalone alias for the same entrypoint
 - `scripts/evaluate_world_model_diffusionlight_physics.sh`: runnable command template
 
 ## Dependencies
@@ -30,7 +30,7 @@ custom path with `--diffusionlight_repo`).
 ## Usage
 
 ```bash
-python tools/evaluate_world_model_metrics.py \
+python tools/evaluate_world_model_diffusionlight.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --modules lighting,motion,shadow \

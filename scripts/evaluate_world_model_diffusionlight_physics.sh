@@ -1,4 +1,4 @@
-python tools/evaluate_world_model_metrics.py \
+python tools/evaluate_world_model_diffusionlight.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --modules lighting,motion,shadow \
