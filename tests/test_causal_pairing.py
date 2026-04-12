@@ -119,7 +119,7 @@ class TestCausalPairing(unittest.TestCase):
         self.assertEqual(key, "sample_scene")
         self.assertIsNotNone(hints)
         assert hints is not None
-        self.assertIn("canonical first event", hints)
+        self.assertIn("full collision timeline", hints)
 
 
 if __name__ == "__main__":
