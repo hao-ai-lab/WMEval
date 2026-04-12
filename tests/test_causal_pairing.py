@@ -12,6 +12,7 @@ from evaluation.modules.lpips_causal_vlm import (
     compute_first_divergence,
     filter_events_by_contact_types,
     merge_nearby_events,
+    split_events_by_evidence_gaps,
     pair_collision_events_monotonic_with_log,
     pair_collision_events_order_with_log,
     pair_collision_events_strict_with_log,
@@ -181,6 +182,34 @@ class TestCausalPairing(unittest.TestCase):
         )
         self.assertEqual(len(merged), 2)
         self.assertEqual(merged[0]["frame"], 14)
+
+    def test_split_events_by_evidence_gaps_emits_multiple_episodes(self) -> None:
+        split = split_events_by_evidence_gaps(
+            [
+                _ev(20, "unknown")
+                | {"evidence_frame_indices": [10, 12, 14, 40, 42, 44], "confidence": 0.8}
+            ],
+            frame_gap=10,
+            min_cluster_size=2,
+        )
+        self.assertEqual(len(split), 2)
+        self.assertEqual([event["frame"] for event in split], [12, 42])
+        self.assertEqual(
+            [event["evidence_frame_indices"] for event in split],
+            [[10, 12, 14], [40, 42, 44]],
+        )
+
+    def test_split_events_by_evidence_gaps_drops_tiny_clusters(self) -> None:
+        split = split_events_by_evidence_gaps(
+            [
+                _ev(20, "unknown")
+                | {"evidence_frame_indices": [10, 12, 14, 40], "confidence": 0.8}
+            ],
+            frame_gap=10,
+            min_cluster_size=2,
+        )
+        self.assertEqual(len(split), 1)
+        self.assertEqual(split[0]["evidence_frame_indices"], [10, 12, 14])
 
     def test_infer_scene_key_from_paths(self) -> None:
         key = infer_scene_key(

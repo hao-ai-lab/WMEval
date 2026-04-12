@@ -473,6 +473,78 @@ def merge_nearby_events(
     return merged
 
 
+def split_events_by_evidence_gaps(
+    events: Sequence[Dict[str, Any]],
+    *,
+    frame_gap: int,
+    min_cluster_size: int = 2,
+) -> List[Dict[str, Any]]:
+    if not events:
+        return []
+
+    split_events: List[Dict[str, Any]] = []
+    for raw_event in sorted(events, key=lambda e: int(e.get("frame", 0))):
+        event = dict(raw_event)
+        evidence_raw = event.get("evidence_frame_indices")
+        if not isinstance(evidence_raw, list):
+            split_events.append(event)
+            continue
+        evidence = sorted(
+            {
+                int(value)
+                for value in evidence_raw
+                if isinstance(value, (int, np.integer))
+            }
+        )
+        if len(evidence) < max(2, int(min_cluster_size)):
+            event["evidence_frame_indices"] = evidence
+            split_events.append(event)
+            continue
+
+        clusters: List[List[int]] = [[evidence[0]]]
+        for idx in evidence[1:]:
+            if idx - clusters[-1][-1] > int(frame_gap):
+                clusters.append([idx])
+            else:
+                clusters[-1].append(idx)
+
+        if len(clusters) == 1:
+            event["evidence_frame_indices"] = evidence
+            split_events.append(event)
+            continue
+
+        source_summary = str(event.get("evidence_summary", "")).strip()
+        try:
+            base_confidence = float(event.get("confidence", 0.0) or 0.0)
+        except (TypeError, ValueError):
+            base_confidence = 0.0
+
+        emitted = False
+        for cluster_index, cluster in enumerate(clusters):
+            if len(cluster) < int(min_cluster_size):
+                continue
+            split_event = dict(event)
+            split_event["evidence_frame_indices"] = cluster
+            anchor = int(event.get("frame", cluster[len(cluster) // 2]))
+            if anchor not in cluster:
+                anchor = cluster[len(cluster) // 2]
+            split_event["frame"] = anchor
+            split_event["confidence"] = base_confidence
+            if source_summary:
+                split_event["evidence_summary"] = (
+                    f"{source_summary} Split episode {cluster_index + 1}/{len(clusters)} "
+                    f"from frames {cluster[0]}-{cluster[-1]}."
+                )
+            split_events.append(split_event)
+            emitted = True
+
+        if not emitted:
+            event["evidence_frame_indices"] = evidence
+            split_events.append(event)
+
+    return split_events
+
+
 def build_refine_window_indices(
     *,
     coarse_events: List[Dict[str, Any]],
@@ -998,6 +1070,12 @@ def run_vlm_judge_on_video(
             per_window_frames = int(
                 artifacts.get("lpips_vlm_window_max_frames", min(coarse_grid_frames, 24))
             )
+            split_gap_frames = int(
+                artifacts.get("lpips_vlm_event_split_gap_frames", max(8, int(round(meta.fps * 0.5))))
+            )
+            split_min_cluster_size = int(
+                artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
+            )
             coarse_groups = build_windowed_keyframe_groups(
                 frame_count=meta.frame_count,
                 fps=meta.fps,
@@ -1041,6 +1119,11 @@ def run_vlm_judge_on_video(
                 coarse_events,
                 frame_gap=merge_gap_frames,
             )
+            coarse_events = split_events_by_evidence_gaps(
+                coarse_events,
+                frame_gap=split_gap_frames,
+                min_cluster_size=split_min_cluster_size,
+            )
             coarse_payload = {
                 "events": coarse_events,
                 "reasoning_steps": [],
@@ -1049,6 +1132,8 @@ def run_vlm_judge_on_video(
                     "overlap_sec": overlap_sec,
                     "per_window_frames": per_window_frames,
                     "merge_gap_frames": merge_gap_frames,
+                    "split_gap_frames": split_gap_frames,
+                    "split_min_cluster_size": split_min_cluster_size,
                     "windows": windowed_logs,
                 },
             }
@@ -1119,6 +1204,18 @@ def run_vlm_judge_on_video(
                 )
                 fine_events_clean = filter_events_by_contact_types(
                     fine_events_clean, contact_types
+                )
+                fine_events_clean = split_events_by_evidence_gaps(
+                    fine_events_clean,
+                    frame_gap=int(
+                        artifacts.get(
+                            "lpips_vlm_event_split_gap_frames",
+                            max(8, int(round(meta.fps * 0.5))),
+                        )
+                    ),
+                    min_cluster_size=int(
+                        artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
+                    ),
                 )
                 relabeled_events, relabel_logs = relabel_event_sides_on_video(
                     video_path,

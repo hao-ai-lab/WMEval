@@ -141,6 +141,18 @@ def main() -> None:
         help="Frame gap used to merge nearby events after windowed detection",
     )
     ap.add_argument(
+        "--lpips_vlm_event_split_gap_frames",
+        type=int,
+        default=12,
+        help="Split an event into multiple episodes when its evidence frames contain larger temporal gaps",
+    )
+    ap.add_argument(
+        "--lpips_vlm_event_split_min_cluster_size",
+        type=int,
+        default=2,
+        help="Minimum evidence frames required for a split sub-episode to be kept",
+    )
+    ap.add_argument(
         "--lpips_vlm_refine_window_sec",
         type=float,
         default=1.0,
@@ -374,6 +386,8 @@ def main() -> None:
         lpips_vlm_window_overlap_sec=args.lpips_vlm_window_overlap_sec,
         lpips_vlm_window_max_frames=args.lpips_vlm_window_max_frames,
         lpips_vlm_window_merge_gap_frames=args.lpips_vlm_window_merge_gap_frames,
+        lpips_vlm_event_split_gap_frames=args.lpips_vlm_event_split_gap_frames,
+        lpips_vlm_event_split_min_cluster_size=args.lpips_vlm_event_split_min_cluster_size,
         lpips_vlm_refine_window_sec=args.lpips_vlm_refine_window_sec,
         lpips_vlm_refine_max_frames_per_window=args.lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,
