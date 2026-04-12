@@ -84,7 +84,7 @@ def main() -> None:
     )
     ap.add_argument(
         "--lpips_vlm_sampling_strategy",
-        choices=["single_grid", "coarse_to_fine"],
+        choices=["single_grid", "coarse_to_fine", "windowed_coarse_to_fine"],
         default="single_grid",
         help="Judge-frame selection strategy for causal_vlm_collision",
     )
@@ -115,6 +115,30 @@ def main() -> None:
         type=int,
         default=12,
         help="Maximum frames sampled for the local side relabel pass per detected event",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_sec",
+        type=float,
+        default=2.5,
+        help="Window length in seconds for windowed_coarse_to_fine detection",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_overlap_sec",
+        type=float,
+        default=1.25,
+        help="Window overlap in seconds for windowed_coarse_to_fine detection",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_max_frames",
+        type=int,
+        default=24,
+        help="Maximum sampled frames per detection window in windowed_coarse_to_fine mode",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_merge_gap_frames",
+        type=int,
+        default=18,
+        help="Frame gap used to merge nearby events after windowed detection",
     )
     ap.add_argument(
         "--lpips_vlm_refine_window_sec",
@@ -346,6 +370,10 @@ def main() -> None:
         lpips_vlm_side_model=args.lpips_vlm_side_model,
         lpips_vlm_side_window_sec=args.lpips_vlm_side_window_sec,
         lpips_vlm_side_max_frames=args.lpips_vlm_side_max_frames,
+        lpips_vlm_window_sec=args.lpips_vlm_window_sec,
+        lpips_vlm_window_overlap_sec=args.lpips_vlm_window_overlap_sec,
+        lpips_vlm_window_max_frames=args.lpips_vlm_window_max_frames,
+        lpips_vlm_window_merge_gap_frames=args.lpips_vlm_window_merge_gap_frames,
         lpips_vlm_refine_window_sec=args.lpips_vlm_refine_window_sec,
         lpips_vlm_refine_max_frames_per_window=args.lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,

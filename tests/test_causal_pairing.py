@@ -5,11 +5,13 @@ from __future__ import annotations
 import unittest
 
 from evaluation.modules.lpips_causal_vlm import (
+    build_windowed_keyframe_groups,
     build_detection_user_prompt,
     build_judge_user_prompt,
     build_side_relabel_user_prompt,
     compute_first_divergence,
     filter_events_by_contact_types,
+    merge_nearby_events,
     pair_collision_events_monotonic_with_log,
     pair_collision_events_order_with_log,
     pair_collision_events_strict_with_log,
@@ -156,6 +158,29 @@ class TestCausalPairing(unittest.TestCase):
         self.assertIn('"front"', text)
         self.assertIn('"back"', text)
         self.assertIn("Event anchor frame: 10", text)
+
+    def test_build_windowed_keyframe_groups_overlaps(self) -> None:
+        groups = build_windowed_keyframe_groups(
+            frame_count=100,
+            fps=10.0,
+            window_sec=2.0,
+            overlap_sec=1.0,
+            max_frames_per_window=5,
+        )
+        self.assertGreaterEqual(len(groups), 2)
+        self.assertLess(groups[1][0], groups[0][-1])
+
+    def test_merge_nearby_events_keeps_higher_confidence(self) -> None:
+        merged = merge_nearby_events(
+            [
+                _ev(10, "unknown") | {"confidence": 0.2},
+                _ev(14, "unknown") | {"confidence": 0.9},
+                _ev(40, "unknown") | {"confidence": 0.5},
+            ],
+            frame_gap=6,
+        )
+        self.assertEqual(len(merged), 2)
+        self.assertEqual(merged[0]["frame"], 14)
 
     def test_infer_scene_key_from_paths(self) -> None:
         key = infer_scene_key(

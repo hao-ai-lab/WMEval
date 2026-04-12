@@ -409,9 +409,68 @@ def sanitize_relabel_payload(
 
 def resolve_vlm_sampling_strategy(artifacts: Mapping[str, Any]) -> str:
     raw = str(artifacts.get("lpips_vlm_sampling_strategy", "single_grid")).strip().lower()
-    if raw in {"single_grid", "coarse_to_fine"}:
+    if raw in {"single_grid", "coarse_to_fine", "windowed_coarse_to_fine"}:
         return raw
     return "single_grid"
+
+
+def build_windowed_keyframe_groups(
+    *,
+    frame_count: int,
+    fps: float,
+    window_sec: float,
+    overlap_sec: float,
+    max_frames_per_window: int,
+) -> List[List[int]]:
+    if frame_count <= 0 or fps <= 0:
+        return []
+    window_frames = max(2, int(round(window_sec * fps)))
+    overlap_frames = max(0, int(round(overlap_sec * fps)))
+    step_frames = max(1, window_frames - overlap_frames)
+    groups: List[List[int]] = []
+    start = 0
+    while start < frame_count:
+        end = min(frame_count - 1, start + window_frames - 1)
+        span = end - start + 1
+        sample_count = min(max(2, max_frames_per_window), span)
+        raw = np.linspace(start, end, num=sample_count)
+        group = sorted(set(min(max(int(round(float(x))), 0), frame_count - 1) for x in raw))
+        if group:
+            groups.append(group)
+        if end >= frame_count - 1:
+            break
+        start += step_frames
+    return groups
+
+
+def merge_nearby_events(
+    events: Sequence[Dict[str, Any]],
+    *,
+    frame_gap: int,
+) -> List[Dict[str, Any]]:
+    if not events:
+        return []
+    ordered = sorted((dict(e) for e in events), key=lambda e: int(e.get("frame", 0)))
+    merged: List[Dict[str, Any]] = [ordered[0]]
+    for event in ordered[1:]:
+        prev = merged[-1]
+        if int(event.get("frame", 0)) - int(prev.get("frame", 0)) > int(frame_gap):
+            merged.append(event)
+            continue
+        prev_conf = float(prev.get("confidence", 0.0) or 0.0)
+        new_conf = float(event.get("confidence", 0.0) or 0.0)
+        chosen = prev
+        if new_conf > prev_conf:
+            chosen = event
+        evidence = set(int(x) for x in prev.get("evidence_frame_indices", []) if isinstance(x, int))
+        evidence.update(
+            int(x)
+            for x in event.get("evidence_frame_indices", [])
+            if isinstance(x, int)
+        )
+        chosen["evidence_frame_indices"] = sorted(evidence)
+        merged[-1] = chosen
+    return merged
 
 
 def build_refine_window_indices(
@@ -922,30 +981,95 @@ def run_vlm_judge_on_video(
     coarse_model = str(artifacts.get("lpips_vlm_coarse_model", model)).strip() or model
     side_relabel_enabled = bool(artifacts.get("lpips_vlm_side_relabel", True))
     side_model = str(artifacts.get("lpips_vlm_side_model", model)).strip() or model
-    if strategy == "coarse_to_fine":
+    if strategy in {"coarse_to_fine", "windowed_coarse_to_fine"}:
         meta = get_video_metadata(video_path)
         if meta.frame_count <= 0:
             raise RuntimeError(f"Video has no frames: {video_path}")
         coarse_grid_frames = int(
-            artifacts.get("lpips_vlm_coarse_grid_frames", min(max_grid_frames, 64) if max_grid_frames > 0 else 64)
+            artifacts.get(
+                "lpips_vlm_coarse_grid_frames",
+                min(max_grid_frames, 64) if max_grid_frames > 0 else 64,
+            )
         )
-        coarse_indices = build_vlm_keyframe_indices(meta.frame_count, coarse_grid_frames)
-        coarse_payload, coarse_indices, _ = run_vlm_judge_on_indices(
-            video_path,
-            coarse_indices,
-            coarse_model,
-            artifacts,
-            phase="coarse",
-            prompt_mode="detection_only",
-        )
-        coarse_events_raw = coarse_payload.get("events")
-        if not isinstance(coarse_events_raw, list):
-            coarse_events_raw = []
-        coarse_events, coarse_dropped = sanitize_events_to_grid(
-            [e for e in coarse_events_raw if isinstance(e, dict)],
-            set(coarse_indices),
-        )
-        coarse_events = filter_events_by_contact_types(coarse_events, contact_types)
+        windowed_logs: List[Dict[str, Any]] = []
+        if strategy == "windowed_coarse_to_fine":
+            window_sec = float(artifacts.get("lpips_vlm_window_sec", 2.5))
+            overlap_sec = float(artifacts.get("lpips_vlm_window_overlap_sec", 1.25))
+            per_window_frames = int(
+                artifacts.get("lpips_vlm_window_max_frames", min(coarse_grid_frames, 24))
+            )
+            coarse_groups = build_windowed_keyframe_groups(
+                frame_count=meta.frame_count,
+                fps=meta.fps,
+                window_sec=window_sec,
+                overlap_sec=overlap_sec,
+                max_frames_per_window=per_window_frames,
+            )
+            coarse_indices = sorted({idx for group in coarse_groups for idx in group})
+            coarse_events: List[Dict[str, Any]] = []
+            coarse_dropped: List[Dict[str, Any]] = []
+            for window_index, group in enumerate(coarse_groups):
+                payload, _, _ = run_vlm_judge_on_indices(
+                    video_path,
+                    group,
+                    coarse_model,
+                    artifacts,
+                    phase=f"coarse_window_{window_index}",
+                    prompt_mode="detection_only",
+                )
+                raw_events = payload.get("events")
+                if not isinstance(raw_events, list):
+                    raw_events = []
+                clean_events, clean_dropped = sanitize_events_to_grid(
+                    [e for e in raw_events if isinstance(e, dict)],
+                    set(group),
+                )
+                clean_events = filter_events_by_contact_types(clean_events, contact_types)
+                coarse_events.extend(clean_events)
+                coarse_dropped.extend(clean_dropped)
+                windowed_logs.append(
+                    {
+                        "window_index": window_index,
+                        "indices": group,
+                        "num_events": len(clean_events),
+                    }
+                )
+            merge_gap_frames = int(
+                artifacts.get("lpips_vlm_window_merge_gap_frames", max(6, int(round(meta.fps * 0.6))))
+            )
+            coarse_events = merge_nearby_events(
+                coarse_events,
+                frame_gap=merge_gap_frames,
+            )
+            coarse_payload = {
+                "events": coarse_events,
+                "reasoning_steps": [],
+                "windowed_detection": {
+                    "window_sec": window_sec,
+                    "overlap_sec": overlap_sec,
+                    "per_window_frames": per_window_frames,
+                    "merge_gap_frames": merge_gap_frames,
+                    "windows": windowed_logs,
+                },
+            }
+        else:
+            coarse_indices = build_vlm_keyframe_indices(meta.frame_count, coarse_grid_frames)
+            coarse_payload, coarse_indices, _ = run_vlm_judge_on_indices(
+                video_path,
+                coarse_indices,
+                coarse_model,
+                artifacts,
+                phase="coarse",
+                prompt_mode="detection_only",
+            )
+            coarse_events_raw = coarse_payload.get("events")
+            if not isinstance(coarse_events_raw, list):
+                coarse_events_raw = []
+            coarse_events, coarse_dropped = sanitize_events_to_grid(
+                [e for e in coarse_events_raw if isinstance(e, dict)],
+                set(coarse_indices),
+            )
+            coarse_events = filter_events_by_contact_types(coarse_events, contact_types)
         window_sec = float(artifacts.get("lpips_vlm_refine_window_sec", 1.0))
         max_frames_per_window = int(artifacts.get("lpips_vlm_refine_max_frames_per_window", 24))
         refine_indices = build_refine_window_indices(
@@ -962,6 +1086,7 @@ def run_vlm_judge_on_video(
                 "coarse_grid_indices": coarse_indices,
                 "coarse_events": coarse_events,
                 "coarse_dropped_events": coarse_dropped,
+                "windowed_detection": coarse_payload.get("windowed_detection"),
                 "refine_indices": [],
                 "used_fine_pass": False,
             }
@@ -1015,6 +1140,7 @@ def run_vlm_judge_on_video(
             "coarse_grid_indices": coarse_indices,
             "coarse_events": coarse_events,
             "coarse_dropped_events": coarse_dropped,
+            "windowed_detection": coarse_payload.get("windowed_detection"),
             "refine_indices": fine_indices,
             "used_fine_pass": True,
         }
