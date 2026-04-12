@@ -72,10 +72,39 @@ def main() -> None:
     )
     ap.add_argument("--lpips_vlm_model", default="gpt-4o", help="OpenAI vision model for causal_vlm_collision")
     ap.add_argument(
+        "--lpips_vlm_coarse_model",
+        default=None,
+        help="Optional model override for the coarse pass when using coarse_to_fine",
+    )
+    ap.add_argument(
         "--lpips_vlm_max_grid_frames",
         type=int,
         default=48,
         help="Max keyframes sent to the VLM per video in causal_vlm_collision (~40–56 typical)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_sampling_strategy",
+        choices=["single_grid", "coarse_to_fine"],
+        default="single_grid",
+        help="Judge-frame selection strategy for causal_vlm_collision",
+    )
+    ap.add_argument(
+        "--lpips_vlm_coarse_grid_frames",
+        type=int,
+        default=24,
+        help="Coarse pass frame cap when --lpips_vlm_sampling_strategy coarse_to_fine is used",
+    )
+    ap.add_argument(
+        "--lpips_vlm_refine_window_sec",
+        type=float,
+        default=1.0,
+        help="Seconds of context added around coarse event evidence for the fine pass",
+    )
+    ap.add_argument(
+        "--lpips_vlm_refine_max_frames_per_window",
+        type=int,
+        default=24,
+        help="Maximum sampled frames per refined event window",
     )
     ap.add_argument(
         "--lpips_vlm_prompt_version",
@@ -108,6 +137,11 @@ def main() -> None:
             "Optional short hint appended to the reference VLM judge prompt (ignored if "
             "empty). Hints are soft: model may disregard if frames disagree."
         ),
+    )
+    ap.add_argument(
+        "--lpips_vlm_scene_key",
+        default=None,
+        help="Optional scene registry key for judge instructions; inferred from video paths when omitted",
     )
     ap.add_argument(
         "--lpips_causal_event_source",
@@ -275,11 +309,17 @@ def main() -> None:
         lpips_event_frames_after=args.lpips_event_frames_after,
         lpips_event_offsets=event_offsets,
         lpips_vlm_model=args.lpips_vlm_model,
+        lpips_vlm_coarse_model=args.lpips_vlm_coarse_model,
         lpips_vlm_max_grid_frames=args.lpips_vlm_max_grid_frames,
+        lpips_vlm_sampling_strategy=args.lpips_vlm_sampling_strategy,
+        lpips_vlm_coarse_grid_frames=args.lpips_vlm_coarse_grid_frames,
+        lpips_vlm_refine_window_sec=args.lpips_vlm_refine_window_sec,
+        lpips_vlm_refine_max_frames_per_window=args.lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,
         lpips_vlm_max_reference_events=args.lpips_vlm_max_reference_events,
         lpips_vlm_reference_trim_sec=args.lpips_vlm_reference_trim_sec,
         lpips_vlm_judge_hint=args.lpips_vlm_judge_hint,
+        lpips_vlm_scene_key=args.lpips_vlm_scene_key,
         lpips_causal_event_source=args.lpips_causal_event_source,
         lpips_causal_lpips_pairing=(
             None

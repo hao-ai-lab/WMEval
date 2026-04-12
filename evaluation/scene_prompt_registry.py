@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Optional
+
+
+SCENE_HINT_REGISTRY: dict[str, str] = {
+    "sample_scene": (
+        "This scene's canonical first event is the earliest meaningful collision in the rollout, "
+        "not merely the clearest late-frame contact. "
+        "Prefer the earliest supported collision episode. "
+        "When depth ambiguity exists, use side='front' for a collision that is primarily along the "
+        "camera-depth/forward direction rather than a lateral screen-left or screen-right touch. "
+        "Do not skip an earlier front/depth collision just because a later side collision is more visually obvious."
+    ),
+}
+
+
+def infer_scene_key(reference_video: str, candidate_video: str) -> Optional[str]:
+    parts: list[str] = []
+    for raw in (reference_video, candidate_video):
+        p = Path(raw)
+        parts.extend(segment.lower() for segment in p.parts if segment)
+        parts.append(p.stem.lower())
+
+    for key in SCENE_HINT_REGISTRY:
+        if key.lower() in parts:
+            return key
+    return None
+
+
+def resolve_scene_hints(
+    *,
+    scene_key: Optional[str],
+    reference_video: str,
+    candidate_video: str,
+    explicit_hints: Optional[str],
+) -> tuple[Optional[str], Optional[str]]:
+    explicit = explicit_hints.strip() if isinstance(explicit_hints, str) else None
+    resolved_key = scene_key.strip().lower() if isinstance(scene_key, str) and scene_key.strip() else None
+    if resolved_key is None:
+        resolved_key = infer_scene_key(reference_video, candidate_video)
+
+    registry_hints = SCENE_HINT_REGISTRY.get(resolved_key) if resolved_key else None
+    if explicit and registry_hints:
+        return resolved_key, registry_hints + "\n" + explicit
+    if explicit:
+        return resolved_key, explicit
+    if registry_hints:
+        return resolved_key, registry_hints
+    return resolved_key, None

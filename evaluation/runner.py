@@ -4,6 +4,7 @@ from typing import Any, Dict, Iterable, Optional, Sequence
 
 from .context import EvaluationContext
 from .registry import normalize_modules, run_modules
+from .scene_prompt_registry import resolve_scene_hints
 from .video_io import build_evaluation_context
 
 
@@ -17,11 +18,17 @@ def _merge_lpips_artifacts(
     lpips_event_frames_after: int,
     lpips_event_offsets: Optional[Sequence[int]],
     lpips_vlm_model: str,
+    lpips_vlm_coarse_model: Optional[str],
     lpips_vlm_max_grid_frames: int,
+    lpips_vlm_sampling_strategy: str,
+    lpips_vlm_coarse_grid_frames: int,
+    lpips_vlm_refine_window_sec: float,
+    lpips_vlm_refine_max_frames_per_window: int,
     lpips_vlm_prompt_version: str,
     lpips_vlm_max_reference_events: Optional[int],
     lpips_vlm_reference_trim_sec: Optional[float],
     lpips_vlm_judge_hint: str,
+    lpips_vlm_scene_key: Optional[str],
     lpips_causal_event_source: str,
     lpips_causal_lpips_pairing: Optional[str],
     save_inspection_artifacts: bool,
@@ -39,7 +46,15 @@ def _merge_lpips_artifacts(
     if lpips_event_offsets is not None:
         context.artifacts["lpips_event_offsets"] = list(lpips_event_offsets)
     context.artifacts["lpips_vlm_model"] = lpips_vlm_model
+    if lpips_vlm_coarse_model is not None and str(lpips_vlm_coarse_model).strip():
+        context.artifacts["lpips_vlm_coarse_model"] = str(lpips_vlm_coarse_model).strip()
     context.artifacts["lpips_vlm_max_grid_frames"] = int(lpips_vlm_max_grid_frames)
+    context.artifacts["lpips_vlm_sampling_strategy"] = lpips_vlm_sampling_strategy
+    context.artifacts["lpips_vlm_coarse_grid_frames"] = int(lpips_vlm_coarse_grid_frames)
+    context.artifacts["lpips_vlm_refine_window_sec"] = float(lpips_vlm_refine_window_sec)
+    context.artifacts["lpips_vlm_refine_max_frames_per_window"] = int(
+        lpips_vlm_refine_max_frames_per_window
+    )
     context.artifacts["lpips_vlm_prompt_version"] = lpips_vlm_prompt_version
     if lpips_vlm_max_reference_events is not None:
         context.artifacts["lpips_vlm_max_reference_events"] = int(
@@ -52,6 +67,8 @@ def _merge_lpips_artifacts(
     hint = (lpips_vlm_judge_hint or "").strip()
     if hint:
         context.artifacts["lpips_vlm_judge_hint"] = hint
+    if lpips_vlm_scene_key is not None and str(lpips_vlm_scene_key).strip():
+        context.artifacts["lpips_vlm_scene_key"] = str(lpips_vlm_scene_key).strip().lower()
     context.artifacts["lpips_causal_event_source"] = lpips_causal_event_source.strip().lower()
     if lpips_causal_lpips_pairing is not None:
         raw = str(lpips_causal_lpips_pairing).strip().lower()
@@ -89,11 +106,17 @@ def run_world_model_evaluation(
     lpips_event_frames_after: int = 2,
     lpips_event_offsets: Optional[Sequence[int]] = None,
     lpips_vlm_model: str = "gpt-4o",
+    lpips_vlm_coarse_model: Optional[str] = None,
     lpips_vlm_max_grid_frames: int = 48,
+    lpips_vlm_sampling_strategy: str = "single_grid",
+    lpips_vlm_coarse_grid_frames: int = 24,
+    lpips_vlm_refine_window_sec: float = 1.0,
+    lpips_vlm_refine_max_frames_per_window: int = 24,
     lpips_vlm_prompt_version: str = "causal_collision_v2",
     lpips_vlm_max_reference_events: Optional[int] = None,
     lpips_vlm_reference_trim_sec: Optional[float] = None,
     lpips_vlm_judge_hint: str = "",
+    lpips_vlm_scene_key: Optional[str] = None,
     lpips_causal_event_source: str = "both",
     lpips_causal_lpips_pairing: Optional[str] = None,
     save_inspection_artifacts: bool = False,
@@ -161,11 +184,17 @@ def run_world_model_evaluation(
                 lpips_event_frames_after=lpips_event_frames_after,
                 lpips_event_offsets=lpips_event_offsets,
                 lpips_vlm_model=lpips_vlm_model,
+                lpips_vlm_coarse_model=lpips_vlm_coarse_model,
                 lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
+                lpips_vlm_sampling_strategy=lpips_vlm_sampling_strategy,
+                lpips_vlm_coarse_grid_frames=lpips_vlm_coarse_grid_frames,
+                lpips_vlm_refine_window_sec=lpips_vlm_refine_window_sec,
+                lpips_vlm_refine_max_frames_per_window=lpips_vlm_refine_max_frames_per_window,
                 lpips_vlm_prompt_version=lpips_vlm_prompt_version,
                 lpips_vlm_max_reference_events=lpips_vlm_max_reference_events,
                 lpips_vlm_reference_trim_sec=lpips_vlm_reference_trim_sec,
                 lpips_vlm_judge_hint=lpips_vlm_judge_hint,
+                lpips_vlm_scene_key=lpips_vlm_scene_key,
                 lpips_causal_event_source=lpips_causal_event_source,
                 lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
                 save_inspection_artifacts=save_inspection_artifacts,
@@ -218,11 +247,17 @@ def run_world_model_evaluation(
         lpips_event_frames_after=lpips_event_frames_after,
         lpips_event_offsets=lpips_event_offsets,
         lpips_vlm_model=lpips_vlm_model,
+        lpips_vlm_coarse_model=lpips_vlm_coarse_model,
         lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
+        lpips_vlm_sampling_strategy=lpips_vlm_sampling_strategy,
+        lpips_vlm_coarse_grid_frames=lpips_vlm_coarse_grid_frames,
+        lpips_vlm_refine_window_sec=lpips_vlm_refine_window_sec,
+        lpips_vlm_refine_max_frames_per_window=lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=lpips_vlm_prompt_version,
         lpips_vlm_max_reference_events=lpips_vlm_max_reference_events,
         lpips_vlm_reference_trim_sec=lpips_vlm_reference_trim_sec,
         lpips_vlm_judge_hint=lpips_vlm_judge_hint,
+        lpips_vlm_scene_key=lpips_vlm_scene_key,
         lpips_causal_event_source=lpips_causal_event_source,
         lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
         save_inspection_artifacts=save_inspection_artifacts,
@@ -271,8 +306,17 @@ def run_world_model_evaluation(
             "inspection_sample_id": inspection_sample_id,
         }
     )
+    resolved_scene_key, resolved_scene_hints = resolve_scene_hints(
+        scene_key=lpips_vlm_scene_key,
+        reference_video=context.reference_video,
+        candidate_video=context.candidate_video,
+        explicit_hints=lpips_vlm_scene_hints,
+    )
+    if resolved_scene_key is not None:
+        context.artifacts["lpips_vlm_scene_key"] = resolved_scene_key
+
     for _k, _v in (
-        ("lpips_vlm_scene_hints", lpips_vlm_scene_hints),
+        ("lpips_vlm_scene_hints", resolved_scene_hints),
         ("lpips_vlm_contact_types", lpips_vlm_contact_types),
         ("lpips_vlm_directional_sides", lpips_vlm_directional_sides),
         ("lpips_vlm_system_prompt", lpips_vlm_system_prompt),

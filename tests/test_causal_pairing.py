@@ -11,6 +11,7 @@ from evaluation.modules.lpips_causal_vlm import (
     pair_collision_events_order_with_log,
     pair_collision_events_strict_with_log,
 )
+from evaluation.scene_prompt_registry import infer_scene_key, resolve_scene_hints
 
 
 def _ev(frame: int, side: str) -> dict:
@@ -100,6 +101,25 @@ class TestCausalPairing(unittest.TestCase):
         self.assertIn("Scene-specific instructions", text)
         self.assertIn("rolling sphere", text)
         self.assertIn("0, 5, 10", text)
+
+    def test_infer_scene_key_from_paths(self) -> None:
+        key = infer_scene_key(
+            "/tmp/out/unity_runs/sample_scene/unity_rollout.mp4",
+            "/tmp/out/genie_runs/sample_scene/run_02/sample_scene_genie_rollout.mp4",
+        )
+        self.assertEqual(key, "sample_scene")
+
+    def test_resolve_scene_hints_uses_registry(self) -> None:
+        key, hints = resolve_scene_hints(
+            scene_key=None,
+            reference_video="/tmp/out/unity_runs/sample_scene/unity_rollout.mp4",
+            candidate_video="/tmp/out/genie_runs/sample_scene/run_02/sample_scene_genie_rollout.mp4",
+            explicit_hints=None,
+        )
+        self.assertEqual(key, "sample_scene")
+        self.assertIsNotNone(hints)
+        assert hints is not None
+        self.assertIn("canonical first event", hints)
 
 
 if __name__ == "__main__":

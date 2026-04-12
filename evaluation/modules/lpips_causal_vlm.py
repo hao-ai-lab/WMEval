@@ -4,6 +4,8 @@ import base64
 import json
 import os
 import re
+from datetime import datetime, timezone
+from time import perf_counter
 from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
 import cv2
@@ -59,6 +61,17 @@ For EACH event object include:
 Output JSON shape:
 {{"reasoning_steps": ["..."], "events": [...]}}
 """
+
+
+def _log_causal(stage: str, **fields: Any) -> None:
+    payload = {
+        "component": "causal_vlm",
+        "stage": stage,
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "pid": os.getpid(),
+        **fields,
+    }
+    print(json.dumps(payload, sort_keys=True), flush=True)
 
 
 def resolve_directional_sides(artifacts: Mapping[str, Any]) -> FrozenSet[str]:
@@ -266,6 +279,45 @@ def sanitize_events_to_grid(
         e["frame"] = frame
         kept.append(e)
     return kept, dropped
+
+
+def resolve_vlm_sampling_strategy(artifacts: Mapping[str, Any]) -> str:
+    raw = str(artifacts.get("lpips_vlm_sampling_strategy", "single_grid")).strip().lower()
+    if raw in {"single_grid", "coarse_to_fine"}:
+        return raw
+    return "single_grid"
+
+
+def build_refine_window_indices(
+    *,
+    coarse_events: List[Dict[str, Any]],
+    frame_count: int,
+    fps: float,
+    window_sec: float,
+    max_frames_per_window: int,
+) -> List[int]:
+    if frame_count <= 0 or fps <= 0 or not coarse_events:
+        return []
+
+    radius_frames = max(1, int(round(float(window_sec) * float(fps))))
+    indices: set[int] = set()
+    for event in coarse_events:
+        anchors = [int(event.get("frame", 0))]
+        evidence = event.get("evidence_frame_indices")
+        if isinstance(evidence, list):
+            for value in evidence:
+                try:
+                    anchors.append(int(value))
+                except (TypeError, ValueError):
+                    continue
+        lo = max(0, min(anchors) - radius_frames)
+        hi = min(frame_count - 1, max(anchors) + radius_frames)
+        span = hi - lo + 1
+        sample_count = min(max(1, int(max_frames_per_window)), span)
+        raw = np.linspace(lo, hi, num=sample_count)
+        for x in raw:
+            indices.add(min(max(int(round(float(x))), 0), frame_count - 1))
+    return sorted(indices)
 
 
 def _event_compact(ev: Dict[str, Any]) -> Dict[str, Any]:
@@ -603,13 +655,130 @@ def run_vlm_judge_on_video(
     model: str,
     artifacts: Mapping[str, Any],
 ) -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
+    strategy = resolve_vlm_sampling_strategy(artifacts)
+    contact_types = resolve_contact_types(artifacts)
+    coarse_model = str(artifacts.get("lpips_vlm_coarse_model", model)).strip() or model
+    if strategy == "coarse_to_fine":
+        meta = get_video_metadata(video_path)
+        if meta.frame_count <= 0:
+            raise RuntimeError(f"Video has no frames: {video_path}")
+        coarse_grid_frames = int(
+            artifacts.get("lpips_vlm_coarse_grid_frames", min(max_grid_frames, 24) if max_grid_frames > 0 else 24)
+        )
+        coarse_indices = build_vlm_keyframe_indices(meta.frame_count, coarse_grid_frames)
+        coarse_payload, coarse_indices, _ = run_vlm_judge_on_indices(
+            video_path,
+            coarse_indices,
+            coarse_model,
+            artifacts,
+            phase="coarse",
+        )
+        coarse_events_raw = coarse_payload.get("events")
+        if not isinstance(coarse_events_raw, list):
+            coarse_events_raw = []
+        coarse_events, coarse_dropped = sanitize_events_to_grid(
+            [e for e in coarse_events_raw if isinstance(e, dict)],
+            set(coarse_indices),
+        )
+        coarse_events = filter_events_by_contact_types(coarse_events, contact_types)
+        window_sec = float(artifacts.get("lpips_vlm_refine_window_sec", 1.0))
+        max_frames_per_window = int(artifacts.get("lpips_vlm_refine_max_frames_per_window", 24))
+        refine_indices = build_refine_window_indices(
+            coarse_events=coarse_events,
+            frame_count=meta.frame_count,
+            fps=meta.fps,
+            window_sec=window_sec,
+            max_frames_per_window=max_frames_per_window,
+        )
+        if not refine_indices:
+            coarse_payload["coarse_to_fine"] = {
+                "strategy": strategy,
+                "coarse_model": coarse_model,
+                "coarse_grid_indices": coarse_indices,
+                "coarse_events": coarse_events,
+                "coarse_dropped_events": coarse_dropped,
+                "refine_indices": [],
+                "used_fine_pass": False,
+            }
+            return coarse_payload, coarse_indices, []
+
+        _log_causal(
+            "coarse_to_fine_refine_plan",
+            video_path=video_path,
+            coarse_frames=len(coarse_indices),
+            coarse_events=len(coarse_events),
+            coarse_model=coarse_model,
+            fine_model=model,
+            refine_frames=len(refine_indices),
+            refine_window_sec=window_sec,
+        )
+        fine_payload, fine_indices, fine_frames = run_vlm_judge_on_indices(
+            video_path,
+            refine_indices,
+            model,
+            artifacts,
+            phase="fine",
+        )
+        fine_payload["coarse_to_fine"] = {
+            "strategy": strategy,
+            "coarse_model": coarse_model,
+            "fine_model": model,
+            "coarse_grid_indices": coarse_indices,
+            "coarse_events": coarse_events,
+            "coarse_dropped_events": coarse_dropped,
+            "refine_indices": fine_indices,
+            "used_fine_pass": True,
+        }
+        return fine_payload, fine_indices, fine_frames
+
+    indices = build_vlm_keyframe_indices(
+        get_video_metadata(video_path).frame_count,
+        max_grid_frames,
+    )
+    return run_vlm_judge_on_indices(
+        video_path,
+        indices,
+        model,
+        artifacts,
+        phase="single_grid",
+    )
+
+
+def run_vlm_judge_on_indices(
+    video_path: str,
+    indices: Sequence[int],
+    model: str,
+    artifacts: Mapping[str, Any],
+    *,
+    phase: str,
+) -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
+    _log_causal(
+        "judge_prepare_start",
+        video_path=video_path,
+        phase=phase,
+        requested_frames=len(indices),
+    )
+    prep_start = perf_counter()
     meta = get_video_metadata(video_path)
     if meta.frame_count <= 0:
         raise RuntimeError(f"Video has no frames: {video_path}")
-    indices = build_vlm_keyframe_indices(meta.frame_count, max_grid_frames)
+    _log_causal(
+        "judge_frame_load_start",
+        video_path=video_path,
+        phase=phase,
+        requested_keyframes=len(indices),
+        frame_count=meta.frame_count,
+    )
     frames = load_frames_by_indices(video_path, indices)
     if len(frames) != len(indices):
         indices = indices[: len(frames)]
+    _log_causal(
+        "judge_frame_load_done",
+        video_path=video_path,
+        phase=phase,
+        loaded_keyframes=len(frames),
+        elapsed_sec=round(perf_counter() - prep_start, 3),
+    )
     system_prompt = resolve_judge_system_prompt(artifacts)
     user_text = build_judge_user_prompt(indices, artifacts)
     raw_timeout = artifacts.get("lpips_vlm_timeout_sec")
@@ -618,12 +787,29 @@ def run_vlm_judge_on_video(
     else:
         n = len(frames)
         timeout_sec = max(120.0, min(3600.0, 5.0 * float(n) + 180.0))
+    _log_causal(
+        "judge_api_start",
+        video_path=video_path,
+        phase=phase,
+        model=model,
+        num_frames=len(frames),
+        timeout_sec=round(timeout_sec, 3),
+    )
+    judge_start = perf_counter()
     payload = call_openai_vision_judge(
         frames,
         model=model,
         system_prompt=system_prompt,
         user_text=user_text,
         timeout_sec=timeout_sec,
+    )
+    _log_causal(
+        "judge_api_done",
+        video_path=video_path,
+        phase=phase,
+        model=model,
+        num_frames=len(frames),
+        elapsed_sec=round(perf_counter() - judge_start, 3),
     )
     return payload, list(indices), frames
 
@@ -681,6 +867,13 @@ def analyze_causal_vlm_lpips(
     event_source = str(
         artifacts.get("lpips_causal_event_source", "both")
     ).strip().lower()
+    _log_causal(
+        "analysis_start",
+        model=model,
+        event_source=event_source,
+        max_grid=max_grid,
+        offsets=offsets,
+    )
     vgg16_weights_cached = os.path.exists(
         os.path.expanduser("~/.cache/torch/hub/checkpoints/vgg16-397923af.pth")
     )
@@ -699,7 +892,21 @@ def analyze_causal_vlm_lpips(
         }
     else:
         try:
-            temporal_baseline = analyze_lpips_from_context(context, device=str(device_obj))
+            temporal_context = EvaluationContext(
+                reference_video=context.reference_video,
+                candidate_video=context.candidate_video,
+                reference=context.reference,
+                candidate=context.candidate,
+                shared_duration_sec=context.shared_duration_sec,
+                eval_fps=context.eval_fps,
+                max_pairs=context.max_pairs,
+                alignment_mode=context.alignment_mode,
+                text_prompt=context.text_prompt,
+                artifacts={**(context.artifacts or {}), "lpips_sampling": "temporal"},
+            )
+            temporal_baseline = analyze_lpips_from_context(
+                temporal_context, device=str(device_obj)
+            )
         except Exception as exc:
             temporal_baseline = {
                 "module": "lpips",
@@ -727,6 +934,7 @@ def analyze_causal_vlm_lpips(
         return result
 
     try:
+        _log_causal("reference_judge_start", video_path=context.reference_video)
         ref_j_raw, ref_grid_idx, _ = run_vlm_judge_on_video(
             context.reference_video,
             max_grid,
@@ -742,6 +950,7 @@ def analyze_causal_vlm_lpips(
             }
             cand_grid_idx = []
         else:
+            _log_causal("candidate_judge_start", video_path=context.candidate_video)
             cand_j_raw, cand_grid_idx, _ = run_vlm_judge_on_video(
                 context.candidate_video,
                 max_grid,
@@ -758,6 +967,11 @@ def analyze_causal_vlm_lpips(
 
     allowed_ref = set(ref_grid_idx)
     allowed_cand = set(cand_grid_idx)
+    _log_causal(
+        "judge_outputs_ready",
+        ref_frames=len(ref_grid_idx),
+        cand_frames=len(cand_grid_idx),
+    )
 
     ref_events_raw = ref_j_raw.get("events")
     cand_events_raw = cand_j_raw.get("events")
@@ -839,12 +1053,14 @@ def analyze_causal_vlm_lpips(
                 "events": ref_events_f,
                 "grid_frame_indices": ref_grid_idx,
                 "dropped_events": ref_dropped,
+                "coarse_to_fine": ref_j_raw.get("coarse_to_fine"),
             },
             "judge_candidate": {
                 "reasoning_steps": cand_j_raw.get("reasoning_steps"),
                 "events": cand_events_f,
                 "grid_frame_indices": cand_grid_idx,
                 "dropped_events": cand_dropped,
+                "coarse_to_fine": cand_j_raw.get("coarse_to_fine"),
                 "skipped": bool(cand_j_raw.get("skipped")),
                 "skip_reason": cand_j_raw.get("skip_reason"),
             },

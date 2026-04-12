@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import json
+import os
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import cv2
 import numpy as np
 import torch
+from time import perf_counter
 
 from ..context import EvaluationContext
 from ..video_io import (
@@ -17,6 +21,17 @@ try:
     import lpips
 except ImportError:
     lpips = None
+
+
+def _log_lpips(stage: str, **fields: Any) -> None:
+    payload = {
+        "component": "lpips",
+        "stage": stage,
+        "ts": datetime.now(timezone.utc).isoformat(),
+        "pid": os.getpid(),
+        **fields,
+    }
+    print(json.dumps(payload, sort_keys=True), flush=True)
 
 
 def ensure_device(device: Optional[str] = None) -> torch.device:
@@ -76,9 +91,21 @@ def compute_lpips_scores(
     if num_pairs == 0:
         return []
 
+    _log_lpips(
+        "model_load_start",
+        device=str(device),
+        num_pairs=num_pairs,
+    )
+    model_load_start = perf_counter()
     loss_fn = lpips.LPIPS(net="vgg").to(device).eval()
+    _log_lpips(
+        "model_load_done",
+        device=str(device),
+        elapsed_sec=round(perf_counter() - model_load_start, 3),
+    )
     scores: List[float] = []
 
+    score_start = perf_counter()
     with torch.no_grad():
         for idx in range(num_pairs):
             reference_frame = reference_frames[idx]
@@ -90,6 +117,18 @@ def compute_lpips_scores(
             candidate_tensor = frame_bgr_to_lpips_tensor(candidate_frame, device)
             distance = loss_fn(reference_tensor, candidate_tensor)
             scores.append(float(distance.mean().item()))
+            if idx == 0 or idx == num_pairs - 1 or (idx + 1) % 8 == 0:
+                _log_lpips(
+                    "score_progress",
+                    completed_pairs=idx + 1,
+                    num_pairs=num_pairs,
+                )
+
+    _log_lpips(
+        "score_done",
+        elapsed_sec=round(perf_counter() - score_start, 3),
+        num_pairs=num_pairs,
+    )
 
     return scores
 
