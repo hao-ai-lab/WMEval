@@ -91,8 +91,30 @@ def main() -> None:
     ap.add_argument(
         "--lpips_vlm_coarse_grid_frames",
         type=int,
-        default=24,
+        default=64,
         help="Coarse pass frame cap when --lpips_vlm_sampling_strategy coarse_to_fine is used",
+    )
+    ap.add_argument(
+        "--lpips_vlm_disable_side_relabel",
+        action="store_true",
+        help="Disable the local second-pass side relabel step for detected contact episodes",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_model",
+        default=None,
+        help="Optional model override for the local side relabel pass",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_window_sec",
+        type=float,
+        default=0.75,
+        help="Seconds of local context on each side of a detected event for side relabeling",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_max_frames",
+        type=int,
+        default=12,
+        help="Maximum frames sampled for the local side relabel pass per detected event",
     )
     ap.add_argument(
         "--lpips_vlm_refine_window_sec",
@@ -320,6 +342,10 @@ def main() -> None:
         lpips_vlm_max_grid_frames=args.lpips_vlm_max_grid_frames,
         lpips_vlm_sampling_strategy=args.lpips_vlm_sampling_strategy,
         lpips_vlm_coarse_grid_frames=args.lpips_vlm_coarse_grid_frames,
+        lpips_vlm_side_relabel=not args.lpips_vlm_disable_side_relabel,
+        lpips_vlm_side_model=args.lpips_vlm_side_model,
+        lpips_vlm_side_window_sec=args.lpips_vlm_side_window_sec,
+        lpips_vlm_side_max_frames=args.lpips_vlm_side_max_frames,
         lpips_vlm_refine_window_sec=args.lpips_vlm_refine_window_sec,
         lpips_vlm_refine_max_frames_per_window=args.lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,

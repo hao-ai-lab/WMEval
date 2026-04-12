@@ -22,6 +22,10 @@ def _merge_lpips_artifacts(
     lpips_vlm_max_grid_frames: int,
     lpips_vlm_sampling_strategy: str,
     lpips_vlm_coarse_grid_frames: int,
+    lpips_vlm_side_relabel: bool,
+    lpips_vlm_side_model: Optional[str],
+    lpips_vlm_side_window_sec: float,
+    lpips_vlm_side_max_frames: int,
     lpips_vlm_refine_window_sec: float,
     lpips_vlm_refine_max_frames_per_window: int,
     lpips_vlm_prompt_version: str,
@@ -51,6 +55,11 @@ def _merge_lpips_artifacts(
     context.artifacts["lpips_vlm_max_grid_frames"] = int(lpips_vlm_max_grid_frames)
     context.artifacts["lpips_vlm_sampling_strategy"] = lpips_vlm_sampling_strategy
     context.artifacts["lpips_vlm_coarse_grid_frames"] = int(lpips_vlm_coarse_grid_frames)
+    context.artifacts["lpips_vlm_side_relabel"] = bool(lpips_vlm_side_relabel)
+    if lpips_vlm_side_model is not None and str(lpips_vlm_side_model).strip():
+        context.artifacts["lpips_vlm_side_model"] = str(lpips_vlm_side_model).strip()
+    context.artifacts["lpips_vlm_side_window_sec"] = float(lpips_vlm_side_window_sec)
+    context.artifacts["lpips_vlm_side_max_frames"] = int(lpips_vlm_side_max_frames)
     context.artifacts["lpips_vlm_refine_window_sec"] = float(lpips_vlm_refine_window_sec)
     context.artifacts["lpips_vlm_refine_max_frames_per_window"] = int(
         lpips_vlm_refine_max_frames_per_window
@@ -109,7 +118,11 @@ def run_world_model_evaluation(
     lpips_vlm_coarse_model: Optional[str] = None,
     lpips_vlm_max_grid_frames: int = 48,
     lpips_vlm_sampling_strategy: str = "single_grid",
-    lpips_vlm_coarse_grid_frames: int = 24,
+    lpips_vlm_coarse_grid_frames: int = 64,
+    lpips_vlm_side_relabel: bool = True,
+    lpips_vlm_side_model: Optional[str] = None,
+    lpips_vlm_side_window_sec: float = 0.75,
+    lpips_vlm_side_max_frames: int = 12,
     lpips_vlm_refine_window_sec: float = 1.0,
     lpips_vlm_refine_max_frames_per_window: int = 24,
     lpips_vlm_prompt_version: str = "causal_collision_v2",
@@ -188,6 +201,10 @@ def run_world_model_evaluation(
                 lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
                 lpips_vlm_sampling_strategy=lpips_vlm_sampling_strategy,
                 lpips_vlm_coarse_grid_frames=lpips_vlm_coarse_grid_frames,
+                lpips_vlm_side_relabel=lpips_vlm_side_relabel,
+                lpips_vlm_side_model=lpips_vlm_side_model,
+                lpips_vlm_side_window_sec=lpips_vlm_side_window_sec,
+                lpips_vlm_side_max_frames=lpips_vlm_side_max_frames,
                 lpips_vlm_refine_window_sec=lpips_vlm_refine_window_sec,
                 lpips_vlm_refine_max_frames_per_window=lpips_vlm_refine_max_frames_per_window,
                 lpips_vlm_prompt_version=lpips_vlm_prompt_version,
@@ -251,6 +268,10 @@ def run_world_model_evaluation(
         lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
         lpips_vlm_sampling_strategy=lpips_vlm_sampling_strategy,
         lpips_vlm_coarse_grid_frames=lpips_vlm_coarse_grid_frames,
+        lpips_vlm_side_relabel=lpips_vlm_side_relabel,
+        lpips_vlm_side_model=lpips_vlm_side_model,
+        lpips_vlm_side_window_sec=lpips_vlm_side_window_sec,
+        lpips_vlm_side_max_frames=lpips_vlm_side_max_frames,
         lpips_vlm_refine_window_sec=lpips_vlm_refine_window_sec,
         lpips_vlm_refine_max_frames_per_window=lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=lpips_vlm_prompt_version,

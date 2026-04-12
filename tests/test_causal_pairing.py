@@ -5,7 +5,9 @@ from __future__ import annotations
 import unittest
 
 from evaluation.modules.lpips_causal_vlm import (
+    build_detection_user_prompt,
     build_judge_user_prompt,
+    build_side_relabel_user_prompt,
     compute_first_divergence,
     filter_events_by_contact_types,
     pair_collision_events_monotonic_with_log,
@@ -137,6 +139,23 @@ class TestCausalPairing(unittest.TestCase):
         self.assertIn("Scene-specific instructions", text)
         self.assertIn("rolling sphere", text)
         self.assertIn("0, 5, 10", text)
+
+    def test_build_detection_user_prompt_deprioritizes_side_labels(self) -> None:
+        text = build_detection_user_prompt([0, 5, 10], {})
+        self.assertIn('side="unknown"', text)
+        self.assertIn("distinct contact/impact episodes", text)
+
+    def test_build_side_relabel_user_prompt_mentions_all_directional_sides(self) -> None:
+        text = build_side_relabel_user_prompt(
+            [8, 10, 12],
+            _ev(10, "unknown"),
+            {"lpips_vlm_scene_hints": "Use motion cues."},
+        )
+        self.assertIn('"left"', text)
+        self.assertIn('"right"', text)
+        self.assertIn('"front"', text)
+        self.assertIn('"back"', text)
+        self.assertIn("Event anchor frame: 10", text)
 
     def test_infer_scene_key_from_paths(self) -> None:
         key = infer_scene_key(

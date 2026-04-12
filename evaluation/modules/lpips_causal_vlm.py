@@ -62,6 +62,53 @@ Output JSON shape:
 {{"reasoning_steps": ["..."], "events": [...]}}
 """
 
+DETECTION_ONLY_USER_PROMPT_TEMPLATE = """Analyze these keyframes from ONE video. Keyframe order matches image order.
+Allowed frame indices (only these may appear in JSON): {idx_str}
+{extra_instructions}
+Your only job is to detect distinct contact/impact episodes in chronological order.
+Do not spend effort on left/right/front/back semantics in this pass. Use side="unknown" unless the side is completely unavoidable from the local evidence.
+
+Follow this checklist and put concise notes in reasoning_steps (string array):
+A) Identify the main moving object and the nearby obstacles/targets it contacts.
+B) Scan in time order and enumerate each distinct contact episode once.
+C) Keep episodes separate when there is meaningful temporal separation.
+D) Cite only allowed frame indices.
+E) Abstain with "events": [] if quality is insufficient.
+
+For EACH event object include:
+- type: usually "collision"
+- side: set to "unknown" unless truly unambiguous
+- frame: integer, must be one of the allowed indices (best contact frame)
+- confidence: number 0-1 (optional)
+- evidence_frame_indices: non-empty array of allowed integers (typically 2-4 frames around contact)
+- evidence_summary: 1-3 sentences describing visible contact evidence only
+
+Output JSON shape:
+{{"reasoning_steps": ["..."], "events": [...]}}
+"""
+
+SIDE_RELABEL_USER_PROMPT_TEMPLATE = """Analyze these keyframes from ONE video around a single already-detected contact episode.
+Allowed frame indices (only these may appear in JSON): {idx_str}
+Event anchor frame: {anchor_frame}
+Current event summary: {event_summary}
+{extra_instructions}
+Classify the side of this ONE contact episode using motion before/at/after contact.
+
+Choose exactly one side:
+- "left" or "right": contact is primarily lateral in image space
+- "front": contact is with an obstacle ahead in the moving object's forward/depth direction
+- "back": contact is with an obstacle behind/rearward or after the moving object has already passed it
+- "unknown": only if the side remains ambiguous from the provided frames
+
+Use temporal cues, not just a single overlap frame:
+- compare approach vs departure frames
+- if the object is approaching an obstacle head-on in depth, prefer "front"
+- if contact happens after the object has already passed an obstacle or with a rearward obstacle, prefer "back"
+
+Output JSON shape:
+{{"reasoning_steps": ["..."], "side": "front|back|left|right|unknown", "confidence": 0.0, "evidence_frame_indices": [...], "evidence_summary": "..."}}
+"""
+
 
 def _log_causal(stage: str, **fields: Any) -> None:
     payload = {
@@ -150,6 +197,48 @@ def build_judge_user_prompt(
             "lpips_vlm_judge_user_prompt_template must include placeholders "
             "{idx_str} and {extra_instructions} (extra may be empty)."
         ) from exc
+
+
+def build_detection_user_prompt(
+    allowed_indices: Sequence[int],
+    artifacts: Optional[Mapping[str, Any]] = None,
+    *,
+    max_events: Optional[int] = None,
+) -> str:
+    local_artifacts = dict(artifacts or {})
+    local_artifacts["lpips_vlm_judge_user_prompt_template"] = (
+        DETECTION_ONLY_USER_PROMPT_TEMPLATE
+    )
+    return build_judge_user_prompt(
+        allowed_indices,
+        local_artifacts,
+        max_events=max_events,
+    )
+
+
+def build_side_relabel_user_prompt(
+    allowed_indices: Sequence[int],
+    event: Mapping[str, Any],
+    artifacts: Optional[Mapping[str, Any]] = None,
+) -> str:
+    artifacts = artifacts or {}
+    idx_str = ", ".join(str(i) for i in allowed_indices)
+    hints = artifacts.get("lpips_vlm_scene_hints")
+    if isinstance(hints, str) and hints.strip():
+        extra_instructions = (
+            "\n## Scene-specific instructions (follow carefully)\n"
+            + hints.strip()
+            + "\n"
+        )
+    else:
+        extra_instructions = ""
+
+    return SIDE_RELABEL_USER_PROMPT_TEMPLATE.format(
+        idx_str=idx_str,
+        anchor_frame=int(event.get("frame", 0)),
+        event_summary=str(event.get("evidence_summary", "")).strip() or "n/a",
+        extra_instructions=extra_instructions,
+    )
 
 
 def filter_events_by_contact_types(
@@ -279,6 +368,41 @@ def sanitize_events_to_grid(
         e["frame"] = frame
         kept.append(e)
     return kept, dropped
+
+
+def sanitize_relabel_payload(
+    payload: Mapping[str, Any],
+    *,
+    allowed: set[int],
+) -> Dict[str, Any]:
+    side = str(payload.get("side", "unknown")).strip().lower() or "unknown"
+    try:
+        confidence = float(payload.get("confidence", 0.0))
+    except (TypeError, ValueError):
+        confidence = 0.0
+    evidence_raw = payload.get("evidence_frame_indices")
+    evidence: List[int] = []
+    if isinstance(evidence_raw, list):
+        for value in evidence_raw:
+            try:
+                idx = int(value)
+            except (TypeError, ValueError):
+                continue
+            if idx in allowed:
+                evidence.append(idx)
+    reasoning_raw = payload.get("reasoning_steps")
+    reasoning_steps = (
+        [str(x) for x in reasoning_raw if str(x).strip()]
+        if isinstance(reasoning_raw, list)
+        else []
+    )
+    return {
+        "side": side,
+        "confidence": max(0.0, min(1.0, confidence)),
+        "evidence_frame_indices": sorted(set(evidence)),
+        "evidence_summary": str(payload.get("evidence_summary", "")).strip(),
+        "reasoning_steps": reasoning_steps,
+    }
 
 
 def resolve_vlm_sampling_strategy(artifacts: Mapping[str, Any]) -> str:
@@ -794,12 +918,14 @@ def run_vlm_judge_on_video(
     strategy = resolve_vlm_sampling_strategy(artifacts)
     contact_types = resolve_contact_types(artifacts)
     coarse_model = str(artifacts.get("lpips_vlm_coarse_model", model)).strip() or model
+    side_relabel_enabled = bool(artifacts.get("lpips_vlm_side_relabel", True))
+    side_model = str(artifacts.get("lpips_vlm_side_model", model)).strip() or model
     if strategy == "coarse_to_fine":
         meta = get_video_metadata(video_path)
         if meta.frame_count <= 0:
             raise RuntimeError(f"Video has no frames: {video_path}")
         coarse_grid_frames = int(
-            artifacts.get("lpips_vlm_coarse_grid_frames", min(max_grid_frames, 24) if max_grid_frames > 0 else 24)
+            artifacts.get("lpips_vlm_coarse_grid_frames", min(max_grid_frames, 64) if max_grid_frames > 0 else 64)
         )
         coarse_indices = build_vlm_keyframe_indices(meta.frame_count, coarse_grid_frames)
         coarse_payload, coarse_indices, _ = run_vlm_judge_on_indices(
@@ -808,6 +934,7 @@ def run_vlm_judge_on_video(
             coarse_model,
             artifacts,
             phase="coarse",
+            prompt_mode="detection_only",
         )
         coarse_events_raw = coarse_payload.get("events")
         if not isinstance(coarse_events_raw, list):
@@ -854,11 +981,35 @@ def run_vlm_judge_on_video(
             model,
             artifacts,
             phase="fine",
+            prompt_mode="detection_only",
         )
+        if side_relabel_enabled:
+            fine_events_raw = fine_payload.get("events")
+            if isinstance(fine_events_raw, list):
+                fine_events_clean, _ = sanitize_events_to_grid(
+                    [e for e in fine_events_raw if isinstance(e, dict)],
+                    set(fine_indices),
+                )
+                fine_events_clean = filter_events_by_contact_types(
+                    fine_events_clean, contact_types
+                )
+                relabeled_events, relabel_logs = relabel_event_sides_on_video(
+                    video_path,
+                    fine_events_clean,
+                    model=side_model,
+                    artifacts=artifacts,
+                )
+                fine_payload["events"] = relabeled_events
+                fine_payload["side_relabel"] = {
+                    "enabled": True,
+                    "model": side_model,
+                    "logs": relabel_logs,
+                }
         fine_payload["coarse_to_fine"] = {
             "strategy": strategy,
             "coarse_model": coarse_model,
             "fine_model": model,
+            "side_model": side_model if side_relabel_enabled else None,
             "coarse_grid_indices": coarse_indices,
             "coarse_events": coarse_events,
             "coarse_dropped_events": coarse_dropped,
@@ -871,13 +1022,35 @@ def run_vlm_judge_on_video(
         get_video_metadata(video_path).frame_count,
         max_grid_frames,
     )
-    return run_vlm_judge_on_indices(
+    payload, indices, frames = run_vlm_judge_on_indices(
         video_path,
         indices,
         model,
         artifacts,
         phase="single_grid",
+        prompt_mode="detection_only",
     )
+    if side_relabel_enabled:
+        events_raw = payload.get("events")
+        if isinstance(events_raw, list):
+            events_clean, _ = sanitize_events_to_grid(
+                [e for e in events_raw if isinstance(e, dict)],
+                set(indices),
+            )
+            events_clean = filter_events_by_contact_types(events_clean, contact_types)
+            relabeled_events, relabel_logs = relabel_event_sides_on_video(
+                video_path,
+                events_clean,
+                model=side_model,
+                artifacts=artifacts,
+            )
+            payload["events"] = relabeled_events
+            payload["side_relabel"] = {
+                "enabled": True,
+                "model": side_model,
+                "logs": relabel_logs,
+            }
+    return payload, indices, frames
 
 
 def run_vlm_judge_on_indices(
@@ -887,6 +1060,7 @@ def run_vlm_judge_on_indices(
     artifacts: Mapping[str, Any],
     *,
     phase: str,
+    prompt_mode: str = "joint",
 ) -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
     _log_causal(
         "judge_prepare_start",
@@ -916,7 +1090,10 @@ def run_vlm_judge_on_indices(
         elapsed_sec=round(perf_counter() - prep_start, 3),
     )
     system_prompt = resolve_judge_system_prompt(artifacts)
-    user_text = build_judge_user_prompt(indices, artifacts)
+    if prompt_mode == "detection_only":
+        user_text = build_detection_user_prompt(indices, artifacts)
+    else:
+        user_text = build_judge_user_prompt(indices, artifacts)
     raw_timeout = artifacts.get("lpips_vlm_timeout_sec")
     if raw_timeout is not None:
         timeout_sec = float(raw_timeout)
@@ -948,6 +1125,129 @@ def run_vlm_judge_on_indices(
         elapsed_sec=round(perf_counter() - judge_start, 3),
     )
     return payload, list(indices), frames
+
+
+def relabel_event_sides_on_video(
+    video_path: str,
+    events: Sequence[Dict[str, Any]],
+    *,
+    model: str,
+    artifacts: Mapping[str, Any],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    if not events:
+        return [], []
+
+    meta = get_video_metadata(video_path)
+    if meta.frame_count <= 0:
+        return list(events), []
+
+    window_sec = float(artifacts.get("lpips_vlm_side_window_sec", 0.75))
+    max_frames = int(artifacts.get("lpips_vlm_side_max_frames", 12))
+    radius_frames = max(1, int(round(window_sec * float(meta.fps))))
+    relabeled: List[Dict[str, Any]] = []
+    relabel_logs: List[Dict[str, Any]] = []
+
+    for index, event in enumerate(sorted(events, key=lambda e: int(e.get("frame", 0)))):
+        anchors = [int(event.get("frame", 0))]
+        evidence = event.get("evidence_frame_indices")
+        if isinstance(evidence, list):
+            for value in evidence:
+                try:
+                    anchors.append(int(value))
+                except (TypeError, ValueError):
+                    continue
+        lo = max(0, min(anchors) - radius_frames)
+        hi = min(meta.frame_count - 1, max(anchors) + radius_frames)
+        sample_count = min(max_frames, hi - lo + 1)
+        indices = sorted(
+            set(int(round(float(x))) for x in np.linspace(lo, hi, num=sample_count))
+        )
+        frames = load_frames_by_indices(video_path, indices)
+        if len(frames) != len(indices):
+            indices = indices[: len(frames)]
+        if not indices:
+            relabeled.append(dict(event))
+            relabel_logs.append(
+                {
+                    "event_index": index,
+                    "status": "skipped",
+                    "reason": "no_local_frames_loaded",
+                    "original_side": str(event.get("side", "unknown")).lower(),
+                }
+            )
+            continue
+
+        system_prompt = resolve_judge_system_prompt(artifacts)
+        user_text = build_side_relabel_user_prompt(indices, event, artifacts)
+        raw_timeout = artifacts.get("lpips_vlm_side_timeout_sec")
+        if raw_timeout is not None:
+            timeout_sec = float(raw_timeout)
+        else:
+            timeout_sec = max(90.0, min(600.0, 4.0 * float(len(indices)) + 90.0))
+        _log_causal(
+            "side_relabel_start",
+            video_path=video_path,
+            model=model,
+            event_index=index,
+            anchor_frame=int(event.get("frame", 0)),
+            num_frames=len(indices),
+        )
+        started = perf_counter()
+        try:
+            payload = call_openai_vision_judge(
+                frames,
+                model=model,
+                system_prompt=system_prompt,
+                user_text=user_text,
+                timeout_sec=timeout_sec,
+            )
+            clean = sanitize_relabel_payload(payload, allowed=set(indices))
+            updated = dict(event)
+            updated["side"] = clean["side"]
+            if clean["evidence_frame_indices"]:
+                updated["evidence_frame_indices"] = clean["evidence_frame_indices"]
+            if clean["evidence_summary"]:
+                updated["evidence_summary"] = clean["evidence_summary"]
+            if clean["confidence"] > 0.0:
+                updated["confidence"] = clean["confidence"]
+            relabeled.append(updated)
+            relabel_logs.append(
+                {
+                    "event_index": index,
+                    "status": "ok",
+                    "original_side": str(event.get("side", "unknown")).lower(),
+                    "relabeled_side": clean["side"],
+                    "elapsed_sec": round(perf_counter() - started, 3),
+                    "reasoning_steps": clean["reasoning_steps"],
+                }
+            )
+            _log_causal(
+                "side_relabel_done",
+                video_path=video_path,
+                model=model,
+                event_index=index,
+                relabeled_side=clean["side"],
+                elapsed_sec=round(perf_counter() - started, 3),
+            )
+        except Exception as exc:
+            relabeled.append(dict(event))
+            relabel_logs.append(
+                {
+                    "event_index": index,
+                    "status": "error",
+                    "reason": str(exc),
+                    "original_side": str(event.get("side", "unknown")).lower(),
+                }
+            )
+            _log_causal(
+                "side_relabel_error",
+                video_path=video_path,
+                model=model,
+                event_index=index,
+                error=str(exc),
+            )
+
+    return relabeled, relabel_logs
 
 
 def resolve_event_offsets(artifacts: Mapping[str, Any]) -> List[int]:
@@ -1214,6 +1514,7 @@ def analyze_causal_vlm_lpips(
                 "grid_frame_indices": ref_grid_idx,
                 "dropped_events": ref_dropped,
                 "coarse_to_fine": ref_j_raw.get("coarse_to_fine"),
+                "side_relabel": ref_j_raw.get("side_relabel"),
             },
             "judge_candidate": {
                 "reasoning_steps": cand_j_raw.get("reasoning_steps"),
@@ -1221,6 +1522,7 @@ def analyze_causal_vlm_lpips(
                 "grid_frame_indices": cand_grid_idx,
                 "dropped_events": cand_dropped,
                 "coarse_to_fine": cand_j_raw.get("coarse_to_fine"),
+                "side_relabel": cand_j_raw.get("side_relabel"),
                 "skipped": bool(cand_j_raw.get("skipped")),
                 "skip_reason": cand_j_raw.get("skip_reason"),
             },
