@@ -27,7 +27,8 @@ For lighting, motion, and shadow physical evaluation, use
 - `evaluation/modules/shadow.py`: SAM2 shadow evaluation module used by the physical-eval pipeline
 - `evaluation/registry.py`: module registry for the orchestrator
 - `evaluation/runner.py`: shared report builder used by CLI tools
-- `tools/evaluate_world_model_diffusionlight.py`: per-video-pair runner
+- `tools/evaluate_world_model_metrics.py`: per-video-pair runner
+- `tools/evaluate_world_model_diffusionlight.py`: compatibility wrapper for older commands
 - `tools/evaluate_world_model_lpips.py`: JSONL batch runner for LPIPS-only experiments
 - `scripts/evaluate_world_model_lpips.sh`: runnable batch command template
 
@@ -91,7 +92,7 @@ For physical evaluation extras such as shadow evaluation, follow
 Temporal LPIPS:
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/evaluate_world_model_metrics.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --text_prompt "A ball rolls down a ramp" \
@@ -106,7 +107,7 @@ python tools/evaluate_world_model_diffusionlight.py \
 Dense (time-aligned) LPIPS:
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/evaluate_world_model_metrics.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --modules lpips \
@@ -119,7 +120,7 @@ python tools/evaluate_world_model_diffusionlight.py \
 Causal VLM collision:
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/evaluate_world_model_metrics.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --modules lpips \
