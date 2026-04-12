@@ -97,8 +97,12 @@ def resolve_judge_system_prompt(artifacts: Mapping[str, Any]) -> str:
 
 
 def build_judge_user_prompt(
-    allowed_indices: Sequence[int], artifacts: Mapping[str, Any]
+    allowed_indices: Sequence[int],
+    artifacts: Optional[Mapping[str, Any]] = None,
+    *,
+    max_events: Optional[int] = None,
 ) -> str:
+    artifacts = artifacts or {}
     idx_str = ", ".join(str(i) for i in allowed_indices)
     hints = artifacts.get("lpips_vlm_scene_hints")
     if isinstance(hints, str) and hints.strip():
@@ -109,6 +113,16 @@ def build_judge_user_prompt(
         )
     else:
         extra_instructions = ""
+
+    if max_events is not None:
+        max_events_text = "ONE" if int(max_events) == 1 else str(int(max_events))
+        extra_instructions += (
+            "Return at most "
+            + max_events_text
+            + " event"
+            + ("" if int(max_events) == 1 else "s")
+            + ", and prefer the earliest clearly supported event when uncertain.\n"
+        )
 
     tmpl = artifacts.get("lpips_vlm_judge_user_prompt_template")
     if isinstance(tmpl, str) and tmpl.strip():
@@ -137,6 +151,66 @@ def filter_events_by_contact_types(
         if t in allow:
             out.append(e)
     return out
+
+
+def filter_events_by_type(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Backward-compatible helper used by older tests and scripts."""
+    out: List[Dict[str, Any]] = []
+    for event in events:
+        event_type = str(event.get("type", "")).strip().lower()
+        if (
+            event_type == "bounce"
+            or "collision" in event_type
+            or "impact" in event_type
+            or "contact" in event_type
+        ):
+            out.append(event)
+    return out
+
+
+def resolve_lpips_temporal_pairing(
+    artifacts: Mapping[str, Any],
+    *,
+    event_source: str,
+) -> str:
+    raw = str(artifacts.get("lpips_causal_lpips_pairing", "") or "").strip().lower()
+    if raw and raw != "auto":
+        return raw
+    return "per_video_contact" if str(event_source).strip().lower() == "both" else "wall_clock"
+
+
+def paired_frames_per_video_contact(
+    reference_contact_frame: int,
+    candidate_contact_frame: int,
+    offset: int,
+    reference_metadata: Any,
+    candidate_metadata: Any,
+) -> Tuple[int, int]:
+    ref_idx = min(
+        max(int(reference_contact_frame) + int(offset), 0),
+        int(reference_metadata.frame_count) - 1,
+    )
+    cand_idx = min(
+        max(int(candidate_contact_frame) + int(offset), 0),
+        int(candidate_metadata.frame_count) - 1,
+    )
+    return ref_idx, cand_idx
+
+
+def paired_frames_for_reference_event_offset(
+    reference_contact_frame: int,
+    offset: int,
+    reference_metadata: Any,
+    candidate_metadata: Any,
+) -> Tuple[int, int]:
+    ref_idx = min(
+        max(int(reference_contact_frame) + int(offset), 0),
+        int(reference_metadata.frame_count) - 1,
+    )
+    ref_time_sec = float(ref_idx) / float(reference_metadata.fps)
+    cand_idx = int(round(ref_time_sec * float(candidate_metadata.fps)))
+    cand_idx = min(max(cand_idx, 0), int(candidate_metadata.frame_count) - 1)
+    return ref_idx, cand_idx
 
 
 def extract_json_object(text: str) -> Dict[str, Any]:
@@ -335,6 +409,22 @@ def pair_collision_events_order_with_log(
             }
         )
     return matched, pairing_log
+
+
+def pair_collision_events_ref_first(
+    ref_events: List[Dict[str, Any]],
+    cand_events: List[Dict[str, Any]],
+) -> Tuple[
+    List[Tuple[Dict[str, Any], Dict[str, Any]]],
+    List[Dict[str, Any]],
+    List[Dict[str, Any]],
+]:
+    """Backward-compatible wrapper around strict side-aware pairing."""
+    matched, unmatched_ref, unmatched_cand, _ = pair_collision_events_strict_with_log(
+        ref_events,
+        cand_events,
+    )
+    return matched, unmatched_ref, unmatched_cand
 
 
 def compute_first_divergence(
@@ -588,7 +678,39 @@ def analyze_causal_vlm_lpips(
         base.update(summarize_scores([]))
         return base
 
-    temporal_baseline = analyze_lpips_from_context(context, device=str(device_obj))
+    event_source = str(
+        artifacts.get("lpips_causal_event_source", "both")
+    ).strip().lower()
+    vgg16_weights_cached = os.path.exists(
+        os.path.expanduser("~/.cache/torch/hub/checkpoints/vgg16-397923af.pth")
+    )
+
+    if event_source in ("reference", "unity") and not vgg16_weights_cached:
+        temporal_baseline = {
+            "module": "lpips",
+            "lpips_sampling": "temporal",
+            "lpips_per_pair": [],
+            "timestamps_sec": [],
+            "reference_frame_indices": [],
+            "candidate_frame_indices": [],
+            "num_pairs": 0,
+            "skipped": True,
+            "skip_reason": "lpips_vgg16_weights_not_cached",
+        }
+    else:
+        try:
+            temporal_baseline = analyze_lpips_from_context(context, device=str(device_obj))
+        except Exception as exc:
+            temporal_baseline = {
+                "module": "lpips",
+                "lpips_sampling": "temporal",
+                "lpips_per_pair": [],
+                "timestamps_sec": [],
+                "reference_frame_indices": [],
+                "candidate_frame_indices": [],
+                "num_pairs": 0,
+                "error": f"temporal_lpips_failed: {exc}",
+            }
 
     def _finalize_inspection(result: Dict[str, Any]) -> Dict[str, Any]:
         if artifacts.get("save_inspection_artifacts"):
@@ -606,11 +728,26 @@ def analyze_causal_vlm_lpips(
 
     try:
         ref_j_raw, ref_grid_idx, _ = run_vlm_judge_on_video(
-            context.reference_video, max_grid, model, artifacts
+            context.reference_video,
+            max_grid,
+            model,
+            artifacts=artifacts,
         )
-        cand_j_raw, cand_grid_idx, _ = run_vlm_judge_on_video(
-            context.candidate_video, max_grid, model, artifacts
-        )
+        if event_source in ("reference", "unity"):
+            cand_j_raw = {
+                "reasoning_steps": [],
+                "events": [],
+                "skipped": True,
+                "skip_reason": "reference_only_event_source",
+            }
+            cand_grid_idx = []
+        else:
+            cand_j_raw, cand_grid_idx, _ = run_vlm_judge_on_video(
+                context.candidate_video,
+                max_grid,
+                model,
+                artifacts=artifacts,
+            )
     except Exception as exc:
         base["error"] = f"vlm_judge_failed: {exc}"
         _merge_temporal_primary_fields(base, temporal_baseline)
@@ -637,6 +774,20 @@ def analyze_causal_vlm_lpips(
     )
     ref_events_f = filter_events_by_contact_types(ref_events_f, contact_types)
     cand_events_f = filter_events_by_contact_types(cand_events_f, contact_types)
+    if event_source in ("reference", "unity"):
+        ref_meta = context.reference.metadata
+        cand_meta = context.candidate.metadata
+        mapped_candidate_events: List[Dict[str, Any]] = []
+        for event in ref_events_f:
+            ref_frame = int(event.get("frame", 0))
+            ref_time_sec = float(ref_frame) / float(ref_meta.fps)
+            cand_frame = int(round(ref_time_sec * float(cand_meta.fps)))
+            cand_frame = min(max(cand_frame, 0), cand_meta.frame_count - 1)
+            mapped = dict(event)
+            mapped["frame"] = cand_frame
+            mapped["mapped_from_reference"] = True
+            mapped_candidate_events.append(mapped)
+        cand_events_f = mapped_candidate_events
 
     strict_matched, strict_unmatched_ref, strict_unmatched_cand, strict_log = (
         pair_collision_events_strict_with_log(
@@ -694,6 +845,8 @@ def analyze_causal_vlm_lpips(
                 "events": cand_events_f,
                 "grid_frame_indices": cand_grid_idx,
                 "dropped_events": cand_dropped,
+                "skipped": bool(cand_j_raw.get("skipped")),
+                "skip_reason": cand_j_raw.get("skip_reason"),
             },
             "reference_action_summary": build_action_summary(
                 ref_events_f, ref_meta.frame_count
@@ -725,6 +878,28 @@ def analyze_causal_vlm_lpips(
         temporal_baseline,
     )
     base["temporal_baseline"] = temporal_baseline
+
+    if event_source in ("reference", "unity") and not vgg16_weights_cached:
+        base["causal_lpips_skipped_reason"] = "lpips_vgg16_weights_not_cached"
+        base["lpips_per_matched_event"] = [
+            {
+                "match_index": mi,
+                "side": ev_r.get("side"),
+                "e_ref": int(ev_r["frame"]),
+                "e_cand": int(ev_c["frame"]),
+                "e_cand_contact_ref_frame": int(ev_r["frame"]),
+                "offsets": offsets,
+                "lpips_per_offset": [],
+                "evaluation_interval": {
+                    "mode": "reference_only_wall_clock",
+                    "lpips_skipped": True,
+                },
+            }
+            for mi, (ev_r, ev_c) in enumerate(matched)
+        ]
+        base["causal_lpips_per_pair"] = []
+        _merge_temporal_primary_fields(base, temporal_baseline)
+        return _finalize_inspection(base)
 
     if num_matched == 0:
         base["causal_lpips_skipped_reason"] = "no_matched_events"

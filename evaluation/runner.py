@@ -122,23 +122,12 @@ def run_world_model_evaluation(
     synthetic_use_depth: bool = False,
     ptlflow_root: Optional[str] = None,
     synthetic_grid_size: int = 8,
-    lpips_sampling: str = "temporal",
-    lpips_vlm_model: str = "gpt-5.4",
-    lpips_vlm_max_grid_frames: int = 24,
-    lpips_vlm_prompt_version: str = "causal_collision_v3",
     lpips_vlm_scene_hints: Optional[str] = None,
     lpips_vlm_contact_types: Optional[str] = None,
     lpips_vlm_directional_sides: Optional[str] = None,
     lpips_vlm_system_prompt: Optional[str] = None,
     lpips_vlm_judge_user_prompt_template: Optional[str] = None,
-    lpips_event_frames_before: int = 2,
-    lpips_event_frames_after: int = 2,
-    lpips_event_offsets: Optional[Sequence[int]] = None,
     causal_match_mode: str = "strict_fallback_order",
-    save_inspection_artifacts: bool = False,
-    inspection_root: str = "reports/world_model_lpips/qa",
-    inspection_run_id: str = "run",
-    inspection_sample_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)

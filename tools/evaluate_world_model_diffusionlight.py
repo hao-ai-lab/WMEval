@@ -206,32 +206,6 @@ def main() -> None:
     ap.add_argument("--ptlflow_root", default="/workspace/ptlflow")
     ap.add_argument("--synthetic_grid_size", type=int, default=8)
     ap.add_argument(
-        "--lpips_sampling",
-        default="temporal",
-        choices=["temporal", "causal_vlm_collision"],
-        help="temporal: uniform time samples; causal_vlm_collision: VLM collision events plus temporal LPIPS baseline",
-    )
-    ap.add_argument(
-        "--lpips_vlm_model",
-        default="gpt-5.4",
-        help="OpenAI vision model for causal LPIPS (gpt-5.4 supports ~1M-token context for large keyframe grids)",
-    )
-    ap.add_argument(
-        "--lpips_vlm_max_grid_frames",
-        type=int,
-        default=24,
-        help=(
-            "Max keyframes sent to the VLM per video (evenly spaced). "
-            "Use 0 or a negative value to send every frame for that clip "
-            "(reference and candidate each use their own frame_count; large, slow, and API-heavy)."
-        ),
-    )
-    ap.add_argument(
-        "--lpips_vlm_prompt_version",
-        default="causal_collision_v3",
-        help="Prompt version tag in report (v3: artifact-driven prompts and pairing defaults)",
-    )
-    ap.add_argument(
         "--lpips_vlm_scene_hints",
         default=None,
         help="Optional extra judge instructions (appended under Scene-specific instructions)",
@@ -326,10 +300,6 @@ def main() -> None:
         synthetic_use_depth=args.synthetic_use_depth,
         ptlflow_root=args.ptlflow_root,
         synthetic_grid_size=args.synthetic_grid_size,
-        lpips_sampling=args.lpips_sampling,
-        lpips_vlm_model=args.lpips_vlm_model,
-        lpips_vlm_max_grid_frames=args.lpips_vlm_max_grid_frames,
-        lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,
         lpips_vlm_scene_hints=args.lpips_vlm_scene_hints,
         lpips_vlm_contact_types=args.lpips_vlm_contact_types,
         lpips_vlm_directional_sides=args.lpips_vlm_directional_sides,
