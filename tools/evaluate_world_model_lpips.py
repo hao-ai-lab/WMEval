@@ -74,6 +74,7 @@ def write_summary_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
         "run_id",
         "reference_video",
         "world_model_video",
+        "lpips_sampling",
         "num_pairs",
         "shared_duration_sec",
         "lpips_mean",
@@ -81,6 +82,8 @@ def write_summary_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
         "lpips_std",
         "lpips_min",
         "lpips_max",
+        "matched_reference_event_fraction",
+        "num_matched_events",
         "error",
     ]
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -103,11 +106,85 @@ def main() -> None:
     ap.add_argument("--eval_fps", type=float, default=4.0, help="Timestamp sampling rate")
     ap.add_argument("--max_pairs", type=int, default=32, help="Maximum frame pairs per video pair")
     ap.add_argument("--device", default=None, help="cuda / cpu (default: auto)")
+    ap.add_argument(
+        "--lpips_sampling",
+        choices=["temporal", "dense", "causal_vlm_collision"],
+        default="temporal",
+        help="LPIPS anchor mode",
+    )
+    ap.add_argument(
+        "--lpips_temporal_fractions",
+        default="0,0.5,1",
+        help='Comma-separated fractions in [0,1] for temporal mode',
+    )
+    ap.add_argument("--lpips_event_frames_before", type=int, default=2)
+    ap.add_argument("--lpips_event_frames_after", type=int, default=2)
+    ap.add_argument(
+        "--lpips_event_offsets",
+        default=None,
+        help='Comma-separated offsets around contact (overrides before/after)',
+    )
+    ap.add_argument("--lpips_vlm_model", default="gpt-4o")
+    ap.add_argument("--lpips_vlm_max_grid_frames", type=int, default=48)
+    ap.add_argument("--lpips_vlm_prompt_version", default="causal_collision_v2")
+    ap.add_argument(
+        "--lpips_vlm_max_reference_events",
+        type=int,
+        default=None,
+        help="Unity VLM: ask for at most N events (e.g. 1)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_reference_trim_sec",
+        type=float,
+        default=None,
+        help="Reference VLM: sample keyframes only from first N seconds (e.g. 2)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_judge_hint",
+        default="",
+        help="Optional reference-judge hint (soft)",
+    )
+    ap.add_argument(
+        "--lpips_causal_event_source",
+        choices=["both", "reference", "unity"],
+        default="both",
+        help="causal_vlm_collision: unity/reference = judge reference only; both = two VLMs",
+    )
+    ap.add_argument(
+        "--lpips_causal_lpips_pairing",
+        choices=["auto", "wall_clock", "per_video_contact"],
+        default="auto",
+        help="causal: auto | wall_clock | per_video_contact (see evaluate_world_model_metrics)",
+    )
+    ap.add_argument(
+        "--save_inspection_artifacts",
+        action="store_true",
+        help="Write QA frames under --inspection_root / run / sample",
+    )
+    ap.add_argument("--inspection_root", default="reports/world_model_lpips/qa")
+    ap.add_argument(
+        "--inspection_run_id",
+        default="",
+        help="If empty, each manifest row's run_id is used (fallback: batch)",
+    )
 
     args = ap.parse_args()
 
     results: List[Dict[str, Any]] = []
     rows = [normalize_manifest_row(row) for row in load_manifest_rows(args.manifest_jsonl)]
+
+    temporal_fractions = [
+        float(x.strip())
+        for x in args.lpips_temporal_fractions.split(",")
+        if x.strip()
+    ]
+    event_offsets = None
+    if args.lpips_event_offsets:
+        event_offsets = [
+            int(x.strip())
+            for x in args.lpips_event_offsets.split(",")
+            if x.strip()
+        ]
 
     for idx, row in enumerate(rows, start=1):
         print(
@@ -117,6 +194,11 @@ def main() -> None:
             flush=True,
         )
 
+        inspection_run_id = (
+            args.inspection_run_id.strip()
+            or (row["run_id"] or "").strip()
+            or "batch"
+        )
         report = run_world_model_evaluation(
             video_path=row["world_model_video"],
             ref_video_path=row["reference_video"],
@@ -124,6 +206,27 @@ def main() -> None:
             modules=["lpips"],
             eval_fps=args.eval_fps,
             max_pairs=args.max_pairs,
+            lpips_sampling=args.lpips_sampling,
+            lpips_temporal_fractions=temporal_fractions,
+            lpips_event_frames_before=args.lpips_event_frames_before,
+            lpips_event_frames_after=args.lpips_event_frames_after,
+            lpips_event_offsets=event_offsets,
+            lpips_vlm_model=args.lpips_vlm_model,
+            lpips_vlm_max_grid_frames=args.lpips_vlm_max_grid_frames,
+            lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,
+            lpips_vlm_max_reference_events=args.lpips_vlm_max_reference_events,
+            lpips_vlm_reference_trim_sec=args.lpips_vlm_reference_trim_sec,
+            lpips_vlm_judge_hint=args.lpips_vlm_judge_hint,
+            lpips_causal_event_source=args.lpips_causal_event_source,
+            lpips_causal_lpips_pairing=(
+                None
+                if args.lpips_causal_lpips_pairing == "auto"
+                else args.lpips_causal_lpips_pairing
+            ),
+            save_inspection_artifacts=args.save_inspection_artifacts,
+            inspection_root=args.inspection_root,
+            inspection_run_id=inspection_run_id,
+            inspection_sample_id=row["sample_id"],
             device=args.device,
         )
         lpips_result = dict(report["results"].get("lpips", {}))

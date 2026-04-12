@@ -13,28 +13,83 @@ The current layout is organized around:
 
 This README is for LPIPS-only evaluation.
 
-For lighting/motion/shadow physical evaluation, use
+For lighting, motion, and shadow physical evaluation, use
 `README_world_model_diffusionlight_physics_eval.md`.
 
 ## Layout
 
 - `evaluation/video_io.py`: shared video metadata, aligned frame sampling, and evaluation context
-- `evaluation/modules/lpips.py`: LPIPS evaluation module
+- `evaluation/modules/lpips.py`: LPIPS evaluation module (sampling modes below)
+- `evaluation/modules/lpips_causal_vlm.py`: optional causal collision path using a vision judge
+- `evaluation/inspection_artifacts.py`: optional QA frame dumps for temporal / causal runs
+- `evaluation/modules/lighting.py`: light-direction evaluation module used by the physical-eval pipeline
+- `evaluation/modules/motion.py`: flow-based motion evaluation module used by the physical-eval pipeline
+- `evaluation/modules/shadow.py`: SAM2 shadow evaluation module used by the physical-eval pipeline
 - `evaluation/registry.py`: module registry for the orchestrator
 - `evaluation/runner.py`: shared report builder used by CLI tools
 - `tools/evaluate_world_model_diffusionlight.py`: per-video-pair runner
+- `tools/evaluate_world_model_metrics.py`: standalone alias for the same entrypoint
 - `tools/evaluate_world_model_lpips.py`: JSONL batch runner for LPIPS-only experiments
 - `scripts/evaluate_world_model_lpips.sh`: runnable batch command template
 
+## LPIPS sampling modes
+
+The `lpips` module chooses frames using `lpips_sampling` (see CLI `--lpips_sampling`).
+
+| Mode | Behavior |
+| --- | --- |
+| `temporal` (default) | Anchor frames at `lpips_temporal_fractions` of each video's timeline (default `0, 0.5, 1`). The same fractions are applied independently to reference and candidate, then LPIPS is computed per anchor. |
+| `dense` | Legacy behavior: uniform timestamp sampling over the shared duration (controlled by `--eval_fps` and `--max_pairs`), one LPIPS score per aligned pair. |
+| `causal_vlm_collision` | A vision model reads a grid of keyframes from each video, proposes collision/contact events with evidence frame indices, sanitizes those events to the grid, matches them reference-first with greedy side-aware pairing, then computes LPIPS at offsets around each matched contact. This mode requires `OPENAI_API_KEY`, either exported in the environment or loaded from a repo-root `.env`. |
+
+Default causal settings use `--lpips_vlm_max_grid_frames 48` and prompt version
+`causal_collision_v2`, which asks for collision geometry, chronological
+scanning, and a clearer tie-break when only one event is requested.
+
+With `--lpips_causal_event_source reference` (or `unity`), the judge runs only
+on the reference clip and the candidate uses the same wall-clock instant mapped
+to its own FPS. With `--lpips_causal_event_source both`, the judge runs on both
+videos and events are paired greedily.
+
+`--lpips_causal_lpips_pairing auto` defaults to `per_video_contact` when the
+event source is `both`, otherwise `wall_clock`.
+
+## Inspection artifacts
+
+With `--save_inspection_artifacts`, PNGs and small JSON sidecars are written
+under:
+
+`{inspection_root}/{inspection_run_id}/{inspection_sample_id}/`
+
+- Temporal runs write `temporal/anchor_*` outputs with `ref.png`, `cand.png`, `pair.png`, `score.txt`, `meta.json`, and `README.md`.
+- Causal runs write `causal/` outputs with judge JSON, matched-event subfolders, and unmatched-event lists.
+
+For `tools/evaluate_world_model_lpips.py`, `inspection_run_id` defaults to each
+manifest row's `run_id` (or `batch` if missing); `inspection_sample_id` is the
+row's `sample_id`.
+
 ## Dependencies
 
-Install the minimal dependencies needed for LPIPS:
+If you want the repo managed by `uv`, copy the template once and sync:
 
 ```bash
-pip install numpy opencv-python torch torchvision lpips
+cp pyproject.toml.example pyproject.toml
+uv lock
+uv sync
 ```
 
+Or install the LPIPS-only dependencies manually:
+
+```bash
+pip install numpy opencv-python-headless torch torchvision lpips openai
+```
+
+For physical evaluation extras such as shadow evaluation, follow
+`README_world_model_diffusionlight_physics_eval.md`.
+
 ## Single-Pair Usage
+
+Temporal LPIPS:
 
 ```bash
 python tools/evaluate_world_model_diffusionlight.py \
@@ -44,7 +99,37 @@ python tools/evaluate_world_model_diffusionlight.py \
   --modules lpips \
   --output_json reports/world_model_metrics/report.json \
   --eval_fps 4 \
-  --max_pairs 32
+  --max_pairs 32 \
+  --lpips_sampling temporal \
+  --lpips_temporal_fractions "0,0.5,1"
+```
+
+Dense (time-aligned) LPIPS:
+
+```bash
+python tools/evaluate_world_model_diffusionlight.py \
+  --video /path/to/world_model_video.mp4 \
+  --ref_video /path/to/reference_video.mp4 \
+  --modules lpips \
+  --lpips_sampling dense \
+  --eval_fps 4 \
+  --max_pairs 32 \
+  --output_json reports/world_model_metrics/report.json
+```
+
+Causal VLM collision:
+
+```bash
+python tools/evaluate_world_model_diffusionlight.py \
+  --video /path/to/world_model_video.mp4 \
+  --ref_video /path/to/reference_video.mp4 \
+  --modules lpips \
+  --lpips_sampling causal_vlm_collision \
+  --lpips_vlm_model gpt-4o \
+  --save_inspection_artifacts \
+  --inspection_run_id my_eval \
+  --inspection_sample_id clip_001 \
+  --output_json reports/world_model_metrics/report.json
 ```
 
 ## Batch Manifest Usage
@@ -78,9 +163,12 @@ python tools/evaluate_world_model_lpips.py \
   --output_jsonl reports/world_model_lpips/results.jsonl \
   --summary_csv reports/world_model_lpips/summary.csv \
   --eval_fps 4 \
-  --max_pairs 32
+  --max_pairs 32 \
+  --lpips_sampling temporal \
+  --lpips_temporal_fractions "0,0.5,1"
 ```
 
-The current alignment mode samples both videos over their shared duration and
-computes LPIPS for matched timestamps. Lower LPIPS means the world-model video
-is perceptually closer to the reference video.
+Default LPIPS behavior is temporal anchors at the start, middle, and end of
+each video. Use `--lpips_sampling dense` to restore the older shared-timestamp
+uniform sampling. Lower LPIPS means the world-model video is perceptually
+closer to the reference at the sampled anchors.

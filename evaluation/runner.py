@@ -2,8 +2,66 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, Optional, Sequence
 
+from .context import EvaluationContext
 from .registry import normalize_modules, run_modules
 from .video_io import build_evaluation_context
+
+
+def _merge_lpips_artifacts(
+    context: EvaluationContext,
+    *,
+    lpips_sampling: str,
+    lpips_temporal_fractions: Optional[Sequence[float]],
+    lpips_temporal_labels: Optional[Sequence[str]],
+    lpips_event_frames_before: int,
+    lpips_event_frames_after: int,
+    lpips_event_offsets: Optional[Sequence[int]],
+    lpips_vlm_model: str,
+    lpips_vlm_max_grid_frames: int,
+    lpips_vlm_prompt_version: str,
+    lpips_vlm_max_reference_events: Optional[int],
+    lpips_vlm_reference_trim_sec: Optional[float],
+    lpips_vlm_judge_hint: str,
+    lpips_causal_event_source: str,
+    lpips_causal_lpips_pairing: Optional[str],
+    save_inspection_artifacts: bool,
+    inspection_root: str,
+    inspection_run_id: str,
+    inspection_sample_id: Optional[str],
+) -> None:
+    context.artifacts["lpips_sampling"] = lpips_sampling.strip().lower()
+    if lpips_temporal_fractions is not None:
+        context.artifacts["lpips_temporal_fractions"] = list(lpips_temporal_fractions)
+    if lpips_temporal_labels is not None:
+        context.artifacts["lpips_temporal_labels"] = list(lpips_temporal_labels)
+    context.artifacts["lpips_event_frames_before"] = int(lpips_event_frames_before)
+    context.artifacts["lpips_event_frames_after"] = int(lpips_event_frames_after)
+    if lpips_event_offsets is not None:
+        context.artifacts["lpips_event_offsets"] = list(lpips_event_offsets)
+    context.artifacts["lpips_vlm_model"] = lpips_vlm_model
+    context.artifacts["lpips_vlm_max_grid_frames"] = int(lpips_vlm_max_grid_frames)
+    context.artifacts["lpips_vlm_prompt_version"] = lpips_vlm_prompt_version
+    if lpips_vlm_max_reference_events is not None:
+        context.artifacts["lpips_vlm_max_reference_events"] = int(
+            lpips_vlm_max_reference_events
+        )
+    if lpips_vlm_reference_trim_sec is not None:
+        context.artifacts["lpips_vlm_reference_trim_sec"] = float(
+            lpips_vlm_reference_trim_sec
+        )
+    hint = (lpips_vlm_judge_hint or "").strip()
+    if hint:
+        context.artifacts["lpips_vlm_judge_hint"] = hint
+    context.artifacts["lpips_causal_event_source"] = lpips_causal_event_source.strip().lower()
+    if lpips_causal_lpips_pairing is not None:
+        raw = str(lpips_causal_lpips_pairing).strip().lower()
+        if raw and raw != "auto":
+            context.artifacts["lpips_causal_lpips_pairing"] = raw
+    context.artifacts["save_inspection_artifacts"] = bool(save_inspection_artifacts)
+    context.artifacts["inspection_root"] = inspection_root
+    context.artifacts["inspection_run_id"] = inspection_run_id
+    if inspection_sample_id is not None:
+        context.artifacts["inspection_sample_id"] = inspection_sample_id
 
 
 def ensure_device(device: Optional[str] = None) -> str:
@@ -24,6 +82,24 @@ def run_world_model_evaluation(
     modules: Iterable[str] = ("lpips",),
     eval_fps: float = 4.0,
     max_pairs: int = 32,
+    lpips_sampling: str = "temporal",
+    lpips_temporal_fractions: Optional[Sequence[float]] = None,
+    lpips_temporal_labels: Optional[Sequence[str]] = None,
+    lpips_event_frames_before: int = 2,
+    lpips_event_frames_after: int = 2,
+    lpips_event_offsets: Optional[Sequence[int]] = None,
+    lpips_vlm_model: str = "gpt-4o",
+    lpips_vlm_max_grid_frames: int = 48,
+    lpips_vlm_prompt_version: str = "causal_collision_v2",
+    lpips_vlm_max_reference_events: Optional[int] = None,
+    lpips_vlm_reference_trim_sec: Optional[float] = None,
+    lpips_vlm_judge_hint: str = "",
+    lpips_causal_event_source: str = "both",
+    lpips_causal_lpips_pairing: Optional[str] = None,
+    save_inspection_artifacts: bool = False,
+    inspection_root: str = "reports/world_model_lpips/qa",
+    inspection_run_id: str = "run",
+    inspection_sample_id: Optional[str] = None,
     device: Optional[str] = None,
     unity_log_json: Optional[str] = None,
     camera_intrinsics_json: Optional[str] = None,
@@ -46,6 +122,12 @@ def run_world_model_evaluation(
     synthetic_use_depth: bool = False,
     ptlflow_root: Optional[str] = None,
     synthetic_grid_size: int = 8,
+    lpips_vlm_scene_hints: Optional[str] = None,
+    lpips_vlm_contact_types: Optional[str] = None,
+    lpips_vlm_directional_sides: Optional[str] = None,
+    lpips_vlm_system_prompt: Optional[str] = None,
+    lpips_vlm_judge_user_prompt_template: Optional[str] = None,
+    causal_match_mode: str = "strict_fallback_order",
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -70,6 +152,27 @@ def run_world_model_evaluation(
                 max_pairs=max_pairs,
                 text_prompt=text_prompt,
             )
+            _merge_lpips_artifacts(
+                context,
+                lpips_sampling=lpips_sampling,
+                lpips_temporal_fractions=lpips_temporal_fractions,
+                lpips_temporal_labels=lpips_temporal_labels,
+                lpips_event_frames_before=lpips_event_frames_before,
+                lpips_event_frames_after=lpips_event_frames_after,
+                lpips_event_offsets=lpips_event_offsets,
+                lpips_vlm_model=lpips_vlm_model,
+                lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
+                lpips_vlm_prompt_version=lpips_vlm_prompt_version,
+                lpips_vlm_max_reference_events=lpips_vlm_max_reference_events,
+                lpips_vlm_reference_trim_sec=lpips_vlm_reference_trim_sec,
+                lpips_vlm_judge_hint=lpips_vlm_judge_hint,
+                lpips_causal_event_source=lpips_causal_event_source,
+                lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+                save_inspection_artifacts=save_inspection_artifacts,
+                inspection_root=inspection_root,
+                inspection_run_id=inspection_run_id,
+                inspection_sample_id=inspection_sample_id,
+            )
             report.update(
                 {
                     "reference_video": context.reference_video,
@@ -81,6 +184,7 @@ def run_world_model_evaluation(
                     "max_pairs": context.max_pairs,
                     "alignment_mode": context.alignment_mode,
                     "num_pairs_sampled": context.num_pairs,
+                    "artifacts": context.artifacts,
                 }
             )
             report["results"] = run_modules(
@@ -104,6 +208,27 @@ def run_world_model_evaluation(
         eval_fps=eval_fps,
         max_pairs=max_pairs,
         text_prompt=text_prompt,
+    )
+    _merge_lpips_artifacts(
+        context,
+        lpips_sampling=lpips_sampling,
+        lpips_temporal_fractions=lpips_temporal_fractions,
+        lpips_temporal_labels=lpips_temporal_labels,
+        lpips_event_frames_before=lpips_event_frames_before,
+        lpips_event_frames_after=lpips_event_frames_after,
+        lpips_event_offsets=lpips_event_offsets,
+        lpips_vlm_model=lpips_vlm_model,
+        lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
+        lpips_vlm_prompt_version=lpips_vlm_prompt_version,
+        lpips_vlm_max_reference_events=lpips_vlm_max_reference_events,
+        lpips_vlm_reference_trim_sec=lpips_vlm_reference_trim_sec,
+        lpips_vlm_judge_hint=lpips_vlm_judge_hint,
+        lpips_causal_event_source=lpips_causal_event_source,
+        lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+        save_inspection_artifacts=save_inspection_artifacts,
+        inspection_root=inspection_root,
+        inspection_run_id=inspection_run_id,
+        inspection_sample_id=inspection_sample_id,
     )
     context.artifacts.update(
         {
@@ -132,8 +257,29 @@ def run_world_model_evaluation(
             "synthetic_use_depth": synthetic_use_depth,
             "ptlflow_root": ptlflow_root if ptlflow_root is not None else "/workspace/ptlflow",
             "synthetic_grid_size": synthetic_grid_size,
+            "lpips_sampling": lpips_sampling,
+            "lpips_vlm_model": lpips_vlm_model,
+            "lpips_vlm_max_grid_frames": lpips_vlm_max_grid_frames,
+            "lpips_vlm_prompt_version": lpips_vlm_prompt_version,
+            "lpips_event_frames_before": lpips_event_frames_before,
+            "lpips_event_frames_after": lpips_event_frames_after,
+            "lpips_event_offsets": lpips_event_offsets,
+            "causal_match_mode": causal_match_mode,
+            "save_inspection_artifacts": save_inspection_artifacts,
+            "inspection_root": inspection_root,
+            "inspection_run_id": inspection_run_id,
+            "inspection_sample_id": inspection_sample_id,
         }
     )
+    for _k, _v in (
+        ("lpips_vlm_scene_hints", lpips_vlm_scene_hints),
+        ("lpips_vlm_contact_types", lpips_vlm_contact_types),
+        ("lpips_vlm_directional_sides", lpips_vlm_directional_sides),
+        ("lpips_vlm_system_prompt", lpips_vlm_system_prompt),
+        ("lpips_vlm_judge_user_prompt_template", lpips_vlm_judge_user_prompt_template),
+    ):
+        if _v is not None:
+            context.artifacts[_k] = _v
 
     report.update(
         {

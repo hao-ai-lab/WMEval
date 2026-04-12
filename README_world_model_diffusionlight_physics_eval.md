@@ -13,6 +13,7 @@ a reference Unity video using:
 - `evaluation/modules/motion.py`: RAFT-based motion module
 - `evaluation/modules/shadow.py`: SAM2-based shadow module
 - `tools/evaluate_world_model_diffusionlight.py`: single-pair orchestrator
+- `tools/evaluate_world_model_metrics.py`: standalone alias for the same entrypoint
 - `scripts/evaluate_world_model_diffusionlight_physics.sh`: runnable command template
 
 ## Dependencies

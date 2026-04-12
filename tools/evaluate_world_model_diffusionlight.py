@@ -42,6 +42,113 @@ def main() -> None:
     ap.add_argument("--eval_fps", type=float, default=4.0, help="Timestamp sampling rate")
     ap.add_argument("--max_pairs", type=int, default=32, help="Maximum aligned frame pairs")
     ap.add_argument("--device", default=None, help="torch device (default: cuda if available else cpu)")
+    ap.add_argument(
+        "--lpips_sampling",
+        choices=["temporal", "dense", "causal_vlm_collision"],
+        default="temporal",
+        help="LPIPS anchor mode: temporal fractions, dense time-aligned pairs, or VLM collision events",
+    )
+    ap.add_argument(
+        "--lpips_temporal_fractions",
+        default="0,0.5,1",
+        help='Comma-separated fractions in [0,1] for temporal mode (e.g. "0,0.5,1")',
+    )
+    ap.add_argument(
+        "--lpips_event_frames_before",
+        type=int,
+        default=2,
+        help="Causal mode: frames before contact for LPIPS offsets (if --lpips_event_offsets not set)",
+    )
+    ap.add_argument(
+        "--lpips_event_frames_after",
+        type=int,
+        default=2,
+        help="Causal mode: frames after contact for LPIPS offsets (if --lpips_event_offsets not set)",
+    )
+    ap.add_argument(
+        "--lpips_event_offsets",
+        default=None,
+        help='Optional comma-separated integer offsets around contact (overrides before/after), e.g. "-2,-1,0,1,2"',
+    )
+    ap.add_argument("--lpips_vlm_model", default="gpt-4o", help="OpenAI vision model for causal_vlm_collision")
+    ap.add_argument(
+        "--lpips_vlm_max_grid_frames",
+        type=int,
+        default=48,
+        help="Max keyframes sent to the VLM per video in causal_vlm_collision (~40–56 typical)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_prompt_version",
+        default="causal_collision_v2",
+        help="Version tag stored in JSON for causal judge prompts",
+    )
+    ap.add_argument(
+        "--lpips_vlm_max_reference_events",
+        type=int,
+        default=None,
+        help=(
+            "Unity VLM only: if set (e.g. 1), append a request for at most that many "
+            "'events' in the judge JSON (soft constraint; not post-filtered)"
+        ),
+    )
+    ap.add_argument(
+        "--lpips_vlm_reference_trim_sec",
+        type=float,
+        default=None,
+        help=(
+            "Reference-only VLM: only sample keyframes from the first N seconds of the "
+            "reference clip (indices stay real file frame numbers). Use e.g. 2 to focus "
+            "on an early collision."
+        ),
+    )
+    ap.add_argument(
+        "--lpips_vlm_judge_hint",
+        default="",
+        help=(
+            "Optional short hint appended to the reference VLM judge prompt (ignored if "
+            "empty). Hints are soft: model may disregard if frames disagree."
+        ),
+    )
+    ap.add_argument(
+        "--lpips_causal_event_source",
+        choices=["both", "reference", "unity"],
+        default="both",
+        help=(
+            "For causal_vlm_collision: 'reference' (or 'unity') = VLM only on the "
+            "reference video; candidate instants follow the same elapsed times as Unity. "
+            "'both' = legacy: VLM on both videos + greedy event matching."
+        ),
+    )
+    ap.add_argument(
+        "--lpips_causal_lpips_pairing",
+        choices=["auto", "wall_clock", "per_video_contact"],
+        default="auto",
+        help=(
+            "causal_vlm_collision: how to pick ref/cand frames per offset. auto = "
+            "per_video_contact when event_source is both, else wall_clock. "
+            "per_video_contact = (e_ref+Δ, e_cand+Δ) on each clip for Genie-friendly timing."
+        ),
+    )
+    ap.add_argument(
+        "--save_inspection_artifacts",
+        action="store_true",
+        help="Write QA frames under inspection_root / run_id / sample_id",
+    )
+    ap.add_argument(
+        "--inspection_root",
+        default="reports/world_model_lpips/qa",
+        help="Base directory for optional LPIPS inspection outputs",
+    )
+    ap.add_argument(
+        "--inspection_run_id",
+        default="single_run",
+        help="Run id subdirectory for inspection artifacts",
+    )
+    ap.add_argument(
+        "--inspection_sample_id",
+        default="sample",
+        help="Sample id subdirectory for inspection artifacts",
+    )
     ap.add_argument("--unity_log_json", default=None, help="Unity per-frame log JSON with light/object states")
     ap.add_argument("--camera_intrinsics_json", default=None, help="Optional camera intrinsics JSON")
     ap.add_argument("--unity_flow_dir", default=None, help="Optional Unity optical-flow ground-truth directory")
@@ -98,15 +205,63 @@ def main() -> None:
     )
     ap.add_argument("--ptlflow_root", default="/workspace/ptlflow")
     ap.add_argument("--synthetic_grid_size", type=int, default=8)
+    ap.add_argument(
+        "--lpips_vlm_scene_hints",
+        default=None,
+        help="Optional extra judge instructions (appended under Scene-specific instructions)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_contact_types",
+        default=None,
+        help="Comma-separated event types to keep (default: collision,impact,contact)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_directional_sides",
+        default=None,
+        help="Comma-separated sides for strict pairing (default: left,right,front,back)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_system_prompt",
+        default=None,
+        help="Override VLM system message (default: generic physics-style judge)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_judge_user_prompt_template",
+        default=None,
+        help="Override user prompt; must contain {idx_str} and {extra_instructions}",
+    )
+    ap.add_argument(
+        "--causal_match_mode",
+        default="strict_fallback_order",
+        choices=["strict_fallback_order", "strict", "order", "side_agnostic", "auto"],
+        help="Pairing for causal LPIPS: auto is an alias for strict_fallback_order",
+    )
 
     args = ap.parse_args()
 
     modules = [module for module in args.modules.split(",") if module.strip()]
+    temporal_fractions = [
+        float(value.strip())
+        for value in args.lpips_temporal_fractions.split(",")
+        if value.strip()
+    ]
+    event_offsets = None
+    if args.lpips_event_offsets:
+        event_offsets = [
+            int(value.strip())
+            for value in args.lpips_event_offsets.split(",")
+            if value.strip()
+        ]
     control_bad_pixel_thresholds = [
         float(value.strip())
         for value in args.control_bad_pixel_thresholds.split(",")
         if value.strip()
     ]
+
+    causal_match_mode = (
+        "strict_fallback_order" if args.causal_match_mode == "auto" else args.causal_match_mode
+    )
+
     report = run_world_model_evaluation(
         video_path=args.video,
         ref_video_path=args.ref_video,
@@ -114,6 +269,27 @@ def main() -> None:
         modules=modules,
         eval_fps=args.eval_fps,
         max_pairs=args.max_pairs,
+        lpips_sampling=args.lpips_sampling,
+        lpips_temporal_fractions=temporal_fractions,
+        lpips_event_frames_before=args.lpips_event_frames_before,
+        lpips_event_frames_after=args.lpips_event_frames_after,
+        lpips_event_offsets=event_offsets,
+        lpips_vlm_model=args.lpips_vlm_model,
+        lpips_vlm_max_grid_frames=args.lpips_vlm_max_grid_frames,
+        lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,
+        lpips_vlm_max_reference_events=args.lpips_vlm_max_reference_events,
+        lpips_vlm_reference_trim_sec=args.lpips_vlm_reference_trim_sec,
+        lpips_vlm_judge_hint=args.lpips_vlm_judge_hint,
+        lpips_causal_event_source=args.lpips_causal_event_source,
+        lpips_causal_lpips_pairing=(
+            None
+            if args.lpips_causal_lpips_pairing == "auto"
+            else args.lpips_causal_lpips_pairing
+        ),
+        save_inspection_artifacts=args.save_inspection_artifacts,
+        inspection_root=args.inspection_root,
+        inspection_run_id=args.inspection_run_id,
+        inspection_sample_id=args.inspection_sample_id,
         device=args.device,
         unity_log_json=args.unity_log_json,
         camera_intrinsics_json=args.camera_intrinsics_json,
@@ -136,6 +312,12 @@ def main() -> None:
         synthetic_use_depth=args.synthetic_use_depth,
         ptlflow_root=args.ptlflow_root,
         synthetic_grid_size=args.synthetic_grid_size,
+        lpips_vlm_scene_hints=args.lpips_vlm_scene_hints,
+        lpips_vlm_contact_types=args.lpips_vlm_contact_types,
+        lpips_vlm_directional_sides=args.lpips_vlm_directional_sides,
+        lpips_vlm_system_prompt=args.lpips_vlm_system_prompt,
+        lpips_vlm_judge_user_prompt_template=args.lpips_vlm_judge_user_prompt_template,
+        causal_match_mode=causal_match_mode,
     )
 
     out_path = Path(args.output_json)
