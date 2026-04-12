@@ -150,7 +150,7 @@ def run_world_model_evaluation(
     lpips_vlm_directional_sides: Optional[str] = None,
     lpips_vlm_system_prompt: Optional[str] = None,
     lpips_vlm_judge_user_prompt_template: Optional[str] = None,
-    causal_match_mode: str = "strict_fallback_order",
+    causal_match_mode: str = "monotonic_side_time",
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)

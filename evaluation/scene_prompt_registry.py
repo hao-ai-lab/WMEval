@@ -9,8 +9,8 @@ SCENE_HINT_REGISTRY: dict[str, str] = {
         "Return the full collision timeline, not just the first event. "
         "Enumerate all distinct collision/contact episodes in chronological order. "
         "Do not omit later collisions just because an earlier one exists, and do not collapse distinct episodes into one event. "
-        "For this mirror-ball style scene, include front/depth collisions, lateral left/right collisions, and repeated floor/down contacts when they are visually distinct episodes. "
-        "When depth ambiguity exists, use side='front' for a collision that is primarily along the camera-depth/forward direction rather than a lateral screen-left or screen-right touch. "
+        "Include depth-direction collisions as well as lateral left/right collisions when they are visually distinct episodes. "
+        "When depth ambiguity exists, use side='front' for contact with an obstacle ahead in the forward camera-depth direction, and use side='back' for a later contact with an obstacle behind or after the moving object has already passed it. "
         "Only merge contacts that are clearly one continuous contact episode with no meaningful separation."
     ),
 }

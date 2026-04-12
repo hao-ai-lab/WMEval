@@ -266,9 +266,16 @@ def main() -> None:
     )
     ap.add_argument(
         "--causal_match_mode",
-        default="strict_fallback_order",
-        choices=["strict_fallback_order", "strict", "order", "side_agnostic", "auto"],
-        help="Pairing for causal LPIPS: auto is an alias for strict_fallback_order",
+        default="monotonic_side_time",
+        choices=[
+            "monotonic_side_time",
+            "strict_fallback_order",
+            "strict",
+            "order",
+            "side_agnostic",
+            "auto",
+        ],
+        help="Pairing for causal LPIPS: auto is an alias for monotonic_side_time",
     )
 
     args = ap.parse_args()
@@ -293,7 +300,7 @@ def main() -> None:
     ]
 
     causal_match_mode = (
-        "strict_fallback_order" if args.causal_match_mode == "auto" else args.causal_match_mode
+        "monotonic_side_time" if args.causal_match_mode == "auto" else args.causal_match_mode
     )
 
     report = run_world_model_evaluation(

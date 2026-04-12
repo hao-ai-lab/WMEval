@@ -463,6 +463,142 @@ def pair_collision_events_order_with_log(
     return matched, pairing_log
 
 
+def _normalized_event_time(event: Dict[str, Any], frame_count: int) -> float:
+    denom = max(1, int(frame_count) - 1)
+    return float(int(event.get("frame", 0))) / float(denom)
+
+
+def _pair_cost_monotonic(
+    ref_event: Dict[str, Any],
+    cand_event: Dict[str, Any],
+    *,
+    ref_frame_count: int,
+    cand_frame_count: int,
+    directional_sides: FrozenSet[str],
+) -> float:
+    rs = str(ref_event.get("side", "unknown")).lower()
+    cs = str(cand_event.get("side", "unknown")).lower()
+    time_cost = abs(
+        _normalized_event_time(ref_event, ref_frame_count)
+        - _normalized_event_time(cand_event, cand_frame_count)
+    )
+    if rs == cs:
+        side_cost = 0.0
+    elif "unknown" in (rs, cs):
+        side_cost = 0.12
+    elif rs in directional_sides and cs in directional_sides:
+        side_cost = 0.35
+    else:
+        side_cost = 0.2
+    return time_cost + side_cost
+
+
+def pair_collision_events_monotonic_with_log(
+    ref_events: List[Dict[str, Any]],
+    cand_events: List[Dict[str, Any]],
+    *,
+    ref_frame_count: int,
+    cand_frame_count: int,
+    directional_sides: FrozenSet[str] = DEFAULT_DIRECTIONAL_SIDES,
+    skip_cost: float = 0.45,
+) -> Tuple[
+    List[Tuple[Dict[str, Any], Dict[str, Any]]],
+    List[Dict[str, Any]],
+    List[Dict[str, Any]],
+    List[Dict[str, Any]],
+]:
+    ref_sorted = sorted(ref_events, key=lambda e: int(e.get("frame", 0)))
+    cand_sorted = sorted(cand_events, key=lambda e: int(e.get("frame", 0)))
+    n_ref = len(ref_sorted)
+    n_cand = len(cand_sorted)
+
+    dp: List[List[float]] = [
+        [0.0 for _ in range(n_cand + 1)] for _ in range(n_ref + 1)
+    ]
+    choice: List[List[str]] = [
+        ["" for _ in range(n_cand + 1)] for _ in range(n_ref + 1)
+    ]
+
+    for i in range(n_ref - 1, -1, -1):
+        dp[i][n_cand] = skip_cost * float(n_ref - i)
+        choice[i][n_cand] = "skip_ref"
+    for j in range(n_cand - 1, -1, -1):
+        dp[n_ref][j] = skip_cost * float(n_cand - j)
+        choice[n_ref][j] = "skip_cand"
+
+    for i in range(n_ref - 1, -1, -1):
+        for j in range(n_cand - 1, -1, -1):
+            match_cost = _pair_cost_monotonic(
+                ref_sorted[i],
+                cand_sorted[j],
+                ref_frame_count=ref_frame_count,
+                cand_frame_count=cand_frame_count,
+                directional_sides=directional_sides,
+            ) + dp[i + 1][j + 1]
+            skip_ref_cost = skip_cost + dp[i + 1][j]
+            skip_cand_cost = skip_cost + dp[i][j + 1]
+
+            best_cost = match_cost
+            best_choice = "match"
+            if skip_ref_cost < best_cost:
+                best_cost = skip_ref_cost
+                best_choice = "skip_ref"
+            if skip_cand_cost < best_cost:
+                best_cost = skip_cand_cost
+                best_choice = "skip_cand"
+            dp[i][j] = best_cost
+            choice[i][j] = best_choice
+
+    matched: List[Tuple[Dict[str, Any], Dict[str, Any]]] = []
+    unmatched_ref: List[Dict[str, Any]] = []
+    unmatched_cand: List[Dict[str, Any]] = []
+    pairing_log: List[Dict[str, Any]] = []
+
+    i = 0
+    j = 0
+    while i < n_ref or j < n_cand:
+        current = choice[i][j] if i <= n_ref and j <= n_cand else ""
+        if i < n_ref and j < n_cand and current == "match":
+            r, c = ref_sorted[i], cand_sorted[j]
+            matched.append((r, c))
+            pairing_log.append(
+                {
+                    "ref_event": _event_compact(r),
+                    "status": "matched",
+                    "cand_event": _event_compact(c),
+                    "match_rule": "monotonic_side_time",
+                    "pair_index": len(matched) - 1,
+                    "pair_cost": _pair_cost_monotonic(
+                        r,
+                        c,
+                        ref_frame_count=ref_frame_count,
+                        cand_frame_count=cand_frame_count,
+                        directional_sides=directional_sides,
+                    ),
+                }
+            )
+            i += 1
+            j += 1
+            continue
+        if i < n_ref and (j == n_cand or current == "skip_ref"):
+            unmatched_ref.append(ref_sorted[i])
+            pairing_log.append(
+                {
+                    "ref_event": _event_compact(ref_sorted[i]),
+                    "status": "unmatched",
+                    "reason": "monotonic_skip_reference",
+                    "detail": {"pair_index": len(matched)},
+                }
+            )
+            i += 1
+            continue
+        if j < n_cand:
+            unmatched_cand.append(cand_sorted[j])
+            j += 1
+
+    return matched, unmatched_ref, unmatched_cand, pairing_log
+
+
 def pair_collision_events_ref_first(
     ref_events: List[Dict[str, Any]],
     cand_events: List[Dict[str, Any]],
@@ -835,7 +971,7 @@ def analyze_causal_vlm_lpips(
     max_grid = int(artifacts.get("lpips_vlm_max_grid_frames", 24))
     prompt_version = str(artifacts.get("lpips_vlm_prompt_version", PROMPT_VERSION_DEFAULT))
     offsets = resolve_event_offsets(artifacts)
-    match_mode = str(artifacts.get("causal_match_mode", "strict_fallback_order")).strip().lower()
+    match_mode = str(artifacts.get("causal_match_mode", "monotonic_side_time")).strip().lower()
     contact_types = resolve_contact_types(artifacts)
     directional_sides = resolve_directional_sides(artifacts)
 
@@ -1003,17 +1139,25 @@ def analyze_causal_vlm_lpips(
             mapped_candidate_events.append(mapped)
         cand_events_f = mapped_candidate_events
 
-    strict_matched, strict_unmatched_ref, strict_unmatched_cand, strict_log = (
-        pair_collision_events_strict_with_log(
-            ref_events_f, cand_events_f, directional_sides=directional_sides
+    _, _, _, strict_log = pair_collision_events_strict_with_log(
+        ref_events_f, cand_events_f, directional_sides=directional_sides
+    )
+
+    monotonic_matched, monotonic_unmatched_ref, monotonic_unmatched_cand, monotonic_log = (
+        pair_collision_events_monotonic_with_log(
+            ref_events_f,
+            cand_events_f,
+            ref_frame_count=context.reference.metadata.frame_count,
+            cand_frame_count=context.candidate.metadata.frame_count,
+            directional_sides=directional_sides,
         )
     )
 
-    matched = strict_matched
-    event_pairing_log = strict_log
-    causal_match_mode_used = "strict"
-    unmatched_ref = strict_unmatched_ref
-    unmatched_cand = strict_unmatched_cand
+    matched = monotonic_matched
+    event_pairing_log = monotonic_log
+    causal_match_mode_used = "monotonic_side_time"
+    unmatched_ref = monotonic_unmatched_ref
+    unmatched_cand = monotonic_unmatched_cand
 
     if match_mode in ("order", "side_agnostic"):
         matched, event_pairing_log = pair_collision_events_order_with_log(
@@ -1026,10 +1170,26 @@ def analyze_causal_vlm_lpips(
         unmatched_ref = ref_sorted[n_pair:]
         unmatched_cand = cand_sorted[n_pair:]
     elif match_mode == "strict":
-        pass
+        matched, unmatched_ref, unmatched_cand, event_pairing_log = (
+            pair_collision_events_strict_with_log(
+                ref_events_f, cand_events_f, directional_sides=directional_sides
+            )
+        )
+        causal_match_mode_used = "strict"
     else:
-        # strict_fallback_order, auto, unknown → strict then order if no pairs
-        if len(strict_matched) == 0 and ref_events_f and cand_events_f:
+        # backward-compatible aliases
+        if match_mode in ("strict_fallback_order", "auto"):
+            matched, unmatched_ref, unmatched_cand, event_pairing_log = (
+                pair_collision_events_monotonic_with_log(
+                    ref_events_f,
+                    cand_events_f,
+                    ref_frame_count=context.reference.metadata.frame_count,
+                    cand_frame_count=context.candidate.metadata.frame_count,
+                    directional_sides=directional_sides,
+                )
+            )
+            causal_match_mode_used = "monotonic_side_time"
+        elif len(monotonic_matched) == 0 and ref_events_f and cand_events_f:
             matched, event_pairing_log = pair_collision_events_order_with_log(
                 ref_events_f, cand_events_f
             )
