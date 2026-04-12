@@ -21,14 +21,16 @@ from evaluation.modules.lpips_causal_vlm import (
     pair_collision_events_monotonic_with_log,
     pair_collision_events_order_with_log,
     pair_collision_events_strict_with_log,
+    sanitize_relabel_payload,
 )
-from evaluation.scene_prompt_registry import infer_scene_key, resolve_scene_hints
+from evaluation.scene_prompt_registry import infer_scene_key, resolve_scene_config, resolve_scene_hints
 
 
 def _ev(frame: int, side: str) -> dict:
     return {
         "type": "collision",
         "side": side,
+        "contact_class": "unknown",
         "frame": frame,
         "evidence_frame_indices": [frame],
         "evidence_summary": "test",
@@ -135,7 +137,7 @@ class TestCausalPairing(unittest.TestCase):
         )
         self.assertEqual(len(ur), 0)
         self.assertEqual(len(uc), 0)
-        self.assertEqual(log[0]["match_rule"], "monotonic_side_time")
+        self.assertEqual(log[0]["match_rule"], "monotonic_chronology")
 
     def test_monotonic_pairing_can_leave_mismatch_unmatched(self) -> None:
         ref = [_ev(10, "left"), _ev(20, "right")]
@@ -153,6 +155,32 @@ class TestCausalPairing(unittest.TestCase):
         self.assertEqual(ur[0]["side"], "right")
         self.assertEqual(len(uc), 0)
         self.assertEqual(log[-1]["reason"], "monotonic_skip_reference")
+
+    def test_monotonic_pairing_allows_label_mismatch_when_time_aligned(self) -> None:
+        ref = [_ev(10, "front") | {"contact_class": "depth"}]
+        cand = [_ev(12, "right") | {"contact_class": "lateral", "side_confidence": 0.1}]
+        matched, ur, uc, _ = pair_collision_events_monotonic_with_log(
+            ref,
+            cand,
+            ref_frame_count=100,
+            cand_frame_count=100,
+        )
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(len(ur), 0)
+        self.assertEqual(len(uc), 0)
+
+    def test_monotonic_pairing_rejects_bad_temporal_match(self) -> None:
+        ref = [_ev(10, "front") | {"contact_class": "depth", "side_confidence": 1.0}]
+        cand = [_ev(90, "left") | {"contact_class": "lateral", "side_confidence": 1.0}]
+        matched, ur, uc, _ = pair_collision_events_monotonic_with_log(
+            ref,
+            cand,
+            ref_frame_count=100,
+            cand_frame_count=100,
+        )
+        self.assertEqual(len(matched), 0)
+        self.assertEqual(len(ur), 1)
+        self.assertEqual(len(uc), 1)
 
     def test_first_divergence_temporal_spike(self) -> None:
         temporal = {
@@ -220,7 +248,25 @@ class TestCausalPairing(unittest.TestCase):
         self.assertIn('"right"', text)
         self.assertIn('"front"', text)
         self.assertIn('"back"', text)
+        self.assertIn('"contact_class"', text)
         self.assertIn("Event anchor frame: 10", text)
+
+    def test_sanitize_relabel_payload_keeps_contact_class_and_side_confidence(self) -> None:
+        payload = sanitize_relabel_payload(
+            {
+                "contact_class": "lateral",
+                "side": "left",
+                "confidence": 0.8,
+                "side_confidence": 0.6,
+                "evidence_frame_indices": [8, 10],
+                "evidence_summary": "test",
+                "reasoning_steps": ["ok"],
+            },
+            allowed={8, 10, 12},
+        )
+        self.assertEqual(payload["contact_class"], "lateral")
+        self.assertEqual(payload["side"], "left")
+        self.assertEqual(payload["side_confidence"], 0.6)
 
     def test_build_windowed_keyframe_groups_overlaps(self) -> None:
         groups = build_windowed_keyframe_groups(
@@ -313,6 +359,15 @@ class TestCausalPairing(unittest.TestCase):
         self.assertIsNotNone(hints)
         assert hints is not None
         self.assertIn("full collision timeline", hints)
+
+    def test_resolve_scene_config_uses_registry(self) -> None:
+        key, config = resolve_scene_config(
+            scene_key=None,
+            reference_video="/tmp/out/unity_runs/sample_scene/unity_rollout.mp4",
+            candidate_video="/tmp/out/genie_runs/sample_scene/run_02/sample_scene_genie_rollout.mp4",
+        )
+        self.assertEqual(key, "sample_scene")
+        self.assertEqual(config["match_bias"], "chronology")
 
 
 if __name__ == "__main__":

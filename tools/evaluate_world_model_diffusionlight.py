@@ -324,8 +324,9 @@ def main() -> None:
     )
     ap.add_argument(
         "--causal_match_mode",
-        default="monotonic_side_time",
+        default="monotonic_chronology",
         choices=[
+            "monotonic_chronology",
             "monotonic_side_time",
             "strict_fallback_order",
             "strict",
@@ -333,7 +334,19 @@ def main() -> None:
             "side_agnostic",
             "auto",
         ],
-        help="Pairing for causal LPIPS: auto is an alias for monotonic_side_time",
+        help="Pairing for causal LPIPS: auto is an alias for monotonic_chronology",
+    )
+    ap.add_argument(
+        "--lpips_vlm_pair_accept_cost",
+        type=float,
+        default=None,
+        help="Maximum monotonic chronology match cost before a pair is left unmatched",
+    )
+    ap.add_argument(
+        "--lpips_vlm_skip_cost",
+        type=float,
+        default=None,
+        help="Cost of leaving an event unmatched in monotonic chronology matching",
     )
 
     args = ap.parse_args()
@@ -358,7 +371,7 @@ def main() -> None:
     ]
 
     causal_match_mode = (
-        "monotonic_side_time" if args.causal_match_mode == "auto" else args.causal_match_mode
+        "monotonic_chronology" if args.causal_match_mode == "auto" else args.causal_match_mode
     )
 
     report = run_world_model_evaluation(
@@ -433,6 +446,8 @@ def main() -> None:
         lpips_vlm_system_prompt=args.lpips_vlm_system_prompt,
         lpips_vlm_judge_user_prompt_template=args.lpips_vlm_judge_user_prompt_template,
         causal_match_mode=causal_match_mode,
+        lpips_vlm_pair_accept_cost=args.lpips_vlm_pair_accept_cost,
+        lpips_vlm_skip_cost=args.lpips_vlm_skip_cost,
     )
 
     out_path = Path(args.output_json)

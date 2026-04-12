@@ -4,7 +4,7 @@ from typing import Any, Dict, Iterable, Optional, Sequence
 
 from .context import EvaluationContext
 from .registry import normalize_modules, run_modules
-from .scene_prompt_registry import resolve_scene_hints
+from .scene_prompt_registry import resolve_scene_config, resolve_scene_hints
 from .video_io import build_evaluation_context
 
 
@@ -41,6 +41,8 @@ def _merge_lpips_artifacts(
     lpips_vlm_scene_key: Optional[str],
     lpips_causal_event_source: str,
     lpips_causal_lpips_pairing: Optional[str],
+    lpips_vlm_pair_accept_cost: Optional[float],
+    lpips_vlm_skip_cost: Optional[float],
     save_inspection_artifacts: bool,
     inspection_root: str,
     inspection_run_id: str,
@@ -101,6 +103,10 @@ def _merge_lpips_artifacts(
         raw = str(lpips_causal_lpips_pairing).strip().lower()
         if raw and raw != "auto":
             context.artifacts["lpips_causal_lpips_pairing"] = raw
+    if lpips_vlm_pair_accept_cost is not None:
+        context.artifacts["lpips_vlm_pair_accept_cost"] = float(lpips_vlm_pair_accept_cost)
+    if lpips_vlm_skip_cost is not None:
+        context.artifacts["lpips_vlm_skip_cost"] = float(lpips_vlm_skip_cost)
     context.artifacts["save_inspection_artifacts"] = bool(save_inspection_artifacts)
     context.artifacts["inspection_root"] = inspection_root
     context.artifacts["inspection_run_id"] = inspection_run_id
@@ -156,6 +162,8 @@ def run_world_model_evaluation(
     lpips_vlm_scene_key: Optional[str] = None,
     lpips_causal_event_source: str = "both",
     lpips_causal_lpips_pairing: Optional[str] = None,
+    lpips_vlm_pair_accept_cost: Optional[float] = None,
+    lpips_vlm_skip_cost: Optional[float] = None,
     save_inspection_artifacts: bool = False,
     inspection_root: str = "reports/world_model_lpips/qa",
     inspection_run_id: str = "run",
@@ -187,7 +195,7 @@ def run_world_model_evaluation(
     lpips_vlm_directional_sides: Optional[str] = None,
     lpips_vlm_system_prompt: Optional[str] = None,
     lpips_vlm_judge_user_prompt_template: Optional[str] = None,
-    causal_match_mode: str = "monotonic_side_time",
+    causal_match_mode: str = "monotonic_chronology",
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -244,6 +252,8 @@ def run_world_model_evaluation(
                 lpips_vlm_scene_key=lpips_vlm_scene_key,
                 lpips_causal_event_source=lpips_causal_event_source,
                 lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+                lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
+                lpips_vlm_skip_cost=lpips_vlm_skip_cost,
                 save_inspection_artifacts=save_inspection_artifacts,
                 inspection_root=inspection_root,
                 inspection_run_id=inspection_run_id,
@@ -317,6 +327,8 @@ def run_world_model_evaluation(
         lpips_vlm_scene_key=lpips_vlm_scene_key,
         lpips_causal_event_source=lpips_causal_event_source,
         lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+        lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
+        lpips_vlm_skip_cost=lpips_vlm_skip_cost,
         save_inspection_artifacts=save_inspection_artifacts,
         inspection_root=inspection_root,
         inspection_run_id=inspection_run_id,
@@ -357,6 +369,8 @@ def run_world_model_evaluation(
             "lpips_event_frames_after": lpips_event_frames_after,
             "lpips_event_offsets": lpips_event_offsets,
             "causal_match_mode": causal_match_mode,
+            "lpips_vlm_pair_accept_cost": lpips_vlm_pair_accept_cost,
+            "lpips_vlm_skip_cost": lpips_vlm_skip_cost,
             "save_inspection_artifacts": save_inspection_artifacts,
             "inspection_root": inspection_root,
             "inspection_run_id": inspection_run_id,
@@ -369,8 +383,15 @@ def run_world_model_evaluation(
         candidate_video=context.candidate_video,
         explicit_hints=lpips_vlm_scene_hints,
     )
+    _, resolved_scene_config = resolve_scene_config(
+        scene_key=resolved_scene_key,
+        reference_video=context.reference_video,
+        candidate_video=context.candidate_video,
+    )
     if resolved_scene_key is not None:
         context.artifacts["lpips_vlm_scene_key"] = resolved_scene_key
+    if resolved_scene_config:
+        context.artifacts["lpips_vlm_scene_config"] = resolved_scene_config
 
     for _k, _v in (
         ("lpips_vlm_scene_hints", resolved_scene_hints),

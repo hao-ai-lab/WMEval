@@ -27,6 +27,9 @@ DEFAULT_DIRECTIONAL_SIDES: FrozenSet[str] = frozenset(
     {"left", "right", "front", "back"}
 )
 DEFAULT_CONTACT_TYPES: Tuple[str, ...] = ("collision", "impact", "contact")
+DEFAULT_CONTACT_CLASSES: FrozenSet[str] = frozenset(
+    {"depth", "lateral", "rear", "unknown"}
+)
 
 DEFAULT_JUDGE_SYSTEM_PROMPT = (
     "You are a careful video analyst for physics-style evaluation clips. "
@@ -122,9 +125,15 @@ Allowed frame indices (only these may appear in JSON): {idx_str}
 Event anchor frame: {anchor_frame}
 Current event summary: {event_summary}
 {extra_instructions}
-Classify the side of this ONE contact episode using motion before/at/after contact.
+Classify the interaction geometry of this ONE contact episode using motion before/at/after contact.
 
-Choose exactly one side:
+First choose exactly one contact_class:
+- "depth": contact is primarily head-on or depth-aligned with an obstacle ahead
+- "lateral": contact is primarily side-on in image space
+- "rear": contact is best described as rearward / after-passing contact
+- "unknown": only if the interaction class remains ambiguous
+
+Then choose exactly one side:
 - "left" or "right": contact is primarily lateral in image space
 - "front": contact is with an obstacle ahead in the moving object's forward/depth direction
 - "back": contact is with an obstacle behind/rearward or after the moving object has already passed it
@@ -134,9 +143,10 @@ Use temporal cues, not just a single overlap frame:
 - compare approach vs departure frames
 - if the object is approaching an obstacle head-on in depth, prefer "front"
 - if contact happens after the object has already passed an obstacle or with a rearward obstacle, prefer "back"
+- if the local evidence only supports the coarse interaction geometry, keep side="unknown"
 
 Output JSON shape:
-{{"reasoning_steps": ["..."], "side": "front|back|left|right|unknown", "confidence": 0.0, "evidence_frame_indices": [...], "evidence_summary": "..."}}
+{{"reasoning_steps": ["..."], "contact_class": "depth|lateral|rear|unknown", "side": "front|back|left|right|unknown", "confidence": 0.0, "side_confidence": 0.0, "evidence_frame_indices": [...], "evidence_summary": "..."}}
 """
 
 
@@ -155,6 +165,11 @@ def resolve_directional_sides(artifacts: Mapping[str, Any]) -> FrozenSet[str]:
     raw = artifacts.get("lpips_vlm_directional_sides")
     if raw is None:
         return DEFAULT_DIRECTIONAL_SIDES
+
+
+def resolve_scene_settings(artifacts: Mapping[str, Any]) -> Mapping[str, Any]:
+    raw = artifacts.get("lpips_vlm_scene_config")
+    return raw if isinstance(raw, Mapping) else {}
     if isinstance(raw, str):
         parts = [p.strip().lower() for p in raw.split(",") if p.strip()]
         return frozenset(parts) if parts else DEFAULT_DIRECTIONAL_SIDES
@@ -465,11 +480,20 @@ def sanitize_relabel_payload(
     *,
     allowed: set[int],
 ) -> Dict[str, Any]:
+    contact_class = str(payload.get("contact_class", "unknown")).strip().lower() or "unknown"
+    if contact_class not in DEFAULT_CONTACT_CLASSES:
+        contact_class = "unknown"
     side = str(payload.get("side", "unknown")).strip().lower() or "unknown"
+    if side not in DEFAULT_DIRECTIONAL_SIDES and side != "unknown":
+        side = "unknown"
     try:
         confidence = float(payload.get("confidence", 0.0))
     except (TypeError, ValueError):
         confidence = 0.0
+    try:
+        side_confidence = float(payload.get("side_confidence", confidence))
+    except (TypeError, ValueError):
+        side_confidence = confidence
     evidence_raw = payload.get("evidence_frame_indices")
     evidence: List[int] = []
     if isinstance(evidence_raw, list):
@@ -487,8 +511,10 @@ def sanitize_relabel_payload(
         else []
     )
     return {
+        "contact_class": contact_class,
         "side": side,
         "confidence": max(0.0, min(1.0, confidence)),
+        "side_confidence": max(0.0, min(1.0, side_confidence)),
         "evidence_frame_indices": sorted(set(evidence)),
         "evidence_summary": str(payload.get("evidence_summary", "")).strip(),
         "reasoning_steps": reasoning_steps,
@@ -670,6 +696,76 @@ def merge_fine_and_coarse_events(
         if not matched:
             merged.append(dict(coarse))
     return sorted(merged, key=lambda e: int(e.get("frame", 0)))
+
+
+def consolidate_event_candidates(
+    events: Sequence[Dict[str, Any]],
+    *,
+    frame_gap: int,
+) -> List[Dict[str, Any]]:
+    consolidated = merge_nearby_events(events, frame_gap=frame_gap)
+    return sorted(consolidated, key=lambda e: int(e.get("frame", 0)))
+
+
+def normalize_and_split_events(
+    events: Sequence[Dict[str, Any]],
+    *,
+    allowed: set[int],
+    contact_types: Sequence[str],
+    split_gap_frames: int,
+    split_min_cluster_size: int,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    clean_events, dropped_events = sanitize_events_to_grid(
+        [e for e in events if isinstance(e, dict)],
+        allowed,
+    )
+    clean_events = filter_events_by_contact_types(clean_events, contact_types)
+    clean_events = split_events_by_evidence_gaps(
+        clean_events,
+        frame_gap=split_gap_frames,
+        min_cluster_size=split_min_cluster_size,
+    )
+    return clean_events, dropped_events
+
+
+def merge_event_candidates(
+    fine_events: Sequence[Dict[str, Any]],
+    coarse_events: Sequence[Dict[str, Any]],
+    *,
+    frame_gap: int,
+    consolidation_gap: int,
+) -> List[Dict[str, Any]]:
+    merged = merge_fine_and_coarse_events(
+        fine_events,
+        coarse_events,
+        frame_gap=frame_gap,
+    )
+    return consolidate_event_candidates(merged, frame_gap=consolidation_gap)
+
+
+def _contact_class_from_side(side: str) -> str:
+    raw = str(side).strip().lower()
+    if raw == "front":
+        return "depth"
+    if raw in {"left", "right"}:
+        return "lateral"
+    if raw == "back":
+        return "rear"
+    return "unknown"
+
+
+def ensure_event_semantics(events: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    normalized: List[Dict[str, Any]] = []
+    for event in events:
+        updated = dict(event)
+        contact_class = str(updated.get("contact_class", "")).strip().lower()
+        if contact_class not in DEFAULT_CONTACT_CLASSES:
+            contact_class = _contact_class_from_side(str(updated.get("side", "unknown")))
+        updated["contact_class"] = contact_class
+        if "side_confidence" not in updated:
+            updated["side_confidence"] = float(updated.get("confidence", 0.0) or 0.0)
+        normalized.append(updated)
+    return normalized
 
 
 def build_refine_window_indices(
@@ -862,19 +958,31 @@ def _pair_cost_monotonic(
 ) -> float:
     rs = str(ref_event.get("side", "unknown")).lower()
     cs = str(cand_event.get("side", "unknown")).lower()
+    rc = str(ref_event.get("contact_class", _contact_class_from_side(rs))).lower()
+    cc = str(cand_event.get("contact_class", _contact_class_from_side(cs))).lower()
     time_cost = abs(
         _normalized_event_time(ref_event, ref_frame_count)
         - _normalized_event_time(cand_event, cand_frame_count)
     )
+    if rc == cc:
+        class_cost = 0.0
+    elif "unknown" in (rc, cc):
+        class_cost = 0.06
+    else:
+        class_cost = 0.18
+    side_conf = min(
+        float(ref_event.get("side_confidence", ref_event.get("confidence", 0.0)) or 0.0),
+        float(cand_event.get("side_confidence", cand_event.get("confidence", 0.0)) or 0.0),
+    )
     if rs == cs:
         side_cost = 0.0
     elif "unknown" in (rs, cs):
-        side_cost = 0.12
+        side_cost = 0.03
     elif rs in directional_sides and cs in directional_sides:
-        side_cost = 0.35
+        side_cost = 0.08 + 0.08 * max(0.0, min(1.0, side_conf))
     else:
-        side_cost = 0.2
-    return time_cost + side_cost
+        side_cost = 0.05
+    return time_cost + class_cost + side_cost
 
 
 def pair_collision_events_monotonic_with_log(
@@ -884,7 +992,8 @@ def pair_collision_events_monotonic_with_log(
     ref_frame_count: int,
     cand_frame_count: int,
     directional_sides: FrozenSet[str] = DEFAULT_DIRECTIONAL_SIDES,
-    skip_cost: float = 0.45,
+    skip_cost: float = 0.26,
+    pair_accept_cost: float = 0.42,
 ) -> Tuple[
     List[Tuple[Dict[str, Any], Dict[str, Any]]],
     List[Dict[str, Any]],
@@ -918,7 +1027,11 @@ def pair_collision_events_monotonic_with_log(
                 ref_frame_count=ref_frame_count,
                 cand_frame_count=cand_frame_count,
                 directional_sides=directional_sides,
-            ) + dp[i + 1][j + 1]
+            )
+            if match_cost > float(pair_accept_cost):
+                match_cost = float("inf")
+            else:
+                match_cost = match_cost + dp[i + 1][j + 1]
             skip_ref_cost = skip_cost + dp[i + 1][j]
             skip_cand_cost = skip_cost + dp[i][j + 1]
 
@@ -950,7 +1063,7 @@ def pair_collision_events_monotonic_with_log(
                     "ref_event": _event_compact(r),
                     "status": "matched",
                     "cand_event": _event_compact(c),
-                    "match_rule": "monotonic_side_time",
+                    "match_rule": "monotonic_chronology",
                     "pair_index": len(matched) - 1,
                     "pair_cost": _pair_cost_monotonic(
                         r,
@@ -959,6 +1072,7 @@ def pair_collision_events_monotonic_with_log(
                         cand_frame_count=cand_frame_count,
                         directional_sides=directional_sides,
                     ),
+                    "pair_accept_cost": float(pair_accept_cost),
                 }
             )
             i += 1
@@ -971,13 +1085,21 @@ def pair_collision_events_monotonic_with_log(
                     "ref_event": _event_compact(ref_sorted[i]),
                     "status": "unmatched",
                     "reason": "monotonic_skip_reference",
-                    "detail": {"pair_index": len(matched)},
+                    "detail": {"pair_index": len(matched), "pair_accept_cost": float(pair_accept_cost)},
                 }
             )
             i += 1
             continue
         if j < n_cand:
             unmatched_cand.append(cand_sorted[j])
+            pairing_log.append(
+                {
+                    "cand_event": _event_compact(cand_sorted[j]),
+                    "status": "unmatched",
+                    "reason": "monotonic_skip_candidate",
+                    "detail": {"pair_index": len(matched), "pair_accept_cost": float(pair_accept_cost)},
+                }
+            )
             j += 1
 
     return matched, unmatched_ref, unmatched_cand, pairing_log
@@ -1304,11 +1426,13 @@ def run_vlm_judge_on_video(
                 raw_events = payload.get("events")
                 if not isinstance(raw_events, list):
                     raw_events = []
-                clean_events, clean_dropped = sanitize_events_to_grid(
-                    [e for e in raw_events if isinstance(e, dict)],
-                    set(group),
+                clean_events, clean_dropped = normalize_and_split_events(
+                    raw_events,
+                    allowed=set(group),
+                    contact_types=contact_types,
+                    split_gap_frames=split_gap_frames,
+                    split_min_cluster_size=split_min_cluster_size,
                 )
-                clean_events = filter_events_by_contact_types(clean_events, contact_types)
                 coarse_events.extend(clean_events)
                 coarse_dropped.extend(clean_dropped)
                 windowed_logs.append(
@@ -1325,10 +1449,12 @@ def run_vlm_judge_on_video(
                 coarse_events,
                 frame_gap=merge_gap_frames,
             )
-            coarse_events = split_events_by_evidence_gaps(
-                coarse_events,
-                frame_gap=split_gap_frames,
-                min_cluster_size=split_min_cluster_size,
+            coarse_events = ensure_event_semantics(
+                split_events_by_evidence_gaps(
+                    coarse_events,
+                    frame_gap=split_gap_frames,
+                    min_cluster_size=split_min_cluster_size,
+                )
             )
             coarse_payload = {
                 "events": coarse_events,
@@ -1356,11 +1482,21 @@ def run_vlm_judge_on_video(
             coarse_events_raw = coarse_payload.get("events")
             if not isinstance(coarse_events_raw, list):
                 coarse_events_raw = []
-            coarse_events, coarse_dropped = sanitize_events_to_grid(
-                [e for e in coarse_events_raw if isinstance(e, dict)],
-                set(coarse_indices),
+            coarse_events, coarse_dropped = normalize_and_split_events(
+                coarse_events_raw,
+                allowed=set(coarse_indices),
+                contact_types=contact_types,
+                split_gap_frames=int(
+                    artifacts.get(
+                        "lpips_vlm_event_split_gap_frames",
+                        max(8, int(round(meta.fps * 0.5))),
+                    )
+                ),
+                split_min_cluster_size=int(
+                    artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
+                ),
             )
-            coarse_events = filter_events_by_contact_types(coarse_events, contact_types)
+            coarse_events = ensure_event_semantics(coarse_events)
         window_sec = float(artifacts.get("lpips_vlm_refine_window_sec", 1.0))
         max_frames_per_window = int(artifacts.get("lpips_vlm_refine_max_frames_per_window", 24))
         refine_indices = build_refine_window_indices(
@@ -1404,33 +1540,29 @@ def run_vlm_judge_on_video(
         if side_relabel_enabled:
             fine_events_raw = fine_payload.get("events")
             if isinstance(fine_events_raw, list):
-                fine_events_clean, _ = sanitize_events_to_grid(
-                    [e for e in fine_events_raw if isinstance(e, dict)],
-                    set(fine_indices),
-                )
-                fine_events_clean = filter_events_by_contact_types(
-                    fine_events_clean, contact_types
-                )
-                fine_events_clean = split_events_by_evidence_gaps(
-                    fine_events_clean,
-                    frame_gap=int(
+                fine_events_clean, _ = normalize_and_split_events(
+                    fine_events_raw,
+                    allowed=set(fine_indices),
+                    contact_types=contact_types,
+                    split_gap_frames=int(
                         artifacts.get(
                             "lpips_vlm_event_split_gap_frames",
                             max(8, int(round(meta.fps * 0.5))),
                         )
                     ),
-                    min_cluster_size=int(
+                    split_min_cluster_size=int(
                         artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
                     ),
                 )
-                fine_events_clean = merge_fine_and_coarse_events(
+                fine_events_clean = merge_event_candidates(
                     fine_events_clean,
                     coarse_events,
-                    frame_gap=int(
-                        artifacts.get("lpips_vlm_fine_coarse_merge_gap_frames", 18)
+                    frame_gap=int(artifacts.get("lpips_vlm_fine_coarse_merge_gap_frames", 18)),
+                    consolidation_gap=int(
+                        artifacts.get("lpips_vlm_window_merge_gap_frames", 18)
                     ),
                 )
-                relabeled_events, relabel_logs = relabel_event_sides_on_video(
+                relabeled_events, relabel_logs = relabel_event_semantics(
                     video_path,
                     fine_events_clean,
                     model=side_model,
@@ -1471,12 +1603,16 @@ def run_vlm_judge_on_video(
     if side_relabel_enabled:
         events_raw = payload.get("events")
         if isinstance(events_raw, list):
-            events_clean, _ = sanitize_events_to_grid(
-                [e for e in events_raw if isinstance(e, dict)],
-                set(indices),
+            events_clean, _ = normalize_and_split_events(
+                events_raw,
+                allowed=set(indices),
+                contact_types=contact_types,
+                split_gap_frames=int(artifacts.get("lpips_vlm_event_split_gap_frames", 12)),
+                split_min_cluster_size=int(
+                    artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
+                ),
             )
-            events_clean = filter_events_by_contact_types(events_clean, contact_types)
-            relabeled_events, relabel_logs = relabel_event_sides_on_video(
+            relabeled_events, relabel_logs = relabel_event_semantics(
                 video_path,
                 events_clean,
                 model=side_model,
@@ -1649,7 +1785,9 @@ def relabel_event_sides_on_video(
             )
             clean = sanitize_relabel_payload(payload, allowed=set(indices))
             updated = dict(event)
+            updated["contact_class"] = clean["contact_class"]
             updated["side"] = clean["side"]
+            updated["side_confidence"] = clean["side_confidence"]
             if clean["evidence_frame_indices"]:
                 updated["evidence_frame_indices"] = clean["evidence_frame_indices"]
             if clean["evidence_summary"]:
@@ -1662,6 +1800,7 @@ def relabel_event_sides_on_video(
                     "event_index": index,
                     "status": "ok",
                     "original_side": str(event.get("side", "unknown")).lower(),
+                    "contact_class": clean["contact_class"],
                     "relabeled_side": clean["side"],
                     "elapsed_sec": round(perf_counter() - started, 3),
                     "reasoning_steps": clean["reasoning_steps"],
@@ -1696,6 +1835,150 @@ def relabel_event_sides_on_video(
     return relabeled, relabel_logs
 
 
+def relabel_event_semantics(
+    video_path: str,
+    events: Sequence[Dict[str, Any]],
+    *,
+    model: str,
+    artifacts: Mapping[str, Any],
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    relabeled, logs = relabel_event_sides_on_video(
+        video_path,
+        events,
+        model=model,
+        artifacts=artifacts,
+    )
+    return ensure_event_semantics(relabeled), logs
+
+
+def detect_event_candidates(
+    video_path: str,
+    *,
+    max_grid_frames: int,
+    model: str,
+    artifacts: Mapping[str, Any],
+) -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
+    payload, indices, frames = run_vlm_judge_on_video(
+        video_path,
+        max_grid_frames,
+        model,
+        artifacts=artifacts,
+    )
+    events_raw = payload.get("events")
+    if isinstance(events_raw, list):
+        payload["events"] = ensure_event_semantics(events_raw)
+    return payload, indices, frames
+
+
+def match_event_timelines(
+    ref_events: List[Dict[str, Any]],
+    cand_events: List[Dict[str, Any]],
+    *,
+    ref_frame_count: int,
+    cand_frame_count: int,
+    artifacts: Mapping[str, Any],
+    directional_sides: FrozenSet[str],
+) -> Tuple[
+    List[Tuple[Dict[str, Any], Dict[str, Any]]],
+    List[Dict[str, Any]],
+    List[Dict[str, Any]],
+    List[Dict[str, Any]],
+    str,
+]:
+    match_mode = str(artifacts.get("causal_match_mode", "monotonic_chronology")).strip().lower()
+    scene_settings = resolve_scene_settings(artifacts)
+    skip_cost = float(
+        artifacts.get(
+            "lpips_vlm_skip_cost",
+            scene_settings.get("skip_cost", 0.26),
+        )
+    )
+    pair_accept_cost = float(
+        artifacts.get(
+            "lpips_vlm_pair_accept_cost",
+            scene_settings.get("pair_accept_cost", 0.42),
+        )
+    )
+    if match_mode in {"monotonic_side_time", "monotonic_chronology", "auto"}:
+        matched, unmatched_ref, unmatched_cand, log = pair_collision_events_monotonic_with_log(
+            ref_events,
+            cand_events,
+            ref_frame_count=ref_frame_count,
+            cand_frame_count=cand_frame_count,
+            directional_sides=directional_sides,
+            skip_cost=skip_cost,
+            pair_accept_cost=pair_accept_cost,
+        )
+        return matched, unmatched_ref, unmatched_cand, log, "monotonic_chronology"
+    if match_mode in ("order", "side_agnostic"):
+        matched, log = pair_collision_events_order_with_log(ref_events, cand_events)
+        ref_sorted = sorted(ref_events, key=lambda e: int(e.get("frame", 0)))
+        cand_sorted = sorted(cand_events, key=lambda e: int(e.get("frame", 0)))
+        n_pair = min(len(ref_sorted), len(cand_sorted))
+        return matched, ref_sorted[n_pair:], cand_sorted[n_pair:], log, match_mode
+    if match_mode == "strict":
+        matched, unmatched_ref, unmatched_cand, log = pair_collision_events_strict_with_log(
+            ref_events, cand_events, directional_sides=directional_sides
+        )
+        return matched, unmatched_ref, unmatched_cand, log, "strict"
+    matched, unmatched_ref, unmatched_cand, log = pair_collision_events_monotonic_with_log(
+        ref_events,
+        cand_events,
+        ref_frame_count=ref_frame_count,
+        cand_frame_count=cand_frame_count,
+        directional_sides=directional_sides,
+        skip_cost=skip_cost,
+        pair_accept_cost=pair_accept_cost,
+    )
+    return matched, unmatched_ref, unmatched_cand, log, "monotonic_chronology"
+
+
+def score_lpips_for_matches(
+    matched: Sequence[Tuple[Dict[str, Any], Dict[str, Any]]],
+    *,
+    offsets: Sequence[int],
+    context: EvaluationContext,
+    device_obj: Any,
+    pairing_mode: str,
+) -> Tuple[List[Dict[str, Any]], List[float]]:
+    ref_meta = context.reference.metadata
+    cand_meta = context.candidate.metadata
+    per_event_rows: List[Dict[str, Any]] = []
+    flat_scores: List[float] = []
+
+    for mi, (ev_r, ev_c) in enumerate(matched):
+        e_ref = int(ev_r["frame"])
+        e_cand = int(ev_c["frame"])
+        row: Dict[str, Any] = {
+            "match_index": mi,
+            "side": ev_r.get("side"),
+            "contact_class": ev_r.get("contact_class"),
+            "e_ref": e_ref,
+            "e_cand": e_cand,
+            "e_cand_contact_ref_frame": e_ref,
+            "offsets": list(offsets),
+            "lpips_per_offset": [],
+            "evaluation_interval": {"mode": pairing_mode},
+        }
+        for delta in offsets:
+            ri = min(max(e_ref + int(delta), 0), ref_meta.frame_count - 1)
+            ci = min(max(e_cand + int(delta), 0), cand_meta.frame_count - 1)
+            fr = load_frames_by_indices(context.reference_video, [ri])
+            fc = load_frames_by_indices(context.candidate_video, [ci])
+            if not fr or not fc:
+                continue
+            pair_scores = compute_lpips_scores([fr[0]], [fc[0]], device_obj)
+            score = pair_scores[0] if pair_scores else None
+            if score is None:
+                continue
+            row["lpips_per_offset"].append(
+                {"offset": int(delta), "ref_frame": ri, "cand_frame": ci, "lpips": score}
+            )
+            flat_scores.append(score)
+        per_event_rows.append(row)
+    return per_event_rows, flat_scores
+
+
 def resolve_event_offsets(artifacts: Mapping[str, Any]) -> List[int]:
     if "lpips_event_offsets" in artifacts and artifacts["lpips_event_offsets"] is not None:
         raw = artifacts["lpips_event_offsets"]
@@ -1717,7 +2000,7 @@ def analyze_causal_vlm_lpips(
     max_grid = int(artifacts.get("lpips_vlm_max_grid_frames", 24))
     prompt_version = str(artifacts.get("lpips_vlm_prompt_version", PROMPT_VERSION_DEFAULT))
     offsets = resolve_event_offsets(artifacts)
-    match_mode = str(artifacts.get("causal_match_mode", "monotonic_side_time")).strip().lower()
+    match_mode = str(artifacts.get("causal_match_mode", "monotonic_chronology")).strip().lower()
     contact_types = resolve_contact_types(artifacts)
     directional_sides = resolve_directional_sides(artifacts)
 
@@ -1817,10 +2100,10 @@ def analyze_causal_vlm_lpips(
 
     try:
         _log_causal("reference_judge_start", video_path=context.reference_video)
-        ref_j_raw, ref_grid_idx, _ = run_vlm_judge_on_video(
+        ref_j_raw, ref_grid_idx, _ = detect_event_candidates(
             context.reference_video,
-            max_grid,
-            model,
+            max_grid_frames=max_grid,
+            model=model,
             artifacts=artifacts,
         )
         if event_source in ("reference", "unity"):
@@ -1833,10 +2116,10 @@ def analyze_causal_vlm_lpips(
             cand_grid_idx = []
         else:
             _log_causal("candidate_judge_start", video_path=context.candidate_video)
-            cand_j_raw, cand_grid_idx, _ = run_vlm_judge_on_video(
+            cand_j_raw, cand_grid_idx, _ = detect_event_candidates(
                 context.candidate_video,
-                max_grid,
-                model,
+                max_grid_frames=max_grid,
+                model=model,
                 artifacts=artifacts,
             )
     except Exception as exc:
@@ -1862,14 +2145,22 @@ def analyze_causal_vlm_lpips(
     if not isinstance(cand_events_raw, list):
         cand_events_raw = []
 
-    ref_events_f, ref_dropped = sanitize_events_to_grid(
-        [e for e in ref_events_raw if isinstance(e, dict)], allowed_ref
+    ref_events_f, ref_dropped = normalize_and_split_events(
+        [e for e in ref_events_raw if isinstance(e, dict)],
+        allowed=allowed_ref,
+        contact_types=contact_types,
+        split_gap_frames=int(artifacts.get("lpips_vlm_event_split_gap_frames", 12)),
+        split_min_cluster_size=int(artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)),
     )
-    cand_events_f, cand_dropped = sanitize_events_to_grid(
-        [e for e in cand_events_raw if isinstance(e, dict)], allowed_cand
+    cand_events_f, cand_dropped = normalize_and_split_events(
+        [e for e in cand_events_raw if isinstance(e, dict)],
+        allowed=allowed_cand,
+        contact_types=contact_types,
+        split_gap_frames=int(artifacts.get("lpips_vlm_event_split_gap_frames", 12)),
+        split_min_cluster_size=int(artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)),
     )
-    ref_events_f = filter_events_by_contact_types(ref_events_f, contact_types)
-    cand_events_f = filter_events_by_contact_types(cand_events_f, contact_types)
+    ref_events_f = ensure_event_semantics(ref_events_f)
+    cand_events_f = ensure_event_semantics(cand_events_f)
     if event_source in ("reference", "unity"):
         ref_meta = context.reference.metadata
         cand_meta = context.candidate.metadata
@@ -1888,63 +2179,16 @@ def analyze_causal_vlm_lpips(
     _, _, _, strict_log = pair_collision_events_strict_with_log(
         ref_events_f, cand_events_f, directional_sides=directional_sides
     )
-
-    monotonic_matched, monotonic_unmatched_ref, monotonic_unmatched_cand, monotonic_log = (
-        pair_collision_events_monotonic_with_log(
+    matched, unmatched_ref, unmatched_cand, event_pairing_log, causal_match_mode_used = (
+        match_event_timelines(
             ref_events_f,
             cand_events_f,
             ref_frame_count=context.reference.metadata.frame_count,
             cand_frame_count=context.candidate.metadata.frame_count,
+            artifacts={**artifacts, "causal_match_mode": match_mode},
             directional_sides=directional_sides,
         )
     )
-
-    matched = monotonic_matched
-    event_pairing_log = monotonic_log
-    causal_match_mode_used = "monotonic_side_time"
-    unmatched_ref = monotonic_unmatched_ref
-    unmatched_cand = monotonic_unmatched_cand
-
-    if match_mode in ("order", "side_agnostic"):
-        matched, event_pairing_log = pair_collision_events_order_with_log(
-            ref_events_f, cand_events_f
-        )
-        causal_match_mode_used = match_mode
-        ref_sorted = sorted(ref_events_f, key=lambda e: int(e.get("frame", 0)))
-        cand_sorted = sorted(cand_events_f, key=lambda e: int(e.get("frame", 0)))
-        n_pair = min(len(ref_sorted), len(cand_sorted))
-        unmatched_ref = ref_sorted[n_pair:]
-        unmatched_cand = cand_sorted[n_pair:]
-    elif match_mode == "strict":
-        matched, unmatched_ref, unmatched_cand, event_pairing_log = (
-            pair_collision_events_strict_with_log(
-                ref_events_f, cand_events_f, directional_sides=directional_sides
-            )
-        )
-        causal_match_mode_used = "strict"
-    else:
-        # backward-compatible aliases
-        if match_mode in ("strict_fallback_order", "auto"):
-            matched, unmatched_ref, unmatched_cand, event_pairing_log = (
-                pair_collision_events_monotonic_with_log(
-                    ref_events_f,
-                    cand_events_f,
-                    ref_frame_count=context.reference.metadata.frame_count,
-                    cand_frame_count=context.candidate.metadata.frame_count,
-                    directional_sides=directional_sides,
-                )
-            )
-            causal_match_mode_used = "monotonic_side_time"
-        elif len(monotonic_matched) == 0 and ref_events_f and cand_events_f:
-            matched, event_pairing_log = pair_collision_events_order_with_log(
-                ref_events_f, cand_events_f
-            )
-            causal_match_mode_used = "order_fallback"
-            ref_sorted = sorted(ref_events_f, key=lambda e: int(e.get("frame", 0)))
-            cand_sorted = sorted(cand_events_f, key=lambda e: int(e.get("frame", 0)))
-            n_pair = min(len(ref_sorted), len(cand_sorted))
-            unmatched_ref = ref_sorted[n_pair:]
-            unmatched_cand = cand_sorted[n_pair:]
 
     num_ref = len(ref_events_f)
     num_cand = len(cand_events_f)
@@ -2032,35 +2276,13 @@ def analyze_causal_vlm_lpips(
         _merge_temporal_primary_fields(base, temporal_baseline)
         return _finalize_inspection(base)
 
-    per_event_rows: List[Dict[str, Any]] = []
-    flat_scores: List[float] = []
-
-    for mi, (ev_r, ev_c) in enumerate(matched):
-        e_ref = int(ev_r["frame"])
-        e_cand = int(ev_c["frame"])
-        row: Dict[str, Any] = {
-            "match_index": mi,
-            "side": ev_r.get("side"),
-            "e_ref": e_ref,
-            "e_cand": e_cand,
-            "offsets": offsets,
-            "lpips_per_offset": [],
-        }
-        for delta in offsets:
-            ri = min(max(e_ref + int(delta), 0), ref_meta.frame_count - 1)
-            ci = min(max(e_cand + int(delta), 0), cand_meta.frame_count - 1)
-            fr = load_frames_by_indices(context.reference_video, [ri])
-            fc = load_frames_by_indices(context.candidate_video, [ci])
-            if not fr or not fc:
-                continue
-            pair_scores = compute_lpips_scores([fr[0]], [fc[0]], device_obj)
-            s = pair_scores[0] if pair_scores else None
-            if s is not None:
-                row["lpips_per_offset"].append(
-                    {"offset": int(delta), "ref_frame": ri, "cand_frame": ci, "lpips": s}
-                )
-                flat_scores.append(s)
-        per_event_rows.append(row)
+    per_event_rows, flat_scores = score_lpips_for_matches(
+        matched,
+        offsets=offsets,
+        context=context,
+        device_obj=device_obj,
+        pairing_mode=resolve_lpips_temporal_pairing(artifacts, event_source=event_source),
+    )
 
     base["lpips_per_matched_event"] = per_event_rows
     base["causal_lpips_per_pair"] = flat_scores
