@@ -72,6 +72,8 @@ Follow this checklist and put concise notes in reasoning_steps (string array):
 A) Identify the main moving object and the nearby obstacles/targets it contacts.
 B) Scan in time order and enumerate each distinct contact episode once.
 C) Keep episodes separate when there is meaningful temporal separation.
+   If a visible gap reopens and the moving object later contacts the same or another obstacle again, treat that as a new event rather than merging it into one long episode.
+   Do not merge two episodes just because they happen on the same general side of the frame.
 D) Cite only allowed frame indices.
 E) Abstain with "events": [] if quality is insufficient.
 
