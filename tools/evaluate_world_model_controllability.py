@@ -94,8 +94,8 @@ def main() -> None:
     )
     ap.add_argument(
         "--ptlflow_root",
-        default="/workspace/ptlflow",
-        help="Directory containing synthetic_flow.py (default: /workspace/ptlflow)",
+        default=None,
+        help="Directory containing synthetic_flow.py (default: ../ptlflow or /workspace/ptlflow)",
     )
     ap.add_argument(
         "--synthetic_grid_size",

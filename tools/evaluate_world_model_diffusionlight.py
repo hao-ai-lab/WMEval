@@ -328,8 +328,48 @@ def main() -> None:
         action="store_true",
         help="Depth Anything for synthetic translation term",
     )
-    ap.add_argument("--ptlflow_root", default="/workspace/ptlflow")
+    ap.add_argument(
+        "--ptlflow_root",
+        default=None,
+        help="Optional PTLFlow checkout; auto-resolves ../ptlflow then /workspace/ptlflow",
+    )
     ap.add_argument("--synthetic_grid_size", type=int, default=8)
+    ap.add_argument(
+        "--lpips_vlm_use_flow_proposals",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use RAFT-guided motion proposals before causal VLM detection",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_proposal_stride",
+        type=int,
+        default=12,
+        help="Frame stride for RAFT proposal sampling on each video",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_peak_threshold",
+        type=float,
+        default=0.35,
+        help="Relative threshold against max RAFT saliency for keeping proposal peaks",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_topk_windows",
+        type=int,
+        default=8,
+        help="Maximum number of RAFT-guided proposal windows per video",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_window_sec",
+        type=float,
+        default=1.25,
+        help="Half-window size in seconds around each RAFT-guided proposal anchor",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_camera_compensation",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Camera-compensate RAFT flow before proposal saliency scoring",
+    )
     ap.add_argument(
         "--lpips_vlm_scene_hints",
         default=None,
@@ -434,6 +474,12 @@ def main() -> None:
         lpips_vlm_coarse_reasoning_effort=args.lpips_vlm_coarse_reasoning_effort,
         lpips_vlm_fine_reasoning_effort=args.lpips_vlm_fine_reasoning_effort,
         lpips_vlm_side_reasoning_effort=args.lpips_vlm_side_reasoning_effort,
+        lpips_vlm_use_flow_proposals=args.lpips_vlm_use_flow_proposals,
+        lpips_vlm_flow_proposal_stride=args.lpips_vlm_flow_proposal_stride,
+        lpips_vlm_flow_peak_threshold=args.lpips_vlm_flow_peak_threshold,
+        lpips_vlm_flow_topk_windows=args.lpips_vlm_flow_topk_windows,
+        lpips_vlm_flow_window_sec=args.lpips_vlm_flow_window_sec,
+        lpips_vlm_flow_camera_compensation=args.lpips_vlm_flow_camera_compensation,
         lpips_vlm_window_sec=args.lpips_vlm_window_sec,
         lpips_vlm_window_overlap_sec=args.lpips_vlm_window_overlap_sec,
         lpips_vlm_window_max_frames=args.lpips_vlm_window_max_frames,

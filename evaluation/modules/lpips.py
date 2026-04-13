@@ -23,6 +23,9 @@ except ImportError:
     lpips = None
 
 
+_LPIPS_MODEL_CACHE: dict[str, Any] = {}
+
+
 def _log_lpips(stage: str, **fields: Any) -> None:
     payload = {
         "component": "lpips",
@@ -91,18 +94,22 @@ def compute_lpips_scores(
     if num_pairs == 0:
         return []
 
-    _log_lpips(
-        "model_load_start",
-        device=str(device),
-        num_pairs=num_pairs,
-    )
-    model_load_start = perf_counter()
-    loss_fn = lpips.LPIPS(net="vgg").to(device).eval()
-    _log_lpips(
-        "model_load_done",
-        device=str(device),
-        elapsed_sec=round(perf_counter() - model_load_start, 3),
-    )
+    device_key = str(device)
+    loss_fn = _LPIPS_MODEL_CACHE.get(device_key)
+    if loss_fn is None:
+        _log_lpips(
+            "model_load_start",
+            device=device_key,
+            num_pairs=num_pairs,
+        )
+        model_load_start = perf_counter()
+        loss_fn = lpips.LPIPS(net="vgg").to(device).eval()
+        _LPIPS_MODEL_CACHE[device_key] = loss_fn
+        _log_lpips(
+            "model_load_done",
+            device=device_key,
+            elapsed_sec=round(perf_counter() - model_load_start, 3),
+        )
     scores: List[float] = []
 
     score_start = perf_counter()

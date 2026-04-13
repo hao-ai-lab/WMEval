@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
+
+from evaluation.path_resolution import resolve_ptlflow_root
+from evaluation.modules.flow_utils import (
+    build_flow_proposal_windows_from_scores,
+    compute_flow_transition_saliency,
+)
 from evaluation.modules.lpips_causal_vlm import (
     build_windowed_keyframe_groups,
     build_detection_user_prompt,
@@ -174,7 +183,7 @@ class TestCausalPairing(unittest.TestCase):
     def test_resolve_reasoning_effort_defaults_by_stage(self) -> None:
         self.assertEqual(
             resolve_reasoning_effort({}, stage="coarse", model="gpt-5.4"),
-            "minimal",
+            "low",
         )
         self.assertEqual(
             resolve_reasoning_effort({}, stage="fine", model="gpt-5.4"),
@@ -206,6 +215,51 @@ class TestCausalPairing(unittest.TestCase):
             resolve_reasoning_effort(artifacts, stage="side", model="gpt-5.4"),
             "minimal",
         )
+
+    def test_flow_transition_saliency_camera_compensation_reduces_global_drift(self) -> None:
+        flow_a = np.zeros((8, 8, 2), dtype=np.float32)
+        flow_b = np.zeros((8, 8, 2), dtype=np.float32)
+        flow_a[..., 0] = 5.0
+        flow_b[..., 0] = 5.0
+        without_comp = compute_flow_transition_saliency(
+            [flow_a, flow_b],
+            camera_compensation=False,
+            global_motion_mode="median_translation",
+        )
+        with_comp = compute_flow_transition_saliency(
+            [flow_a, flow_b],
+            camera_compensation=True,
+            global_motion_mode="median_translation",
+        )
+        self.assertGreater(without_comp[0], 1.0)
+        self.assertLess(with_comp[0], 1e-3)
+        self.assertLess(with_comp[1], 1e-3)
+
+    def test_build_flow_proposal_windows_from_scores_keeps_local_peaks(self) -> None:
+        groups, logs = build_flow_proposal_windows_from_scores(
+            [0, 10, 20, 30, 40],
+            [0.1, 0.9, 0.2, 0.8],
+            frame_count=50,
+            fps=10.0,
+            window_sec=0.5,
+            max_frames_per_window=6,
+            topk_windows=2,
+            peak_threshold=0.3,
+        )
+        self.assertEqual(len(groups), 2)
+        anchors = [row["anchor_frame"] for row in logs]
+        self.assertEqual(anchors, [15, 35])
+
+    def test_resolve_ptlflow_root_prefers_sibling_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            repo_root = Path(tmpdir)
+            sibling = repo_root / "ptlflow"
+            sibling.mkdir()
+            (sibling / "synthetic_flow.py").write_text("# test\n", encoding="utf-8")
+            self.assertEqual(
+                resolve_ptlflow_root(repo_root=repo_root),
+                str(sibling.resolve()),
+            )
 
     def test_monotonic_pairing_rejects_bad_temporal_match(self) -> None:
         ref = [_ev(10, "front") | {"contact_class": "depth", "side_confidence": 1.0}]

@@ -11,6 +11,7 @@ from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tupl
 
 import cv2
 import numpy as np
+import torch
 
 from ..context import EvaluationContext
 from ..video_io import (
@@ -18,6 +19,13 @@ from ..video_io import (
     build_vlm_keyframe_indices,
     get_video_metadata,
     load_frames_by_indices,
+)
+from .flow_utils import (
+    build_flow_proposal_windows_from_scores,
+    center_crop_to_common,
+    compute_flow_transition_saliency,
+    flow_raft,
+    load_raft_model,
 )
 
 from .lpips import analyze_lpips_from_context, compute_lpips_scores, summarize_scores
@@ -188,10 +196,10 @@ def resolve_reasoning_effort(
         "repair": "lpips_vlm_fine_reasoning_effort",
     }
     default_map = {
-        "coarse": "minimal",
+        "coarse": "low",
         "fine": "medium",
         "side": "medium",
-        "repair": "minimal",
+        "repair": "low",
     }
     raw = artifacts.get(key_map.get(stage, ""))
     if raw is None:
@@ -829,12 +837,118 @@ def build_refine_window_indices(
     return sorted(indices)
 
 
+def merge_keyframe_groups(groups: Sequence[Sequence[int]]) -> List[List[int]]:
+    seen: set[Tuple[int, ...]] = set()
+    merged: List[List[int]] = []
+    for group in groups:
+        normalized = tuple(sorted({int(value) for value in group}))
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        merged.append(list(normalized))
+    return merged
+
+
+def propose_flow_guided_windows(
+    video_path: str,
+    *,
+    frame_count: int,
+    fps: float,
+    max_frames_per_window: int,
+    artifacts: Mapping[str, Any],
+) -> Tuple[List[List[int]], Dict[str, Any]]:
+    if frame_count <= 1 or fps <= 0:
+        return [], {"enabled": False, "reason": "invalid_video_metadata"}
+    if not bool(artifacts.get("lpips_vlm_use_flow_proposals", True)):
+        return [], {"enabled": False, "reason": "disabled"}
+
+    stride = max(1, int(artifacts.get("lpips_vlm_flow_proposal_stride", 12)))
+    sample_indices = list(range(0, frame_count, stride))
+    if not sample_indices or sample_indices[-1] != frame_count - 1:
+        sample_indices.append(frame_count - 1)
+    sample_indices = sorted(set(sample_indices))
+    if len(sample_indices) < 2:
+        return [], {
+            "enabled": True,
+            "reason": "insufficient_sample_indices",
+            "stride": stride,
+            "sample_indices": sample_indices,
+        }
+
+    _log_causal(
+        "flow_proposals_start",
+        video_path=video_path,
+        stride=stride,
+        sampled_frames=len(sample_indices),
+    )
+    start = perf_counter()
+    frames = load_frames_by_indices(video_path, sample_indices)
+    if len(frames) != len(sample_indices):
+        sample_indices = sample_indices[: len(frames)]
+    if len(frames) < 2:
+        return [], {
+            "enabled": True,
+            "reason": "insufficient_loaded_frames",
+            "stride": stride,
+            "sample_indices": sample_indices,
+        }
+
+    device_name = "cuda" if torch.cuda.is_available() else "cpu"
+    device_obj = torch.device(device_name)
+    raft_model, raft_transform = load_raft_model(device_obj)
+    flows: List[np.ndarray] = []
+    for idx in range(len(frames) - 1):
+        prev_bgr, next_bgr = center_crop_to_common(frames[idx], frames[idx + 1])
+        flows.append(flow_raft(raft_model, raft_transform, prev_bgr, next_bgr, device_obj))
+
+    camera_compensation = bool(
+        artifacts.get("lpips_vlm_flow_camera_compensation", True)
+    )
+    global_motion_mode = str(
+        artifacts.get("control_global_motion_mode", "median_translation")
+    )
+    scores = compute_flow_transition_saliency(
+        flows,
+        camera_compensation=camera_compensation,
+        global_motion_mode=global_motion_mode,
+    )
+    windows, logs = build_flow_proposal_windows_from_scores(
+        sample_indices,
+        scores,
+        frame_count=frame_count,
+        fps=fps,
+        window_sec=float(artifacts.get("lpips_vlm_flow_window_sec", 1.25)),
+        max_frames_per_window=max_frames_per_window,
+        topk_windows=int(artifacts.get("lpips_vlm_flow_topk_windows", 8)),
+        peak_threshold=float(artifacts.get("lpips_vlm_flow_peak_threshold", 0.35)),
+    )
+    _log_causal(
+        "flow_proposals_done",
+        video_path=video_path,
+        stride=stride,
+        sampled_frames=len(sample_indices),
+        num_windows=len(windows),
+        elapsed_sec=round(perf_counter() - start, 3),
+    )
+    return merge_keyframe_groups(windows), {
+        "enabled": True,
+        "stride": stride,
+        "camera_compensation": camera_compensation,
+        "global_motion_mode": global_motion_mode,
+        "sample_indices": sample_indices,
+        "scores": [float(score) for score in scores],
+        "windows": logs,
+    }
+
+
 def _event_compact(ev: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "type": ev.get("type"),
+        "contact_class": ev.get("contact_class"),
         "side": ev.get("side"),
         "frame": ev.get("frame"),
         "confidence": ev.get("confidence"),
+        "side_confidence": ev.get("side_confidence"),
         "evidence_summary": ev.get("evidence_summary"),
     }
 
@@ -1025,8 +1139,10 @@ def _pair_cost_monotonic_breakdown(
         side_cost = 0.0
     elif "unknown" in (rs, cs):
         side_cost = 0.03
+    elif rc != cc:
+        side_cost = 0.12 + 0.18 * max(0.0, min(1.0, side_conf))
     elif rs in directional_sides and cs in directional_sides:
-        side_cost = 0.08 + 0.08 * max(0.0, min(1.0, side_conf))
+        side_cost = 0.25 + 0.12 * max(0.0, min(1.0, side_conf))
     else:
         side_cost = 0.05
     return {
@@ -1458,19 +1574,34 @@ def run_vlm_judge_on_video(
             per_window_frames = int(
                 artifacts.get("lpips_vlm_window_max_frames", min(coarse_grid_frames, 24))
             )
-            split_gap_frames = int(
-                artifacts.get("lpips_vlm_event_split_gap_frames", max(8, int(round(meta.fps * 0.5))))
-            )
-            split_min_cluster_size = int(
-                artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
-            )
-            coarse_groups = build_windowed_keyframe_groups(
+            default_coarse_groups = build_windowed_keyframe_groups(
                 frame_count=meta.frame_count,
                 fps=meta.fps,
                 window_sec=window_sec,
                 overlap_sec=overlap_sec,
                 max_frames_per_window=per_window_frames,
             )
+            flow_groups, flow_plan = propose_flow_guided_windows(
+                video_path,
+                frame_count=meta.frame_count,
+                fps=meta.fps,
+                max_frames_per_window=per_window_frames,
+                artifacts=artifacts,
+            )
+            split_gap_frames = int(
+                artifacts.get("lpips_vlm_event_split_gap_frames", max(8, int(round(meta.fps * 0.5))))
+            )
+            split_min_cluster_size = int(
+                artifacts.get("lpips_vlm_event_split_min_cluster_size", 2)
+            )
+            if len(flow_groups) >= 2:
+                coarse_groups = flow_groups
+                flow_plan["used_default_fallback"] = False
+            else:
+                coarse_groups = merge_keyframe_groups(flow_groups + default_coarse_groups[:2])
+                if not coarse_groups:
+                    coarse_groups = default_coarse_groups
+                flow_plan["used_default_fallback"] = True
             coarse_indices = sorted({idx for group in coarse_groups for idx in group})
             coarse_events: List[Dict[str, Any]] = []
             coarse_dropped: List[Dict[str, Any]] = []
@@ -1527,11 +1658,24 @@ def run_vlm_judge_on_video(
                     "merge_gap_frames": merge_gap_frames,
                     "split_gap_frames": split_gap_frames,
                     "split_min_cluster_size": split_min_cluster_size,
+                    "flow_proposals": flow_plan,
                     "windows": windowed_logs,
                 },
             }
         else:
-            coarse_indices = build_vlm_keyframe_indices(meta.frame_count, coarse_grid_frames)
+            flow_groups, flow_plan = propose_flow_guided_windows(
+                video_path,
+                frame_count=meta.frame_count,
+                fps=meta.fps,
+                max_frames_per_window=min(coarse_grid_frames, 24),
+                artifacts=artifacts,
+            )
+            if len(flow_groups) >= 2:
+                coarse_indices = sorted({idx for group in flow_groups for idx in group})
+                flow_plan["used_default_fallback"] = False
+            else:
+                coarse_indices = build_vlm_keyframe_indices(meta.frame_count, coarse_grid_frames)
+                flow_plan["used_default_fallback"] = True
             coarse_payload, coarse_indices, _ = run_vlm_judge_on_indices(
                 video_path,
                 coarse_indices,
@@ -1559,6 +1703,7 @@ def run_vlm_judge_on_video(
                 ),
             )
             coarse_events = ensure_event_semantics(coarse_events)
+            coarse_payload["flow_proposals"] = flow_plan
         window_sec = float(artifacts.get("lpips_vlm_refine_window_sec", 1.0))
         max_frames_per_window = int(artifacts.get("lpips_vlm_refine_max_frames_per_window", 24))
         refine_indices = build_refine_window_indices(
@@ -1649,7 +1794,8 @@ def run_vlm_judge_on_video(
             "refine_indices": fine_indices,
             "used_fine_pass": True,
         }
-        return fine_payload, fine_indices, fine_frames
+        allowed_indices = sorted(set(coarse_indices) | set(fine_indices))
+        return fine_payload, allowed_indices, fine_frames
 
     indices = build_vlm_keyframe_indices(
         get_video_metadata(video_path).frame_count,

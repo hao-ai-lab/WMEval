@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, Iterable, Optional, Sequence
 
 from .context import EvaluationContext
+from .path_resolution import resolve_ptlflow_root
 from .registry import normalize_modules, run_modules
 from .scene_prompt_registry import resolve_scene_config, resolve_scene_hints
 from .video_io import build_evaluation_context
@@ -49,6 +50,12 @@ def _merge_lpips_artifacts(
     lpips_vlm_coarse_reasoning_effort: Optional[str],
     lpips_vlm_fine_reasoning_effort: Optional[str],
     lpips_vlm_side_reasoning_effort: Optional[str],
+    lpips_vlm_use_flow_proposals: bool,
+    lpips_vlm_flow_proposal_stride: int,
+    lpips_vlm_flow_peak_threshold: float,
+    lpips_vlm_flow_topk_windows: int,
+    lpips_vlm_flow_window_sec: float,
+    lpips_vlm_flow_camera_compensation: bool,
     save_inspection_artifacts: bool,
     inspection_root: str,
     inspection_run_id: str,
@@ -116,6 +123,14 @@ def _merge_lpips_artifacts(
     context.artifacts["lpips_vlm_parallel_videos"] = bool(lpips_vlm_parallel_videos)
     context.artifacts["lpips_vlm_side_relabel_concurrency"] = int(lpips_vlm_side_relabel_concurrency)
     context.artifacts["lpips_vlm_coarse_window_concurrency"] = int(lpips_vlm_coarse_window_concurrency)
+    context.artifacts["lpips_vlm_use_flow_proposals"] = bool(lpips_vlm_use_flow_proposals)
+    context.artifacts["lpips_vlm_flow_proposal_stride"] = int(lpips_vlm_flow_proposal_stride)
+    context.artifacts["lpips_vlm_flow_peak_threshold"] = float(lpips_vlm_flow_peak_threshold)
+    context.artifacts["lpips_vlm_flow_topk_windows"] = int(lpips_vlm_flow_topk_windows)
+    context.artifacts["lpips_vlm_flow_window_sec"] = float(lpips_vlm_flow_window_sec)
+    context.artifacts["lpips_vlm_flow_camera_compensation"] = bool(
+        lpips_vlm_flow_camera_compensation
+    )
     if lpips_vlm_coarse_reasoning_effort is not None:
         context.artifacts["lpips_vlm_coarse_reasoning_effort"] = str(lpips_vlm_coarse_reasoning_effort).strip().lower()
     if lpips_vlm_fine_reasoning_effort is not None:
@@ -182,9 +197,15 @@ def run_world_model_evaluation(
     lpips_vlm_parallel_videos: bool = True,
     lpips_vlm_side_relabel_concurrency: int = 2,
     lpips_vlm_coarse_window_concurrency: int = 1,
-    lpips_vlm_coarse_reasoning_effort: Optional[str] = "minimal",
+    lpips_vlm_coarse_reasoning_effort: Optional[str] = "low",
     lpips_vlm_fine_reasoning_effort: Optional[str] = "medium",
     lpips_vlm_side_reasoning_effort: Optional[str] = "medium",
+    lpips_vlm_use_flow_proposals: bool = True,
+    lpips_vlm_flow_proposal_stride: int = 12,
+    lpips_vlm_flow_peak_threshold: float = 0.35,
+    lpips_vlm_flow_topk_windows: int = 8,
+    lpips_vlm_flow_window_sec: float = 1.25,
+    lpips_vlm_flow_camera_compensation: bool = True,
     save_inspection_artifacts: bool = False,
     inspection_root: str = "reports/world_model_lpips/qa",
     inspection_run_id: str = "run",
@@ -281,6 +302,12 @@ def run_world_model_evaluation(
                 lpips_vlm_coarse_reasoning_effort=lpips_vlm_coarse_reasoning_effort,
                 lpips_vlm_fine_reasoning_effort=lpips_vlm_fine_reasoning_effort,
                 lpips_vlm_side_reasoning_effort=lpips_vlm_side_reasoning_effort,
+                lpips_vlm_use_flow_proposals=lpips_vlm_use_flow_proposals,
+                lpips_vlm_flow_proposal_stride=lpips_vlm_flow_proposal_stride,
+                lpips_vlm_flow_peak_threshold=lpips_vlm_flow_peak_threshold,
+                lpips_vlm_flow_topk_windows=lpips_vlm_flow_topk_windows,
+                lpips_vlm_flow_window_sec=lpips_vlm_flow_window_sec,
+                lpips_vlm_flow_camera_compensation=lpips_vlm_flow_camera_compensation,
                 save_inspection_artifacts=save_inspection_artifacts,
                 inspection_root=inspection_root,
                 inspection_run_id=inspection_run_id,
@@ -362,6 +389,12 @@ def run_world_model_evaluation(
         lpips_vlm_coarse_reasoning_effort=lpips_vlm_coarse_reasoning_effort,
         lpips_vlm_fine_reasoning_effort=lpips_vlm_fine_reasoning_effort,
         lpips_vlm_side_reasoning_effort=lpips_vlm_side_reasoning_effort,
+        lpips_vlm_use_flow_proposals=lpips_vlm_use_flow_proposals,
+        lpips_vlm_flow_proposal_stride=lpips_vlm_flow_proposal_stride,
+        lpips_vlm_flow_peak_threshold=lpips_vlm_flow_peak_threshold,
+        lpips_vlm_flow_topk_windows=lpips_vlm_flow_topk_windows,
+        lpips_vlm_flow_window_sec=lpips_vlm_flow_window_sec,
+        lpips_vlm_flow_camera_compensation=lpips_vlm_flow_camera_compensation,
         save_inspection_artifacts=save_inspection_artifacts,
         inspection_root=inspection_root,
         inspection_run_id=inspection_run_id,
@@ -392,7 +425,7 @@ def run_world_model_evaluation(
             "synthetic_action_file": synthetic_action_file,
             "synthetic_infer_actions": synthetic_infer_actions,
             "synthetic_use_depth": synthetic_use_depth,
-            "ptlflow_root": ptlflow_root if ptlflow_root is not None else "/workspace/ptlflow",
+            "ptlflow_root": resolve_ptlflow_root(ptlflow_root),
             "synthetic_grid_size": synthetic_grid_size,
             "lpips_sampling": lpips_sampling,
             "lpips_vlm_model": lpips_vlm_model,
