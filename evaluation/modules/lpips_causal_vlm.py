@@ -431,9 +431,9 @@ def repair_json_object_with_model(
             {"role": "user", "content": repair_prompt},
         ],
     }
-    if str(model).startswith("gpt-5") and reasoning_effort:
-        create_kwargs["reasoning_effort"] = reasoning_effort
-        create_kwargs["temperature"] = 0
+    if str(model).startswith("gpt-5"):
+        if reasoning_effort:
+            create_kwargs["reasoning_effort"] = reasoning_effort
     else:
         create_kwargs["temperature"] = 0
 
@@ -1342,9 +1342,9 @@ def call_openai_vision_judge(
                 },
             ],
         }
-        if str(model).startswith("gpt-5") and reasoning_effort:
-            create_kwargs["reasoning_effort"] = reasoning_effort
-            create_kwargs["temperature"] = 0
+        if str(model).startswith("gpt-5"):
+            if reasoning_effort:
+                create_kwargs["reasoning_effort"] = reasoning_effort
         else:
             create_kwargs["temperature"] = 0
         return create_kwargs
