@@ -1887,18 +1887,14 @@ def match_event_timelines(
 ]:
     match_mode = str(artifacts.get("causal_match_mode", "monotonic_chronology")).strip().lower()
     scene_settings = resolve_scene_settings(artifacts)
-    skip_cost = float(
-        artifacts.get(
-            "lpips_vlm_skip_cost",
-            scene_settings.get("skip_cost", 0.26),
-        )
-    )
-    pair_accept_cost = float(
-        artifacts.get(
-            "lpips_vlm_pair_accept_cost",
-            scene_settings.get("pair_accept_cost", 0.42),
-        )
-    )
+    raw_skip_cost = artifacts.get("lpips_vlm_skip_cost")
+    if raw_skip_cost is None:
+        raw_skip_cost = scene_settings.get("skip_cost", 0.26)
+    raw_pair_accept_cost = artifacts.get("lpips_vlm_pair_accept_cost")
+    if raw_pair_accept_cost is None:
+        raw_pair_accept_cost = scene_settings.get("pair_accept_cost", 0.42)
+    skip_cost = float(raw_skip_cost)
+    pair_accept_cost = float(raw_pair_accept_cost)
     if match_mode in {"monotonic_side_time", "monotonic_chronology", "auto"}:
         matched, unmatched_ref, unmatched_cand, log = pair_collision_events_monotonic_with_log(
             ref_events,
