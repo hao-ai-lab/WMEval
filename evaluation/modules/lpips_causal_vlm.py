@@ -1091,6 +1091,11 @@ def _normalized_event_time(event: Dict[str, Any], frame_count: int) -> float:
     return float(int(event.get("frame", 0))) / float(denom)
 
 
+def _normalized_event_rank(index: int, count: int) -> float:
+    denom = max(1, int(count) - 1)
+    return float(index) / float(denom)
+
+
 def _pair_cost_monotonic(
     ref_event: Dict[str, Any],
     cand_event: Dict[str, Any],
@@ -1098,6 +1103,10 @@ def _pair_cost_monotonic(
     ref_frame_count: int,
     cand_frame_count: int,
     directional_sides: FrozenSet[str],
+    ref_index: Optional[int] = None,
+    cand_index: Optional[int] = None,
+    ref_event_count: Optional[int] = None,
+    cand_event_count: Optional[int] = None,
 ) -> float:
     breakdown = _pair_cost_monotonic_breakdown(
         ref_event,
@@ -1105,6 +1114,10 @@ def _pair_cost_monotonic(
         ref_frame_count=ref_frame_count,
         cand_frame_count=cand_frame_count,
         directional_sides=directional_sides,
+        ref_index=ref_index,
+        cand_index=cand_index,
+        ref_event_count=ref_event_count,
+        cand_event_count=cand_event_count,
     )
     return float(sum(breakdown.values()))
 
@@ -1116,6 +1129,10 @@ def _pair_cost_monotonic_breakdown(
     ref_frame_count: int,
     cand_frame_count: int,
     directional_sides: FrozenSet[str],
+    ref_index: Optional[int] = None,
+    cand_index: Optional[int] = None,
+    ref_event_count: Optional[int] = None,
+    cand_event_count: Optional[int] = None,
 ) -> Dict[str, float]:
     rs = str(ref_event.get("side", "unknown")).lower()
     cs = str(cand_event.get("side", "unknown")).lower()
@@ -1130,7 +1147,7 @@ def _pair_cost_monotonic_breakdown(
     elif "unknown" in (rc, cc):
         class_cost = 0.06
     else:
-        class_cost = 0.18
+        class_cost = 0.26
     side_conf = min(
         float(ref_event.get("side_confidence", ref_event.get("confidence", 0.0)) or 0.0),
         float(cand_event.get("side_confidence", cand_event.get("confidence", 0.0)) or 0.0),
@@ -1145,8 +1162,23 @@ def _pair_cost_monotonic_breakdown(
         side_cost = 0.25 + 0.12 * max(0.0, min(1.0, side_conf))
     else:
         side_cost = 0.05
+    phase_cost = 0.0
+    if (
+        ref_index is not None
+        and cand_index is not None
+        and ref_event_count is not None
+        and cand_event_count is not None
+        and ref_event_count > 0
+        and cand_event_count > 0
+    ):
+        phase_delta = abs(
+            _normalized_event_rank(int(ref_index), int(ref_event_count))
+            - _normalized_event_rank(int(cand_index), int(cand_event_count))
+        )
+        phase_cost = 0.6 * float(phase_delta)
     return {
         "time_cost": float(time_cost),
+        "phase_cost": float(phase_cost),
         "class_cost": float(class_cost),
         "side_cost": float(side_cost),
     }
@@ -1194,6 +1226,10 @@ def pair_collision_events_monotonic_with_log(
                 ref_frame_count=ref_frame_count,
                 cand_frame_count=cand_frame_count,
                 directional_sides=directional_sides,
+                ref_index=i,
+                cand_index=j,
+                ref_event_count=n_ref,
+                cand_event_count=n_cand,
             )
             if match_cost > float(pair_accept_cost):
                 match_cost = float("inf")
@@ -1238,6 +1274,10 @@ def pair_collision_events_monotonic_with_log(
                         ref_frame_count=ref_frame_count,
                         cand_frame_count=cand_frame_count,
                         directional_sides=directional_sides,
+                        ref_index=i,
+                        cand_index=j,
+                        ref_event_count=n_ref,
+                        cand_event_count=n_cand,
                     ),
                     "pair_cost_breakdown": _pair_cost_monotonic_breakdown(
                         r,
@@ -1245,6 +1285,10 @@ def pair_collision_events_monotonic_with_log(
                         ref_frame_count=ref_frame_count,
                         cand_frame_count=cand_frame_count,
                         directional_sides=directional_sides,
+                        ref_index=i,
+                        cand_index=j,
+                        ref_event_count=n_ref,
+                        cand_event_count=n_cand,
                     ),
                     "pair_accept_cost": float(pair_accept_cost),
                 }
@@ -2120,15 +2164,13 @@ def match_event_timelines(
     skip_cost = float(raw_skip_cost)
     pair_accept_cost = float(raw_pair_accept_cost)
     if match_mode in {"monotonic_side_time", "monotonic_chronology", "auto"}:
-        matched, unmatched_ref, unmatched_cand, log = pair_collision_events_monotonic_with_log(
-            ref_events,
-            cand_events,
-            ref_frame_count=ref_frame_count,
-            cand_frame_count=cand_frame_count,
-            directional_sides=directional_sides,
-            skip_cost=skip_cost,
-            pair_accept_cost=pair_accept_cost,
-        )
+        del skip_cost, pair_accept_cost, ref_frame_count, cand_frame_count, directional_sides
+        matched, log = pair_collision_events_order_with_log(ref_events, cand_events)
+        ref_sorted = sorted(ref_events, key=lambda e: int(e.get("frame", 0)))
+        cand_sorted = sorted(cand_events, key=lambda e: int(e.get("frame", 0)))
+        n_pair = min(len(ref_sorted), len(cand_sorted))
+        unmatched_ref = ref_sorted[n_pair:]
+        unmatched_cand = cand_sorted[n_pair:]
         return matched, unmatched_ref, unmatched_cand, log, "monotonic_chronology"
     if match_mode in ("order", "side_agnostic"):
         matched, log = pair_collision_events_order_with_log(ref_events, cand_events)

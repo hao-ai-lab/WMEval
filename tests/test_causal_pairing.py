@@ -134,51 +134,31 @@ class TestCausalPairing(unittest.TestCase):
     def test_monotonic_pairing_preserves_time_order(self) -> None:
         ref = [_ev(199, "front"), _ev(247, "right"), _ev(275, "back")]
         cand = [_ev(20, "front"), _ev(60, "right"), _ev(120, "back")]
-        matched, ur, uc, log = pair_collision_events_monotonic_with_log(
-            ref,
-            cand,
-            ref_frame_count=496,
-            cand_frame_count=172,
-        )
+        matched, log = pair_collision_events_order_with_log(ref, cand)
         self.assertEqual(len(matched), 3)
         self.assertEqual(
             [(r["side"], c["side"]) for r, c in matched],
             [("front", "front"), ("right", "right"), ("back", "back")],
         )
-        self.assertEqual(len(ur), 0)
-        self.assertEqual(len(uc), 0)
-        self.assertEqual(log[0]["match_rule"], "monotonic_chronology")
-        self.assertIn("pair_cost_breakdown", log[0])
+        self.assertEqual(log[0]["match_rule"], "order_index")
 
     def test_monotonic_pairing_can_leave_mismatch_unmatched(self) -> None:
         ref = [_ev(10, "left"), _ev(20, "right")]
         cand = [_ev(12, "left")]
-        matched, ur, uc, log = pair_collision_events_monotonic_with_log(
+        matched, log = pair_collision_events_order_with_log(
             ref,
             cand,
-            ref_frame_count=100,
-            cand_frame_count=100,
         )
         self.assertEqual(len(matched), 1)
         self.assertEqual(matched[0][0]["side"], "left")
         self.assertEqual(matched[0][1]["side"], "left")
-        self.assertEqual(len(ur), 1)
-        self.assertEqual(ur[0]["side"], "right")
-        self.assertEqual(len(uc), 0)
-        self.assertEqual(log[-1]["reason"], "monotonic_skip_reference")
+        self.assertEqual(log[-1]["reason"], "no_candidate_at_order_index")
 
     def test_monotonic_pairing_allows_label_mismatch_when_time_aligned(self) -> None:
         ref = [_ev(10, "front") | {"contact_class": "depth"}]
         cand = [_ev(12, "right") | {"contact_class": "lateral", "side_confidence": 0.1}]
-        matched, ur, uc, _ = pair_collision_events_monotonic_with_log(
-            ref,
-            cand,
-            ref_frame_count=100,
-            cand_frame_count=100,
-        )
+        matched, _ = pair_collision_events_order_with_log(ref, cand)
         self.assertEqual(len(matched), 1)
-        self.assertEqual(len(ur), 0)
-        self.assertEqual(len(uc), 0)
 
     def test_resolve_reasoning_effort_defaults_by_stage(self) -> None:
         self.assertEqual(
@@ -261,18 +241,14 @@ class TestCausalPairing(unittest.TestCase):
                 str(sibling.resolve()),
             )
 
-    def test_monotonic_pairing_rejects_bad_temporal_match(self) -> None:
+    def test_order_pairing_matches_by_event_index_even_when_semantics_differ(self) -> None:
         ref = [_ev(10, "front") | {"contact_class": "depth", "side_confidence": 1.0}]
         cand = [_ev(90, "left") | {"contact_class": "lateral", "side_confidence": 1.0}]
-        matched, ur, uc, _ = pair_collision_events_monotonic_with_log(
-            ref,
-            cand,
-            ref_frame_count=100,
-            cand_frame_count=100,
-        )
-        self.assertEqual(len(matched), 0)
-        self.assertEqual(len(ur), 1)
-        self.assertEqual(len(uc), 1)
+        matched, log = pair_collision_events_order_with_log(ref, cand)
+        self.assertEqual(len(matched), 1)
+        self.assertEqual(matched[0][0]["frame"], 10)
+        self.assertEqual(matched[0][1]["frame"], 90)
+        self.assertEqual(log[0]["match_rule"], "order_index")
 
     def test_first_divergence_temporal_spike(self) -> None:
         temporal = {
