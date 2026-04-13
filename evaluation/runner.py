@@ -43,6 +43,12 @@ def _merge_lpips_artifacts(
     lpips_causal_lpips_pairing: Optional[str],
     lpips_vlm_pair_accept_cost: Optional[float],
     lpips_vlm_skip_cost: Optional[float],
+    lpips_vlm_parallel_videos: bool,
+    lpips_vlm_side_relabel_concurrency: int,
+    lpips_vlm_coarse_window_concurrency: int,
+    lpips_vlm_coarse_reasoning_effort: Optional[str],
+    lpips_vlm_fine_reasoning_effort: Optional[str],
+    lpips_vlm_side_reasoning_effort: Optional[str],
     save_inspection_artifacts: bool,
     inspection_root: str,
     inspection_run_id: str,
@@ -107,6 +113,15 @@ def _merge_lpips_artifacts(
         context.artifacts["lpips_vlm_pair_accept_cost"] = float(lpips_vlm_pair_accept_cost)
     if lpips_vlm_skip_cost is not None:
         context.artifacts["lpips_vlm_skip_cost"] = float(lpips_vlm_skip_cost)
+    context.artifacts["lpips_vlm_parallel_videos"] = bool(lpips_vlm_parallel_videos)
+    context.artifacts["lpips_vlm_side_relabel_concurrency"] = int(lpips_vlm_side_relabel_concurrency)
+    context.artifacts["lpips_vlm_coarse_window_concurrency"] = int(lpips_vlm_coarse_window_concurrency)
+    if lpips_vlm_coarse_reasoning_effort is not None:
+        context.artifacts["lpips_vlm_coarse_reasoning_effort"] = str(lpips_vlm_coarse_reasoning_effort).strip().lower()
+    if lpips_vlm_fine_reasoning_effort is not None:
+        context.artifacts["lpips_vlm_fine_reasoning_effort"] = str(lpips_vlm_fine_reasoning_effort).strip().lower()
+    if lpips_vlm_side_reasoning_effort is not None:
+        context.artifacts["lpips_vlm_side_reasoning_effort"] = str(lpips_vlm_side_reasoning_effort).strip().lower()
     context.artifacts["save_inspection_artifacts"] = bool(save_inspection_artifacts)
     context.artifacts["inspection_root"] = inspection_root
     context.artifacts["inspection_run_id"] = inspection_run_id
@@ -164,6 +179,12 @@ def run_world_model_evaluation(
     lpips_causal_lpips_pairing: Optional[str] = None,
     lpips_vlm_pair_accept_cost: Optional[float] = None,
     lpips_vlm_skip_cost: Optional[float] = None,
+    lpips_vlm_parallel_videos: bool = True,
+    lpips_vlm_side_relabel_concurrency: int = 2,
+    lpips_vlm_coarse_window_concurrency: int = 1,
+    lpips_vlm_coarse_reasoning_effort: Optional[str] = "minimal",
+    lpips_vlm_fine_reasoning_effort: Optional[str] = "medium",
+    lpips_vlm_side_reasoning_effort: Optional[str] = "medium",
     save_inspection_artifacts: bool = False,
     inspection_root: str = "reports/world_model_lpips/qa",
     inspection_run_id: str = "run",
@@ -254,6 +275,12 @@ def run_world_model_evaluation(
                 lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
                 lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
                 lpips_vlm_skip_cost=lpips_vlm_skip_cost,
+                lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,
+                lpips_vlm_side_relabel_concurrency=lpips_vlm_side_relabel_concurrency,
+                lpips_vlm_coarse_window_concurrency=lpips_vlm_coarse_window_concurrency,
+                lpips_vlm_coarse_reasoning_effort=lpips_vlm_coarse_reasoning_effort,
+                lpips_vlm_fine_reasoning_effort=lpips_vlm_fine_reasoning_effort,
+                lpips_vlm_side_reasoning_effort=lpips_vlm_side_reasoning_effort,
                 save_inspection_artifacts=save_inspection_artifacts,
                 inspection_root=inspection_root,
                 inspection_run_id=inspection_run_id,
@@ -329,6 +356,12 @@ def run_world_model_evaluation(
         lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
         lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
         lpips_vlm_skip_cost=lpips_vlm_skip_cost,
+        lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,
+        lpips_vlm_side_relabel_concurrency=lpips_vlm_side_relabel_concurrency,
+        lpips_vlm_coarse_window_concurrency=lpips_vlm_coarse_window_concurrency,
+        lpips_vlm_coarse_reasoning_effort=lpips_vlm_coarse_reasoning_effort,
+        lpips_vlm_fine_reasoning_effort=lpips_vlm_fine_reasoning_effort,
+        lpips_vlm_side_reasoning_effort=lpips_vlm_side_reasoning_effort,
         save_inspection_artifacts=save_inspection_artifacts,
         inspection_root=inspection_root,
         inspection_run_id=inspection_run_id,

@@ -117,6 +117,39 @@ def main() -> None:
         help="Maximum frames sampled for the local side relabel pass per detected event",
     )
     ap.add_argument(
+        "--lpips_vlm_parallel_videos",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run reference and candidate causal extraction in parallel when event_source=both",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_relabel_concurrency",
+        type=int,
+        default=2,
+        help="Concurrency cap for local side relabel requests",
+    )
+    ap.add_argument(
+        "--lpips_vlm_coarse_window_concurrency",
+        type=int,
+        default=1,
+        help="Reserved concurrency cap for coarse window calls (kept at 1 by default)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_coarse_reasoning_effort",
+        default="minimal",
+        help="Reasoning effort for coarse causal judge calls on GPT-5 models",
+    )
+    ap.add_argument(
+        "--lpips_vlm_fine_reasoning_effort",
+        default="medium",
+        help="Reasoning effort for fine causal judge calls on GPT-5 models",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_reasoning_effort",
+        default="medium",
+        help="Reasoning effort for side relabel calls on GPT-5 models",
+    )
+    ap.add_argument(
         "--lpips_vlm_window_sec",
         type=float,
         default=2.5,
@@ -395,6 +428,12 @@ def main() -> None:
         lpips_vlm_side_model=args.lpips_vlm_side_model,
         lpips_vlm_side_window_sec=args.lpips_vlm_side_window_sec,
         lpips_vlm_side_max_frames=args.lpips_vlm_side_max_frames,
+        lpips_vlm_parallel_videos=args.lpips_vlm_parallel_videos,
+        lpips_vlm_side_relabel_concurrency=args.lpips_vlm_side_relabel_concurrency,
+        lpips_vlm_coarse_window_concurrency=args.lpips_vlm_coarse_window_concurrency,
+        lpips_vlm_coarse_reasoning_effort=args.lpips_vlm_coarse_reasoning_effort,
+        lpips_vlm_fine_reasoning_effort=args.lpips_vlm_fine_reasoning_effort,
+        lpips_vlm_side_reasoning_effort=args.lpips_vlm_side_reasoning_effort,
         lpips_vlm_window_sec=args.lpips_vlm_window_sec,
         lpips_vlm_window_overlap_sec=args.lpips_vlm_window_overlap_sec,
         lpips_vlm_window_max_frames=args.lpips_vlm_window_max_frames,

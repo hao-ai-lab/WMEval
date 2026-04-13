@@ -21,6 +21,7 @@ from evaluation.modules.lpips_causal_vlm import (
     pair_collision_events_monotonic_with_log,
     pair_collision_events_order_with_log,
     pair_collision_events_strict_with_log,
+    resolve_reasoning_effort,
     sanitize_relabel_payload,
 )
 from evaluation.scene_prompt_registry import infer_scene_key, resolve_scene_config, resolve_scene_hints
@@ -138,6 +139,7 @@ class TestCausalPairing(unittest.TestCase):
         self.assertEqual(len(ur), 0)
         self.assertEqual(len(uc), 0)
         self.assertEqual(log[0]["match_rule"], "monotonic_chronology")
+        self.assertIn("pair_cost_breakdown", log[0])
 
     def test_monotonic_pairing_can_leave_mismatch_unmatched(self) -> None:
         ref = [_ev(10, "left"), _ev(20, "right")]
@@ -168,6 +170,42 @@ class TestCausalPairing(unittest.TestCase):
         self.assertEqual(len(matched), 1)
         self.assertEqual(len(ur), 0)
         self.assertEqual(len(uc), 0)
+
+    def test_resolve_reasoning_effort_defaults_by_stage(self) -> None:
+        self.assertEqual(
+            resolve_reasoning_effort({}, stage="coarse", model="gpt-5.4"),
+            "minimal",
+        )
+        self.assertEqual(
+            resolve_reasoning_effort({}, stage="fine", model="gpt-5.4"),
+            "medium",
+        )
+        self.assertEqual(
+            resolve_reasoning_effort({}, stage="side", model="gpt-5.4"),
+            "medium",
+        )
+        self.assertIsNone(
+            resolve_reasoning_effort({}, stage="fine", model="gpt-4o")
+        )
+
+    def test_resolve_reasoning_effort_honors_artifacts(self) -> None:
+        artifacts = {
+            "lpips_vlm_coarse_reasoning_effort": "low",
+            "lpips_vlm_fine_reasoning_effort": "high",
+            "lpips_vlm_side_reasoning_effort": "minimal",
+        }
+        self.assertEqual(
+            resolve_reasoning_effort(artifacts, stage="coarse", model="gpt-5.4"),
+            "low",
+        )
+        self.assertEqual(
+            resolve_reasoning_effort(artifacts, stage="fine", model="gpt-5.4"),
+            "high",
+        )
+        self.assertEqual(
+            resolve_reasoning_effort(artifacts, stage="side", model="gpt-5.4"),
+            "minimal",
+        )
 
     def test_monotonic_pairing_rejects_bad_temporal_match(self) -> None:
         ref = [_ev(10, "front") | {"contact_class": "depth", "side_confidence": 1.0}]

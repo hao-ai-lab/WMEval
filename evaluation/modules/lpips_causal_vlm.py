@@ -4,6 +4,7 @@ import base64
 import json
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from time import perf_counter
 from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
@@ -170,6 +171,33 @@ def resolve_directional_sides(artifacts: Mapping[str, Any]) -> FrozenSet[str]:
 def resolve_scene_settings(artifacts: Mapping[str, Any]) -> Mapping[str, Any]:
     raw = artifacts.get("lpips_vlm_scene_config")
     return raw if isinstance(raw, Mapping) else {}
+
+
+def resolve_reasoning_effort(
+    artifacts: Mapping[str, Any],
+    *,
+    stage: str,
+    model: str,
+) -> Optional[str]:
+    if not str(model).startswith("gpt-5"):
+        return None
+    key_map = {
+        "coarse": "lpips_vlm_coarse_reasoning_effort",
+        "fine": "lpips_vlm_fine_reasoning_effort",
+        "side": "lpips_vlm_side_reasoning_effort",
+        "repair": "lpips_vlm_fine_reasoning_effort",
+    }
+    default_map = {
+        "coarse": "minimal",
+        "fine": "medium",
+        "side": "medium",
+        "repair": "minimal",
+    }
+    raw = artifacts.get(key_map.get(stage, ""))
+    if raw is None:
+        raw = default_map.get(stage)
+    value = str(raw).strip().lower() if raw is not None else ""
+    return value or None
     if isinstance(raw, str):
         parts = [p.strip().lower() for p in raw.split(",") if p.strip()]
         return frozenset(parts) if parts else DEFAULT_DIRECTIONAL_SIDES
@@ -387,6 +415,7 @@ def repair_json_object_with_model(
     model: str,
     raw_text: str,
     timeout_sec: float,
+    reasoning_effort: Optional[str] = None,
 ) -> Dict[str, Any]:
     repair_prompt = (
         "The following model output was intended to be a single JSON object, but it is malformed. "
@@ -402,8 +431,8 @@ def repair_json_object_with_model(
             {"role": "user", "content": repair_prompt},
         ],
     }
-    if str(model).startswith("gpt-5"):
-        create_kwargs["reasoning_effort"] = "none"
+    if str(model).startswith("gpt-5") and reasoning_effort:
+        create_kwargs["reasoning_effort"] = reasoning_effort
         create_kwargs["temperature"] = 0
     else:
         create_kwargs["temperature"] = 0
@@ -956,6 +985,24 @@ def _pair_cost_monotonic(
     cand_frame_count: int,
     directional_sides: FrozenSet[str],
 ) -> float:
+    breakdown = _pair_cost_monotonic_breakdown(
+        ref_event,
+        cand_event,
+        ref_frame_count=ref_frame_count,
+        cand_frame_count=cand_frame_count,
+        directional_sides=directional_sides,
+    )
+    return float(sum(breakdown.values()))
+
+
+def _pair_cost_monotonic_breakdown(
+    ref_event: Dict[str, Any],
+    cand_event: Dict[str, Any],
+    *,
+    ref_frame_count: int,
+    cand_frame_count: int,
+    directional_sides: FrozenSet[str],
+) -> Dict[str, float]:
     rs = str(ref_event.get("side", "unknown")).lower()
     cs = str(cand_event.get("side", "unknown")).lower()
     rc = str(ref_event.get("contact_class", _contact_class_from_side(rs))).lower()
@@ -982,7 +1029,11 @@ def _pair_cost_monotonic(
         side_cost = 0.08 + 0.08 * max(0.0, min(1.0, side_conf))
     else:
         side_cost = 0.05
-    return time_cost + class_cost + side_cost
+    return {
+        "time_cost": float(time_cost),
+        "class_cost": float(class_cost),
+        "side_cost": float(side_cost),
+    }
 
 
 def pair_collision_events_monotonic_with_log(
@@ -1066,6 +1117,13 @@ def pair_collision_events_monotonic_with_log(
                     "match_rule": "monotonic_chronology",
                     "pair_index": len(matched) - 1,
                     "pair_cost": _pair_cost_monotonic(
+                        r,
+                        c,
+                        ref_frame_count=ref_frame_count,
+                        cand_frame_count=cand_frame_count,
+                        directional_sides=directional_sides,
+                    ),
+                    "pair_cost_breakdown": _pair_cost_monotonic_breakdown(
                         r,
                         c,
                         ref_frame_count=ref_frame_count,
@@ -1250,6 +1308,7 @@ def call_openai_vision_judge(
     system_prompt: str,
     user_text: str,
     timeout_sec: float = 120.0,
+    reasoning_effort: Optional[str] = None,
 ) -> Dict[str, Any]:
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
@@ -1283,8 +1342,8 @@ def call_openai_vision_judge(
                 },
             ],
         }
-        if str(model).startswith("gpt-5"):
-            create_kwargs["reasoning_effort"] = "none"
+        if str(model).startswith("gpt-5") and reasoning_effort:
+            create_kwargs["reasoning_effort"] = reasoning_effort
             create_kwargs["temperature"] = 0
         else:
             create_kwargs["temperature"] = 0
@@ -1308,6 +1367,7 @@ def call_openai_vision_judge(
             model=model,
             raw_text=raw_text,
             timeout_sec=min(timeout_sec, 120.0),
+            reasoning_effort=reasoning_effort,
         )
         _log_causal(
             "judge_json_repair_done",
@@ -1422,6 +1482,7 @@ def run_vlm_judge_on_video(
                     artifacts,
                     phase=f"coarse_window_{window_index}",
                     prompt_mode="detection_only",
+                    reasoning_stage="coarse",
                 )
                 raw_events = payload.get("events")
                 if not isinstance(raw_events, list):
@@ -1478,6 +1539,7 @@ def run_vlm_judge_on_video(
                 artifacts,
                 phase="coarse",
                 prompt_mode="detection_only",
+                reasoning_stage="coarse",
             )
             coarse_events_raw = coarse_payload.get("events")
             if not isinstance(coarse_events_raw, list):
@@ -1536,6 +1598,7 @@ def run_vlm_judge_on_video(
             artifacts,
             phase="fine",
             prompt_mode="detection_high_recall",
+            reasoning_stage="fine",
         )
         if side_relabel_enabled:
             fine_events_raw = fine_payload.get("events")
@@ -1599,6 +1662,7 @@ def run_vlm_judge_on_video(
         artifacts,
         phase="single_grid",
         prompt_mode="detection_only",
+        reasoning_stage="fine",
     )
     if side_relabel_enabled:
         events_raw = payload.get("events")
@@ -1635,6 +1699,7 @@ def run_vlm_judge_on_indices(
     *,
     phase: str,
     prompt_mode: str = "joint",
+    reasoning_stage: str = "fine",
 ) -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
     _log_causal(
         "judge_prepare_start",
@@ -1697,6 +1762,11 @@ def run_vlm_judge_on_indices(
         system_prompt=system_prompt,
         user_text=user_text,
         timeout_sec=timeout_sec,
+        reasoning_effort=resolve_reasoning_effort(
+            artifacts,
+            stage=reasoning_stage,
+            model=model,
+        ),
     )
     _log_causal(
         "judge_api_done",
@@ -1726,10 +1796,12 @@ def relabel_event_sides_on_video(
     window_sec = float(artifacts.get("lpips_vlm_side_window_sec", 0.75))
     max_frames = int(artifacts.get("lpips_vlm_side_max_frames", 12))
     radius_frames = max(1, int(round(window_sec * float(meta.fps))))
-    relabeled: List[Dict[str, Any]] = []
-    relabel_logs: List[Dict[str, Any]] = []
+    concurrency = max(1, int(artifacts.get("lpips_vlm_side_relabel_concurrency", 2)))
+    tasks = list(enumerate(sorted(events, key=lambda e: int(e.get("frame", 0)))))
+    relabeled_by_index: Dict[int, Dict[str, Any]] = {}
+    relabel_logs_by_index: Dict[int, Dict[str, Any]] = {}
 
-    for index, event in enumerate(sorted(events, key=lambda e: int(e.get("frame", 0)))):
+    def _run_one(index: int, event: Dict[str, Any]) -> tuple[int, Dict[str, Any], Dict[str, Any]]:
         anchors = [int(event.get("frame", 0))]
         evidence = event.get("evidence_frame_indices")
         if isinstance(evidence, list):
@@ -1748,16 +1820,12 @@ def relabel_event_sides_on_video(
         if len(frames) != len(indices):
             indices = indices[: len(frames)]
         if not indices:
-            relabeled.append(dict(event))
-            relabel_logs.append(
-                {
-                    "event_index": index,
-                    "status": "skipped",
-                    "reason": "no_local_frames_loaded",
-                    "original_side": str(event.get("side", "unknown")).lower(),
-                }
-            )
-            continue
+            return index, dict(event), {
+                "event_index": index,
+                "status": "skipped",
+                "reason": "no_local_frames_loaded",
+                "original_side": str(event.get("side", "unknown")).lower(),
+            }
 
         system_prompt = resolve_judge_system_prompt(artifacts)
         user_text = build_side_relabel_user_prompt(indices, event, artifacts)
@@ -1782,6 +1850,11 @@ def relabel_event_sides_on_video(
                 system_prompt=system_prompt,
                 user_text=user_text,
                 timeout_sec=timeout_sec,
+                reasoning_effort=resolve_reasoning_effort(
+                    artifacts,
+                    stage="side",
+                    model=model,
+                ),
             )
             clean = sanitize_relabel_payload(payload, allowed=set(indices))
             updated = dict(event)
@@ -1794,18 +1867,15 @@ def relabel_event_sides_on_video(
                 updated["evidence_summary"] = clean["evidence_summary"]
             if clean["confidence"] > 0.0:
                 updated["confidence"] = clean["confidence"]
-            relabeled.append(updated)
-            relabel_logs.append(
-                {
-                    "event_index": index,
-                    "status": "ok",
-                    "original_side": str(event.get("side", "unknown")).lower(),
-                    "contact_class": clean["contact_class"],
-                    "relabeled_side": clean["side"],
-                    "elapsed_sec": round(perf_counter() - started, 3),
-                    "reasoning_steps": clean["reasoning_steps"],
-                }
-            )
+            log = {
+                "event_index": index,
+                "status": "ok",
+                "original_side": str(event.get("side", "unknown")).lower(),
+                "contact_class": clean["contact_class"],
+                "relabeled_side": clean["side"],
+                "elapsed_sec": round(perf_counter() - started, 3),
+                "reasoning_steps": clean["reasoning_steps"],
+            }
             _log_causal(
                 "side_relabel_done",
                 video_path=video_path,
@@ -1814,16 +1884,14 @@ def relabel_event_sides_on_video(
                 relabeled_side=clean["side"],
                 elapsed_sec=round(perf_counter() - started, 3),
             )
+            return index, updated, log
         except Exception as exc:
-            relabeled.append(dict(event))
-            relabel_logs.append(
-                {
-                    "event_index": index,
-                    "status": "error",
-                    "reason": str(exc),
-                    "original_side": str(event.get("side", "unknown")).lower(),
-                }
-            )
+            log = {
+                "event_index": index,
+                "status": "error",
+                "reason": str(exc),
+                "original_side": str(event.get("side", "unknown")).lower(),
+            }
             _log_causal(
                 "side_relabel_error",
                 video_path=video_path,
@@ -1831,7 +1899,17 @@ def relabel_event_sides_on_video(
                 event_index=index,
                 error=str(exc),
             )
+            return index, dict(event), log
 
+    with ThreadPoolExecutor(max_workers=concurrency) as executor:
+        futures = [executor.submit(_run_one, index, dict(event)) for index, event in tasks]
+        for future in as_completed(futures):
+            index, updated, log = future.result()
+            relabeled_by_index[index] = updated
+            relabel_logs_by_index[index] = log
+
+    relabeled = [relabeled_by_index[index] for index, _ in tasks]
+    relabel_logs = [relabel_logs_by_index[index] for index, _ in tasks]
     return relabeled, relabel_logs
 
 
@@ -2095,14 +2173,28 @@ def analyze_causal_vlm_lpips(
         return result
 
     try:
-        _log_causal("reference_judge_start", video_path=context.reference_video)
-        ref_j_raw, ref_grid_idx, _ = detect_event_candidates(
-            context.reference_video,
-            max_grid_frames=max_grid,
-            model=model,
-            artifacts=artifacts,
-        )
+        parallel_videos = bool(artifacts.get("lpips_vlm_parallel_videos", True))
+
+        def _run_reference() -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
+            _log_causal("reference_judge_start", video_path=context.reference_video)
+            return detect_event_candidates(
+                context.reference_video,
+                max_grid_frames=max_grid,
+                model=model,
+                artifacts=artifacts,
+            )
+
+        def _run_candidate() -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
+            _log_causal("candidate_judge_start", video_path=context.candidate_video)
+            return detect_event_candidates(
+                context.candidate_video,
+                max_grid_frames=max_grid,
+                model=model,
+                artifacts=artifacts,
+            )
+
         if event_source in ("reference", "unity"):
+            ref_j_raw, ref_grid_idx, _ = _run_reference()
             cand_j_raw = {
                 "reasoning_steps": [],
                 "events": [],
@@ -2110,14 +2202,15 @@ def analyze_causal_vlm_lpips(
                 "skip_reason": "reference_only_event_source",
             }
             cand_grid_idx = []
+        elif parallel_videos:
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                ref_future = executor.submit(_run_reference)
+                cand_future = executor.submit(_run_candidate)
+                ref_j_raw, ref_grid_idx, _ = ref_future.result()
+                cand_j_raw, cand_grid_idx, _ = cand_future.result()
         else:
-            _log_causal("candidate_judge_start", video_path=context.candidate_video)
-            cand_j_raw, cand_grid_idx, _ = detect_event_candidates(
-                context.candidate_video,
-                max_grid_frames=max_grid,
-                model=model,
-                artifacts=artifacts,
-            )
+            ref_j_raw, ref_grid_idx, _ = _run_reference()
+            cand_j_raw, cand_grid_idx, _ = _run_candidate()
     except Exception as exc:
         base["error"] = f"vlm_judge_failed: {exc}"
         _merge_temporal_primary_fields(base, temporal_baseline)
