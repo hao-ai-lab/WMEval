@@ -1,0 +1,40 @@
+# Ignore heavy assets inside imported model repos
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.gif
+
+# common large model checkpoints/binaries
+*.pt
+*.pth
+*.ckpt
+*.bin
+*.safetensors
+
+# large archives
+*.zip
+*.tar
+*.tar.gz
+*.7z
+
+# copied env/runtime folders inside oss_eval repos
+*/lib/
+*/bin/
+*/include/
+*/share/
+*/pyvenv.cfg
+
+# python build/cache noise from merged repos
+__pycache__/
+*/__pycache__/
+*/*.pyc
+
+# venv
+oss_eval/HY-WorldPlay/worldplay
+oss_eval/lingbot-world/lingbot
+oss_eval/Matrix-Game-2/matrix_game_2
+oss_eval/Matrix-Game-3/matrix_game_3
+
+*.pdf
