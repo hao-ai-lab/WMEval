@@ -91,3 +91,31 @@ def test_chain_breaks_at_causal_3() -> None:
     assert results.dua == 100.0
     assert round(results.icra, 1) == 66.7
     assert results.rf >= 1.0
+
+
+def test_compute_delta_higher_is_better_metrics():
+    from evaluation.modules._causal_step_delta import compute_delta
+
+    unity = {"csr": 100.0, "amcl": 4.0, "mcl": 4, "rf": 0.0, "ws": 10.0, "dua": 100.0, "icra": 100.0}
+    wm    = {"csr":   0.0, "amcl": 2.0, "mcl": 2, "rf": 1.0, "ws":  3.0, "dua":  75.0, "icra":  66.7}
+    delta = compute_delta(unity, wm)
+    assert delta["csr"] == 100.0
+    assert delta["amcl"] == 2.0
+    assert delta["mcl"] == 2
+    assert delta["ws"] == 7.0
+    assert delta["dua"] == 25.0
+    assert round(delta["icra"], 1) == 33.3
+
+
+def test_compute_delta_rf_is_inverted():
+    from evaluation.modules._causal_step_delta import compute_delta
+
+    unity = {"csr": 100.0, "amcl": 4.0, "mcl": 4, "rf": 0.0, "ws": 10.0, "dua": 100.0, "icra": 100.0}
+    wm    = {"csr":   0.0, "amcl": 2.0, "mcl": 2, "rf": 1.0, "ws":  3.0, "dua":  75.0, "icra":  66.7}
+    delta = compute_delta(unity, wm)
+    assert delta["rf"] == 1.0
+
+
+def test_compute_delta_convention_string():
+    from evaluation.modules._causal_step_delta import DELTA_CONVENTION_STRING
+    assert "positive = wm worse" in DELTA_CONVENTION_STRING.lower()
