@@ -119,3 +119,42 @@ def test_compute_delta_rf_is_inverted():
 def test_compute_delta_convention_string():
     from evaluation.modules._causal_step_delta import DELTA_CONVENTION_STRING
     assert "positive = wm worse" in DELTA_CONVENTION_STRING.lower()
+
+
+def test_io_ensure_causalstep_importable_default():
+    from evaluation.modules._causal_step_io import ensure_causalstep_importable
+    # Default resolves to sibling CausalStep dir; must not raise.
+    ensure_causalstep_importable(None)
+
+    import causalstep  # noqa: F401
+
+
+def test_io_load_segments(tmp_path):
+    import json
+    from evaluation.modules._causal_step_io import load_segments
+
+    segs = {
+        "trajectory_id": "t1",
+        "source": "unity_gt",
+        "events": [
+            {"index": 1, "name": "rolling", "start_sec": 0.0, "end_sec": 0.5, "trigger": "start"},
+            {"index": 2, "name": "impact",  "start_sec": 0.5, "end_sec": 1.0, "trigger": "stack_hit_flag"},
+        ],
+    }
+    p = tmp_path / "segments.json"
+    p.write_text(json.dumps(segs))
+    loaded = load_segments(str(p))
+    assert loaded["trajectory_id"] == "t1"
+    assert len(loaded["events"]) == 2
+    assert loaded["events"][0]["name"] == "rolling"
+
+
+def test_io_write_answers_roundtrip(tmp_path):
+    from evaluation.modules._causal_step_io import write_answers, load_answers_as_map
+
+    answers = {("v1", 1, "descriptive"): "A", ("v1", 2, "causal"): "B"}
+    out_path = tmp_path / "answers.json"
+    write_answers(str(out_path), answers, video_id="v1")
+    loaded = load_answers_as_map(str(out_path))
+    assert loaded[("v1", 1, "descriptive")] == "A"
+    assert loaded[("v1", 2, "causal")] == "B"
