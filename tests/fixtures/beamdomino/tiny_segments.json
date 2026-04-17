@@ -1,0 +1,10 @@
+{
+  "trajectory_id": "traj_tiny",
+  "source": "unity_gt",
+  "events": [
+    {"index": 1, "name": "rolling", "start_sec": 0.0,  "end_sec": 0.50, "trigger": "start"},
+    {"index": 2, "name": "impact",  "start_sec": 0.50, "end_sec": 1.00, "trigger": "stack_hit_flag"},
+    {"index": 3, "name": "topple",  "start_sec": 1.00, "end_sec": 1.50, "trigger": "first_fallen_flag"},
+    {"index": 4, "name": "cascade", "start_sec": 1.50, "end_sec": 2.00, "trigger": "cascade_plateau"}
+  ]
+}
