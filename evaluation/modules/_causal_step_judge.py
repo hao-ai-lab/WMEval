@@ -27,6 +27,8 @@ class JudgeRequest:
     choices: List[str]
     start_sec: float
     end_sec: float
+    segment_frames_start: int | None = None
+    segment_frames_end: int | None = None
     # For causal QAs we may also want the previous segment window; kept optional:
     prev_segment_index: int | None = None
     prev_start_sec: float | None = None
