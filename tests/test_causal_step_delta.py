@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-CAUSALSTEP_ROOT = ROOT.parent / "CausalStep"
+CAUSALSTEP_ROOT = ROOT / "imports" / "CausalStep"
 if str(CAUSALSTEP_ROOT) not in sys.path:
     sys.path.insert(0, str(CAUSALSTEP_ROOT))
 
@@ -121,9 +121,18 @@ def test_compute_delta_convention_string():
     assert "positive = wm worse" in DELTA_CONVENTION_STRING.lower()
 
 
+def test_compute_delta_raises_when_metrics_missing():
+    from evaluation.modules._causal_step_delta import compute_delta
+
+    unity = {"csr": 100.0, "amcl": 4.0, "mcl": 4, "rf": 0.0, "ws": 10.0, "dua": 100.0, "icra": 100.0}
+    wm_incomplete = {"csr": 0.0, "amcl": 2.0, "mcl": 2, "ws": 3.0, "dua": 75.0}  # missing rf, icra
+    with pytest.raises(ValueError, match="missing metrics"):
+        compute_delta(unity, wm_incomplete)
+
+
 def test_io_ensure_causalstep_importable_default():
     from evaluation.modules._causal_step_io import ensure_causalstep_importable
-    # Default resolves to sibling CausalStep dir; must not raise.
+    # Default resolves to WMEval/imports/CausalStep; must not raise.
     ensure_causalstep_importable(None)
 
     import causalstep  # noqa: F401

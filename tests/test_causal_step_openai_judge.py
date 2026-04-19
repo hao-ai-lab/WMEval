@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-CAUSALSTEP_ROOT = ROOT.parent / "CausalStep"
+CAUSALSTEP_ROOT = ROOT / "imports" / "CausalStep"
 if str(CAUSALSTEP_ROOT) not in sys.path:
     sys.path.insert(0, str(CAUSALSTEP_ROOT))
 
@@ -32,6 +32,29 @@ def test_sample_segment_frames_picks_four_evenly():
     frames = _fake_frames(60)
     picks = sample_segment_frames(frames, start_frame=10, end_frame=50, num_samples=4)
     assert picks.shape == (4, 64, 64, 3)
+
+
+def test_sample_segment_frames_clamps_negative_start():
+    """Defensive: a slightly-negative start (rounding drift) should clamp to 0."""
+    frames = _fake_frames(20)
+    picks = sample_segment_frames(frames, start_frame=-2, end_frame=10, num_samples=4)
+    assert picks.shape == (4, 64, 64, 3)
+
+
+def test_sample_segment_frames_clamps_end_past_video():
+    """WM video may be shorter than Unity. end_frame past the end should clamp,
+    and as long as start is still valid the sample should succeed."""
+    frames = _fake_frames(30)
+    picks = sample_segment_frames(frames, start_frame=20, end_frame=100, num_samples=4)
+    assert picks.shape == (4, 64, 64, 3)
+
+
+def test_sample_segment_frames_raises_when_segment_entirely_past_video():
+    """If both start and end are past the last frame (segment not in the video at all)
+    we must raise, not silently sample garbage frames."""
+    frames = _fake_frames(20)
+    with pytest.raises(ValueError, match="segment.*outside"):
+        sample_segment_frames(frames, start_frame=50, end_frame=80, num_samples=4)
 
 
 def test_build_prompt_contains_question_and_choices():
