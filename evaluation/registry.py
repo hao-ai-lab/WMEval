@@ -89,7 +89,19 @@ def _run_clip4clip(context: EvaluationContext, device: Optional[str] = None) -> 
     return run_clip4clip(context=context, device=device)
 
 
+def _run_causal_step(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+    try:
+        from .modules.causal_step import analyze_causal_step_from_context
+    except Exception as exc:
+        return {
+            "module": "causal_step",
+            "error": f"failed to import causal_step module: {exc}",
+        }
+    return analyze_causal_step_from_context(context=context, device=device)
+
+
 MODULE_REGISTRY: Dict[str, EvaluationModule] = {
+    "causal_step": _run_causal_step,
     "clip4clip": _run_clip4clip,
     "control_motion": _run_control_motion,
     "lpips": _run_lpips,
