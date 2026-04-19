@@ -6,12 +6,12 @@ import io
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import numpy as np
 from PIL import Image
 
-from ._causal_step_judge import Judge, JudgeParseError, JudgeRequest, parse_letter
+from ._causal_step_judge import JudgeParseError, JudgeRequest, parse_letter
 
 
 FramesProvider = Callable[[str], np.ndarray]  # path -> (N,H,W,3) uint8
@@ -24,10 +24,29 @@ def sample_segment_frames(
     end_frame: int,
     num_samples: int = 4,
 ) -> np.ndarray:
-    """Pick `num_samples` evenly-spaced frames from [start_frame, end_frame)."""
+    """Pick `num_samples` evenly-spaced frames from ``[start_frame, end_frame)``.
+
+    Tolerates a segment window that extends past the video (e.g. a world-model
+    clip shorter than its Unity reference) by clamping both bounds into
+    ``[0, len(frames))``. Raises ``ValueError`` only when the segment falls
+    entirely outside the available frames — silent sampling there would hand
+    the judge frames from the wrong time window.
+    """
     if end_frame <= start_frame:
         raise ValueError(f"bad segment: {start_frame}..{end_frame}")
-    end_frame = min(end_frame, len(frames))
+    n = len(frames)
+    if n == 0:
+        raise ValueError("cannot sample from an empty frame array")
+    # Segment entirely past the last available frame — refuse to hand the judge
+    # misleading frames from the video tail.
+    if start_frame >= n:
+        raise ValueError(
+            f"segment [{start_frame}, {end_frame}) is entirely outside video of length {n}"
+        )
+    # Clamp into valid range. Negative start from rounding drift would wrap
+    # under numpy's negative indexing and silently sample the video tail.
+    start_frame = max(start_frame, 0)
+    end_frame = min(end_frame, n)
     idx = np.linspace(start_frame, end_frame - 1, num_samples).round().astype(int)
     return frames[idx]
 

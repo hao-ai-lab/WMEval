@@ -1,5 +1,5 @@
 """I/O helpers for the causal_step module: load segments, load/write answers,
-and bootstrap the unpackaged CausalStep sibling directory onto sys.path."""
+and bootstrap the vendored CausalStep directory (WMEval/imports/CausalStep) onto sys.path."""
 
 from __future__ import annotations
 
@@ -10,16 +10,16 @@ from typing import Any, Dict, Mapping, Tuple
 
 
 def ensure_causalstep_importable(causalstep_root: str | None) -> None:
-    """Add the CausalStep sibling directory to sys.path so `import causalstep` works.
+    """Add the vendored CausalStep directory to sys.path so `import causalstep` works.
 
-    If `causalstep_root` is None, default to `<WMEval-parent>/CausalStep`.
+    If `causalstep_root` is None, default to `<WMEval>/imports/CausalStep`.
     """
     if causalstep_root:
         root = Path(causalstep_root).resolve()
     else:
         # This file is WMEval/evaluation/modules/_causal_step_io.py
-        # parents[0]=modules, [1]=evaluation, [2]=WMEval, [3]=WorldModelBench
-        root = Path(__file__).resolve().parents[3] / "CausalStep"
+        # parents[0]=modules, [1]=evaluation, [2]=WMEval
+        root = Path(__file__).resolve().parents[2] / "imports" / "CausalStep"
     if not (root / "causalstep" / "__init__.py").is_file():
         raise RuntimeError(
             f"CausalStep package not found at {root}. "
