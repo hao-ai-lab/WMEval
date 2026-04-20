@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Any, Dict, Iterable, Optional, Sequence
 
 from .context import EvaluationContext
+from .path_resolution import resolve_ptlflow_root
 from .registry import normalize_modules, run_modules
+from .scene_prompt_registry import resolve_scene_config, resolve_scene_hints
 from .video_io import build_evaluation_context
 
 
@@ -17,13 +19,43 @@ def _merge_lpips_artifacts(
     lpips_event_frames_after: int,
     lpips_event_offsets: Optional[Sequence[int]],
     lpips_vlm_model: str,
+    lpips_vlm_coarse_model: Optional[str],
     lpips_vlm_max_grid_frames: int,
+    lpips_vlm_sampling_strategy: str,
+    lpips_vlm_coarse_grid_frames: int,
+    lpips_vlm_side_relabel: bool,
+    lpips_vlm_side_model: Optional[str],
+    lpips_vlm_side_window_sec: float,
+    lpips_vlm_side_max_frames: int,
+    lpips_vlm_window_sec: float,
+    lpips_vlm_window_overlap_sec: float,
+    lpips_vlm_window_max_frames: int,
+    lpips_vlm_window_merge_gap_frames: int,
+    lpips_vlm_event_split_gap_frames: int,
+    lpips_vlm_event_split_min_cluster_size: int,
+    lpips_vlm_refine_window_sec: float,
+    lpips_vlm_refine_max_frames_per_window: int,
     lpips_vlm_prompt_version: str,
     lpips_vlm_max_reference_events: Optional[int],
     lpips_vlm_reference_trim_sec: Optional[float],
     lpips_vlm_judge_hint: str,
+    lpips_vlm_scene_key: Optional[str],
     lpips_causal_event_source: str,
     lpips_causal_lpips_pairing: Optional[str],
+    lpips_vlm_pair_accept_cost: Optional[float],
+    lpips_vlm_skip_cost: Optional[float],
+    lpips_vlm_parallel_videos: bool,
+    lpips_vlm_side_relabel_concurrency: int,
+    lpips_vlm_coarse_window_concurrency: int,
+    lpips_vlm_coarse_reasoning_effort: Optional[str],
+    lpips_vlm_fine_reasoning_effort: Optional[str],
+    lpips_vlm_side_reasoning_effort: Optional[str],
+    lpips_vlm_use_flow_proposals: bool,
+    lpips_vlm_flow_proposal_stride: int,
+    lpips_vlm_flow_peak_threshold: float,
+    lpips_vlm_flow_topk_windows: int,
+    lpips_vlm_flow_window_sec: float,
+    lpips_vlm_flow_camera_compensation: bool,
     save_inspection_artifacts: bool,
     inspection_root: str,
     inspection_run_id: str,
@@ -39,7 +71,32 @@ def _merge_lpips_artifacts(
     if lpips_event_offsets is not None:
         context.artifacts["lpips_event_offsets"] = list(lpips_event_offsets)
     context.artifacts["lpips_vlm_model"] = lpips_vlm_model
+    if lpips_vlm_coarse_model is not None and str(lpips_vlm_coarse_model).strip():
+        context.artifacts["lpips_vlm_coarse_model"] = str(lpips_vlm_coarse_model).strip()
     context.artifacts["lpips_vlm_max_grid_frames"] = int(lpips_vlm_max_grid_frames)
+    context.artifacts["lpips_vlm_sampling_strategy"] = lpips_vlm_sampling_strategy
+    context.artifacts["lpips_vlm_coarse_grid_frames"] = int(lpips_vlm_coarse_grid_frames)
+    context.artifacts["lpips_vlm_side_relabel"] = bool(lpips_vlm_side_relabel)
+    if lpips_vlm_side_model is not None and str(lpips_vlm_side_model).strip():
+        context.artifacts["lpips_vlm_side_model"] = str(lpips_vlm_side_model).strip()
+    context.artifacts["lpips_vlm_side_window_sec"] = float(lpips_vlm_side_window_sec)
+    context.artifacts["lpips_vlm_side_max_frames"] = int(lpips_vlm_side_max_frames)
+    context.artifacts["lpips_vlm_window_sec"] = float(lpips_vlm_window_sec)
+    context.artifacts["lpips_vlm_window_overlap_sec"] = float(lpips_vlm_window_overlap_sec)
+    context.artifacts["lpips_vlm_window_max_frames"] = int(lpips_vlm_window_max_frames)
+    context.artifacts["lpips_vlm_window_merge_gap_frames"] = int(
+        lpips_vlm_window_merge_gap_frames
+    )
+    context.artifacts["lpips_vlm_event_split_gap_frames"] = int(
+        lpips_vlm_event_split_gap_frames
+    )
+    context.artifacts["lpips_vlm_event_split_min_cluster_size"] = int(
+        lpips_vlm_event_split_min_cluster_size
+    )
+    context.artifacts["lpips_vlm_refine_window_sec"] = float(lpips_vlm_refine_window_sec)
+    context.artifacts["lpips_vlm_refine_max_frames_per_window"] = int(
+        lpips_vlm_refine_max_frames_per_window
+    )
     context.artifacts["lpips_vlm_prompt_version"] = lpips_vlm_prompt_version
     if lpips_vlm_max_reference_events is not None:
         context.artifacts["lpips_vlm_max_reference_events"] = int(
@@ -52,11 +109,34 @@ def _merge_lpips_artifacts(
     hint = (lpips_vlm_judge_hint or "").strip()
     if hint:
         context.artifacts["lpips_vlm_judge_hint"] = hint
+    if lpips_vlm_scene_key is not None and str(lpips_vlm_scene_key).strip():
+        context.artifacts["lpips_vlm_scene_key"] = str(lpips_vlm_scene_key).strip().lower()
     context.artifacts["lpips_causal_event_source"] = lpips_causal_event_source.strip().lower()
     if lpips_causal_lpips_pairing is not None:
         raw = str(lpips_causal_lpips_pairing).strip().lower()
         if raw and raw != "auto":
             context.artifacts["lpips_causal_lpips_pairing"] = raw
+    if lpips_vlm_pair_accept_cost is not None:
+        context.artifacts["lpips_vlm_pair_accept_cost"] = float(lpips_vlm_pair_accept_cost)
+    if lpips_vlm_skip_cost is not None:
+        context.artifacts["lpips_vlm_skip_cost"] = float(lpips_vlm_skip_cost)
+    context.artifacts["lpips_vlm_parallel_videos"] = bool(lpips_vlm_parallel_videos)
+    context.artifacts["lpips_vlm_side_relabel_concurrency"] = int(lpips_vlm_side_relabel_concurrency)
+    context.artifacts["lpips_vlm_coarse_window_concurrency"] = int(lpips_vlm_coarse_window_concurrency)
+    context.artifacts["lpips_vlm_use_flow_proposals"] = bool(lpips_vlm_use_flow_proposals)
+    context.artifacts["lpips_vlm_flow_proposal_stride"] = int(lpips_vlm_flow_proposal_stride)
+    context.artifacts["lpips_vlm_flow_peak_threshold"] = float(lpips_vlm_flow_peak_threshold)
+    context.artifacts["lpips_vlm_flow_topk_windows"] = int(lpips_vlm_flow_topk_windows)
+    context.artifacts["lpips_vlm_flow_window_sec"] = float(lpips_vlm_flow_window_sec)
+    context.artifacts["lpips_vlm_flow_camera_compensation"] = bool(
+        lpips_vlm_flow_camera_compensation
+    )
+    if lpips_vlm_coarse_reasoning_effort is not None:
+        context.artifacts["lpips_vlm_coarse_reasoning_effort"] = str(lpips_vlm_coarse_reasoning_effort).strip().lower()
+    if lpips_vlm_fine_reasoning_effort is not None:
+        context.artifacts["lpips_vlm_fine_reasoning_effort"] = str(lpips_vlm_fine_reasoning_effort).strip().lower()
+    if lpips_vlm_side_reasoning_effort is not None:
+        context.artifacts["lpips_vlm_side_reasoning_effort"] = str(lpips_vlm_side_reasoning_effort).strip().lower()
     context.artifacts["save_inspection_artifacts"] = bool(save_inspection_artifacts)
     context.artifacts["inspection_root"] = inspection_root
     context.artifacts["inspection_run_id"] = inspection_run_id
@@ -89,13 +169,43 @@ def run_world_model_evaluation(
     lpips_event_frames_after: int = 2,
     lpips_event_offsets: Optional[Sequence[int]] = None,
     lpips_vlm_model: str = "gpt-4o",
+    lpips_vlm_coarse_model: Optional[str] = None,
     lpips_vlm_max_grid_frames: int = 48,
+    lpips_vlm_sampling_strategy: str = "single_grid",
+    lpips_vlm_coarse_grid_frames: int = 64,
+    lpips_vlm_side_relabel: bool = True,
+    lpips_vlm_side_model: Optional[str] = None,
+    lpips_vlm_side_window_sec: float = 0.75,
+    lpips_vlm_side_max_frames: int = 12,
+    lpips_vlm_window_sec: float = 2.5,
+    lpips_vlm_window_overlap_sec: float = 1.25,
+    lpips_vlm_window_max_frames: int = 24,
+    lpips_vlm_window_merge_gap_frames: int = 18,
+    lpips_vlm_event_split_gap_frames: int = 12,
+    lpips_vlm_event_split_min_cluster_size: int = 2,
+    lpips_vlm_refine_window_sec: float = 1.0,
+    lpips_vlm_refine_max_frames_per_window: int = 24,
     lpips_vlm_prompt_version: str = "causal_collision_v2",
     lpips_vlm_max_reference_events: Optional[int] = None,
     lpips_vlm_reference_trim_sec: Optional[float] = None,
     lpips_vlm_judge_hint: str = "",
+    lpips_vlm_scene_key: Optional[str] = None,
     lpips_causal_event_source: str = "both",
     lpips_causal_lpips_pairing: Optional[str] = None,
+    lpips_vlm_pair_accept_cost: Optional[float] = None,
+    lpips_vlm_skip_cost: Optional[float] = None,
+    lpips_vlm_parallel_videos: bool = True,
+    lpips_vlm_side_relabel_concurrency: int = 2,
+    lpips_vlm_coarse_window_concurrency: int = 1,
+    lpips_vlm_coarse_reasoning_effort: Optional[str] = "low",
+    lpips_vlm_fine_reasoning_effort: Optional[str] = "medium",
+    lpips_vlm_side_reasoning_effort: Optional[str] = "medium",
+    lpips_vlm_use_flow_proposals: bool = True,
+    lpips_vlm_flow_proposal_stride: int = 12,
+    lpips_vlm_flow_peak_threshold: float = 0.35,
+    lpips_vlm_flow_topk_windows: int = 8,
+    lpips_vlm_flow_window_sec: float = 1.25,
+    lpips_vlm_flow_camera_compensation: bool = True,
     save_inspection_artifacts: bool = False,
     inspection_root: str = "reports/world_model_lpips/qa",
     inspection_run_id: str = "run",
@@ -127,7 +237,7 @@ def run_world_model_evaluation(
     lpips_vlm_directional_sides: Optional[str] = None,
     lpips_vlm_system_prompt: Optional[str] = None,
     lpips_vlm_judge_user_prompt_template: Optional[str] = None,
-    causal_match_mode: str = "strict_fallback_order",
+    causal_match_mode: str = "monotonic_chronology",
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -161,13 +271,43 @@ def run_world_model_evaluation(
                 lpips_event_frames_after=lpips_event_frames_after,
                 lpips_event_offsets=lpips_event_offsets,
                 lpips_vlm_model=lpips_vlm_model,
+                lpips_vlm_coarse_model=lpips_vlm_coarse_model,
                 lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
+                lpips_vlm_sampling_strategy=lpips_vlm_sampling_strategy,
+                lpips_vlm_coarse_grid_frames=lpips_vlm_coarse_grid_frames,
+                lpips_vlm_side_relabel=lpips_vlm_side_relabel,
+                lpips_vlm_side_model=lpips_vlm_side_model,
+                lpips_vlm_side_window_sec=lpips_vlm_side_window_sec,
+                lpips_vlm_side_max_frames=lpips_vlm_side_max_frames,
+                lpips_vlm_window_sec=lpips_vlm_window_sec,
+                lpips_vlm_window_overlap_sec=lpips_vlm_window_overlap_sec,
+                lpips_vlm_window_max_frames=lpips_vlm_window_max_frames,
+                lpips_vlm_window_merge_gap_frames=lpips_vlm_window_merge_gap_frames,
+                lpips_vlm_event_split_gap_frames=lpips_vlm_event_split_gap_frames,
+                lpips_vlm_event_split_min_cluster_size=lpips_vlm_event_split_min_cluster_size,
+                lpips_vlm_refine_window_sec=lpips_vlm_refine_window_sec,
+                lpips_vlm_refine_max_frames_per_window=lpips_vlm_refine_max_frames_per_window,
                 lpips_vlm_prompt_version=lpips_vlm_prompt_version,
                 lpips_vlm_max_reference_events=lpips_vlm_max_reference_events,
                 lpips_vlm_reference_trim_sec=lpips_vlm_reference_trim_sec,
                 lpips_vlm_judge_hint=lpips_vlm_judge_hint,
+                lpips_vlm_scene_key=lpips_vlm_scene_key,
                 lpips_causal_event_source=lpips_causal_event_source,
                 lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+                lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
+                lpips_vlm_skip_cost=lpips_vlm_skip_cost,
+                lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,
+                lpips_vlm_side_relabel_concurrency=lpips_vlm_side_relabel_concurrency,
+                lpips_vlm_coarse_window_concurrency=lpips_vlm_coarse_window_concurrency,
+                lpips_vlm_coarse_reasoning_effort=lpips_vlm_coarse_reasoning_effort,
+                lpips_vlm_fine_reasoning_effort=lpips_vlm_fine_reasoning_effort,
+                lpips_vlm_side_reasoning_effort=lpips_vlm_side_reasoning_effort,
+                lpips_vlm_use_flow_proposals=lpips_vlm_use_flow_proposals,
+                lpips_vlm_flow_proposal_stride=lpips_vlm_flow_proposal_stride,
+                lpips_vlm_flow_peak_threshold=lpips_vlm_flow_peak_threshold,
+                lpips_vlm_flow_topk_windows=lpips_vlm_flow_topk_windows,
+                lpips_vlm_flow_window_sec=lpips_vlm_flow_window_sec,
+                lpips_vlm_flow_camera_compensation=lpips_vlm_flow_camera_compensation,
                 save_inspection_artifacts=save_inspection_artifacts,
                 inspection_root=inspection_root,
                 inspection_run_id=inspection_run_id,
@@ -218,13 +358,43 @@ def run_world_model_evaluation(
         lpips_event_frames_after=lpips_event_frames_after,
         lpips_event_offsets=lpips_event_offsets,
         lpips_vlm_model=lpips_vlm_model,
+        lpips_vlm_coarse_model=lpips_vlm_coarse_model,
         lpips_vlm_max_grid_frames=lpips_vlm_max_grid_frames,
+        lpips_vlm_sampling_strategy=lpips_vlm_sampling_strategy,
+        lpips_vlm_coarse_grid_frames=lpips_vlm_coarse_grid_frames,
+        lpips_vlm_side_relabel=lpips_vlm_side_relabel,
+        lpips_vlm_side_model=lpips_vlm_side_model,
+        lpips_vlm_side_window_sec=lpips_vlm_side_window_sec,
+        lpips_vlm_side_max_frames=lpips_vlm_side_max_frames,
+        lpips_vlm_window_sec=lpips_vlm_window_sec,
+        lpips_vlm_window_overlap_sec=lpips_vlm_window_overlap_sec,
+        lpips_vlm_window_max_frames=lpips_vlm_window_max_frames,
+        lpips_vlm_window_merge_gap_frames=lpips_vlm_window_merge_gap_frames,
+        lpips_vlm_event_split_gap_frames=lpips_vlm_event_split_gap_frames,
+        lpips_vlm_event_split_min_cluster_size=lpips_vlm_event_split_min_cluster_size,
+        lpips_vlm_refine_window_sec=lpips_vlm_refine_window_sec,
+        lpips_vlm_refine_max_frames_per_window=lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=lpips_vlm_prompt_version,
         lpips_vlm_max_reference_events=lpips_vlm_max_reference_events,
         lpips_vlm_reference_trim_sec=lpips_vlm_reference_trim_sec,
         lpips_vlm_judge_hint=lpips_vlm_judge_hint,
+        lpips_vlm_scene_key=lpips_vlm_scene_key,
         lpips_causal_event_source=lpips_causal_event_source,
         lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+        lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
+        lpips_vlm_skip_cost=lpips_vlm_skip_cost,
+        lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,
+        lpips_vlm_side_relabel_concurrency=lpips_vlm_side_relabel_concurrency,
+        lpips_vlm_coarse_window_concurrency=lpips_vlm_coarse_window_concurrency,
+        lpips_vlm_coarse_reasoning_effort=lpips_vlm_coarse_reasoning_effort,
+        lpips_vlm_fine_reasoning_effort=lpips_vlm_fine_reasoning_effort,
+        lpips_vlm_side_reasoning_effort=lpips_vlm_side_reasoning_effort,
+        lpips_vlm_use_flow_proposals=lpips_vlm_use_flow_proposals,
+        lpips_vlm_flow_proposal_stride=lpips_vlm_flow_proposal_stride,
+        lpips_vlm_flow_peak_threshold=lpips_vlm_flow_peak_threshold,
+        lpips_vlm_flow_topk_windows=lpips_vlm_flow_topk_windows,
+        lpips_vlm_flow_window_sec=lpips_vlm_flow_window_sec,
+        lpips_vlm_flow_camera_compensation=lpips_vlm_flow_camera_compensation,
         save_inspection_artifacts=save_inspection_artifacts,
         inspection_root=inspection_root,
         inspection_run_id=inspection_run_id,
@@ -255,7 +425,7 @@ def run_world_model_evaluation(
             "synthetic_action_file": synthetic_action_file,
             "synthetic_infer_actions": synthetic_infer_actions,
             "synthetic_use_depth": synthetic_use_depth,
-            "ptlflow_root": ptlflow_root if ptlflow_root is not None else "/workspace/ptlflow",
+            "ptlflow_root": resolve_ptlflow_root(ptlflow_root),
             "synthetic_grid_size": synthetic_grid_size,
             "lpips_sampling": lpips_sampling,
             "lpips_vlm_model": lpips_vlm_model,
@@ -265,14 +435,32 @@ def run_world_model_evaluation(
             "lpips_event_frames_after": lpips_event_frames_after,
             "lpips_event_offsets": lpips_event_offsets,
             "causal_match_mode": causal_match_mode,
+            "lpips_vlm_pair_accept_cost": lpips_vlm_pair_accept_cost,
+            "lpips_vlm_skip_cost": lpips_vlm_skip_cost,
             "save_inspection_artifacts": save_inspection_artifacts,
             "inspection_root": inspection_root,
             "inspection_run_id": inspection_run_id,
             "inspection_sample_id": inspection_sample_id,
         }
     )
+    resolved_scene_key, resolved_scene_hints = resolve_scene_hints(
+        scene_key=lpips_vlm_scene_key,
+        reference_video=context.reference_video,
+        candidate_video=context.candidate_video,
+        explicit_hints=lpips_vlm_scene_hints,
+    )
+    _, resolved_scene_config = resolve_scene_config(
+        scene_key=resolved_scene_key,
+        reference_video=context.reference_video,
+        candidate_video=context.candidate_video,
+    )
+    if resolved_scene_key is not None:
+        context.artifacts["lpips_vlm_scene_key"] = resolved_scene_key
+    if resolved_scene_config:
+        context.artifacts["lpips_vlm_scene_config"] = resolved_scene_config
+
     for _k, _v in (
-        ("lpips_vlm_scene_hints", lpips_vlm_scene_hints),
+        ("lpips_vlm_scene_hints", resolved_scene_hints),
         ("lpips_vlm_contact_types", lpips_vlm_contact_types),
         ("lpips_vlm_directional_sides", lpips_vlm_directional_sides),
         ("lpips_vlm_system_prompt", lpips_vlm_system_prompt),
