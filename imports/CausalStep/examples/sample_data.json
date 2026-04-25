@@ -1,0 +1,101 @@
+{
+  "videos": [
+    {
+      "video_id": "video_001",
+      "segments": [
+        {"index": 1, "video_path": "video_001/seg1.mp4"},
+        {"index": 2, "video_path": "video_001/seg2.mp4"},
+        {"index": 3, "video_path": "video_001/seg3.mp4"}
+      ],
+      "descriptive_qas": [
+        {
+          "segment_index": 1,
+          "question": "What is happening in this segment?",
+          "choices": ["A) A cat is sleeping", "B) A dog is running", "C) A bird is flying", "D) A fish is swimming", "E) A horse is galloping", "F) A rabbit is hopping", "G) A snake is slithering", "H) A frog is jumping"],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 2,
+          "question": "What does the character do in this segment?",
+          "choices": ["A) Opens a door", "B) Closes a window", "C) Picks up a book", "D) Drops a glass", "E) Turns on a light", "F) Sits on a chair", "G) Stands on a table", "H) Walks through a hallway"],
+          "correct_answer": "C"
+        },
+        {
+          "segment_index": 3,
+          "question": "What is shown at the end of this segment?",
+          "choices": ["A) A sunset", "B) A sunrise", "C) A rainstorm", "D) A snowfall", "E) A clear sky", "F) A foggy landscape", "G) A starry night", "H) A rainbow"],
+          "correct_answer": "A"
+        }
+      ],
+      "causal_qas": [
+        {
+          "segment_index": 2,
+          "question": "Why does the character pick up a book in this segment?",
+          "choices": ["A) Because they were bored from watching the cat sleep", "B) Because the door was locked", "C) Because it was raining outside", "D) Because someone called them", "E) Because they heard a noise", "F) Because the light went out", "G) Because they were hungry", "H) Because the phone rang"],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 3,
+          "question": "What caused the sunset scene to appear?",
+          "choices": ["A) The character went outside after reading", "B) The TV was turned on", "C) A painting was revealed", "D) Time passed while sleeping", "E) The window was opened", "F) The book described a sunset", "G) The lights dimmed", "H) A flashback occurred"],
+          "correct_answer": "A"
+        }
+      ]
+    },
+    {
+      "video_id": "video_002",
+      "segments": [
+        {"index": 1, "video_path": "video_002/seg1.mp4"},
+        {"index": 2, "video_path": "video_002/seg2.mp4"},
+        {"index": 3, "video_path": "video_002/seg3.mp4"},
+        {"index": 4, "video_path": "video_002/seg4.mp4"}
+      ],
+      "descriptive_qas": [
+        {
+          "segment_index": 1,
+          "question": "What sport is being played?",
+          "choices": ["A) Basketball", "B) Soccer", "C) Tennis", "D) Baseball", "E) Hockey", "F) Golf", "G) Swimming", "H) Boxing"],
+          "correct_answer": "B"
+        },
+        {
+          "segment_index": 2,
+          "question": "What happens to the ball?",
+          "choices": ["A) It goes out of bounds", "B) It hits the goalpost", "C) A player scores", "D) The referee stops play", "E) A foul is called", "F) The ball is intercepted", "G) A corner kick is awarded", "H) The goalkeeper saves it"],
+          "correct_answer": "B"
+        },
+        {
+          "segment_index": 3,
+          "question": "What is the team's reaction?",
+          "choices": ["A) They celebrate", "B) They argue with the referee", "C) They regroup for another attempt", "D) They substitute a player", "E) They take a break", "F) They change formation", "G) They protest", "H) They walk off"],
+          "correct_answer": "C"
+        },
+        {
+          "segment_index": 4,
+          "question": "How does the match end?",
+          "choices": ["A) With a goal", "B) With a draw", "C) With a red card", "D) With a penalty shootout", "E) With extra time", "F) With an injury", "G) With a celebration", "H) With a protest"],
+          "correct_answer": "A"
+        }
+      ],
+      "causal_qas": [
+        {
+          "segment_index": 2,
+          "question": "Why did the ball hit the goalpost?",
+          "choices": ["A) The player aimed too wide after dribbling past defenders", "B) The goalkeeper deflected it", "C) The wind changed direction", "D) Another player blocked the shot", "E) The ball was wet", "F) The player slipped", "G) The pitch was uneven", "H) The sun was in the player's eyes"],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 3,
+          "question": "Why did the team regroup?",
+          "choices": ["A) Because the previous shot hit the post and they needed a new strategy", "B) Because halftime started", "C) Because the coach called a timeout", "D) Because a player was injured", "E) Because of a substitution", "F) Because the weather changed", "G) Because the fans were chanting", "H) Because the score was tied"],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 4,
+          "question": "What led to the final goal?",
+          "choices": ["A) The regrouping led to a better attacking formation", "B) A penalty was awarded", "C) An own goal occurred", "D) A free kick was taken", "E) A header from a corner", "F) A long-range shot", "G) A counterattack", "H) A lucky deflection"],
+          "correct_answer": "A"
+        }
+      ]
+    }
+  ]
+}

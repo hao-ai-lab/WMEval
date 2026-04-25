@@ -238,6 +238,14 @@ def run_world_model_evaluation(
     lpips_vlm_system_prompt: Optional[str] = None,
     lpips_vlm_judge_user_prompt_template: Optional[str] = None,
     causal_match_mode: str = "monotonic_chronology",
+    causal_step_qa_dataset: Optional[str] = None,
+    causal_step_video_id: Optional[str] = None,
+    causal_step_answers_cache_dir: Optional[str] = None,
+    causal_step_vlm_model: str = "gpt-4o",
+    causal_step_vlm_prompt_version: str = "v1",
+    causal_step_causal_fail_advance: bool = True,
+    causal_step_judge: str = "openai",
+    causalstep_root: Optional[str] = None,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -465,9 +473,19 @@ def run_world_model_evaluation(
         ("lpips_vlm_directional_sides", lpips_vlm_directional_sides),
         ("lpips_vlm_system_prompt", lpips_vlm_system_prompt),
         ("lpips_vlm_judge_user_prompt_template", lpips_vlm_judge_user_prompt_template),
+        ("causal_step_qa_dataset", causal_step_qa_dataset),
+        ("causal_step_video_id", causal_step_video_id),
+        ("causal_step_answers_cache_dir", causal_step_answers_cache_dir),
+        ("causalstep_root", causalstep_root),
     ):
         if _v is not None:
             context.artifacts[_k] = _v
+    context.artifacts["causal_step_vlm_model"] = causal_step_vlm_model
+    context.artifacts["causal_step_vlm_prompt_version"] = causal_step_vlm_prompt_version
+    context.artifacts["causal_step_causal_fail_advance"] = bool(
+        causal_step_causal_fail_advance
+    )
+    context.artifacts["causal_step_judge"] = causal_step_judge
 
     report.update(
         {

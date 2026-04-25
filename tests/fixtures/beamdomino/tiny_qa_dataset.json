@@ -1,0 +1,24 @@
+{
+  "videos": [
+    {
+      "video_id": "traj_tiny",
+      "segments": [
+        {"index": 1, "video_path": "unity_gt.mp4", "start_time": 0.0, "end_time": 0.5},
+        {"index": 2, "video_path": "unity_gt.mp4", "start_time": 0.5, "end_time": 1.0},
+        {"index": 3, "video_path": "unity_gt.mp4", "start_time": 1.0, "end_time": 1.5},
+        {"index": 4, "video_path": "unity_gt.mp4", "start_time": 1.5, "end_time": 2.0}
+      ],
+      "descriptive_qas": [
+        {"segment_index": 1, "question": "Stage 1?", "choices": ["A) rolling", "B) impact", "C) topple", "D) cascade"], "correct_answer": "A"},
+        {"segment_index": 2, "question": "Stage 2?", "choices": ["A) rolling", "B) impact", "C) topple", "D) cascade"], "correct_answer": "B"},
+        {"segment_index": 3, "question": "Stage 3?", "choices": ["A) rolling", "B) impact", "C) topple", "D) cascade"], "correct_answer": "C"},
+        {"segment_index": 4, "question": "Stage 4?", "choices": ["A) rolling", "B) impact", "C) topple", "D) cascade"], "correct_answer": "D"}
+      ],
+      "causal_qas": [
+        {"segment_index": 2, "question": "Why impact?", "choices": ["A) ball rolled into stack", "B) wind", "C) earthquake", "D) magic"], "correct_answer": "A"},
+        {"segment_index": 3, "question": "Why topple?", "choices": ["A) impact tipped stack", "B) age", "C) user click", "D) rain"], "correct_answer": "A"},
+        {"segment_index": 4, "question": "Why cascade?", "choices": ["A) first domino hit next", "B) time", "C) gravity alone", "D) sound"], "correct_answer": "A"}
+      ]
+    }
+  ]
+}

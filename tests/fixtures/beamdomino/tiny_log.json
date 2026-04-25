@@ -1,0 +1,15 @@
+{
+  "trajectory_id": "traj_tiny",
+  "fps": 50.0,
+  "frames": [
+    {"t": 0.00, "stack_hit_flag": 0, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 0.0},
+    {"t": 0.30, "stack_hit_flag": 0, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 3.2},
+    {"t": 0.50, "stack_hit_flag": 1, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 4.1},
+    {"t": 0.80, "stack_hit_flag": 1, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 3.9},
+    {"t": 1.00, "stack_hit_flag": 1, "cascade_count": 0.05, "fallen_count": 1, "ball_speed": 3.5},
+    {"t": 1.20, "stack_hit_flag": 1, "cascade_count": 0.25, "fallen_count": 5, "ball_speed": 3.2},
+    {"t": 1.50, "stack_hit_flag": 1, "cascade_count": 0.50, "fallen_count": 10, "ball_speed": 3.0},
+    {"t": 1.80, "stack_hit_flag": 1, "cascade_count": 0.50, "fallen_count": 10, "ball_speed": 2.9},
+    {"t": 2.00, "stack_hit_flag": 1, "cascade_count": 0.50, "fallen_count": 10, "ball_speed": 2.8}
+  ]
+}
