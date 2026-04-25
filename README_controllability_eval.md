@@ -139,7 +139,8 @@ When you pass a calibration file and either an action recording or **inferred**
 actions, `control_motion` additionally reports `synthetic_vs_candidate`:
 
 - **Reference motion**: Longuet-Higgins field from `synthetic_flow.py` (loaded
-  from your `ptlflow` checkout: default `--ptlflow_root /workspace/ptlflow`).
+  from your `ptlflow` checkout: default auto-resolution prefers sibling
+  `../ptlflow`, then falls back to `--ptlflow_root` or `/workspace/ptlflow`).
 - **Candidate motion**: **same RAFT model** as the main block (consistent with
   the RAFT ref vs RAFT gen comparison).
 - **Per-pair / temporal metrics**: same families as ptlflow (`mf_epe`, `pixel_epe_mean`,

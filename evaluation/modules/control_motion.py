@@ -8,7 +8,6 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 import cv2
 import numpy as np
 import torch
-from torchvision.models.optical_flow import Raft_Large_Weights, raft_large
 
 from ..context import EvaluationContext
 from .flow_divergence_metrics import (
@@ -16,7 +15,12 @@ from .flow_divergence_metrics import (
     compute_temporal_metrics,
     json_safe_floats,
 )
-from .motion import _center_crop_to_common, _flow_raft
+from .flow_utils import (
+    center_crop_to_common as _center_crop_to_common,
+    estimate_camera_motion as _estimate_camera_motion,
+    flow_raft as _flow_raft,
+    load_raft_model,
+)
 
 
 def _get_thresholds(raw_thresholds: Any) -> List[float]:
@@ -49,18 +53,6 @@ def _summarize(values: Sequence[float]) -> Dict[str, float | None]:
     }
 
 
-def _estimate_global_motion(flow: np.ndarray, mode: str) -> np.ndarray:
-    flat = flow.reshape(-1, 2)
-    if mode == "mean_translation":
-        return flat.mean(axis=0).astype(np.float32)
-    if mode == "median_translation":
-        return np.median(flat, axis=0).astype(np.float32)
-    raise ValueError(
-        f"Unsupported control global motion mode: {mode!r}. "
-        "Use 'affine_ransac', 'median_translation', or 'mean_translation'."
-    )
-
-
 def _angle_error_deg(flow_ref: np.ndarray, flow_gen: np.ndarray, mask: np.ndarray) -> float | None:
     if not np.any(mask):
         return None
@@ -91,76 +83,6 @@ def _relative_epe(flow_ref: np.ndarray, flow_gen: np.ndarray, mask: np.ndarray) 
     numer = np.linalg.norm(gen_sel - ref_sel, axis=1)
     denom = np.linalg.norm(ref_sel, axis=1) + 1.0
     return float(np.mean(numer / denom))
-
-
-def _fit_affine_motion(flow: np.ndarray) -> tuple[np.ndarray, np.ndarray | None]:
-    height, width = flow.shape[:2]
-    stride_y = max(1, height // 64)
-    stride_x = max(1, width // 64)
-
-    ys = np.arange(0, height, stride_y, dtype=np.float32)
-    xs = np.arange(0, width, stride_x, dtype=np.float32)
-    grid_x, grid_y = np.meshgrid(xs, ys)
-    src = np.stack([grid_x.reshape(-1), grid_y.reshape(-1)], axis=1).astype(np.float32)
-    sampled_flow = flow[::stride_y, ::stride_x].reshape(-1, 2).astype(np.float32)
-    dst = src + sampled_flow
-
-    matrix, _ = cv2.estimateAffinePartial2D(
-        src,
-        dst,
-        method=cv2.RANSAC,
-        ransacReprojThreshold=3.0,
-        maxIters=2000,
-        confidence=0.99,
-        refineIters=10,
-    )
-    if matrix is None:
-        translation = np.median(flow.reshape(-1, 2), axis=0).astype(np.float32)
-        motion_field = np.broadcast_to(
-            translation.reshape(1, 1, 2), flow.shape
-        ).astype(np.float32)
-        return motion_field, None
-
-    full_x, full_y = np.meshgrid(
-        np.arange(width, dtype=np.float32),
-        np.arange(height, dtype=np.float32),
-    )
-    homogeneous = np.stack(
-        [full_x.reshape(-1), full_y.reshape(-1), np.ones(height * width, dtype=np.float32)],
-        axis=1,
-    )
-    dst_full = homogeneous @ matrix.T
-    motion_field = dst_full.reshape(height, width, 2) - np.stack(
-        [full_x, full_y], axis=2
-    )
-    return motion_field.astype(np.float32), matrix.astype(np.float32)
-
-
-def _estimate_camera_motion(
-    flow: np.ndarray,
-    mode: str,
-) -> tuple[np.ndarray, Dict[str, Any]]:
-    if mode == "affine_ransac":
-        motion_field, matrix = _fit_affine_motion(flow)
-        if matrix is None:
-            translation = np.median(flow.reshape(-1, 2), axis=0).astype(np.float32)
-            return motion_field, {
-                "type": "translation_fallback",
-                "vector": [float(translation[0]), float(translation[1])],
-            }
-        return motion_field, {
-            "type": "affine_ransac",
-            "matrix_2x3": [[float(v) for v in row] for row in matrix.tolist()],
-        }
-
-    translation = _estimate_global_motion(flow, mode)
-    motion_field = np.broadcast_to(
-        translation.reshape(1, 1, 2), flow.shape
-    ).astype(np.float32)
-    return motion_field, {
-        "type": mode,
-        "vector": [float(translation[0]), float(translation[1])],
-    }
 
 
 def _compute_metrics(
@@ -544,9 +466,7 @@ def analyze_control_motion_from_context(
     ptlflow_root = str(artifacts.get("ptlflow_root", "/workspace/ptlflow"))
     synthetic_grid_size = int(artifacts.get("synthetic_grid_size", 8))
 
-    weights = Raft_Large_Weights.DEFAULT
-    transform = weights.transforms()
-    model = raft_large(weights=weights, progress=False).to(device_obj).eval()
+    model, transform = load_raft_model(device_obj)
 
     raw_metrics_per_pair: List[Dict[str, Any]] = []
     compensated_metrics_per_pair: List[Dict[str, Any]] = []

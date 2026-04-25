@@ -72,10 +72,130 @@ def main() -> None:
     )
     ap.add_argument("--lpips_vlm_model", default="gpt-4o", help="OpenAI vision model for causal_vlm_collision")
     ap.add_argument(
+        "--lpips_vlm_coarse_model",
+        default=None,
+        help="Optional model override for the coarse pass when using coarse_to_fine",
+    )
+    ap.add_argument(
         "--lpips_vlm_max_grid_frames",
         type=int,
         default=48,
         help="Max keyframes sent to the VLM per video in causal_vlm_collision (~40–56 typical)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_sampling_strategy",
+        choices=["single_grid", "coarse_to_fine", "windowed_coarse_to_fine"],
+        default="single_grid",
+        help="Judge-frame selection strategy for causal_vlm_collision",
+    )
+    ap.add_argument(
+        "--lpips_vlm_coarse_grid_frames",
+        type=int,
+        default=64,
+        help="Coarse pass frame cap when --lpips_vlm_sampling_strategy coarse_to_fine is used",
+    )
+    ap.add_argument(
+        "--lpips_vlm_disable_side_relabel",
+        action="store_true",
+        help="Disable the local second-pass side relabel step for detected contact episodes",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_model",
+        default=None,
+        help="Optional model override for the local side relabel pass",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_window_sec",
+        type=float,
+        default=0.75,
+        help="Seconds of local context on each side of a detected event for side relabeling",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_max_frames",
+        type=int,
+        default=12,
+        help="Maximum frames sampled for the local side relabel pass per detected event",
+    )
+    ap.add_argument(
+        "--lpips_vlm_parallel_videos",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run reference and candidate causal extraction in parallel when event_source=both",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_relabel_concurrency",
+        type=int,
+        default=2,
+        help="Concurrency cap for local side relabel requests",
+    )
+    ap.add_argument(
+        "--lpips_vlm_coarse_window_concurrency",
+        type=int,
+        default=1,
+        help="Reserved concurrency cap for coarse window calls (kept at 1 by default)",
+    )
+    ap.add_argument(
+        "--lpips_vlm_coarse_reasoning_effort",
+        default="minimal",
+        help="Reasoning effort for coarse causal judge calls on GPT-5 models",
+    )
+    ap.add_argument(
+        "--lpips_vlm_fine_reasoning_effort",
+        default="medium",
+        help="Reasoning effort for fine causal judge calls on GPT-5 models",
+    )
+    ap.add_argument(
+        "--lpips_vlm_side_reasoning_effort",
+        default="medium",
+        help="Reasoning effort for side relabel calls on GPT-5 models",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_sec",
+        type=float,
+        default=2.5,
+        help="Window length in seconds for windowed_coarse_to_fine detection",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_overlap_sec",
+        type=float,
+        default=1.25,
+        help="Window overlap in seconds for windowed_coarse_to_fine detection",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_max_frames",
+        type=int,
+        default=24,
+        help="Maximum sampled frames per detection window in windowed_coarse_to_fine mode",
+    )
+    ap.add_argument(
+        "--lpips_vlm_window_merge_gap_frames",
+        type=int,
+        default=18,
+        help="Frame gap used to merge nearby events after windowed detection",
+    )
+    ap.add_argument(
+        "--lpips_vlm_event_split_gap_frames",
+        type=int,
+        default=12,
+        help="Split an event into multiple episodes when its evidence frames contain larger temporal gaps",
+    )
+    ap.add_argument(
+        "--lpips_vlm_event_split_min_cluster_size",
+        type=int,
+        default=2,
+        help="Minimum evidence frames required for a split sub-episode to be kept",
+    )
+    ap.add_argument(
+        "--lpips_vlm_refine_window_sec",
+        type=float,
+        default=1.0,
+        help="Seconds of context added around coarse event evidence for the fine pass",
+    )
+    ap.add_argument(
+        "--lpips_vlm_refine_max_frames_per_window",
+        type=int,
+        default=24,
+        help="Maximum sampled frames per refined event window",
     )
     ap.add_argument(
         "--lpips_vlm_prompt_version",
@@ -108,6 +228,11 @@ def main() -> None:
             "Optional short hint appended to the reference VLM judge prompt (ignored if "
             "empty). Hints are soft: model may disregard if frames disagree."
         ),
+    )
+    ap.add_argument(
+        "--lpips_vlm_scene_key",
+        default=None,
+        help="Optional scene registry key for judge instructions; inferred from video paths when omitted",
     )
     ap.add_argument(
         "--lpips_causal_event_source",
@@ -203,8 +328,48 @@ def main() -> None:
         action="store_true",
         help="Depth Anything for synthetic translation term",
     )
-    ap.add_argument("--ptlflow_root", default="/workspace/ptlflow")
+    ap.add_argument(
+        "--ptlflow_root",
+        default=None,
+        help="Optional PTLFlow checkout; auto-resolves ../ptlflow then /workspace/ptlflow",
+    )
     ap.add_argument("--synthetic_grid_size", type=int, default=8)
+    ap.add_argument(
+        "--lpips_vlm_use_flow_proposals",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use RAFT-guided motion proposals before causal VLM detection",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_proposal_stride",
+        type=int,
+        default=12,
+        help="Frame stride for RAFT proposal sampling on each video",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_peak_threshold",
+        type=float,
+        default=0.35,
+        help="Relative threshold against max RAFT saliency for keeping proposal peaks",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_topk_windows",
+        type=int,
+        default=8,
+        help="Maximum number of RAFT-guided proposal windows per video",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_window_sec",
+        type=float,
+        default=1.25,
+        help="Half-window size in seconds around each RAFT-guided proposal anchor",
+    )
+    ap.add_argument(
+        "--lpips_vlm_flow_camera_compensation",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Camera-compensate RAFT flow before proposal saliency scoring",
+    )
     ap.add_argument(
         "--lpips_vlm_scene_hints",
         default=None,
@@ -232,9 +397,29 @@ def main() -> None:
     )
     ap.add_argument(
         "--causal_match_mode",
-        default="strict_fallback_order",
-        choices=["strict_fallback_order", "strict", "order", "side_agnostic", "auto"],
-        help="Pairing for causal LPIPS: auto is an alias for strict_fallback_order",
+        default="monotonic_chronology",
+        choices=[
+            "monotonic_chronology",
+            "monotonic_side_time",
+            "strict_fallback_order",
+            "strict",
+            "order",
+            "side_agnostic",
+            "auto",
+        ],
+        help="Pairing for causal LPIPS: auto is an alias for monotonic_chronology",
+    )
+    ap.add_argument(
+        "--lpips_vlm_pair_accept_cost",
+        type=float,
+        default=None,
+        help="Maximum monotonic chronology match cost before a pair is left unmatched",
+    )
+    ap.add_argument(
+        "--lpips_vlm_skip_cost",
+        type=float,
+        default=None,
+        help="Cost of leaving an event unmatched in monotonic chronology matching",
     )
 
     args = ap.parse_args()
@@ -259,7 +444,7 @@ def main() -> None:
     ]
 
     causal_match_mode = (
-        "strict_fallback_order" if args.causal_match_mode == "auto" else args.causal_match_mode
+        "monotonic_chronology" if args.causal_match_mode == "auto" else args.causal_match_mode
     )
 
     report = run_world_model_evaluation(
@@ -275,11 +460,39 @@ def main() -> None:
         lpips_event_frames_after=args.lpips_event_frames_after,
         lpips_event_offsets=event_offsets,
         lpips_vlm_model=args.lpips_vlm_model,
+        lpips_vlm_coarse_model=args.lpips_vlm_coarse_model,
         lpips_vlm_max_grid_frames=args.lpips_vlm_max_grid_frames,
+        lpips_vlm_sampling_strategy=args.lpips_vlm_sampling_strategy,
+        lpips_vlm_coarse_grid_frames=args.lpips_vlm_coarse_grid_frames,
+        lpips_vlm_side_relabel=not args.lpips_vlm_disable_side_relabel,
+        lpips_vlm_side_model=args.lpips_vlm_side_model,
+        lpips_vlm_side_window_sec=args.lpips_vlm_side_window_sec,
+        lpips_vlm_side_max_frames=args.lpips_vlm_side_max_frames,
+        lpips_vlm_parallel_videos=args.lpips_vlm_parallel_videos,
+        lpips_vlm_side_relabel_concurrency=args.lpips_vlm_side_relabel_concurrency,
+        lpips_vlm_coarse_window_concurrency=args.lpips_vlm_coarse_window_concurrency,
+        lpips_vlm_coarse_reasoning_effort=args.lpips_vlm_coarse_reasoning_effort,
+        lpips_vlm_fine_reasoning_effort=args.lpips_vlm_fine_reasoning_effort,
+        lpips_vlm_side_reasoning_effort=args.lpips_vlm_side_reasoning_effort,
+        lpips_vlm_use_flow_proposals=args.lpips_vlm_use_flow_proposals,
+        lpips_vlm_flow_proposal_stride=args.lpips_vlm_flow_proposal_stride,
+        lpips_vlm_flow_peak_threshold=args.lpips_vlm_flow_peak_threshold,
+        lpips_vlm_flow_topk_windows=args.lpips_vlm_flow_topk_windows,
+        lpips_vlm_flow_window_sec=args.lpips_vlm_flow_window_sec,
+        lpips_vlm_flow_camera_compensation=args.lpips_vlm_flow_camera_compensation,
+        lpips_vlm_window_sec=args.lpips_vlm_window_sec,
+        lpips_vlm_window_overlap_sec=args.lpips_vlm_window_overlap_sec,
+        lpips_vlm_window_max_frames=args.lpips_vlm_window_max_frames,
+        lpips_vlm_window_merge_gap_frames=args.lpips_vlm_window_merge_gap_frames,
+        lpips_vlm_event_split_gap_frames=args.lpips_vlm_event_split_gap_frames,
+        lpips_vlm_event_split_min_cluster_size=args.lpips_vlm_event_split_min_cluster_size,
+        lpips_vlm_refine_window_sec=args.lpips_vlm_refine_window_sec,
+        lpips_vlm_refine_max_frames_per_window=args.lpips_vlm_refine_max_frames_per_window,
         lpips_vlm_prompt_version=args.lpips_vlm_prompt_version,
         lpips_vlm_max_reference_events=args.lpips_vlm_max_reference_events,
         lpips_vlm_reference_trim_sec=args.lpips_vlm_reference_trim_sec,
         lpips_vlm_judge_hint=args.lpips_vlm_judge_hint,
+        lpips_vlm_scene_key=args.lpips_vlm_scene_key,
         lpips_causal_event_source=args.lpips_causal_event_source,
         lpips_causal_lpips_pairing=(
             None
@@ -318,6 +531,8 @@ def main() -> None:
         lpips_vlm_system_prompt=args.lpips_vlm_system_prompt,
         lpips_vlm_judge_user_prompt_template=args.lpips_vlm_judge_user_prompt_template,
         causal_match_mode=causal_match_mode,
+        lpips_vlm_pair_accept_cost=args.lpips_vlm_pair_accept_cost,
+        lpips_vlm_skip_cost=args.lpips_vlm_skip_cost,
     )
 
     out_path = Path(args.output_json)

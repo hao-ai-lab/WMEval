@@ -1,56 +1,14 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 import numpy as np
 import torch
-import torch.nn.functional as F
-from torchvision.models.optical_flow import Raft_Large_Weights, raft_large
 
 from ..context import EvaluationContext
-
-
-def _center_crop_to_common(a: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    h = min(a.shape[0], b.shape[0])
-    w = min(a.shape[1], b.shape[1])
-
-    def crop(img: np.ndarray) -> np.ndarray:
-        y0 = (img.shape[0] - h) // 2
-        x0 = (img.shape[1] - w) // 2
-        return img[y0 : y0 + h, x0 : x0 + w]
-
-    return crop(a), crop(b)
-
-
-def _to_rgb_tchw(frame_bgr: np.ndarray, device: torch.device) -> torch.Tensor:
-    frame_rgb = frame_bgr[..., ::-1].copy()
-    tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1).float().unsqueeze(0)
-    return tensor.to(device)
-
-
-def _flow_raft(model: torch.nn.Module, transform, prev_bgr: np.ndarray, next_bgr: np.ndarray, device: torch.device) -> np.ndarray:
-    t0 = _to_rgb_tchw(prev_bgr, device)
-    t1 = _to_rgb_tchw(next_bgr, device)
-    t0, t1 = transform(t0, t1)
-
-    h, w = t0.shape[-2:]
-    target_h = max(128, int(np.ceil(h / 8.0) * 8))
-    target_w = max(128, int(np.ceil(w / 8.0) * 8))
-    if target_h != h or target_w != w:
-        t0 = F.interpolate(t0, size=(target_h, target_w), mode="bilinear", align_corners=False)
-        t1 = F.interpolate(t1, size=(target_h, target_w), mode="bilinear", align_corners=False)
-
-    with torch.no_grad():
-        flow_list = model(t0, t1)
-    flow_t = flow_list[-1][0:1]
-
-    if flow_t.shape[-2:] != (h, w):
-        flow_t = F.interpolate(flow_t, size=(h, w), mode="bilinear", align_corners=False)
-        flow_t[:, 0] *= float(w) / float(target_w)
-        flow_t[:, 1] *= float(h) / float(target_h)
-
-    flow = flow_t[0].detach().cpu().permute(1, 2, 0).numpy()
-    return flow.astype(np.float32)
+from .flow_utils import center_crop_to_common as _center_crop_to_common
+from .flow_utils import flow_raft as _flow_raft
+from .flow_utils import load_raft_model
 
 
 def _summarize(values: List[float], prefix: str) -> Dict[str, float | None]:
@@ -79,9 +37,7 @@ def analyze_motion_from_context(context: EvaluationContext, device: str | None =
         device = "cuda" if torch.cuda.is_available() else "cpu"
     device_obj = torch.device(device)
 
-    weights = Raft_Large_Weights.DEFAULT
-    transform = weights.transforms()
-    model = raft_large(weights=weights, progress=False).to(device_obj).eval()
+    model, transform = load_raft_model(device_obj)
 
     epe_all: List[float] = []
     epe_dynamic: List[float] = []
