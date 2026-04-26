@@ -11,6 +11,50 @@ if str(ROOT) not in sys.path:
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "beamdomino"
 
 
+def _vec(x=0.0, y=0.0, z=0.0):
+    return {"x": x, "y": y, "z": z}
+
+
+def _body(name, *, rotation_x=0.0, rotation_z=0.0):
+    return {
+        "name": name,
+        "position": _vec(),
+        "velocity": _vec(),
+        "angularVelocity": _vec(),
+        "rotation": _vec(rotation_x, 0.0, rotation_z),
+        "kineticEnergy": 0.0,
+        "potentialEnergy": 0.0,
+    }
+
+
+def _collision(a, b, impulse):
+    return {
+        "time": 0.0,
+        "bodyA": a,
+        "bodyB": b,
+        "contactPoint": _vec(),
+        "contactNormal": _vec(),
+        "impulse": impulse,
+    }
+
+
+def _frame(idx, t, *, fallen_indices=(), collisions=()):
+    bodies = [_body("FloorBall")]
+    for di in range(3):
+        bodies.append(
+            _body(f"Domino_S00_D0{di}", rotation_x=45.0 if di in fallen_indices else 0.0)
+        )
+    return {
+        "frame": idx,
+        "time": t,
+        "deltaTime": 0.1,
+        "bodies": bodies,
+        "collisions": list(collisions),
+        "totalKineticEnergy": 0.0,
+        "totalPotentialEnergy": 0.0,
+    }
+
+
 def test_detect_segments_produces_four_canonical_events():
     from tools.detect_beamdomino_segments import detect_segments
 
@@ -32,35 +76,35 @@ def test_detect_segments_produces_four_canonical_events():
         assert abs(got["end_sec"] - want["end_sec"]) < 1e-6
 
 
-def test_detect_segments_raises_when_stack_never_hit():
+def test_detect_segments_raises_when_no_ball_impact():
     from tools.detect_beamdomino_segments import detect_segments, SegmentDetectionError
 
     log = {
         "trajectory_id": "no_hit",
-        "fps": 50.0,
         "frames": [
-            {"t": 0.0, "stack_hit_flag": 0, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 0.0},
-            {"t": 1.0, "stack_hit_flag": 0, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 3.0},
+            _frame(0, 0.0),
+            _frame(1, 0.5, collisions=[_collision("FloorBall", "Pillar", 0.0)]),
+            _frame(2, 1.0),
         ],
     }
     try:
         detect_segments(log)
     except SegmentDetectionError as e:
-        assert "stack_hit_flag" in str(e)
+        assert "ball impact" in str(e).lower()
         return
     raise AssertionError("expected SegmentDetectionError")
 
 
-def test_detect_segments_raises_when_cascade_never_starts():
+def test_detect_segments_raises_when_no_domino_falls():
     from tools.detect_beamdomino_segments import detect_segments, SegmentDetectionError
 
     log = {
         "trajectory_id": "no_cascade",
-        "fps": 50.0,
         "frames": [
-            {"t": 0.0, "stack_hit_flag": 0, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 0.0},
-            {"t": 0.5, "stack_hit_flag": 1, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 3.0},
-            {"t": 1.5, "stack_hit_flag": 1, "cascade_count": 0.0, "fallen_count": 0, "ball_speed": 3.0},
+            _frame(0, 0.0),
+            _frame(1, 0.5, collisions=[_collision("FloorBall", "Pillar", 0.5)]),
+            _frame(2, 1.0),
+            _frame(3, 1.5),
         ],
     }
     try:
