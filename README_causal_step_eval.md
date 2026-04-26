@@ -79,14 +79,17 @@ If it fails, either `CausalStep/` is not at `imports/CausalStep/` or the
 ## 4) Step 1 — Detect segment boundaries
 
 `tools/detect_beamdomino_segments.py` parses the per-frame physics log into the
-four canonical BeamDomino stages:
+four canonical BeamDomino stages. The detector derives stage triggers directly
+from the recorder's `bodies[].rotation` and `collisions[].impulse` —
+`GroundTruthRecorder.cs` does not emit explicit `stack_hit_flag` /
+`fallen_count` fields.
 
 | Stage | Boundary rule |
 | --- | --- |
-| `rolling` | `t=0` until the first frame with `stack_hit_flag == 1` |
-| `impact` | `stack_hit_flag` until the first frame with `fallen_count >= 1` |
-| `topple` | first fall until the cascade plateaus (no new fall for `plateau_window_sec`, default 0.5s) |
-| `cascade` | plateau start to end of log |
+| `rolling` | `t=0` until the first frame with a nonzero-impulse collision involving a body whose name contains `"Ball"` (impulse > `--ball-impulse-threshold`, default `0.01`). |
+| `impact` | ball impact until the first frame where any `Domino_*` body has tilted past `--fallen-tilt-deg` (default `30°`, computed as `max(|wrap180(rot.x)|, |wrap180(rot.z)|)`). |
+| `topple` | first fallen domino until the cascade plateaus (no new fall for `plateau_window_sec`, default `0.5s`). |
+| `cascade` | plateau start to end of log. |
 
 ```bash
 python tools/detect_beamdomino_segments.py \
@@ -94,9 +97,15 @@ python tools/detect_beamdomino_segments.py \
   --out   runs/traj_001/segments.json
 ```
 
-If the detector raises `SegmentDetectionError`, the trajectory probably never
-produced a stack hit or never propagated to a domino fall — re-record with a
-stronger ball push.
+Optional tuning flags (rarely needed; defaults are tuned to the BeamDomino
+scene): `--fallen-tilt-deg`, `--ball-impulse-threshold`, `--plateau-window-sec`.
+
+If the detector raises `SegmentDetectionError`, either no `"Ball"` body ever
+collided with sufficient impulse (`no ball impact found ...`) or no domino
+ever tilted past the threshold (`no fallen domino found ...`). The
+trajectory probably never propagated to a domino fall — re-record with a
+stronger ball push, or lower `--ball-impulse-threshold` / `--fallen-tilt-deg`
+if the defaults don't match your scene's physics.
 
 ## 5) Step 2 — Generate a draft QA dataset (then review it)
 
@@ -289,7 +298,8 @@ prose regime.
 | `RuntimeError: CausalStep package not found at …` | `CausalStep/` is not at `imports/CausalStep/`. Restore it there or pass `--causalstep-root /abs/path/to/CausalStep`. |
 | `missing artifacts: [...]` in the result dict | One of `causal_step_qa_dataset`, `causal_step_video_id`, `causal_step_answers_cache_dir` is unset. The CLI sets these; if calling `run_modules` directly, populate `EvaluationContext.artifacts`. |
 | `no frames read from <path>` | `cv2.VideoCapture` couldn't decode the file. Re-encode with `ffmpeg -i in.mp4 -c:v libx264 -pix_fmt yuv420p out.mp4`. |
-| `SegmentDetectionError: stack_hit_flag never became 1` | The trajectory never hit the stack — re-record. |
+| `SegmentDetectionError: no ball impact found ...` | No body whose name contains `"Ball"` had a collision with impulse above `--ball-impulse-threshold`. Re-record with a stronger push, or lower the threshold. |
+| `SegmentDetectionError: no fallen domino found ...` | No `Domino_*` body tilted past `--fallen-tilt-deg`. The cascade never propagated — re-record with a stronger push, or lower the threshold. |
 | OpenAI 401 / `OPENAI_API_KEY` missing | Export the key in the same shell that runs the CLI. |
 | Same prompt, new answers | Cache is keyed by request. If you changed prompt content but kept `causal_step_vlm_prompt_version` the same, delete `<cache-root>/<video_id>/vlm_cache/` and re-run. |
 
@@ -347,3 +357,34 @@ prose regime.
 - The CausalStep package itself is consumed unchanged at
   `imports/CausalStep/`; adapter code lives in
   `evaluation/modules/_causal_step_*.py`.
+
+## 18) Scene tuning: weak cascades
+
+If only a handful of dominoes ended up fallen at the end of a recording,
+the `cascade` segment will be short and the cascade-stage QA will have
+little to discriminate WM from GT — the detector will still produce four
+segments, but the `cascade` window may be dominated by post-collapse
+stillness.
+
+To get a stronger cascade signal, fix the **scene/physics** side:
+
+- Increase `ballForce` on the BeamDomino agent in Unity (Inspector →
+  `BeamDominoAgent`).
+- Reduce `dominoSpacing` so adjacent dominoes are within fall reach
+  (≤ ~0.6× domino height).
+- Visually inspect the recording to confirm the Roof / RoofBall structure
+  actually lands on the first domino. If it lands beside the row, no
+  cascade can start no matter how strong the push is.
+
+Or tune the **detector** side without re-recording:
+
+- `--fallen-tilt-deg` (default `30°`): lower it to count weakly-tilted
+  dominoes as fallen — useful if your scene's dominoes only tip ~15–20°
+  before settling against neighbors.
+- `--ball-impulse-threshold` (default `0.01`): lower it if your scene
+  reports very small impulses on the impact contact.
+
+The detector does not require a particular cascade size to succeed; it
+only requires *one* fallen domino to start the topple stage. A trajectory
+where 4/60 dominoes fell is a perfectly valid run — just expect lower
+discrimination on cascade-segment QA.
