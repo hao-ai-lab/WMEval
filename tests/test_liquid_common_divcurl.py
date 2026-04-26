@@ -57,6 +57,8 @@ def test_divergence_for_pure_sink():
 
 
 def test_invalid_pixels_propagate_as_nan():
+    """A single invalid pixel at (8,8) must NaN-mask itself and its 4 cardinal
+    stencil neighbours, but NOT pixels two steps away."""
     from evaluation.modules._liquid_common import PIVField, divergence_curl_2d
 
     h, w = 16, 16
@@ -66,5 +68,15 @@ def test_invalid_pixels_propagate_as_nan():
     valid[8, 8] = False
     field = PIVField(u=u, v=v, valid=valid)
     div, curl = divergence_curl_2d(field)
+    # Self
     assert np.isnan(div[8, 8])
     assert np.isnan(curl[8, 8])
+    # Cardinal neighbours — must also be NaN because the central-difference
+    # stencil at each of these reads pixel (8, 8).
+    for r, c in [(7, 8), (9, 8), (8, 7), (8, 9)]:
+        assert np.isnan(div[r, c]), f"div[{r},{c}] should be NaN (stencil reads (8,8))"
+        assert np.isnan(curl[r, c]), f"curl[{r},{c}] should be NaN"
+    # Two steps away — must NOT be NaN; the stencil there does not touch (8, 8).
+    for r, c in [(8, 6), (8, 10), (6, 8), (10, 8)]:
+        assert not np.isnan(div[r, c]), f"div[{r},{c}] should be finite (stencil does not touch (8,8))"
+        assert not np.isnan(curl[r, c]), f"curl[{r},{c}] should be finite"
