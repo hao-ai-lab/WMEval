@@ -368,22 +368,6 @@ def run_world_model_evaluation(
                 inspection_run_id=inspection_run_id,
                 inspection_sample_id=inspection_sample_id,
             )
-            _merge_liquid_artifacts(
-                context,
-                liquid_state_unity_log_path=liquid_state_unity_log_path,
-                liquid_cache_root=liquid_cache_root,
-                liquid_sam2_model=liquid_sam2_model,
-                liquid_sam2_prompt=liquid_sam2_prompt,
-                liquid_piv_window_size=liquid_piv_window_size,
-                liquid_piv_overlap=liquid_piv_overlap,
-                liquid_max_pairs=liquid_max_pairs,
-                liquid_pour_threshold_deg=liquid_pour_threshold_deg,
-                liquid_k_pour=liquid_k_pour,
-                liquid_bottle_local_volume_ml=liquid_bottle_local_volume_ml,
-                liquid_camera_compensation=liquid_camera_compensation,
-                liquid_camera_regime=liquid_camera_regime,
-                liquid_coupling_max_lag_sec=liquid_coupling_max_lag_sec,
-            )
             report.update(
                 {
                     "reference_video": context.reference_video,
