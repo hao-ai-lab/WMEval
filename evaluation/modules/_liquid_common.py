@@ -14,7 +14,9 @@ not invalidate SAM2 caches.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import pickle
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -317,3 +319,100 @@ def load_unity_log(path: str | Path) -> UnityLog:
         camera_rotation_quat=camera_rotation_quat,
         camera_intrinsics=camera_intrinsics,
     )
+
+
+def _content_hash(path: str | Path, chunk: int = 1 << 20) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            buf = f.read(chunk)
+            if not buf:
+                break
+            h.update(buf)
+    return h.hexdigest()[:16]
+
+
+def _cache_path(cache_dir: Path, video_path: str | Path, kind: str, config_hash: str) -> Path:
+    ch = _content_hash(video_path)
+    return cache_dir / f"{Path(video_path).stem}.{kind}.{ch}.{config_hash}.pkl"
+
+
+def _config_hash(config: dict) -> str:
+    items = sorted((str(k), str(v)) for k, v in config.items())
+    return hashlib.sha256(repr(items).encode("utf-8")).hexdigest()[:16]
+
+
+def _read_video_frames_uint8(path: str, max_frames: int | None = None) -> np.ndarray:
+    """Decode the entire video into a (T, H, W, 3) uint8 RGB array."""
+    import cv2
+
+    cap = cv2.VideoCapture(str(path))
+    frames: list[np.ndarray] = []
+    try:
+        while True:
+            ok, bgr = cap.read()
+            if not ok:
+                break
+            frames.append(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+            if max_frames is not None and len(frames) >= max_frames:
+                break
+    finally:
+        cap.release()
+    if not frames:
+        raise RuntimeError(f"_read_video_frames_uint8: no frames read from {path}")
+    return np.stack(frames).astype(np.uint8)
+
+
+def get_liquid_mask_video(
+    *,
+    video_path: str,
+    sam2_model: str,
+    prompt: str,
+    fps: float,
+    max_pairs: int | None,
+    cache_dir: str | Path,
+) -> LiquidMaskResult:
+    """Run SAM2 video predictor on `video_path`, prompted by `prompt`, returning per-frame masks.
+
+    Caches the binary mask volume under cache_dir keyed on (video content hash, sam2 settings).
+    """
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cfg = _config_hash({"sam2_model": sam2_model, "prompt": prompt, "fps": fps, "max_pairs": max_pairs})
+    cache_file = _cache_path(cache_dir, video_path, "sam2_mask", cfg)
+    if cache_file.exists():
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    # Lazy import — keeps unit-test path SAM2-free.
+    from sam2.build_sam import build_sam2_video_predictor
+    import torch
+
+    frames = _read_video_frames_uint8(video_path, max_frames=max_pairs)
+    predictor = build_sam2_video_predictor(sam2_model)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    predictor.to(device)
+
+    state = predictor.init_state(video_path=video_path)
+    text_input = prompt.strip() or "the liquid inside the bottle"
+    predictor.add_new_points_or_box(
+        inference_state=state,
+        frame_idx=0,
+        obj_id=0,
+        labels=None,
+        points=None,
+        text=text_input,
+    )
+    masks: list[np.ndarray] = [np.zeros(frames.shape[1:3], dtype=bool)] * frames.shape[0]
+    for frame_idx, _obj_ids, mask_logits in predictor.propagate_in_video(state):
+        m = (mask_logits[0] > 0).cpu().numpy()
+        if m.ndim == 3:
+            m = m[0]
+        masks[frame_idx] = m.astype(bool)
+
+    result = LiquidMaskResult(
+        masks=np.stack(masks).astype(bool), fps=float(fps), sam2_model=sam2_model, prompt=text_input
+    )
+    with open(cache_file, "wb") as f:
+        pickle.dump(result, f)
+    return result
