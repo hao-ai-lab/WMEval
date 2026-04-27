@@ -30,3 +30,9 @@ def test_liquid_velocity_registered():
     from evaluation.registry import get_available_modules
 
     assert "liquid_velocity" in get_available_modules()
+
+
+def test_liquid_coupling_registered():
+    from evaluation.registry import get_available_modules
+
+    assert "liquid_coupling" in get_available_modules()

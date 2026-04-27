@@ -122,10 +122,22 @@ def _run_liquid_velocity(context: EvaluationContext, device: Optional[str] = Non
     return analyze_liquid_velocity_from_context(context=context, device=device)
 
 
+def _run_liquid_coupling(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+    try:
+        from .modules.liquid_coupling import analyze_liquid_coupling_from_context
+    except Exception as exc:
+        return {
+            "module": "liquid_coupling",
+            "error": f"failed to import liquid_coupling module: {exc}",
+        }
+    return analyze_liquid_coupling_from_context(context=context, device=device)
+
+
 MODULE_REGISTRY: Dict[str, EvaluationModule] = {
     "causal_step": _run_causal_step,
     "clip4clip": _run_clip4clip,
     "control_motion": _run_control_motion,
+    "liquid_coupling": _run_liquid_coupling,
     "liquid_state": _run_liquid_state,
     "liquid_velocity": _run_liquid_velocity,
     "lpips": _run_lpips,
