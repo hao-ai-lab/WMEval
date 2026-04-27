@@ -425,18 +425,31 @@ def main() -> None:
     g_liquid = ap.add_argument_group("liquid_* (LiquidContainer scene)")
     g_liquid.add_argument("--liquid_unity_log", type=str, default=None,
         help="Path to unity_gt_log.json written by LiquidGroundTruthRecorder.cs")
-    g_liquid.add_argument("--liquid_cache_root", type=str, default="runs/liquid_cache")
-    g_liquid.add_argument("--liquid_sam2_model", type=str, default="facebook/sam2.1-hiera-small")
-    g_liquid.add_argument("--liquid_sam2_prompt", type=str, default=None)
-    g_liquid.add_argument("--liquid_piv_window_size", type=int, default=32)
-    g_liquid.add_argument("--liquid_piv_overlap", type=int, default=16)
-    g_liquid.add_argument("--liquid_max_pairs", type=int, default=0)
-    g_liquid.add_argument("--liquid_pour_threshold_deg", type=float, default=30.0)
-    g_liquid.add_argument("--liquid_k_pour", type=float, default=0.05)
-    g_liquid.add_argument("--liquid_bottle_local_volume_ml", type=float, default=500.0)
-    g_liquid.add_argument("--liquid_camera_compensation", type=lambda x: str(x).lower() == "true", default=True)
-    g_liquid.add_argument("--liquid_camera_regime", type=str, default="c2_static_side")
-    g_liquid.add_argument("--liquid_coupling_max_lag_sec", type=float, default=1.0)
+    g_liquid.add_argument("--liquid_cache_root", type=str, default="runs/liquid_cache",
+        help="Directory for SAM2/PIV pickled caches (shared across trajectories)")
+    g_liquid.add_argument("--liquid_sam2_model", type=str, default="facebook/sam2.1-hiera-small",
+        help="HuggingFace SAM2 video predictor checkpoint id")
+    g_liquid.add_argument("--liquid_sam2_prompt", type=str, default=None,
+        help="Text prompt used to seed the SAM2 mask track (default: 'the liquid inside the bottle')")
+    g_liquid.add_argument("--liquid_piv_window_size", type=int, default=32,
+        help="OpenPIV interrogation window edge (px)")
+    g_liquid.add_argument("--liquid_piv_overlap", type=int, default=16,
+        help="OpenPIV interrogation window overlap (px)")
+    g_liquid.add_argument("--liquid_max_pairs", type=int, default=0,
+        help="Per-module pair cap for liquid modules (0 = inherit global --max_pairs)")
+    g_liquid.add_argument("--liquid_pour_threshold_deg", type=float, default=30.0,
+        help="Tilt threshold above which pour is considered active")
+    g_liquid.add_argument("--liquid_k_pour", type=float, default=0.05,
+        help="Volumetric pour-rate coefficient (matches Unity model)")
+    g_liquid.add_argument("--liquid_bottle_local_volume_ml", type=float, default=500.0,
+        help="Bottle internal volume (ml), used to scale pour rate")
+    g_liquid.add_argument("--liquid_camera_compensation", action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Subtract estimated camera motion from PIV velocities")
+    g_liquid.add_argument("--liquid_camera_regime", type=str, default="c2_static_side",
+        help="Camera regime label (e.g. c1_handheld, c2_static_side)")
+    g_liquid.add_argument("--liquid_coupling_max_lag_sec", type=float, default=1.0,
+        help="Maximum lag (sec) considered for tilt -> pour-rate correlation")
 
     args = ap.parse_args()
 
