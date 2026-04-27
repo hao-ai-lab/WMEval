@@ -416,3 +416,89 @@ def get_liquid_mask_video(
     with open(cache_file, "wb") as f:
         pickle.dump(result, f)
     return result
+
+
+def _gray_uint8_video(video_path: str, max_frames: int | None) -> np.ndarray:
+    rgb = _read_video_frames_uint8(video_path, max_frames=max_frames)
+    # Standard luma weights. Avoids importing cv2 again.
+    g = (0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]).astype(np.uint8)
+    return g  # (T, H, W)
+
+
+def get_piv_field(
+    *,
+    video_path: str,
+    mask: LiquidMaskResult,
+    window_size: int,
+    overlap: int,
+    fps: float,
+    cache_dir: str | Path,
+    max_frames: int | None = None,
+) -> PIVField:
+    """OpenPIV cross-correlation per consecutive-frame pair, restricted to the
+    intersection of consecutive masks. Returns u, v, valid arrays of shape
+    (T-1, H_p, W_p) where (H_p, W_p) is the PIV grid.
+    """
+    cache_dir = Path(cache_dir)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cfg = _config_hash(
+        {
+            "window_size": window_size,
+            "overlap": overlap,
+            "fps": fps,
+            "max_frames": max_frames,
+            "sam2_model": mask.sam2_model,
+            "prompt": mask.prompt,
+        }
+    )
+    cache_file = _cache_path(cache_dir, video_path, "piv", cfg)
+    if cache_file.exists():
+        with open(cache_file, "rb") as f:
+            return pickle.load(f)
+
+    # Lazy import — keeps unit tests OpenPIV-free.
+    from openpiv import pyprocess
+
+    gray = _gray_uint8_video(video_path, max_frames=max_frames)
+    if gray.shape[0] < 2:
+        raise RuntimeError(f"get_piv_field: need ≥2 frames, got {gray.shape[0]}")
+
+    masks = mask.masks
+    if masks.shape[0] < gray.shape[0]:
+        raise ValueError(
+            f"get_piv_field: mask has {masks.shape[0]} frames, video has {gray.shape[0]}"
+        )
+
+    us: list[np.ndarray] = []
+    vs: list[np.ndarray] = []
+    valids: list[np.ndarray] = []
+    for t in range(gray.shape[0] - 1):
+        a = gray[t].astype(np.int32)
+        b = gray[t + 1].astype(np.int32)
+        u, v, sig2noise = pyprocess.extended_search_area_piv(
+            a,
+            b,
+            window_size=int(window_size),
+            overlap=int(overlap),
+            dt=1.0,
+            search_area_size=int(window_size),
+            sig2noise_method="peak2peak",
+        )
+        # Window center grid for masking.
+        x_centers, y_centers = pyprocess.get_coordinates(
+            image_size=a.shape, search_area_size=int(window_size), overlap=int(overlap)
+        )
+        joint_mask = masks[t] & masks[t + 1]
+        sampled = joint_mask[
+            np.clip(y_centers.astype(int), 0, joint_mask.shape[0] - 1),
+            np.clip(x_centers.astype(int), 0, joint_mask.shape[1] - 1),
+        ]
+        valid = sampled & (sig2noise > 1.05) & np.isfinite(u) & np.isfinite(v)
+        us.append(np.where(valid, u, np.nan).astype(np.float32))
+        vs.append(np.where(valid, v, np.nan).astype(np.float32))
+        valids.append(valid)
+
+    field = PIVField(u=np.stack(us), v=np.stack(vs), valid=np.stack(valids))
+    with open(cache_file, "wb") as f:
+        pickle.dump(field, f)
+    return field
