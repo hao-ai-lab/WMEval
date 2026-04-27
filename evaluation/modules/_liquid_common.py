@@ -14,7 +14,9 @@ not invalidate SAM2 caches.
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -218,3 +220,100 @@ def detect_pour_onset_from_curve(
         else:
             run_len = 0
     return None
+
+
+@dataclass
+class UnityLog:
+    """Parsed `unity_gt_log.json` payload, exposing per-frame arrays."""
+
+    scene: str
+    fps: float
+    bottle_local_volume_ml: float
+    pour_threshold_deg: float
+    k_pour: float
+    initial_fill_fraction: float
+
+    # Per-frame arrays, all shape (T,) unless noted.
+    t_sim: np.ndarray
+    fill_fraction: np.ndarray
+    surface_height: np.ndarray
+    pour_rate: np.ndarray
+    spilled_volume: np.ndarray
+    is_pouring: np.ndarray
+    tilt_deg: np.ndarray
+    bottle_position: np.ndarray  # (T, 3)
+    bottle_rotation_quat: np.ndarray  # (T, 4)
+    actions: np.ndarray  # (T, 6) — order: fwd, right, up, pitch, yaw, roll
+    camera_position: np.ndarray  # (T, 3)
+    camera_rotation_quat: np.ndarray  # (T, 4)
+    camera_intrinsics: list  # length T, each dict {fx, fy, cx, cy, near, far}
+
+    @property
+    def num_frames(self) -> int:
+        return int(self.t_sim.shape[0])
+
+
+_REQUIRED_HEADER_KEYS = (
+    "scene",
+    "fps",
+    "bottle_local_volume_ml",
+    "pour_threshold_deg",
+    "k_pour",
+    "initial_fill_fraction",
+    "frames",
+)
+_REQUIRED_FRAME_KEYS = ("t_sim", "frame_index", "bottle", "actions", "liquid", "camera")
+_ACTION_ORDER = ("fwd", "right", "up", "pitch", "yaw", "roll")
+
+
+def load_unity_log(path: str | Path) -> UnityLog:
+    """Parse the per-frame Unity ground-truth JSON written by LiquidGroundTruthRecorder.cs."""
+    raw = json.loads(Path(path).read_text())
+    for key in _REQUIRED_HEADER_KEYS:
+        if key not in raw:
+            raise ValueError(f"unity log {path}: missing required key: {key}")
+    frames = raw["frames"]
+    if not isinstance(frames, list) or not frames:
+        raise ValueError(f"unity log {path}: 'frames' must be a non-empty list")
+    for i, fr in enumerate(frames):
+        for key in _REQUIRED_FRAME_KEYS:
+            if key not in fr:
+                raise ValueError(f"unity log {path}: frame {i} missing {key!r}")
+
+    t_sim = np.array([f["t_sim"] for f in frames], dtype=np.float64)
+    fill_fraction = np.array([f["liquid"]["fill_fraction"] for f in frames], dtype=np.float32)
+    surface_height = np.array([f["liquid"]["surface_height"] for f in frames], dtype=np.float32)
+    pour_rate = np.array([f["liquid"]["pour_rate"] for f in frames], dtype=np.float32)
+    spilled_volume = np.array([f["liquid"]["spilled_volume"] for f in frames], dtype=np.float32)
+    is_pouring = np.array([bool(f["liquid"]["is_pouring"]) for f in frames], dtype=bool)
+    tilt_deg = np.array([f["bottle"]["tilt_deg_from_up"] for f in frames], dtype=np.float32)
+    bottle_position = np.array([f["bottle"]["position"] for f in frames], dtype=np.float32)
+    bottle_rotation_quat = np.array([f["bottle"]["rotation_quat"] for f in frames], dtype=np.float32)
+    actions = np.array(
+        [[f["actions"][k] for k in _ACTION_ORDER] for f in frames], dtype=np.float32
+    )
+    camera_position = np.array([f["camera"]["position"] for f in frames], dtype=np.float32)
+    camera_rotation_quat = np.array([f["camera"]["rotation_quat"] for f in frames], dtype=np.float32)
+    camera_intrinsics = [f["camera"].get("intrinsics", {}) for f in frames]
+
+    return UnityLog(
+        scene=str(raw["scene"]),
+        fps=float(raw["fps"]),
+        bottle_local_volume_ml=float(raw["bottle_local_volume_ml"]),
+        pour_threshold_deg=float(raw["pour_threshold_deg"]),
+        k_pour=float(raw["k_pour"]),
+        initial_fill_fraction=float(raw["initial_fill_fraction"]),
+        t_sim=t_sim,
+        fill_fraction=fill_fraction,
+        surface_height=surface_height,
+        pour_rate=pour_rate,
+        spilled_volume=spilled_volume,
+        is_pouring=is_pouring,
+        tilt_deg=tilt_deg,
+        bottle_position=bottle_position,
+        bottle_rotation_quat=bottle_rotation_quat,
+        actions=actions,
+        camera_position=camera_position,
+        camera_rotation_quat=camera_rotation_quat,
+        camera_intrinsics=camera_intrinsics,
+    )
