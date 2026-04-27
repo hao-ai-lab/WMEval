@@ -274,6 +274,13 @@ def load_unity_log(path: str | Path) -> UnityLog:
     for key in _REQUIRED_HEADER_KEYS:
         if key not in raw:
             raise ValueError(f"unity log {path}: missing required key: {key}")
+    fps_raw = raw["fps"]
+    try:
+        fps_value = float(fps_raw)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"unity log {path}: fps not numeric: {fps_raw!r}") from exc
+    if not (fps_value > 0.0) or not np.isfinite(fps_value):
+        raise ValueError(f"unity log {path}: fps must be positive and finite, got {fps_raw!r}")
     frames = raw["frames"]
     if not isinstance(frames, list) or not frames:
         raise ValueError(f"unity log {path}: 'frames' must be a non-empty list")

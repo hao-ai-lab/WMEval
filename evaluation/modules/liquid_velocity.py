@@ -23,10 +23,15 @@ def _epe_stats(diff_norm: np.ndarray) -> Dict[str, float]:
 
 
 def _cosine_similarity(u_a, v_a, u_b, v_b, joint_valid) -> float:
-    eps = 1e-8
-    dot = u_a * u_b + v_a * v_b
-    na = np.sqrt(u_a * u_a + v_a * v_a) + eps
-    nb = np.sqrt(u_b * u_b + v_b * v_b) + eps
+    # Compute in float64 so eps is not absorbed below the float32 ULP (~1.19e-7 at unit magnitudes).
+    u_a64 = np.asarray(u_a, dtype=np.float64)
+    v_a64 = np.asarray(v_a, dtype=np.float64)
+    u_b64 = np.asarray(u_b, dtype=np.float64)
+    v_b64 = np.asarray(v_b, dtype=np.float64)
+    eps = 1e-12
+    dot = u_a64 * u_b64 + v_a64 * v_b64
+    na = np.sqrt(u_a64 * u_a64 + v_a64 * v_a64) + eps
+    nb = np.sqrt(u_b64 * u_b64 + v_b64 * v_b64) + eps
     cos = dot / (na * nb)
     cos = cos[joint_valid & np.isfinite(cos)]
     if cos.size == 0:
@@ -68,18 +73,17 @@ def compute_velocity_metrics_from_fields(
     div_residual = div_residual[np.isfinite(div_residual)]
     div_residual_mean = float(np.mean(div_residual)) if div_residual.size > 0 else float("nan")
 
-    curl_u_flat = curl_u[np.isfinite(curl_u)]
-    curl_w_flat = curl_w[np.isfinite(curl_w)]
-    curl_mean_err = float(np.mean(curl_w_flat) - np.mean(curl_u_flat)) if (
-        curl_u_flat.size > 0 and curl_w_flat.size > 0
-    ) else float("nan")
-    curl_std_err = float(np.std(curl_w_flat) - np.std(curl_u_flat)) if (
-        curl_u_flat.size > 0 and curl_w_flat.size > 0
-    ) else float("nan")
+    curl_residual = np.abs(curl_w - curl_u)
+    curl_residual = curl_residual[np.isfinite(curl_residual)]
+    curl_mean_err = float(np.mean(curl_residual)) if curl_residual.size > 0 else float("nan")
+    curl_std_err = float(np.std(curl_residual)) if curl_residual.size > 0 else float("nan")
 
     tc_unity = _temporal_consistency(unity)
     tc_wm = _temporal_consistency(wm)
-    tc_ratio = float(tc_wm / tc_unity) if tc_unity and tc_unity > 1e-8 else float("nan")
+    if np.isfinite(tc_unity) and tc_unity > 1e-8 and np.isfinite(tc_wm):
+        tc_ratio = float(tc_wm / tc_unity)
+    else:
+        tc_ratio = float("nan")
 
     return {
         "epe": _epe_stats(diff_norm),

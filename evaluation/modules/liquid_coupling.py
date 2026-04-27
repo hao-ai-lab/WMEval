@@ -89,8 +89,9 @@ def analyze_liquid_coupling_from_context(
         unity_masks=unity_mask.masks[:n], unity_log_fill=log.fill_fraction[:n],
     )
     wm_fill = _lc.estimate_fill_curve_from_mask(wm_mask.masks[:n], calibration=calibration)
+    # Negative values (back-flow) are kept — they are a model-failure signal, not noise.
     wm_pour_rate = np.zeros(n, dtype=np.float32)
-    wm_pour_rate[1:] = np.maximum(0.0, -(wm_fill[1:] - wm_fill[:-1]) * fps * bottle_volume_ml)
+    wm_pour_rate[1:] = -(wm_fill[1:] - wm_fill[:-1]) * fps * bottle_volume_ml
 
     tilt = log.tilt_deg[:n]
     unity_pour_rate = log.pour_rate[:n]

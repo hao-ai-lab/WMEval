@@ -19,7 +19,7 @@ from . import _liquid_common as _lc
 def _pearsonr_safe(a: np.ndarray, b: np.ndarray) -> float:
     a = np.asarray(a, dtype=np.float64).reshape(-1)
     b = np.asarray(b, dtype=np.float64).reshape(-1)
-    if a.size != b.size or a.size < 2:
+    if a.size != b.size or a.size < 3:
         return float("nan")
     if np.std(a) < 1e-12 or np.std(b) < 1e-12:
         return float("nan")
@@ -146,8 +146,9 @@ def analyze_liquid_state_from_context(
     unity_fill = log.fill_fraction[:n]
 
     # WM pour-rate is finite-differenced from wm_fill (no Unity log on the WM side).
+    # Negative values (back-flow) are kept — they are a model-failure signal, not noise.
     wm_pour_rate = np.zeros(n, dtype=np.float32)
-    wm_pour_rate[1:] = np.maximum(0.0, -(wm_fill[1:] - wm_fill[:-1]) * fps * bottle_volume_ml)
+    wm_pour_rate[1:] = -(wm_fill[1:] - wm_fill[:-1]) * fps * bottle_volume_ml
     unity_pour_rate = log.pour_rate[:n]
 
     # Surface-height proxy on WM side: topmost mask pixel y, in normalized [0,1] image units.

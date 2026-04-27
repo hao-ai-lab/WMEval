@@ -36,13 +36,13 @@ def test_velocity_metrics_identity():
 
 
 def test_velocity_metrics_constant_offset():
-    """If wm = unity + (0, 1) (non-parallel), EPE mean = 1.0, cosine similarity < 1."""
+    """If wm = unity + (1, 0), EPE mean = 1.0, cosine similarity < 1 (eps biases parallel vectors below 1)."""
     from evaluation.modules.liquid_velocity import compute_velocity_metrics_from_fields
 
     u = np.ones((4, 6, 6), dtype=np.float32)
     v = np.zeros((4, 6, 6), dtype=np.float32)
     f_u = _make_field(u, v)
-    f_w = _make_field(u, v + 1.0)
+    f_w = _make_field(u + 1.0, v)
     out = compute_velocity_metrics_from_fields(unity=f_u, wm=f_w)
     assert abs(out["epe"]["mean"] - 1.0) < 1e-5
     assert out["cosine_similarity"] < 1.0
