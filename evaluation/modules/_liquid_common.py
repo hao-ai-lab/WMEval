@@ -109,8 +109,10 @@ def divergence_curl_2d(field: PIVField) -> tuple[np.ndarray, np.ndarray]:
 def _fit_linear_robust(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
     """Robust linear fit using repeated-median (Siegel) slopes.
 
-    Falls back to ordinary least squares when scipy is unavailable.
-    Returns (slope, intercept, r2).
+    Returns (slope, intercept, r2). Siegel's estimator is breakdown-resistant
+    to up to 50% contaminated data, which is what the plan's "linear_robust"
+    contract requires; the discretization bias from rasterized fill rectangles
+    breaks an OLS+trim implementation against the test's <1e-3 intercept band.
     """
     from scipy.stats import siegelslopes
 
