@@ -21,6 +21,29 @@ SCENE_CONFIG_REGISTRY: dict[str, dict[str, Any]] = {
         "skip_cost": 0.26,
         "forbid_cross_class_matches": False,
     },
+    "liquid_container": {
+        "scene_hints": (
+            "Liquid pour scene. Evaluate fluid velocity field on the liquid mask, "
+            "pour-onset timing, fill-fraction curve, mass conservation (spill volume), "
+            "and tilt-to-pour causal coupling."
+        ),
+        "default_pour_threshold_deg": 30.0,
+        "default_k_pour": 0.05,
+        "default_sam2_prompt": "the liquid inside the bottle",
+        "default_camera_regime": "c2_static_side",
+        "default_piv_window_size": 32,
+        "default_piv_overlap": 16,
+        "default_fill_calibration_method": "linear_robust",
+        "default_bottle_local_volume_ml": 500.0,
+        "applicable_modules": [
+            "liquid_velocity",
+            "liquid_state",
+            "liquid_coupling",
+            "lpips",
+            "control_motion",
+            "clip4clip",
+        ],
+    },
 }
 
 
