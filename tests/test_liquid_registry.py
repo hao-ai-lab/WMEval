@@ -24,3 +24,9 @@ def test_liquid_container_scene_in_registry():
     assert cfg["default_k_pour"] == 0.05
     assert cfg["default_sam2_prompt"] == "the liquid inside the bottle"
     assert "liquid_state" in cfg["applicable_modules"]
+
+
+def test_liquid_velocity_registered():
+    from evaluation.registry import get_available_modules
+
+    assert "liquid_velocity" in get_available_modules()
