@@ -104,3 +104,68 @@ def divergence_curl_2d(field: PIVField) -> tuple[np.ndarray, np.ndarray]:
     div = np.where(stencil_ok, div, np.nan)
     curl = np.where(stencil_ok, curl, np.nan)
     return div, curl
+
+
+def _fit_linear_robust(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
+    """Robust linear fit using repeated-median (Siegel) slopes.
+
+    Falls back to ordinary least squares when scipy is unavailable.
+    Returns (slope, intercept, r2).
+    """
+    from scipy.stats import siegelslopes
+
+    x = np.asarray(x, dtype=np.float64).reshape(-1)
+    y = np.asarray(y, dtype=np.float64).reshape(-1)
+    if x.shape != y.shape:
+        raise ValueError(f"_fit_linear_robust: shape mismatch x={x.shape} y={y.shape}")
+    if x.size < 2:
+        raise ValueError("_fit_linear_robust: need at least 2 points")
+
+    result = siegelslopes(y, x)
+    slope = float(result.slope)
+    intercept = float(result.intercept)
+
+    y_pred = slope * x + intercept
+    ss_res = float(np.sum((y - y_pred) ** 2))
+    ss_tot = float(np.sum((y - y.mean()) ** 2))
+    r2 = 1.0 - ss_res / ss_tot if ss_tot > 1e-12 else 1.0
+    return slope, intercept, r2
+
+
+def _mask_areas(masks: np.ndarray) -> np.ndarray:
+    """Per-frame mask area in pixels."""
+    if masks.ndim != 3:
+        raise ValueError(f"_mask_areas: expected (T, H, W) got {masks.shape}")
+    return masks.reshape(masks.shape[0], -1).sum(axis=1).astype(np.float64)
+
+
+def fit_fill_calibration(
+    *,
+    unity_masks: np.ndarray,
+    unity_log_fill: np.ndarray,
+) -> FillCalibration:
+    """Fit mask_area_px → fill_fraction on the Unity reference.
+
+    The Unity log gives ground-truth fill[t]. The Unity video gives mask[t].
+    We fit a robust linear model so the same calibration can be applied
+    to the WM-side mask sequence (assuming same camera framing).
+    """
+    if unity_masks.shape[0] != unity_log_fill.shape[0]:
+        raise ValueError(
+            f"fit_fill_calibration: T mismatch masks={unity_masks.shape[0]} "
+            f"fill={unity_log_fill.shape[0]}"
+        )
+    areas = _mask_areas(unity_masks)
+    slope, intercept, r2 = _fit_linear_robust(areas, unity_log_fill)
+    return FillCalibration(slope=slope, intercept=intercept, r2=r2, method="linear_robust")
+
+
+def estimate_fill_curve_from_mask(
+    masks: np.ndarray,
+    *,
+    calibration: FillCalibration,
+) -> np.ndarray:
+    """Apply a fitted calibration to a (possibly WM-side) mask sequence."""
+    areas = _mask_areas(masks)
+    fill = calibration.slope * areas + calibration.intercept
+    return np.clip(fill.astype(np.float32), 0.0, 1.0)
