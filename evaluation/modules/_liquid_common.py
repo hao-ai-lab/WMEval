@@ -171,3 +171,50 @@ def estimate_fill_curve_from_mask(
     areas = _mask_areas(masks)
     fill = calibration.slope * areas + calibration.intercept
     return np.clip(fill.astype(np.float32), 0.0, 1.0)
+
+
+def _moving_average(curve: np.ndarray, window: int) -> np.ndarray:
+    if window <= 1:
+        return curve.astype(np.float32, copy=False)
+    kernel = np.ones(window, dtype=np.float32) / float(window)
+    pad = window // 2
+    padded = np.pad(curve, pad, mode="edge")
+    return np.convolve(padded, kernel, mode="valid")[: len(curve)].astype(np.float32)
+
+
+def detect_pour_onset_from_curve(
+    curve: np.ndarray,
+    fps: float,
+    *,
+    threshold_drop: float = 0.005,
+    k_consecutive: int = 5,
+    smoothing_window: int = 1,
+) -> Optional[float]:
+    """Return the time (sec) of the first sustained downward drop in a fill curve.
+
+    A frame t is "dropping" if smoothed_curve[t] - smoothed_curve[t-1] < -threshold_drop.
+    The onset is the first index of a run of >= k_consecutive dropping frames.
+    Returns None if no such run exists.
+    """
+    if fps <= 0:
+        raise ValueError("detect_pour_onset_from_curve: fps must be positive")
+    curve = np.asarray(curve, dtype=np.float32).reshape(-1)
+    if curve.size < k_consecutive + 1:
+        return None
+    smoothed = _moving_average(curve, smoothing_window)
+    deltas = np.diff(smoothed)
+    dropping = deltas < -float(threshold_drop)
+
+    # Find the first run of length >= k_consecutive of `dropping == True`.
+    run_len = 0
+    for i, is_drop in enumerate(dropping):
+        if is_drop:
+            run_len += 1
+            if run_len >= k_consecutive:
+                # Onset corresponds to the start of the run, which is at index
+                # (i - k_consecutive + 1) in `dropping`, i.e. between curve[i-k+1] and curve[i-k+2].
+                onset_frame = i - k_consecutive + 2
+                return float(onset_frame) / float(fps)
+        else:
+            run_len = 0
+    return None
