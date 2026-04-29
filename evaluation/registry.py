@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .context import EvaluationContext
-
+from .modules.clip4clip import run_clip4clip
 EvaluationModule = Callable[[EvaluationContext, Optional[str]], Dict[str, Any]]
 
 _CAUSAL_LPIPS_ALIASES = frozenset(
