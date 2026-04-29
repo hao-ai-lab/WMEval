@@ -2,9 +2,8 @@
 """Shared helpers for the LiquidContainer eval modules.
 
 This module provides:
-  - Schema dataclasses (LiquidMaskResult, PIVField, FillCalibration)
-  - Pure-numerical helpers (divergence_curl_2d, fit_fill_calibration,
-    estimate_fill_curve_from_mask, detect_pour_onset_from_curve)
+  - Schema dataclasses (LiquidMaskResult, PIVField)
+  - Pure-numerical helpers (divergence_curl_2d, _mask_areas)
   - Cached I/O wrappers around SAM2 (get_liquid_mask_video) and
     OpenPIV (get_piv_field)
 
@@ -15,11 +14,9 @@ not invalidate SAM2 caches.
 from __future__ import annotations
 
 import hashlib
-import json
 import pickle
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
@@ -56,16 +53,6 @@ class PIVField:
     valid: np.ndarray  # (..., H, W) bool — False where PIV failed
 
 
-@dataclass
-class FillCalibration:
-    """Linear fit mask_area_px → fill_fraction in [0, 1]."""
-
-    slope: float
-    intercept: float
-    r2: float
-    method: str = "linear_robust"
-
-
 def divergence_curl_2d(field: PIVField) -> tuple[np.ndarray, np.ndarray]:
     """Finite-difference 2D divergence and curl on the (H, W) plane.
 
@@ -82,7 +69,6 @@ def divergence_curl_2d(field: PIVField) -> tuple[np.ndarray, np.ndarray]:
             f"divergence_curl_2d: shape mismatch u={u.shape} v={v.shape} valid={valid.shape}"
         )
 
-    # Central differences on last two axes.
     du_dx = np.full_like(u, np.nan)
     du_dy = np.full_like(u, np.nan)
     dv_dx = np.full_like(v, np.nan)
@@ -96,7 +82,6 @@ def divergence_curl_2d(field: PIVField) -> tuple[np.ndarray, np.ndarray]:
     div = du_dx + dv_dy
     curl = dv_dx - du_dy
 
-    # Mask: a pixel is valid if itself AND its left/right/up/down neighbours are valid.
     stencil_ok = np.zeros_like(valid)
     stencil_ok[..., 1:-1, 1:-1] = (
         valid[..., 1:-1, 1:-1]
@@ -110,222 +95,11 @@ def divergence_curl_2d(field: PIVField) -> tuple[np.ndarray, np.ndarray]:
     return div, curl
 
 
-def _fit_linear_robust(x: np.ndarray, y: np.ndarray) -> tuple[float, float, float]:
-    """Robust linear fit using repeated-median (Siegel) slopes.
-
-    Returns (slope, intercept, r2). Siegel's estimator is breakdown-resistant
-    to up to 50% contaminated data, which is what the plan's "linear_robust"
-    contract requires; the discretization bias from rasterized fill rectangles
-    breaks an OLS+trim implementation against the test's <1e-3 intercept band.
-    """
-    from scipy.stats import siegelslopes
-
-    x = np.asarray(x, dtype=np.float64).reshape(-1)
-    y = np.asarray(y, dtype=np.float64).reshape(-1)
-    if x.shape != y.shape:
-        raise ValueError(f"_fit_linear_robust: shape mismatch x={x.shape} y={y.shape}")
-    if x.size < 2:
-        raise ValueError("_fit_linear_robust: need at least 2 points")
-
-    result = siegelslopes(y, x)
-    slope = float(result.slope)
-    intercept = float(result.intercept)
-
-    y_pred = slope * x + intercept
-    ss_res = float(np.sum((y - y_pred) ** 2))
-    ss_tot = float(np.sum((y - y.mean()) ** 2))
-    r2 = 1.0 - ss_res / ss_tot if ss_tot > 1e-12 else 1.0
-    return slope, intercept, r2
-
-
 def _mask_areas(masks: np.ndarray) -> np.ndarray:
     """Per-frame mask area in pixels."""
     if masks.ndim != 3:
         raise ValueError(f"_mask_areas: expected (T, H, W) got {masks.shape}")
     return masks.reshape(masks.shape[0], -1).sum(axis=1).astype(np.float64)
-
-
-def fit_fill_calibration(
-    *,
-    unity_masks: np.ndarray,
-    unity_log_fill: np.ndarray,
-) -> FillCalibration:
-    """Fit mask_area_px → fill_fraction on the Unity reference.
-
-    The Unity log gives ground-truth fill[t]. The Unity video gives mask[t].
-    We fit a robust linear model so the same calibration can be applied
-    to the WM-side mask sequence (assuming same camera framing).
-    """
-    if unity_masks.shape[0] != unity_log_fill.shape[0]:
-        raise ValueError(
-            f"fit_fill_calibration: T mismatch masks={unity_masks.shape[0]} "
-            f"fill={unity_log_fill.shape[0]}"
-        )
-    areas = _mask_areas(unity_masks)
-    slope, intercept, r2 = _fit_linear_robust(areas, unity_log_fill)
-    return FillCalibration(slope=slope, intercept=intercept, r2=r2, method="linear_robust")
-
-
-def estimate_fill_curve_from_mask(
-    masks: np.ndarray,
-    *,
-    calibration: FillCalibration,
-) -> np.ndarray:
-    """Apply a fitted calibration to a (possibly WM-side) mask sequence."""
-    areas = _mask_areas(masks)
-    fill = calibration.slope * areas + calibration.intercept
-    return np.clip(fill.astype(np.float32), 0.0, 1.0)
-
-
-def _moving_average(curve: np.ndarray, window: int) -> np.ndarray:
-    if window <= 1:
-        return curve.astype(np.float32, copy=False)
-    kernel = np.ones(window, dtype=np.float32) / float(window)
-    pad = window // 2
-    padded = np.pad(curve, pad, mode="edge")
-    return np.convolve(padded, kernel, mode="valid")[: len(curve)].astype(np.float32)
-
-
-def detect_pour_onset_from_curve(
-    curve: np.ndarray,
-    fps: float,
-    *,
-    threshold_drop: float = 0.005,
-    k_consecutive: int = 5,
-    smoothing_window: int = 1,
-) -> Optional[float]:
-    """Return the time (sec) of the first sustained downward drop in a fill curve.
-
-    A frame t is "dropping" if smoothed_curve[t] - smoothed_curve[t-1] < -threshold_drop.
-    The onset is the first index of a run of >= k_consecutive dropping frames.
-    Returns None if no such run exists.
-    """
-    if fps <= 0:
-        raise ValueError("detect_pour_onset_from_curve: fps must be positive")
-    curve = np.asarray(curve, dtype=np.float32).reshape(-1)
-    if curve.size < k_consecutive + 1:
-        return None
-    smoothed = _moving_average(curve, smoothing_window)
-    deltas = np.diff(smoothed)
-    dropping = deltas < -float(threshold_drop)
-
-    # Find the first run of length >= k_consecutive of `dropping == True`.
-    run_len = 0
-    for i, is_drop in enumerate(dropping):
-        if is_drop:
-            run_len += 1
-            if run_len >= k_consecutive:
-                # Onset corresponds to the start of the run, which is at index
-                # (i - k_consecutive + 1) in `dropping`, i.e. between curve[i-k+1] and curve[i-k+2].
-                onset_frame = i - k_consecutive + 2
-                return float(onset_frame) / float(fps)
-        else:
-            run_len = 0
-    return None
-
-
-@dataclass
-class UnityLog:
-    """Parsed `unity_gt_log.json` payload, exposing per-frame arrays."""
-
-    scene: str
-    fps: float
-    bottle_local_volume_ml: float
-    pour_threshold_deg: float
-    k_pour: float
-    initial_fill_fraction: float
-
-    # Per-frame arrays, all shape (T,) unless noted.
-    t_sim: np.ndarray
-    fill_fraction: np.ndarray
-    surface_height: np.ndarray
-    pour_rate: np.ndarray
-    spilled_volume: np.ndarray
-    is_pouring: np.ndarray
-    tilt_deg: np.ndarray
-    bottle_position: np.ndarray  # (T, 3)
-    bottle_rotation_quat: np.ndarray  # (T, 4)
-    actions: np.ndarray  # (T, 6) — order: fwd, right, up, pitch, yaw, roll
-    camera_position: np.ndarray  # (T, 3)
-    camera_rotation_quat: np.ndarray  # (T, 4)
-    camera_intrinsics: list  # length T, each dict {fx, fy, cx, cy, near, far}
-
-    @property
-    def num_frames(self) -> int:
-        return int(self.t_sim.shape[0])
-
-
-_REQUIRED_HEADER_KEYS = (
-    "scene",
-    "fps",
-    "bottle_local_volume_ml",
-    "pour_threshold_deg",
-    "k_pour",
-    "initial_fill_fraction",
-    "frames",
-)
-_REQUIRED_FRAME_KEYS = ("t_sim", "frame_index", "bottle", "actions", "liquid", "camera")
-_ACTION_ORDER = ("fwd", "right", "up", "pitch", "yaw", "roll")
-
-
-def load_unity_log(path: str | Path) -> UnityLog:
-    """Parse the per-frame Unity ground-truth JSON written by LiquidGroundTruthRecorder.cs."""
-    raw = json.loads(Path(path).read_text())
-    for key in _REQUIRED_HEADER_KEYS:
-        if key not in raw:
-            raise ValueError(f"unity log {path}: missing required key: {key}")
-    fps_raw = raw["fps"]
-    try:
-        fps_value = float(fps_raw)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"unity log {path}: fps not numeric: {fps_raw!r}") from exc
-    if not (fps_value > 0.0) or not np.isfinite(fps_value):
-        raise ValueError(f"unity log {path}: fps must be positive and finite, got {fps_raw!r}")
-    frames = raw["frames"]
-    if not isinstance(frames, list) or not frames:
-        raise ValueError(f"unity log {path}: 'frames' must be a non-empty list")
-    for i, fr in enumerate(frames):
-        for key in _REQUIRED_FRAME_KEYS:
-            if key not in fr:
-                raise ValueError(f"unity log {path}: frame {i} missing {key!r}")
-
-    t_sim = np.array([f["t_sim"] for f in frames], dtype=np.float64)
-    fill_fraction = np.array([f["liquid"]["fill_fraction"] for f in frames], dtype=np.float32)
-    surface_height = np.array([f["liquid"]["surface_height"] for f in frames], dtype=np.float32)
-    pour_rate = np.array([f["liquid"]["pour_rate"] for f in frames], dtype=np.float32)
-    spilled_volume = np.array([f["liquid"]["spilled_volume"] for f in frames], dtype=np.float32)
-    is_pouring = np.array([bool(f["liquid"]["is_pouring"]) for f in frames], dtype=bool)
-    tilt_deg = np.array([f["bottle"]["tilt_deg_from_up"] for f in frames], dtype=np.float32)
-    bottle_position = np.array([f["bottle"]["position"] for f in frames], dtype=np.float32)
-    bottle_rotation_quat = np.array([f["bottle"]["rotation_quat"] for f in frames], dtype=np.float32)
-    actions = np.array(
-        [[f["actions"][k] for k in _ACTION_ORDER] for f in frames], dtype=np.float32
-    )
-    camera_position = np.array([f["camera"]["position"] for f in frames], dtype=np.float32)
-    camera_rotation_quat = np.array([f["camera"]["rotation_quat"] for f in frames], dtype=np.float32)
-    camera_intrinsics = [f["camera"].get("intrinsics", {}) for f in frames]
-
-    return UnityLog(
-        scene=str(raw["scene"]),
-        fps=float(raw["fps"]),
-        bottle_local_volume_ml=float(raw["bottle_local_volume_ml"]),
-        pour_threshold_deg=float(raw["pour_threshold_deg"]),
-        k_pour=float(raw["k_pour"]),
-        initial_fill_fraction=float(raw["initial_fill_fraction"]),
-        t_sim=t_sim,
-        fill_fraction=fill_fraction,
-        surface_height=surface_height,
-        pour_rate=pour_rate,
-        spilled_volume=spilled_volume,
-        is_pouring=is_pouring,
-        tilt_deg=tilt_deg,
-        bottle_position=bottle_position,
-        bottle_rotation_quat=bottle_rotation_quat,
-        actions=actions,
-        camera_position=camera_position,
-        camera_rotation_quat=camera_rotation_quat,
-        camera_intrinsics=camera_intrinsics,
-    )
 
 
 def _content_hash(path: str | Path, chunk: int = 1 << 20) -> str:
@@ -391,7 +165,6 @@ def get_liquid_mask_video(
         with open(cache_file, "rb") as f:
             return pickle.load(f)
 
-    # Lazy import — keeps unit-test path SAM2-free.
     from sam2.build_sam import build_sam2_video_predictor
     import torch
 
@@ -427,7 +200,6 @@ def get_liquid_mask_video(
 
 def _gray_uint8_video(video_path: str, max_frames: int | None) -> np.ndarray:
     rgb = _read_video_frames_uint8(video_path, max_frames=max_frames)
-    # Standard luma weights. Avoids importing cv2 again.
     g = (0.299 * rgb[..., 0] + 0.587 * rgb[..., 1] + 0.114 * rgb[..., 2]).astype(np.uint8)
     return g  # (T, H, W)
 
@@ -463,7 +235,6 @@ def get_piv_field(
         with open(cache_file, "rb") as f:
             return pickle.load(f)
 
-    # Lazy import — keeps unit tests OpenPIV-free.
     from openpiv import pyprocess
 
     gray = _gray_uint8_video(video_path, max_frames=max_frames)
@@ -491,7 +262,6 @@ def get_piv_field(
             search_area_size=int(window_size),
             sig2noise_method="peak2peak",
         )
-        # Window center grid for masking.
         x_centers, y_centers = pyprocess.get_coordinates(
             image_size=a.shape, search_area_size=int(window_size), overlap=int(overlap)
         )

@@ -100,17 +100,6 @@ def _run_causal_step(context: EvaluationContext, device: Optional[str] = None) -
     return analyze_causal_step_from_context(context=context, device=device)
 
 
-def _run_liquid_state(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
-    try:
-        from .modules.liquid_state import analyze_liquid_state_from_context
-    except Exception as exc:
-        return {
-            "module": "liquid_state",
-            "error": f"failed to import liquid_state module: {exc}",
-        }
-    return analyze_liquid_state_from_context(context=context, device=device)
-
-
 def _run_liquid_velocity(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
     try:
         from .modules.liquid_velocity import analyze_liquid_velocity_from_context
@@ -122,28 +111,59 @@ def _run_liquid_velocity(context: EvaluationContext, device: Optional[str] = Non
     return analyze_liquid_velocity_from_context(context=context, device=device)
 
 
-def _run_liquid_coupling(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+def _run_liquid_volume_conservation(
+    context: EvaluationContext, device: Optional[str] = None
+) -> Dict[str, Any]:
     try:
-        from .modules.liquid_coupling import analyze_liquid_coupling_from_context
+        from .modules.liquid_volume_conservation import (
+            analyze_liquid_volume_conservation_from_context,
+        )
     except Exception as exc:
         return {
-            "module": "liquid_coupling",
-            "error": f"failed to import liquid_coupling module: {exc}",
+            "module": "liquid_volume_conservation",
+            "error": f"failed to import liquid_volume_conservation module: {exc}",
         }
-    return analyze_liquid_coupling_from_context(context=context, device=device)
+    return analyze_liquid_volume_conservation_from_context(context=context, device=device)
+
+
+def _run_liquid_surface_orientation(
+    context: EvaluationContext, device: Optional[str] = None
+) -> Dict[str, Any]:
+    try:
+        from .modules.liquid_surface_orientation import (
+            analyze_liquid_surface_orientation_from_context,
+        )
+    except Exception as exc:
+        return {
+            "module": "liquid_surface_orientation",
+            "error": f"failed to import liquid_surface_orientation module: {exc}",
+        }
+    return analyze_liquid_surface_orientation_from_context(context=context, device=device)
+
+
+def _run_slosh_spectrum(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+    try:
+        from .modules.slosh_spectrum import analyze_slosh_spectrum_from_context
+    except Exception as exc:
+        return {
+            "module": "slosh_spectrum",
+            "error": f"failed to import slosh_spectrum module: {exc}",
+        }
+    return analyze_slosh_spectrum_from_context(context=context, device=device)
 
 
 MODULE_REGISTRY: Dict[str, EvaluationModule] = {
     "causal_step": _run_causal_step,
     "clip4clip": _run_clip4clip,
     "control_motion": _run_control_motion,
-    "liquid_coupling": _run_liquid_coupling,
-    "liquid_state": _run_liquid_state,
+    "liquid_surface_orientation": _run_liquid_surface_orientation,
     "liquid_velocity": _run_liquid_velocity,
+    "liquid_volume_conservation": _run_liquid_volume_conservation,
     "lpips": _run_lpips,
     "lighting": _run_lighting,
     "motion": _run_motion,
     "shadow": _run_shadow,
+    "slosh_spectrum": _run_slosh_spectrum,
 }
 
 

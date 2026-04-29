@@ -147,22 +147,15 @@ def _merge_lpips_artifacts(
 def _merge_liquid_artifacts(
     context: EvaluationContext,
     *,
-    liquid_state_unity_log_path: Optional[str],
     liquid_cache_root: str,
     liquid_sam2_model: str,
     liquid_sam2_prompt: Optional[str],
     liquid_piv_window_size: int,
     liquid_piv_overlap: int,
     liquid_max_pairs: int,
-    liquid_pour_threshold_deg: float,
-    liquid_k_pour: float,
-    liquid_bottle_local_volume_ml: float,
     liquid_camera_compensation: bool,
     liquid_camera_regime: str,
-    liquid_coupling_max_lag_sec: float,
 ) -> None:
-    if liquid_state_unity_log_path is not None:
-        context.artifacts["liquid_state_unity_log_path"] = str(liquid_state_unity_log_path)
     context.artifacts["liquid_cache_root"] = str(liquid_cache_root)
     context.artifacts["liquid_sam2_model"] = str(liquid_sam2_model)
     if liquid_sam2_prompt is not None and str(liquid_sam2_prompt).strip():
@@ -170,12 +163,8 @@ def _merge_liquid_artifacts(
     context.artifacts["liquid_piv_window_size"] = int(liquid_piv_window_size)
     context.artifacts["liquid_piv_overlap"] = int(liquid_piv_overlap)
     context.artifacts["liquid_max_pairs"] = int(liquid_max_pairs)
-    context.artifacts["liquid_pour_threshold_deg"] = float(liquid_pour_threshold_deg)
-    context.artifacts["liquid_k_pour"] = float(liquid_k_pour)
-    context.artifacts["liquid_bottle_local_volume_ml"] = float(liquid_bottle_local_volume_ml)
     context.artifacts["liquid_camera_compensation"] = bool(liquid_camera_compensation)
     context.artifacts["liquid_camera_regime"] = str(liquid_camera_regime).strip().lower()
-    context.artifacts["liquid_coupling_max_lag_sec"] = float(liquid_coupling_max_lag_sec)
 
 
 def ensure_device(device: Optional[str] = None) -> str:
@@ -280,19 +269,14 @@ def run_world_model_evaluation(
     causal_step_causal_fail_advance: bool = True,
     causal_step_judge: str = "openai",
     causalstep_root: Optional[str] = None,
-    liquid_state_unity_log_path: Optional[str] = None,
     liquid_cache_root: str = "runs/liquid_cache",
     liquid_sam2_model: str = "facebook/sam2.1-hiera-small",
     liquid_sam2_prompt: Optional[str] = None,
     liquid_piv_window_size: int = 32,
     liquid_piv_overlap: int = 16,
     liquid_max_pairs: int = 0,
-    liquid_pour_threshold_deg: float = 30.0,
-    liquid_k_pour: float = 0.05,
-    liquid_bottle_local_volume_ml: float = 500.0,
     liquid_camera_compensation: bool = True,
     liquid_camera_regime: str = "c2_static_side",
-    liquid_coupling_max_lag_sec: float = 1.0,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -457,19 +441,14 @@ def run_world_model_evaluation(
     )
     _merge_liquid_artifacts(
         context,
-        liquid_state_unity_log_path=liquid_state_unity_log_path,
         liquid_cache_root=liquid_cache_root,
         liquid_sam2_model=liquid_sam2_model,
         liquid_sam2_prompt=liquid_sam2_prompt,
         liquid_piv_window_size=liquid_piv_window_size,
         liquid_piv_overlap=liquid_piv_overlap,
         liquid_max_pairs=liquid_max_pairs,
-        liquid_pour_threshold_deg=liquid_pour_threshold_deg,
-        liquid_k_pour=liquid_k_pour,
-        liquid_bottle_local_volume_ml=liquid_bottle_local_volume_ml,
         liquid_camera_compensation=liquid_camera_compensation,
         liquid_camera_regime=liquid_camera_regime,
-        liquid_coupling_max_lag_sec=liquid_coupling_max_lag_sec,
     )
     context.artifacts.update(
         {
