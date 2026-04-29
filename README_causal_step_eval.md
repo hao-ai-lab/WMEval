@@ -110,9 +110,25 @@ if the defaults don't match your scene's physics.
 ## 5) Step 2 — Generate a draft QA dataset (then review it)
 
 `tools/generate_beamdomino_causal_step_qa.py` turns each segment into a
-CausalStep `descriptive` + `causal` QA pair using per-stage templates. The
-output is a **draft** — the templates are intentionally generic and must be
-reviewed by a human.
+CausalStep `descriptive` + `causal` QA pair. Two modes are supported.
+
+In both modes, choice positions are **auto-shuffled** per QA via a
+deterministic seed `(video_id, segment_index, qa_type)` — `correct_answer`
+varies across A/B/C/D rather than always being `A`. Reruns on the same
+inputs produce identical output (the shuffle is stable), so the OpenAI
+judge's prompt-based cache key stays valid.
+
+The output is a **draft** in either mode and must be reviewed by a human.
+
+### Mode 1 — Templates (default; offline, free)
+
+Static per-stage templates ground the wording in the canonical BeamDomino
+scene (one ball rolls along the floor → strikes a leg of a small white
+platform with another ball on top → the platform tips → a row of dominoes
+falls in a chain). Distractors are written as plausible near-misses (mirror
+direction, wrong contact location, simultaneous-vs-sequential fall) rather
+than easy rejects like "wind" or "magic", so the VLM judge has to look at
+the frames.
 
 ```bash
 python tools/generate_beamdomino_causal_step_qa.py \
@@ -121,11 +137,53 @@ python tools/generate_beamdomino_causal_step_qa.py \
   --out       runs/traj_001/qa_dataset.json
 ```
 
+### Mode 2 — VLM hybrid (online; OpenAI API)
+
+Asks a vision model to rewrite the question and generate 3 distractors
+*grounded in the segment's actual frames* — useful when trajectories vary
+visibly (e.g., which side the leg gets knocked from, which arc of dominoes
+falls) and a static template can't reflect that.
+
+**Hybrid contract:** the template's correct answer is given to the VLM as
+a strong prior. The VLM may either confirm it (return verbatim) or *correct*
+it when the segment frames clearly contradict the template wording — for
+example, when the template says "the platform tipped right" but the frames
+show it tipping left. Every override is logged to stderr (`[qa-gen] VLM
+overrode template correct answer ...`) so a human reviewer can spot-check
+the change before evaluation. This trades the previous "VLM cannot corrupt
+ground truth" guarantee for the ability to fix templates that are wrong
+for a particular trajectory's footage. If you want the strict-pin
+behaviour, run in templates mode instead.
+
+```bash
+export OPENAI_API_KEY=sk-...
+python tools/generate_beamdomino_causal_step_qa.py \
+  --segments  runs/traj_001/segments.json \
+  --video-id  traj_001 \
+  --out       runs/traj_001/qa_dataset.json \
+  --mode      vlm \
+  --video     runs/traj_001/unity_gt.mp4 \
+  --vlm-model gpt-5.4
+```
+
+VLM responses are disk-cached at `<out>.parent/qa_vlm_cache/` (override with
+`--vlm-cache-dir`). Cache keys include `--vlm-num-frames` (default `4`) so
+bumping the frame count forces a recompute.
+
+### Human review
+
 Open `qa_dataset.json` and edit:
 
 - Reword anything too generic to discriminate WM from GT.
-- Make sure the `correct_answer` letter still matches after any reorderings.
+- For VLM mode, scan the QA-gen stderr for `VLM overrode template correct
+  answer ...` lines and confirm every override matches what the video
+  actually shows — the VLM is now allowed to change ground truth, so this
+  is the most important review step.
+- Double-check that no distractor accidentally restates the correct answer
+  — `decorate_qa` rejects exact duplicates but not paraphrases.
 - Verify segment time spans look sensible against the actual video.
+- The `correct_answer` letter is auto-correct after the shuffle; if you
+  reorder choices manually, update the letter.
 
 ## 6) Step 3 — Smoke-test with the fake judge
 
@@ -270,7 +328,14 @@ for every metric, **positive means "WM is worse than Unity"**.
 3. Run the three WMEval CLIs:
    ```bash
    python tools/detect_beamdomino_segments.py --log .../unity_gt_log.json --out .../segments.json
+
+   # Option A — templates (offline, free)
    python tools/generate_beamdomino_causal_step_qa.py --segments .../segments.json --video-id traj_N --out .../qa_dataset.json
+
+   # Option B — VLM hybrid (frame-grounded distractors; needs OPENAI_API_KEY)
+   # python tools/generate_beamdomino_causal_step_qa.py --segments .../segments.json --video-id traj_N --out .../qa_dataset.json \
+   #     --mode vlm --video .../unity_gt.mp4 --vlm-model gpt-5.4
+
    $EDITOR .../qa_dataset.json   # human review
    echo '{"video_id":"traj_N","unity_video":".../unity_gt.mp4","wm_video":".../wm_pred.mp4","qa_dataset":".../qa_dataset.json"}' >> runs/manifest.jsonl
    python tools/evaluate_world_model_causal_step.py --manifest runs/manifest.jsonl --cache-root runs/cache --judge openai --out runs/causal_step_results.json
@@ -302,6 +367,10 @@ prose regime.
 | `SegmentDetectionError: no fallen domino found ...` | No `Domino_*` body tilted past `--fallen-tilt-deg`. The cascade never propagated — re-record with a stronger push, or lower the threshold. |
 | OpenAI 401 / `OPENAI_API_KEY` missing | Export the key in the same shell that runs the CLI. |
 | Same prompt, new answers | Cache is keyed by request. If you changed prompt content but kept `causal_step_vlm_prompt_version` the same, delete `<cache-root>/<video_id>/vlm_cache/` and re-run. |
+| QA-gen: `--video is required when --mode vlm` | VLM mode reads frames from the Unity GT video. Pass `--video runs/traj_N/unity_gt.mp4`. |
+| QA-gen: `RuntimeError: OPENAI_API_KEY must be set` | VLM mode calls OpenAI. Export `OPENAI_API_KEY=sk-...` or rerun without `--mode vlm`. |
+| QA-gen: `VLM emitted a distractor identical to the correct answer` | Transient model glitch — `decorate_qa` refused to cache the bad response. Rerun the same command. |
+| QA-gen: stale VLM distractors after bumping `--vlm-num-frames` | Cache key includes `num_frames`, so a bump forces a recompute automatically; if you want a clean wipe regardless, delete `<out>.parent/qa_vlm_cache/`. |
 
 ## 15) File reference
 
@@ -317,12 +386,14 @@ prose regime.
 | `evaluation/modules/_causal_step_runner.py` | Bridges the judge to CausalStep's `PrecomputedModel` and runs `evaluate_chain` / `evaluate_descriptive_isolated` / `evaluate_causal_isolated`. |
 | `evaluation/modules/_causal_step_delta.py` | Polarity-correct delta between Unity and WM metric blocks. |
 | `tools/detect_beamdomino_segments.py` | CLI: physics log → `segments.json`. |
-| `tools/generate_beamdomino_causal_step_qa.py` | CLI: segments → draft `qa_dataset.json` (human-review needed). |
+| `tools/generate_beamdomino_causal_step_qa.py` | CLI: segments → draft `qa_dataset.json` (templates *or* VLM-hybrid mode; human-review needed). |
+| `tools/_causal_qa_vlm.py` | OpenAI VLM-based QA decoration: rewrites question + 3 distractors per segment from the actual frames, and may correct the template's answer when the frames contradict it (overrides logged to stderr). Imported lazily by the QA-gen CLI when `--mode vlm` is set. |
 | `tools/evaluate_world_model_causal_step.py` | CLI: manifest → `causal_step_results.json`. |
 | `docs/causal_step_qa_review_checklist.md` | What to look for when reviewing the draft QA. |
 | `tests/test_causal_step_delta.py` | CausalStep importability + metric polarity. |
 | `tests/test_beamdomino_segments.py` | Segment detector unit tests. |
 | `tests/test_causal_step_module.py` | Module integration tests with the fake judge. |
+| `tests/test_generate_beamdomino_causal_step_qa.py` | QA-gen CLI tests: deterministic shuffle, template/VLM-mode contracts, decorator caching. |
 
 ### CausalStep (consumed unchanged)
 
