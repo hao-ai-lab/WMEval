@@ -3,7 +3,7 @@
 Reads a segments JSON produced by `detect_beamdomino_segments` (top-level
 `events` list with `{index, name, start_sec, end_sec, ...}`) and emits a
 CausalStep-loadable draft using per-stage templates. Output must be reviewed
-by a human (see docs/causal_step_qa_review_checklist.md) before evaluation.
+by a human before evaluation.
 
 Template wording is grounded in the canonical BeamDomino scene: 
 one ball rolls along the floor, strikes a supporting leg 
@@ -25,10 +25,20 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import random
 import re
+import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable, Optional
+
+# VLM mode lazy-imports `evaluation.modules.causal_step._read_window_uint8`,
+# which lives at the repo root. Mirror the other tools' bootstrap so the
+# import resolves regardless of cwd or whether the script is invoked as
+# `python tools/...` vs `python -m tools.generate_beamdomino_causal_step_qa`.
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 _LETTER_PREFIX = re.compile(r"^[A-Z]\)\s*")
 
@@ -208,7 +218,89 @@ STAGE_TEMPLATES: dict[str, dict[str, Any]] = {
 }
 
 
-def build_dataset(*, video_id: str, events: list[dict[str, Any]]) -> dict[str, Any]:
+# Decorator contract: called once per QA when in VLM mode. Receives the stage
+# label, qa kind, segment metadata, and the original template's question +
+# correct option body; returns the rewritten question, the correct body
+# (which the decorator may override based on what the frames show), and 3
+# distractors. Overrides are logged. See `tools/_causal_qa_vlm.py:decorate_qa`
+# for the production implementation.
+QADecorator = Callable[..., Any]
+
+
+def _build_qa(
+    *,
+    template_question: str,
+    template_choices: list[str],
+    template_correct: str,
+    video_id: str,
+    segment_index: int,
+    qa_kind: str,
+    seg: dict[str, Any],
+    stage: str,
+    decorator: Optional[QADecorator],
+) -> dict[str, Any]:
+    """Assemble one QA dict, optionally routing through the VLM decorator.
+
+    With `decorator=None` we use the template question, the template's
+    correct answer, and the template distractors as-is. With a decorator,
+    the question, the correct answer, and the 3 distractors all come from
+    the VLM after it has viewed the segment frames. The decorator is
+    expected to start from the template's correct body and only override
+    it when the frames demonstrably contradict it; overrides are logged to
+    stderr so human review remains tractable.
+    """
+    correct_idx = ord(template_correct) - ord("A")
+    template_correct_body = template_choices[correct_idx].split(") ", 1)[1]
+
+    if decorator is not None:
+        result = decorator(
+            stage=stage,
+            qa_type=qa_kind,
+            segment_index=segment_index,
+            start_sec=float(seg["start_sec"]),
+            end_sec=float(seg["end_sec"]),
+            template_question=template_question,
+            template_correct_body=template_correct_body,
+        )
+        question = result.question
+        correct_body = result.correct
+        distractor_bodies = list(result.distractors)
+        if correct_body.strip().lower() != template_correct_body.strip().lower():
+            print(
+                f"[qa-gen] VLM overrode template correct answer "
+                f"video_id={video_id} segment={segment_index} qa={qa_kind}: "
+                f"template={template_correct_body!r} -> vlm={correct_body!r}",
+                file=sys.stderr,
+            )
+    else:
+        question = template_question
+        correct_body = template_correct_body
+        distractor_bodies = [
+            ch.split(") ", 1)[1]
+            for ch in template_choices
+            if ch.split(") ", 1)[1] != correct_body
+        ]
+
+    pre_shuffle = [f"A) {correct_body}"] + [
+        f"{chr(ord('A') + 1 + i)}) {body}" for i, body in enumerate(distractor_bodies)
+    ]
+    choices, correct_letter = _shuffled_choices(
+        pre_shuffle, "A", seed=_seed_for(video_id, segment_index, qa_kind)
+    )
+    return {
+        "segment_index": segment_index,
+        "question": question,
+        "choices": choices,
+        "correct_answer": correct_letter,
+    }
+
+
+def build_dataset(
+    *,
+    video_id: str,
+    events: list[dict[str, Any]],
+    decorator: Optional[QADecorator] = None,
+) -> dict[str, Any]:
     """Build a CausalStep-schema dataset from a segments.json `events` list.
 
     CausalStep schema requires: 1-indexed contiguous segments, descriptive QA
@@ -217,6 +309,13 @@ def build_dataset(*, video_id: str, events: list[dict[str, Any]]) -> dict[str, A
     Choices are shuffled per QA via `_shuffled_choices` so the correct letter
     is no longer always `A`; the shuffle is seeded by `(video_id,
     segment_index, qa_type)` and is therefore stable across reruns.
+
+    When `decorator` is provided (VLM mode), each question, its correct
+    answer, and its 3 distractors are written by the model based on the
+    segment's frames. The model is given the template's correct answer as
+    a strong prior; if it overrides the prior (because the frames clearly
+    contradict the template wording), `_build_qa` logs the override to
+    stderr so a human reviewer can spot-check the change.
     """
     sorted_events = sorted(events, key=lambda e: e["index"])
     out_segments: list[dict[str, Any]] = []
@@ -237,32 +336,32 @@ def build_dataset(*, video_id: str, events: list[dict[str, Any]]) -> dict[str, A
                 "end_time": float(seg["end_sec"]),
             }
         )
-        desc_choices, desc_correct = _shuffled_choices(
-            tmpl["descriptive_choices"],
-            tmpl["descriptive_correct"],
-            seed=_seed_for(video_id, idx, "descriptive"),
-        )
         desc_qas.append(
-            {
-                "segment_index": idx,
-                "question": tmpl["descriptive"],
-                "choices": desc_choices,
-                "correct_answer": desc_correct,
-            }
+            _build_qa(
+                template_question=tmpl["descriptive"],
+                template_choices=tmpl["descriptive_choices"],
+                template_correct=tmpl["descriptive_correct"],
+                video_id=video_id,
+                segment_index=idx,
+                qa_kind="descriptive",
+                seg=seg,
+                stage=stage,
+                decorator=decorator,
+            )
         )
         if idx >= 2:
-            causal_choices, causal_correct = _shuffled_choices(
-                tmpl["causal_choices"],
-                tmpl["causal_correct"],
-                seed=_seed_for(video_id, idx, "causal"),
-            )
             causal_qas.append(
-                {
-                    "segment_index": idx,
-                    "question": tmpl["causal_question"],
-                    "choices": causal_choices,
-                    "correct_answer": causal_correct,
-                }
+                _build_qa(
+                    template_question=tmpl["causal_question"],
+                    template_choices=tmpl["causal_choices"],
+                    template_correct=tmpl["causal_correct"],
+                    video_id=video_id,
+                    segment_index=idx,
+                    qa_kind="causal",
+                    seg=seg,
+                    stage=stage,
+                    decorator=decorator,
+                )
             )
 
     return {
@@ -277,11 +376,119 @@ def build_dataset(*, video_id: str, events: list[dict[str, Any]]) -> dict[str, A
     }
 
 
+def _probe_video_fps(video_path: Path) -> float:
+    """Read FPS off the video. Falls back to 30 if the codec lies."""
+    import cv2
+
+    cap = cv2.VideoCapture(str(video_path))
+    try:
+        if not cap.isOpened():
+            raise RuntimeError(f"cannot open video {video_path}")
+        fps = cap.get(cv2.CAP_PROP_FPS)
+    finally:
+        cap.release()
+    if not fps or fps <= 0:
+        return 30.0
+    return float(fps)
+
+
+def _make_vlm_decorator(
+    *,
+    video_path: Path,
+    video_id: str,
+    model: str,
+    cache_dir: Path,
+    num_frames: int,
+    fps: float,
+) -> QADecorator:
+    """Build a decorator closure that pulls frames from disk and calls OpenAI.
+
+    Imports are lazy because the templates-mode CLI path must work without
+    the openai SDK installed.
+    """
+    from openai import OpenAI
+
+    from evaluation.modules.causal_step import _read_window_uint8
+    from tools._causal_qa_vlm import decorate_qa
+
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY must be set for --mode vlm")
+    client = OpenAI(api_key=api_key)
+
+    def _decorator(
+        *,
+        stage: str,
+        qa_type: str,
+        segment_index: int,
+        start_sec: float,
+        end_sec: float,
+        template_question: str,
+        template_correct_body: str,
+    ) -> Any:
+        start_frame = int(round(start_sec * fps))
+        end_frame = max(int(round(end_sec * fps)), start_frame + 1)
+        frames = _read_window_uint8(
+            str(video_path),
+            start_frame=start_frame,
+            end_frame=end_frame,
+            num_samples=num_frames,
+        )
+        return decorate_qa(
+            client=client,
+            model=model,
+            frames=frames,
+            stage=stage,
+            qa_type=qa_type,
+            start_sec=start_sec,
+            end_sec=end_sec,
+            template_question=template_question,
+            template_correct_body=template_correct_body,
+            cache_dir=cache_dir,
+            video_id=video_id,
+            segment_index=segment_index,
+        )
+
+    return _decorator
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--segments", required=True, type=Path)
     parser.add_argument("--video-id", required=True)
     parser.add_argument("--out", required=True, type=Path)
+    parser.add_argument(
+        "--mode",
+        choices=["templates", "vlm"],
+        default="templates",
+        help="`templates` (default) emits the static templates; `vlm` asks a "
+        "vision model to rewrite questions and generate distractors from the "
+        "actual segment frames (correct answers stay template-pinned).",
+    )
+    parser.add_argument(
+        "--video",
+        type=Path,
+        default=None,
+        help="Path to the trajectory video. Required for --mode vlm.",
+    )
+    parser.add_argument(
+        "--vlm-model",
+        default="gpt-5.4",
+        help="OpenAI model id for VLM mode (default: gpt-5.4).",
+    )
+    parser.add_argument(
+        "--vlm-cache-dir",
+        type=Path,
+        default=None,
+        help="Where decorated QAs are cached. Defaults to <out>.parent/qa_vlm_cache.",
+    )
+    parser.add_argument("--vlm-num-frames", type=int, default=4)
+    parser.add_argument(
+        "--video-fps",
+        type=float,
+        default=None,
+        help="Override the video FPS (otherwise read from the file).",
+    )
     args = parser.parse_args()
 
     segments_payload = json.loads(args.segments.read_text())
@@ -291,7 +498,24 @@ def main() -> None:
             f"expected segments.json to have top-level 'events' list, got {type(events).__name__}"
         )
 
-    dataset = build_dataset(video_id=args.video_id, events=events)
+    decorator: Optional[QADecorator] = None
+    if args.mode == "vlm":
+        if args.video is None:
+            parser.error("--video is required when --mode vlm")
+        cache_dir = args.vlm_cache_dir or (args.out.parent / "qa_vlm_cache")
+        fps = args.video_fps if args.video_fps else _probe_video_fps(args.video)
+        decorator = _make_vlm_decorator(
+            video_path=args.video,
+            video_id=args.video_id,
+            model=args.vlm_model,
+            cache_dir=cache_dir,
+            num_frames=args.vlm_num_frames,
+            fps=fps,
+        )
+
+    dataset = build_dataset(
+        video_id=args.video_id, events=events, decorator=decorator
+    )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(dataset, indent=2))
     print(f"wrote draft QA dataset to {args.out}")
