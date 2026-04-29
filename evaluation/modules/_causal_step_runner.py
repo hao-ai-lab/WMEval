@@ -39,7 +39,8 @@ def run_causal_step_for_video(
     index range `[segment_frames_start, segment_frames_end)` that frame-consuming
     judges (e.g. `OpenAIJudge`) need to slice the correct window out of the video.
 
-    Returns keys: CSR, AMCL, MCL, RF, WS, DUA, ICRA (UPPERCASE).
+    Returns keys: csr, amcl, mcl, rf, ws, dua, icra (lowercase, matching
+    causalstep.metrics.compute_all_metrics output and `compute_delta` input).
     """
     ensure_causalstep_importable(str(causalstep_root) if causalstep_root else None)
 
@@ -108,5 +109,4 @@ def run_causal_step_for_video(
     isolated_desc = evaluate_descriptive_isolated(video, model)
     isolated_causal = evaluate_causal_isolated(video, model)
     agg = compute_all_metrics([chain_result], [isolated_desc], [isolated_causal])
-    lower = agg.to_dict()["metrics"]
-    return {k.upper(): v for k, v in lower.items()}
+    return dict(agg.to_dict()["metrics"])

@@ -22,9 +22,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-CAUSALSTEP_ROOT = ROOT / "imports" / "CausalStep"
-if str(CAUSALSTEP_ROOT) not in sys.path:
-    sys.path.insert(0, str(CAUSALSTEP_ROOT))
+# CausalStep is added to sys.path lazily by ensure_causalstep_importable, which
+# honors the optional `causalstep_root` artifact. Don't insert it here too —
+# that would let an out-of-tree --causalstep-root override silently lose to the
+# default path depending on insertion order.
 
 from evaluation.context import EvaluationContext, SampledVideoFrames, VideoMetadata
 from evaluation.registry import run_modules
@@ -135,17 +136,19 @@ def main() -> None:
     metric_keys = list(ok[0]["delta"].keys())
     agg = {
         "unity_mean": {
-            k: statistics.fmean(r["unity"][k.upper()] for r in ok) for k in metric_keys
+            k: statistics.fmean(r["unity"][k] for r in ok) for k in metric_keys
         },
         "wm_mean": {
-            k: statistics.fmean(r["wm"][k.upper()] for r in ok) for k in metric_keys
+            k: statistics.fmean(r["wm"][k] for r in ok) for k in metric_keys
         },
         "delta_mean": {
             k: statistics.fmean(r["delta"][k] for r in ok) for k in metric_keys
         },
         "n_trajectories": len(ok),
         "n_errors": len(per_video) - len(ok),
-        "delta_convention": "positive = WM worse than Unity",
+        "delta_convention": ok[0].get(
+            "delta_convention", "positive = WM worse than Unity"
+        ),
     }
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

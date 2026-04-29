@@ -179,7 +179,8 @@ def test_analyze_causal_step_from_context_uses_fake_judge(tmp_path):
     out = analyze_causal_step_from_context(context=ctx)
     assert out["module"] == "causal_step"
     assert "unity" in out and "wm" in out and "delta" in out
-    assert "CSR" in out["unity"]
-    assert out["unity"]["CSR"] == 100.0
-    # delta keys are lowercase per compute_delta convention
+    # All three blocks (unity, wm, delta) use lowercase metric keys —
+    # matching causalstep.metrics.compute_all_metrics output.
+    assert "csr" in out["unity"]
+    assert out["unity"]["csr"] == 100.0
     assert "csr" in out["delta"]
