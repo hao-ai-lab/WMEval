@@ -422,25 +422,6 @@ def main() -> None:
         help="Cost of leaving an event unmatched in monotonic chronology matching",
     )
 
-    g_liquid = ap.add_argument_group("liquid_* (LiquidContainer scene)")
-    g_liquid.add_argument("--liquid_cache_root", type=str, default="runs/liquid_cache",
-        help="Directory for SAM2/PIV pickled caches (shared across trajectories)")
-    g_liquid.add_argument("--liquid_sam2_model", type=str, default="facebook/sam2.1-hiera-small",
-        help="HuggingFace SAM2 video predictor checkpoint id")
-    g_liquid.add_argument("--liquid_sam2_prompt", type=str, default=None,
-        help="Text prompt used to seed the SAM2 mask track (default: 'the liquid inside the bottle')")
-    g_liquid.add_argument("--liquid_piv_window_size", type=int, default=32,
-        help="OpenPIV interrogation window edge (px)")
-    g_liquid.add_argument("--liquid_piv_overlap", type=int, default=16,
-        help="OpenPIV interrogation window overlap (px)")
-    g_liquid.add_argument("--liquid_max_pairs", type=int, default=0,
-        help="Per-module pair cap for liquid modules (0 = inherit global --max_pairs)")
-    g_liquid.add_argument("--liquid_camera_compensation", action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Subtract estimated camera motion from PIV velocities")
-    g_liquid.add_argument("--liquid_camera_regime", type=str, default="c2_static_side",
-        help="Camera regime label (e.g. c1_handheld, c2_static_side)")
-
     args = ap.parse_args()
 
     modules = [module for module in args.modules.split(",") if module.strip()]
@@ -552,14 +533,6 @@ def main() -> None:
         causal_match_mode=causal_match_mode,
         lpips_vlm_pair_accept_cost=args.lpips_vlm_pair_accept_cost,
         lpips_vlm_skip_cost=args.lpips_vlm_skip_cost,
-        liquid_cache_root=args.liquid_cache_root,
-        liquid_sam2_model=args.liquid_sam2_model,
-        liquid_sam2_prompt=args.liquid_sam2_prompt,
-        liquid_piv_window_size=args.liquid_piv_window_size,
-        liquid_piv_overlap=args.liquid_piv_overlap,
-        liquid_max_pairs=args.liquid_max_pairs,
-        liquid_camera_compensation=args.liquid_camera_compensation,
-        liquid_camera_regime=args.liquid_camera_regime,
     )
 
     out_path = Path(args.output_json)

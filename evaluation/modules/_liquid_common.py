@@ -183,8 +183,14 @@ def get_liquid_mask_video(
         points=None,
         text=text_input,
     )
-    masks: list[np.ndarray] = [np.zeros(frames.shape[1:3], dtype=bool)] * frames.shape[0]
+    target_frames = int(frames.shape[0])
+    masks: list[np.ndarray] = [np.zeros(frames.shape[1:3], dtype=bool) for _ in range(target_frames)]
+    # SAM2 propagates over the full video that init_state opened; cap at the
+    # frame budget we asked _read_video_frames_uint8 to read so max_pairs is
+    # actually respected (otherwise the pre-sized masks list would IndexError).
     for frame_idx, _obj_ids, mask_logits in predictor.propagate_in_video(state):
+        if frame_idx >= target_frames:
+            break
         m = (mask_logits[0] > 0).cpu().numpy()
         if m.ndim == 3:
             m = m[0]
@@ -220,6 +226,10 @@ def get_piv_field(
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
+    # Hash the mask volume itself: two mask runs with the same sam2_model/prompt
+    # strings can still produce different masks (model patch, video re-encode,
+    # nondeterminism). Without this, PIV would silently serve stale results.
+    mask_bytes_hash = hashlib.sha256(np.ascontiguousarray(mask.masks).tobytes()).hexdigest()[:16]
     cfg = _config_hash(
         {
             "window_size": window_size,
@@ -228,6 +238,7 @@ def get_piv_field(
             "max_frames": max_frames,
             "sam2_model": mask.sam2_model,
             "prompt": mask.prompt,
+            "mask_hash": mask_bytes_hash,
         }
     )
     cache_file = _cache_path(cache_dir, video_path, "piv", cfg)

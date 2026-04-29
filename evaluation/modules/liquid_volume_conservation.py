@@ -10,7 +10,8 @@ Two failure modes matter:
   - Long-horizon leakage / spurious growth — captured by
     `mask_area_drift_per_sec` (linear-fit slope / mean, in 1/sec).
 
-Each is reported separately for Unity, WM, and as the absolute delta.
+Each is reported separately for Unity, WM, and as `delta = wm − unity`
+(signed: positive means WM jitters or drifts more than Unity).
 """
 from __future__ import annotations
 
@@ -56,10 +57,10 @@ def compute_volume_conservation_from_masks(
     drift_u = _drift_per_sec(unity_area, fps)
     drift_w = _drift_per_sec(wm_area, fps)
 
-    def _delta(a: float, b: float) -> float:
-        if not (np.isfinite(a) and np.isfinite(b)):
+    def _delta(unity: float, wm: float) -> float:
+        if not (np.isfinite(unity) and np.isfinite(wm)):
             return float("nan")
-        return float(abs(a - b))
+        return float(wm - unity)
 
     return {
         "mask_area_std_normalized": {

@@ -5,10 +5,16 @@
 #                      curl_stats.mean_error ≈ 0, temporal_consistency ≈ 1
 #   - liquid_volume_conservation: every delta ≈ 0
 #   - liquid_surface_orientation: surface_tilt_residual_deg.delta ≈ 0
-#   - slosh_spectrum: dominant_frequency_hz.ratio ≈ 1, spectral_l1 ≈ 0
+#   - slosh_spectrum: dominant_frequency_hz.ratio ≈ 1, delta_hz ≈ 0,
+#                     spectral_l1 ≈ 0
 #
 # Usage: bash WMEval/scripts/sanity_unity_vs_unity_liquid.sh [VIDEO_PATH]
 set -euo pipefail
+
+# Run from WMEval/ so relative paths (tools/, runs/, reports/) resolve no
+# matter where the user invokes the script from.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
 
 VIDEO="${1:-/Users/abhilash/Documents/Work/WorldModelBench/WorldModelBenchScenePrivate/GameScenes/LiquidContainer/Recordings/Movie_001.mp4}"
 OUT="reports/world_model_liquid_sanity/identity.json"
@@ -20,7 +26,7 @@ fi
 
 mkdir -p "$(dirname "$OUT")"
 
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/evaluate_world_model_liquid.py \
   --video "$VIDEO" \
   --ref_video "$VIDEO" \
   --modules liquid_velocity,liquid_volume_conservation,liquid_surface_orientation,slosh_spectrum \

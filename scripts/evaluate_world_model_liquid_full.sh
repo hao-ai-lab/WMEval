@@ -19,6 +19,16 @@ WM_VIDEO="$2"
 OUT_JSON="$3"
 WM_NAME="${4:-$(basename "$WM_VIDEO" .mp4)}"
 
+# Resolve OUT_JSON relative to the caller's CWD before we cd into WMEval/.
+case "$OUT_JSON" in
+  /*) ;;
+  *) OUT_JSON="$(pwd)/$OUT_JSON" ;;
+esac
+
+# Run from WMEval/ so relative paths (tools/, runs/) resolve consistently.
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
 for f in "$REF_VIDEO" "$WM_VIDEO"; do
   if [ ! -f "$f" ]; then
     echo "evaluate_world_model_liquid_full: missing video: $f" >&2
@@ -28,7 +38,7 @@ done
 
 mkdir -p "$(dirname "$OUT_JSON")"
 
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/evaluate_world_model_liquid.py \
   --video "$WM_VIDEO" \
   --ref_video "$REF_VIDEO" \
   --modules liquid_velocity,liquid_volume_conservation,liquid_surface_orientation,slosh_spectrum,lpips,control_motion,clip4clip \
@@ -44,15 +54,18 @@ python tools/evaluate_world_model_diffusionlight.py \
   --max_pairs 32
 
 # Tag the report with the model name for downstream leaderboard merging.
-python -c "
-import json, sys
-p = sys.argv[1]
-name = sys.argv[2]
+# Atomic: write to a temp file then os.replace so an interrupt cannot
+# leave OUT_JSON empty/partial.
+python - "$OUT_JSON" "$WM_NAME" <<'PY'
+import json, os, sys
+p, name = sys.argv[1], sys.argv[2]
 with open(p) as f:
     rep = json.load(f)
-rep['model'] = name
-with open(p, 'w') as f:
+rep["model"] = name
+tmp = p + ".tmp"
+with open(tmp, "w") as f:
     json.dump(rep, f, indent=2)
-" "$OUT_JSON" "$WM_NAME"
+os.replace(tmp, p)
+PY
 
 echo "wrote $OUT_JSON (model=$WM_NAME)"

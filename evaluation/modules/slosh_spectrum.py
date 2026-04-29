@@ -69,7 +69,9 @@ def _dominant_frequency(freqs: np.ndarray, power: np.ndarray) -> float:
 def _normalized(power: np.ndarray) -> np.ndarray:
     total = power.sum()
     if total <= 1e-12:
-        return power
+        # Honour the "unit-area normalized" contract: a near-flat spectrum
+        # contributes zero mass instead of un-normalized noise to spectral_l1.
+        return np.zeros_like(power)
     return power / total
 
 
@@ -94,6 +96,8 @@ def compute_slosh_spectrum_from_masks(
         ratio = float(f_w / f_u)
     else:
         ratio = float("nan")
+    # Signed delta: positive = WM peak is higher than Unity's; negative = lower.
+    delta_hz = float(f_w - f_u) if (np.isfinite(f_u) and np.isfinite(f_w)) else float("nan")
 
     if power_u.size > 0 and power_w.size > 0 and power_u.size == power_w.size:
         l1 = float(np.abs(_normalized(power_u) - _normalized(power_w)).sum())
@@ -101,7 +105,7 @@ def compute_slosh_spectrum_from_masks(
         l1 = float("nan")
 
     return {
-        "dominant_frequency_hz": {"unity": f_u, "wm": f_w, "ratio": ratio},
+        "dominant_frequency_hz": {"unity": f_u, "wm": f_w, "ratio": ratio, "delta_hz": delta_hz},
         "spectral_l1": l1,
     }
 

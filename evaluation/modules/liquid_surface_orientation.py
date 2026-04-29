@@ -61,8 +61,9 @@ def compute_surface_orientation_from_masks(
     wm_tilts = _per_frame_tilt_deg(wm_masks)
     rms_u = _rms_abs(unity_tilts)
     rms_w = _rms_abs(wm_tilts)
+    # Signed: delta = wm − unity, so positive = WM tilts more than Unity.
     if np.isfinite(rms_u) and np.isfinite(rms_w):
-        delta = float(abs(rms_u - rms_w))
+        delta = float(rms_w - rms_u)
     else:
         delta = float("nan")
     return {
