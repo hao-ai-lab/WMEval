@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from ..context import EvaluationContext
-from ._causal_step_delta import compute_delta
+from ._causal_step_delta import DELTA_CONVENTION_STRING, compute_delta
 from ._causal_step_io import ensure_causalstep_importable
 from ._causal_step_judge import Judge, JudgeRequest
 from ._causal_step_runner import run_causal_step_for_video
@@ -42,23 +42,81 @@ class _AlwaysAJudge:
         return "A"
 
 
-def _read_frames_uint8(path: str) -> "np.ndarray":
+def _read_window_uint8(
+    path: str,
+    *,
+    start_frame: int,
+    end_frame: int,
+    num_samples: int,
+) -> "np.ndarray":
+    """Decode and return ``num_samples`` evenly-spaced frames from
+    ``[start_frame, end_frame)`` without buffering the whole video.
+
+    Earlier this function loaded the entire clip into RAM as one ``uint8``
+    ndarray; for a 30s 1080p video that's ~5.6 GB and is called once per QA.
+    Here we seek to ``start_frame`` and read sequentially up to the last
+    sampled index, keeping only the picks. Out-of-range windows are clamped
+    so a slightly-too-long Unity reference still yields valid frames; a
+    window entirely past the last available frame raises (silently sampling
+    from the video tail would feed the judge frames from the wrong segment).
+    """
     import cv2
     import numpy as np
 
+    if end_frame <= start_frame:
+        raise ValueError(f"bad segment: {start_frame}..{end_frame}")
+
     cap = cv2.VideoCapture(path)
-    frames = []
     try:
-        while True:
+        if not cap.isOpened():
+            raise RuntimeError(f"cannot open video {path}")
+        total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        # Some codecs report unreliable frame counts; only enforce the
+        # entirely-past-end check when total looks trustworthy.
+        if total > 0 and start_frame >= total:
+            raise ValueError(
+                f"segment [{start_frame}, {end_frame}) is entirely outside video of length {total}"
+            )
+        s = max(start_frame, 0)
+        e = min(end_frame, total) if total > 0 else end_frame
+        idx = np.linspace(s, e - 1, num_samples).round().astype(int)
+        wanted = sorted(set(int(i) for i in idx))
+        picks: dict[int, np.ndarray] = {}
+
+        cap.set(cv2.CAP_PROP_POS_FRAMES, s)
+        cur = s
+        last_needed = wanted[-1]
+        while cur <= last_needed:
             ok, bgr = cap.read()
             if not ok:
                 break
-            frames.append(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+            if cur in picks or cur < wanted[0]:
+                cur += 1
+                continue
+            if cur in wanted:
+                picks[cur] = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+            cur += 1
+
+        if not picks:
+            raise RuntimeError(
+                f"no frames read from {path} in window [{start_frame}, {end_frame})"
+            )
+
+        # Map every requested index to the nearest decoded frame so a slightly
+        # short clip (last_needed past EOF) still returns `num_samples` frames.
+        nearest = sorted(picks.keys())
+        out_frames = []
+        for i in idx:
+            i = int(i)
+            if i in picks:
+                out_frames.append(picks[i])
+            else:
+                # find nearest decoded index
+                nearest_i = min(nearest, key=lambda k: abs(k - i))
+                out_frames.append(picks[nearest_i])
+        return np.stack(out_frames).astype("uint8")
     finally:
         cap.release()
-    if not frames:
-        raise RuntimeError(f"no frames read from {path}")
-    return np.stack(frames).astype("uint8")
 
 
 def _build_judge(context: EvaluationContext) -> Judge:
@@ -77,11 +135,13 @@ def _build_judge(context: EvaluationContext) -> Judge:
         cache_dir = Path(context.artifacts["causal_step_answers_cache_dir"]) / "vlm_cache"
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
         model = str(context.artifacts.get("causal_step_vlm_model", "gpt-4o"))
+        prompt_version = str(context.artifacts.get("causal_step_vlm_prompt_version", "v1"))
         return OpenAIJudge(
             client=client,
             model=model,
             cache_dir=cache_dir,
-            frames_provider=_read_frames_uint8,
+            frames_provider=_read_window_uint8,
+            prompt_version=prompt_version,
         )
     raise ValueError(f"unknown causal_step_judge kind: {judge_kind!r}")
 
@@ -122,7 +182,7 @@ def analyze_causal_step_from_context(
 
     judge = _build_judge(context)
 
-    unity_upper = run_causal_step_for_video(
+    unity = run_causal_step_for_video(
         qa_dataset_path=qa_path,
         video_id=video_id,
         video_path=context.reference_video,
@@ -131,7 +191,7 @@ def analyze_causal_step_from_context(
         causal_fail_advance=causal_fail_advance,
         fps=float(context.reference.metadata.fps),
     )
-    wm_upper = run_causal_step_for_video(
+    wm = run_causal_step_for_video(
         qa_dataset_path=qa_path,
         video_id=video_id,
         video_path=context.candidate_video,
@@ -141,19 +201,31 @@ def analyze_causal_step_from_context(
         fps=float(context.candidate.metadata.fps),
     )
 
-    unity_lower = {k.lower(): v for k, v in unity_upper.items()}
-    wm_lower = {k.lower(): v for k, v in wm_upper.items()}
-    delta = compute_delta(unity=unity_lower, wm=wm_lower)
+    delta = compute_delta(unity=unity, wm=wm)
 
-    return {
+    parse_failures = _aggregate_parse_failures(judge)
+    result = {
         "module": "causal_step",
         "video_id": video_id,
-        "unity": unity_upper,
-        "wm": wm_upper,
+        "unity": unity,
+        "wm": wm,
         "delta": delta,
-        "delta_convention": "positive = WM worse than Unity",
+        "delta_convention": DELTA_CONVENTION_STRING,
         "vlm_model": str(arts.get("causal_step_vlm_model", "gpt-4o")),
         "vlm_prompt_version": str(arts.get("causal_step_vlm_prompt_version", "v1")),
         "judge_kind": _judge_kind(context),
         "causal_fail_advance": causal_fail_advance,
     }
+    if parse_failures is not None:
+        result["judge_parse_failures"] = parse_failures
+    return result
+
+
+def _aggregate_parse_failures(judge: Judge) -> Optional[int]:
+    """Read a parse-failure counter off the judge if it exposes one.
+
+    `OpenAIJudge` exposes `parse_failures` (incremented when the model returns
+    text we can't map to a choice letter); the debug `_AlwaysAJudge` and
+    `FakeJudge` don't, so the field is omitted from the result for those.
+    """
+    return getattr(judge, "parse_failures", None)

@@ -124,6 +124,11 @@ python tools/generate_beamdomino_causal_step_qa.py \
 Open `qa_dataset.json` and edit:
 
 - Reword anything too generic to discriminate WM from GT.
+- **Shuffle choice positions per video.** The auto-generator emits all four
+  templates with `correct_answer="A"`. If you ship them as-is, a VLM that
+  always picks A scores 100% (this is exactly what the `fake_always_a` debug
+  judge demonstrates), and even a calibrated judge gets a free positional
+  prior. Permute the choices and update `correct_answer` to match.
 - Make sure the `correct_answer` letter still matches after any reorderings.
 - Verify segment time spans look sensible against the actual video.
 
