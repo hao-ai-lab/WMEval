@@ -423,8 +423,6 @@ def main() -> None:
     )
 
     g_liquid = ap.add_argument_group("liquid_* (LiquidContainer scene)")
-    g_liquid.add_argument("--liquid_unity_log", type=str, default=None,
-        help="Path to unity_gt_log.json written by LiquidGroundTruthRecorder.cs")
     g_liquid.add_argument("--liquid_cache_root", type=str, default="runs/liquid_cache",
         help="Directory for SAM2/PIV pickled caches (shared across trajectories)")
     g_liquid.add_argument("--liquid_sam2_model", type=str, default="facebook/sam2.1-hiera-small",
@@ -437,19 +435,11 @@ def main() -> None:
         help="OpenPIV interrogation window overlap (px)")
     g_liquid.add_argument("--liquid_max_pairs", type=int, default=0,
         help="Per-module pair cap for liquid modules (0 = inherit global --max_pairs)")
-    g_liquid.add_argument("--liquid_pour_threshold_deg", type=float, default=30.0,
-        help="Tilt threshold above which pour is considered active")
-    g_liquid.add_argument("--liquid_k_pour", type=float, default=0.05,
-        help="Volumetric pour-rate coefficient (matches Unity model)")
-    g_liquid.add_argument("--liquid_bottle_local_volume_ml", type=float, default=500.0,
-        help="Bottle internal volume (ml), used to scale pour rate")
     g_liquid.add_argument("--liquid_camera_compensation", action=argparse.BooleanOptionalAction,
         default=True,
         help="Subtract estimated camera motion from PIV velocities")
     g_liquid.add_argument("--liquid_camera_regime", type=str, default="c2_static_side",
         help="Camera regime label (e.g. c1_handheld, c2_static_side)")
-    g_liquid.add_argument("--liquid_coupling_max_lag_sec", type=float, default=1.0,
-        help="Maximum lag (sec) considered for tilt -> pour-rate correlation")
 
     args = ap.parse_args()
 
@@ -562,19 +552,14 @@ def main() -> None:
         causal_match_mode=causal_match_mode,
         lpips_vlm_pair_accept_cost=args.lpips_vlm_pair_accept_cost,
         lpips_vlm_skip_cost=args.lpips_vlm_skip_cost,
-        liquid_state_unity_log_path=args.liquid_unity_log,
         liquid_cache_root=args.liquid_cache_root,
         liquid_sam2_model=args.liquid_sam2_model,
         liquid_sam2_prompt=args.liquid_sam2_prompt,
         liquid_piv_window_size=args.liquid_piv_window_size,
         liquid_piv_overlap=args.liquid_piv_overlap,
         liquid_max_pairs=args.liquid_max_pairs,
-        liquid_pour_threshold_deg=args.liquid_pour_threshold_deg,
-        liquid_k_pour=args.liquid_k_pour,
-        liquid_bottle_local_volume_ml=args.liquid_bottle_local_volume_ml,
         liquid_camera_compensation=args.liquid_camera_compensation,
         liquid_camera_regime=args.liquid_camera_regime,
-        liquid_coupling_max_lag_sec=args.liquid_coupling_max_lag_sec,
     )
 
     out_path = Path(args.output_json)
