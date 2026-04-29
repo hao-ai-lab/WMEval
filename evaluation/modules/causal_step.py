@@ -134,7 +134,7 @@ def _build_judge(context: EvaluationContext) -> Judge:
 
         cache_dir = Path(context.artifacts["causal_step_answers_cache_dir"]) / "vlm_cache"
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        model = str(context.artifacts.get("causal_step_vlm_model", "gpt-4o"))
+        model = str(context.artifacts.get("causal_step_vlm_model", "gpt-5.4-mini"))
         prompt_version = str(context.artifacts.get("causal_step_vlm_prompt_version", "v1"))
         return OpenAIJudge(
             client=client,
@@ -211,7 +211,7 @@ def analyze_causal_step_from_context(
         "wm": wm,
         "delta": delta,
         "delta_convention": DELTA_CONVENTION_STRING,
-        "vlm_model": str(arts.get("causal_step_vlm_model", "gpt-4o")),
+        "vlm_model": str(arts.get("causal_step_vlm_model", "gpt-5.4-mini")),
         "vlm_prompt_version": str(arts.get("causal_step_vlm_prompt_version", "v1")),
         "judge_kind": _judge_kind(context),
         "causal_fail_advance": causal_fail_advance,
