@@ -21,6 +21,25 @@ from pathlib import Path
 import numpy as np
 
 
+def require_matched_fps(context, *, module_name: str, tol: float = 0.1) -> float:
+    """Return shared fps for a (reference, candidate) pair, or raise.
+
+    Every liquid module multiplies pixel/frame quantities by fps to convert
+    to physical units (pixels/sec, Hz). If the two videos disagree on fps
+    the metric silently scales by ref_fps/wm_fps. The shell pipeline runs
+    normalize_fps on both videos before invoking the eval; this guard fires
+    only when callers bypass that wrapper.
+    """
+    ref_fps = float(context.reference.metadata.fps)
+    wm_fps = float(context.candidate.metadata.fps)
+    if abs(ref_fps - wm_fps) > tol:
+        raise ValueError(
+            f"{module_name}: reference fps ({ref_fps}) != candidate fps ({wm_fps}); "
+            f"run WMEval/scripts/normalize_fps.sh on both videos before evaluation"
+        )
+    return ref_fps
+
+
 @dataclass
 class LiquidMaskResult:
     """Per-frame binary masks for the liquid region inside the bottle.

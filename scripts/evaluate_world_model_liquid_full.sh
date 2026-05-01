@@ -38,9 +38,24 @@ done
 
 mkdir -p "$(dirname "$OUT_JSON")"
 
+# Normalize both videos to the WMEval canonical 24 fps before the eval runs.
+# Different world models render at different native rates; without this the
+# pipeline would silently misreport velocities and slosh frequencies for any
+# WM whose fps disagrees with the reference. See WMEval/scripts/normalize_fps.sh.
+# shellcheck source=normalize_fps.sh
+source "$SCRIPT_DIR/normalize_fps.sh"
+
+WORK_DIR="$(mktemp -d -t wmeval_liquid.XXXXXX)"
+trap 'rm -rf "$WORK_DIR"' EXIT
+
+REF_VIDEO_24="$WORK_DIR/ref_24.mp4"
+WM_VIDEO_24="$WORK_DIR/wm_24.mp4"
+normalize_fps "$REF_VIDEO" "$REF_VIDEO_24"
+normalize_fps "$WM_VIDEO"  "$WM_VIDEO_24"
+
 python tools/evaluate_world_model_liquid.py \
-  --video "$WM_VIDEO" \
-  --ref_video "$REF_VIDEO" \
+  --video "$WM_VIDEO_24" \
+  --ref_video "$REF_VIDEO_24" \
   --modules liquid_velocity,liquid_volume_conservation,liquid_surface_orientation,slosh_spectrum,lpips,control_motion,clip4clip \
   --liquid_cache_root runs/liquid_cache \
   --liquid_sam2_model facebook/sam2.1-hiera-small \

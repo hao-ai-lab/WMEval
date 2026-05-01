@@ -110,7 +110,7 @@ def analyze_liquid_velocity_from_context(
     sam2_prompt = str(arts.get("liquid_sam2_prompt", "the liquid inside the bottle"))
     window_size = int(arts.get("liquid_piv_window_size", 32))
     overlap = int(arts.get("liquid_piv_overlap", 16))
-    fps = float(context.reference.metadata.fps)
+    fps = _lc.require_matched_fps(context, module_name="liquid_velocity")
     max_pairs = int(arts.get("liquid_max_pairs", 0)) or None
 
     unity_mask = _lc.get_liquid_mask_video(

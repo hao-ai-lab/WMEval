@@ -92,7 +92,7 @@ def analyze_liquid_surface_orientation_from_context(
     cache_root = Path(arts.get("liquid_cache_root", "runs/liquid_cache"))
     sam2_model = str(arts.get("liquid_sam2_model", "facebook/sam2.1-hiera-small"))
     sam2_prompt = str(arts.get("liquid_sam2_prompt", "the liquid inside the bottle"))
-    fps = float(context.reference.metadata.fps)
+    fps = _lc.require_matched_fps(context, module_name="liquid_surface_orientation")
     max_pairs = int(arts.get("liquid_max_pairs", 0)) or None
 
     unity_mask = _lc.get_liquid_mask_video(
