@@ -215,6 +215,128 @@ STAGE_TEMPLATES: dict[str, dict[str, Any]] = {
         ],
         "causal_correct": "A",
     },
+    # ── glancing-shape stages ────────────────────────────────────────────
+    # `glance`: ball touches a leg/roof of the platform but the platform
+    # remains standing — momentum transfer was insufficient to tip it. Used
+    # as segment 2 in the glancing chain.
+    "glance": {
+        "descriptive": (
+            "What happens between the rolling floor ball and the platform "
+            "during this segment?"
+        ),
+        "descriptive_choices": [
+            "A) the floor ball brushes against the platform but the platform "
+            "stays standing on its legs without tipping over",
+            "B) the floor ball cleanly knocks one of the legs out and the "
+            "platform begins to fall in this segment",
+            "C) the floor ball stops cleanly when it touches the platform "
+            "and never leaves the platform's footprint",
+            "D) the floor ball passes underneath the platform without "
+            "touching any leg or surface",
+        ],
+        "descriptive_correct": "A",
+        "causal_question": (
+            "Why does the platform remain standing during this segment, "
+            "even though the floor ball makes contact with it?"
+        ),
+        "causal_choices": [
+            "A) the contact is a glancing one — the ball brushes the platform "
+            "without delivering enough horizontal force to remove a leg's "
+            "support, so the platform stays balanced",
+            "B) one supporting leg has been removed but the ball on top "
+            "shifts to the opposite side and re-balances the platform",
+            "C) the platform is rigidly anchored to the floor and cannot tip "
+            "regardless of what hits it",
+            "D) the ball reverses direction on contact and pushes the "
+            "platform back into place before it can tilt",
+        ],
+        "causal_correct": "A",
+    },
+    # `cascade_from_strike`: same observable chain reaction as `cascade`,
+    # but the *cause* is the direct ball-on-domino hit, not a falling
+    # platform. The descriptive QA matches `cascade` (chain reaction is the
+    # same regardless of how it started), but the causal QA pins the cause
+    # to the ball's earlier direct strike.
+    "cascade_from_strike": {
+        "descriptive": (
+            "What are the dominoes near the platform doing during this "
+            "segment, and in what pattern?"
+        ),
+        "descriptive_choices": [
+            "A) the closest domino is knocked over and falls into its "
+            "neighbor, which then tips the next one, propagating a chain "
+            "reaction along the row",
+            "B) every domino in the line tips over at the same instant, in "
+            "perfect unison rather than one after another",
+            "C) the dominoes remain upright; only the balls and the platform "
+            "are still moving at this point",
+            "D) the dominoes lift off the floor and float upward instead of "
+            "tipping over sideways",
+        ],
+        "descriptive_correct": "A",
+        "causal_question": (
+            "Why are the dominoes falling in this chain reaction during "
+            "this segment?"
+        ),
+        "causal_choices": [
+            "A) the rolling floor ball had earlier struck the first domino "
+            "directly, and that fall is now tipping each successive piece "
+            "along the row",
+            "B) the platform tipped over earlier and its falling surface "
+            "knocked the first domino, propagating the impulse along the row",
+            "C) every domino was animated to fall on a fixed timer, "
+            "independent of any physical contact in the scene",
+            "D) the floor tilted and the dominoes simply slid sideways "
+            "together without ever tipping over",
+        ],
+        "causal_correct": "A",
+    },
+    # `strike`: ball hits a domino directly (no platform involvement in
+    # this segment). Used as segment 2 in direct_strike and segment 3 in
+    # glancing chains.
+    "strike": {
+        "descriptive": (
+            "What contact occurs during this segment, and which object does "
+            "the floor ball strike?"
+        ),
+        "descriptive_choices": [
+            "A) the floor ball collides directly with a domino in the row, "
+            "without first knocking the platform over into it",
+            "B) the falling platform — having been tipped earlier in the "
+            "trajectory — strikes the first domino in this segment",
+            "C) the floor ball stops short of the dominoes and never makes "
+            "contact with any of them in this segment",
+            "D) the ball that had been on top of the platform drops onto a "
+            "domino on its own, with no contact from the floor ball",
+        ],
+        "descriptive_correct": "A",
+        "causal_question": (
+            "Why does the first domino begin to fall during this segment?"
+        ),
+        "causal_choices": [
+            "A) the rolling floor ball reached the row and struck a domino "
+            "directly, transferring its momentum into that standing piece",
+            "B) the platform tipped over earlier and its falling surface "
+            "knocked into the first domino during this segment",
+            "C) the ball that had been resting on top of the platform "
+            "rolled off the platform and hit the dominoes itself",
+            "D) the dominoes are scripted to begin falling on a fixed timer "
+            "once the trajectory starts, without any direct contact",
+        ],
+        "causal_correct": "A",
+    },
+}
+
+
+# trajectory_shape -> ordered list of stage names per segment index. The
+# generator no longer trusts the per-segment `name` field on the segments
+# JSON (that came from the detector); it instead picks the stage from this
+# table based on `trajectory_shape`. That keeps the QA semantics tied to
+# the *shape*, not to whatever stage label the detector happened to emit.
+SHAPE_STAGE_CHAINS: dict[str, list[str]] = {
+    "canonical":     ["rolling", "impact", "topple",  "cascade"],
+    "glancing":      ["rolling", "glance", "strike",  "cascade_from_strike"],
+    "direct_strike": ["rolling", "strike", "cascade_from_strike"],
 }
 
 
@@ -300,6 +422,7 @@ def build_dataset(
     video_id: str,
     events: list[dict[str, Any]],
     decorator: Optional[QADecorator] = None,
+    trajectory_shape: Optional[str] = None,
 ) -> dict[str, Any]:
     """Build a CausalStep-schema dataset from a segments.json `events` list.
 
@@ -310,6 +433,13 @@ def build_dataset(
     is no longer always `A`; the shuffle is seeded by `(video_id,
     segment_index, qa_type)` and is therefore stable across reruns.
 
+    When `trajectory_shape` is provided, the per-segment stage is picked from
+    `SHAPE_STAGE_CHAINS[shape]` rather than from each event's `name` field.
+    This decouples the QA semantics from the detector's segment labels and
+    is the supported way to wire shape-specific question chains. When
+    `trajectory_shape` is None (legacy callers, including the existing test
+    fixture), each event's `name` field selects the template directly.
+
     When `decorator` is provided (VLM mode), each question, its correct
     answer, and its 3 distractors are written by the model based on the
     segment's frames. The model is given the template's correct answer as
@@ -318,16 +448,31 @@ def build_dataset(
     stderr so a human reviewer can spot-check the change.
     """
     sorted_events = sorted(events, key=lambda e: e["index"])
+    if trajectory_shape is not None:
+        if trajectory_shape not in SHAPE_STAGE_CHAINS:
+            raise ValueError(
+                f"unknown trajectory_shape {trajectory_shape!r}; "
+                f"expected one of {sorted(SHAPE_STAGE_CHAINS)}"
+            )
+        chain = SHAPE_STAGE_CHAINS[trajectory_shape]
+        if len(chain) != len(sorted_events):
+            raise ValueError(
+                f"trajectory_shape {trajectory_shape!r} expects {len(chain)} "
+                f"segments but got {len(sorted_events)}"
+            )
+    else:
+        chain = None
+
     out_segments: list[dict[str, Any]] = []
     desc_qas: list[dict[str, Any]] = []
     causal_qas: list[dict[str, Any]] = []
 
     for seg in sorted_events:
-        stage = seg["name"]
+        idx = int(seg["index"])
+        stage = chain[idx - 1] if chain is not None else seg["name"]
         if stage not in STAGE_TEMPLATES:
             raise ValueError(f"unknown stage {stage!r} in segment {seg}")
         tmpl = STAGE_TEMPLATES[stage]
-        idx = int(seg["index"])
 
         out_segments.append(
             {
@@ -497,6 +642,11 @@ def main() -> None:
         raise ValueError(
             f"expected segments.json to have top-level 'events' list, got {type(events).__name__}"
         )
+    trajectory_shape = (
+        segments_payload.get("trajectory_shape")
+        if isinstance(segments_payload, dict)
+        else None
+    )
 
     decorator: Optional[QADecorator] = None
     if args.mode == "vlm":
@@ -514,7 +664,10 @@ def main() -> None:
         )
 
     dataset = build_dataset(
-        video_id=args.video_id, events=events, decorator=decorator
+        video_id=args.video_id,
+        events=events,
+        decorator=decorator,
+        trajectory_shape=trajectory_shape,
     )
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(dataset, indent=2))

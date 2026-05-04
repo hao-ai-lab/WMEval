@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
 
 from tools._causal_qa_vlm import QADecoratorResult, decorate_qa
 from tools.generate_beamdomino_causal_step_qa import (
+    SHAPE_STAGE_CHAINS,
     STAGE_TEMPLATES,
     _shuffled_choices,
     build_dataset,
@@ -120,6 +121,73 @@ def test_build_dataset_different_video_ids_get_different_shuffles():
     b_letters = [qa["correct_answer"] for qa in ds_b["videos"][0]["causal_qas"]]
     # Vanishingly unlikely they coincidentally match across all causal QAs.
     assert a_letters != b_letters
+
+
+# --- shape-aware chain dispatch ----------------------------------------------
+
+
+_THREE_EVENTS_DIRECT_STRIKE = [
+    {"index": 1, "name": "rolling", "start_sec": 0.0, "end_sec": 0.6},
+    {"index": 2, "name": "strike",  "start_sec": 0.6, "end_sec": 0.9},
+    {"index": 3, "name": "cascade", "start_sec": 0.9, "end_sec": 1.5},
+]
+
+_FOUR_EVENTS_GLANCING = [
+    {"index": 1, "name": "rolling", "start_sec": 0.0, "end_sec": 0.6},
+    {"index": 2, "name": "glance",  "start_sec": 0.6, "end_sec": 1.2},
+    {"index": 3, "name": "strike",  "start_sec": 1.2, "end_sec": 1.4},
+    {"index": 4, "name": "cascade", "start_sec": 1.4, "end_sec": 2.0},
+]
+
+
+def test_build_dataset_direct_strike_shape_emits_three_segments():
+    """direct_strike trajectories are 3 segments, not 4. The dataset must
+    contain descriptive QAs for segs 1/2/3 and causal QAs for 2/3 only."""
+    ds = build_dataset(
+        video_id="far_001",
+        events=_THREE_EVENTS_DIRECT_STRIKE,
+        trajectory_shape="direct_strike",
+    )
+    v = ds["videos"][0]
+    assert [s["index"] for s in v["segments"]] == [1, 2, 3]
+    assert [q["segment_index"] for q in v["descriptive_qas"]] == [1, 2, 3]
+    assert [q["segment_index"] for q in v["causal_qas"]] == [2, 3]
+
+
+def test_build_dataset_glancing_shape_uses_glance_template_for_seg2():
+    """Glancing trajectories use the `glance` template at seg 2, whose
+    correct descriptive answer is "platform stays standing" — distinct from
+    canonical's "ball strikes a leg" or direct_strike's "ball hits domino"."""
+    ds = build_dataset(
+        video_id="glance_001",
+        events=_FOUR_EVENTS_GLANCING,
+        trajectory_shape="glancing",
+    )
+    seg2_desc = next(
+        q for q in ds["videos"][0]["descriptive_qas"] if q["segment_index"] == 2
+    )
+    correct_idx = ord(seg2_desc["correct_answer"]) - ord("A")
+    assert "stays standing" in seg2_desc["choices"][correct_idx]
+
+
+def test_build_dataset_shape_chain_length_mismatch_raises():
+    """If the events list has the wrong number of segments for the declared
+    shape, the generator must refuse rather than silently dropping or
+    duplicating QAs."""
+    with pytest.raises(ValueError, match="expects 4 segments"):
+        build_dataset(
+            video_id="x",
+            events=_THREE_EVENTS_DIRECT_STRIKE,  # 3 events
+            trajectory_shape="canonical",          # but canonical wants 4
+        )
+
+
+def test_shape_stage_chains_only_reference_known_stages():
+    """Every stage name listed in SHAPE_STAGE_CHAINS must have a template,
+    otherwise a build with that shape would crash on KeyError."""
+    for shape, stages in SHAPE_STAGE_CHAINS.items():
+        for s in stages:
+            assert s in STAGE_TEMPLATES, f"shape {shape!r} references unknown stage {s!r}"
 
 
 # --- VLM-mode (decorator) tests ----------------------------------------------

@@ -31,11 +31,39 @@ from evaluation.context import EvaluationContext, SampledVideoFrames, VideoMetad
 from evaluation.registry import run_modules
 
 
+def _probe_video(path: str) -> tuple[float, int]:
+    """Read fps + total frame count off the file via cv2.
+
+    Both Unity (60 fps) and Genie (20 fps) clips coexist in the same manifest,
+    so the runner cannot assume a global fps when converting segment seconds
+    to frame indices. Returns ``(fps, frame_count)``; falls back to ``(30.0, 1)``
+    if cv2 reports nonsense (some codecs do).
+    """
+    import cv2
+
+    cap = cv2.VideoCapture(path)
+    try:
+        if not cap.isOpened():
+            return 30.0, 1
+        fps = float(cap.get(cv2.CAP_PROP_FPS))
+        n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if not fps or fps <= 0:
+            fps = 30.0
+        if n <= 0:
+            n = 1
+        return fps, n
+    finally:
+        cap.release()
+
+
 def _stub_frames(path: str) -> SampledVideoFrames:
-    """Minimal SampledVideoFrames stub — causal_step does not consume these
-    fields; it reads frames lazily from disk inside the judge when needed."""
+    """Minimal SampledVideoFrames stub — causal_step does not consume the
+    pixel data, but the runner *does* read ``metadata.fps`` to convert segment
+    seconds to frame indices, so the fps must be the file's real rate."""
+    fps, n = _probe_video(path)
+    duration = n / fps if fps else 1.0
     meta = VideoMetadata(
-        path=path, fps=30.0, frame_count=1, width=64, height=64, duration_sec=1.0
+        path=path, fps=fps, frame_count=n, width=64, height=64, duration_sec=duration
     )
     arr = np.zeros((64, 64, 3), dtype="uint8")
     return SampledVideoFrames(
@@ -48,6 +76,9 @@ def _run_one(
     cache_root: Path,
     judge: str,
     causalstep_root: Path | None,
+    wm_full_video: bool = False,
+    vlm_model: str | None = None,
+    vlm_num_frames: int | None = None,
 ) -> dict[str, Any]:
     ctx = EvaluationContext(
         reference_video=entry["unity_video"],
@@ -62,7 +93,18 @@ def _run_one(
             "causal_step_video_id": entry["video_id"],
             "causal_step_answers_cache_dir": str(cache_root / entry["video_id"]),
             "causal_step_causal_fail_advance": True,
+            "causal_step_wm_full_video": wm_full_video,
             "causal_step_judge": judge,
+            **(
+                {"causal_step_vlm_model": vlm_model}
+                if vlm_model is not None
+                else {}
+            ),
+            **(
+                {"causal_step_vlm_num_frames": vlm_num_frames}
+                if vlm_num_frames is not None
+                else {}
+            ),
             **(
                 {"causalstep_root": str(causalstep_root)}
                 if causalstep_root is not None
@@ -79,6 +121,9 @@ def _run_manifest(
     cache_root: Path,
     judge: str,
     causalstep_root: Path | None,
+    wm_full_video: bool = False,
+    vlm_model: str | None = None,
+    vlm_num_frames: int | None = None,
 ) -> list[dict[str, Any]]:
     """Evaluate every entry in the manifest, catching per-entry failures.
 
@@ -97,7 +142,9 @@ def _run_manifest(
             per_video.append({"error": f"bad manifest line: {exc}", "line": line})
             continue
         try:
-            result = _run_one(entry, cache_root, judge, causalstep_root)
+            result = _run_one(entry, cache_root, judge, causalstep_root, wm_full_video, vlm_model, vlm_num_frames)
+            if "trajectory" in entry and isinstance(result, dict):
+                result["trajectory"] = entry["trajectory"]
         except Exception as exc:  # noqa: BLE001 — one bad video must not kill the batch
             result = {"video_id": entry.get("video_id"), "error": f"{type(exc).__name__}: {exc}"}
         per_video.append(result)
@@ -118,6 +165,36 @@ def main() -> None:
         default=None,
         help="Override CausalStep package location (defaults to WMEval/imports/CausalStep).",
     )
+    parser.add_argument(
+        "--wm-full-video",
+        action="store_true",
+        help=(
+            "Skip segment-windowing on the world-model side; the judge sees the whole "
+            "WM clip for every QA. Used when WM frames aren't time-aligned to the "
+            "Unity reference (e.g. manually-driven Project Genie rollouts)."
+        ),
+    )
+    parser.add_argument(
+        "--vlm-model",
+        default=None,
+        help=(
+            "Override the OpenAI model id used by the judge. If omitted, the module "
+            "default (gpt-5.4-mini) is used. Cache keys include the model id so "
+            "switching here does not collide with prior cached answers."
+        ),
+    )
+    parser.add_argument(
+        "--vlm-num-frames",
+        type=int,
+        default=None,
+        help=(
+            "Number of evenly-spaced frames the judge sees per QA. The module "
+            "default is 4. Bumping this helps on tight segments (e.g. 0.12s "
+            "cascades on the direct_strike shape) where 4 frames undersample "
+            "the chain reaction. Cache keys include this number, so changing it "
+            "invalidates prior answers."
+        ),
+    )
     args = parser.parse_args()
 
     per_video = _run_manifest(
@@ -125,6 +202,9 @@ def main() -> None:
         cache_root=args.cache_root,
         judge=args.judge,
         causalstep_root=args.causalstep_root,
+        wm_full_video=args.wm_full_video,
+        vlm_model=args.vlm_model,
+        vlm_num_frames=args.vlm_num_frames,
     )
 
     ok = [r for r in per_video if "error" not in r]
@@ -134,22 +214,42 @@ def main() -> None:
         raise SystemExit("all trajectories errored; see per-video results in --out")
 
     metric_keys = list(ok[0]["delta"].keys())
-    agg = {
-        "unity_mean": {
-            k: statistics.fmean(r["unity"][k] for r in ok) for k in metric_keys
-        },
-        "wm_mean": {
-            k: statistics.fmean(r["wm"][k] for r in ok) for k in metric_keys
-        },
-        "delta_mean": {
-            k: statistics.fmean(r["delta"][k] for r in ok) for k in metric_keys
-        },
+
+    def _stat(values: list[float], op: str) -> float:
+        if op == "mean":
+            return statistics.fmean(values)
+        if op == "std":
+            return statistics.pstdev(values) if len(values) > 1 else 0.0
+        raise ValueError(op)
+
+    agg: dict[str, Any] = {
+        "unity_mean": {k: _stat([r["unity"][k] for r in ok], "mean") for k in metric_keys},
+        "wm_mean": {k: _stat([r["wm"][k] for r in ok], "mean") for k in metric_keys},
+        "delta_mean": {k: _stat([r["delta"][k] for r in ok], "mean") for k in metric_keys},
         "n_trajectories": len(ok),
         "n_errors": len(per_video) - len(ok),
         "delta_convention": ok[0].get(
             "delta_convention", "positive = WM worse than Unity"
         ),
     }
+
+    by_traj: dict[str, list[dict[str, Any]]] = {}
+    for r in ok:
+        t = r.get("trajectory")
+        if t is not None:
+            by_traj.setdefault(str(t), []).append(r)
+    if by_traj:
+        agg["by_trajectory"] = {
+            t: {
+                "n_runs": len(rs),
+                "delta_mean": {k: _stat([r["delta"][k] for r in rs], "mean") for k in metric_keys},
+                "delta_std":  {k: _stat([r["delta"][k] for r in rs], "std")  for k in metric_keys},
+                "wm_mean":    {k: _stat([r["wm"][k]    for r in rs], "mean") for k in metric_keys},
+                "wm_std":     {k: _stat([r["wm"][k]    for r in rs], "std")  for k in metric_keys},
+                "unity_mean": {k: _stat([r["unity"][k] for r in rs], "mean") for k in metric_keys},
+            }
+            for t, rs in by_traj.items()
+        }
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
