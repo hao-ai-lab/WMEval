@@ -32,12 +32,19 @@ def run_causal_step_for_video(
     causal_fail_advance: bool,
     fps: float,
     causalstep_root: Path | None = None,
+    force_full_video: bool = False,
 ) -> Dict[str, Any]:
     """Judge every QA for `video_id`, run CausalStep, return per-video metrics dict.
 
     `fps` is required so segment time windows can be converted to the half-open frame
     index range `[segment_frames_start, segment_frames_end)` that frame-consuming
     judges (e.g. `OpenAIJudge`) need to slice the correct window out of the video.
+
+    When ``force_full_video`` is True, every JudgeRequest's frame window is replaced
+    with the whole video span. The QA still references segment_index, but the judge
+    sees the full clip for every question — used for world-model videos that are not
+    temporally aligned with the Unity reference (e.g. Project Genie's manually-driven
+    rollouts), where Unity-derived segment windows would slice the wrong frames.
 
     Returns keys: csr, amcl, mcl, rf, ws, dua, icra (lowercase, matching
     causalstep.metrics.compute_all_metrics output and `compute_delta` input).
@@ -59,12 +66,30 @@ def run_causal_step_for_video(
     except StopIteration as exc:
         raise ValueError(f"video_id {video_id!r} not in {qa_dataset_path}") from exc
 
+    full_start_frame = 0
+    full_end_frame = 0
+    full_start_sec = 0.0
+    full_end_sec = 0.0
+    if force_full_video:
+        import cv2  # local import: only paid when the flag is on
+
+        cap = cv2.VideoCapture(video_path)
+        try:
+            full_end_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 1
+        finally:
+            cap.release()
+        full_end_sec = full_end_frame / fps if fps else float(full_end_frame)
+
     # Build answers map by invoking the judge for every QA.
     answers_map: dict[tuple[str, int, str], str] = {}
     for seg in video.segments:
-        start_sec = float(seg.start_time) if seg.start_time is not None else 0.0
-        end_sec = float(seg.end_time) if seg.end_time is not None else 0.0
-        start_frame, end_frame = _frame_window(start_sec, end_sec, fps)
+        if force_full_video:
+            start_sec, end_sec = full_start_sec, full_end_sec
+            start_frame, end_frame = full_start_frame, full_end_frame
+        else:
+            start_sec = float(seg.start_time) if seg.start_time is not None else 0.0
+            end_sec = float(seg.end_time) if seg.end_time is not None else 0.0
+            start_frame, end_frame = _frame_window(start_sec, end_sec, fps)
 
         desc_qa = video.descriptive_qas.get(seg.index)
         if desc_qa is not None:
