@@ -76,6 +76,18 @@ def test_build_prompt_contains_question_and_choices():
     assert "Answer with exactly one letter" in prompt
 
 
+def _windowed_frames_provider(num_video_frames: int = 60):
+    """A test frames_provider matching the windowed signature used in production."""
+    pool = _fake_frames(num_video_frames)
+
+    def provider(path, *, start_frame, end_frame, num_samples):
+        return sample_segment_frames(
+            pool, start_frame=start_frame, end_frame=end_frame, num_samples=num_samples
+        )
+
+    return provider
+
+
 def test_openai_judge_caches_and_parses(tmp_path: Path):
     fake_client = MagicMock()
     fake_client.chat.completions.create.return_value = MagicMock(
@@ -86,7 +98,7 @@ def test_openai_judge_caches_and_parses(tmp_path: Path):
         client=fake_client,
         model="gpt-4o",
         cache_dir=tmp_path / "cache",
-        frames_provider=lambda path: _fake_frames(60),
+        frames_provider=_windowed_frames_provider(60),
     )
 
     req = JudgeRequest(
@@ -103,8 +115,155 @@ def test_openai_judge_caches_and_parses(tmp_path: Path):
     out = judge.answer(req)
     assert out == "B"
     assert fake_client.chat.completions.create.call_count == 1
+    assert judge.parse_failures == 0
 
     # Second call should hit cache, not the API
     out2 = judge.answer(req)
     assert out2 == "B"
     assert fake_client.chat.completions.create.call_count == 1
+
+
+def test_openai_judge_invalidates_cache_on_num_samples_change(tmp_path: Path):
+    """Bumping num_frame_samples must change the cache key. Otherwise reruns
+    silently keep the old answer that was based on fewer/different frames."""
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))]
+    )
+    req = JudgeRequest(
+        video_path="x.mp4",
+        segment_index=1,
+        qa_type="causal",
+        question="q",
+        choices=["A) yes", "B) no"],
+        start_sec=0.0,
+        end_sec=1.0,
+        segment_frames_start=0,
+        segment_frames_end=30,
+    )
+    cache_dir = tmp_path / "cache"
+
+    j4 = OpenAIJudge(
+        client=fake_client,
+        model="gpt-4o",
+        cache_dir=cache_dir,
+        frames_provider=_windowed_frames_provider(60),
+        num_frame_samples=4,
+    )
+    j4.answer(req)
+    assert fake_client.chat.completions.create.call_count == 1
+
+    j8 = OpenAIJudge(
+        client=fake_client,
+        model="gpt-4o",
+        cache_dir=cache_dir,
+        frames_provider=_windowed_frames_provider(60),
+        num_frame_samples=8,
+    )
+    j8.answer(req)
+    # Different num_frame_samples must miss the cache and call the API again.
+    assert fake_client.chat.completions.create.call_count == 2
+
+
+def test_openai_judge_uses_max_completion_tokens_for_gpt5(tmp_path: Path):
+    """gpt-5 family rejects `max_tokens`/`temperature` in chat.completions.
+    The judge must send `max_completion_tokens` and omit temperature, or the
+    real API returns 400 BadRequest before we even get to parse the answer."""
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))]
+    )
+
+    judge = OpenAIJudge(
+        client=fake_client,
+        model="gpt-5.4-mini",
+        cache_dir=tmp_path / "cache",
+        frames_provider=_windowed_frames_provider(60),
+    )
+    req = JudgeRequest(
+        video_path="x.mp4",
+        segment_index=1,
+        qa_type="causal",
+        question="q",
+        choices=["A) yes", "B) no"],
+        start_sec=0.0,
+        end_sec=1.0,
+        segment_frames_start=0,
+        segment_frames_end=30,
+    )
+    judge.answer(req)
+
+    kwargs = fake_client.chat.completions.create.call_args.kwargs
+    assert "max_completion_tokens" in kwargs
+    assert "max_tokens" not in kwargs
+    assert "temperature" not in kwargs
+
+
+def test_openai_judge_uses_legacy_params_for_gpt4(tmp_path: Path):
+    """gpt-4* still accepts `max_tokens`/`temperature` and is cheaper for
+    short answers — don't change its request shape."""
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))]
+    )
+
+    judge = OpenAIJudge(
+        client=fake_client,
+        model="gpt-4o",
+        cache_dir=tmp_path / "cache",
+        frames_provider=_windowed_frames_provider(60),
+    )
+    req = JudgeRequest(
+        video_path="x.mp4",
+        segment_index=1,
+        qa_type="causal",
+        question="q",
+        choices=["A) yes", "B) no"],
+        start_sec=0.0,
+        end_sec=1.0,
+        segment_frames_start=0,
+        segment_frames_end=30,
+    )
+    judge.answer(req)
+
+    kwargs = fake_client.chat.completions.create.call_args.kwargs
+    assert "max_tokens" in kwargs
+    assert "temperature" in kwargs
+    assert "max_completion_tokens" not in kwargs
+
+
+def test_openai_judge_does_not_cache_unparseable_response(tmp_path: Path):
+    """An unparseable response must not poison the cache: a transient model
+    glitch shouldn't lock the dataset to a permanently empty answer."""
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="I cannot tell."))]
+    )
+    judge = OpenAIJudge(
+        client=fake_client,
+        model="gpt-4o",
+        cache_dir=tmp_path / "cache",
+        frames_provider=_windowed_frames_provider(60),
+    )
+    req = JudgeRequest(
+        video_path="x.mp4",
+        segment_index=1,
+        qa_type="causal",
+        question="q",
+        choices=["A) yes", "B) no"],
+        start_sec=0.0,
+        end_sec=1.0,
+        segment_frames_start=0,
+        segment_frames_end=30,
+    )
+    out = judge.answer(req)
+    assert out == ""
+    assert judge.parse_failures == 1
+
+    # Second call should re-hit the API (no cache entry written).
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))]
+    )
+    out2 = judge.answer(req)
+    assert out2 == "A"
+    assert fake_client.chat.completions.create.call_count == 2

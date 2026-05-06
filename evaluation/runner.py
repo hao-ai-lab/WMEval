@@ -271,7 +271,7 @@ def run_world_model_evaluation(
     causal_step_qa_dataset: Optional[str] = None,
     causal_step_video_id: Optional[str] = None,
     causal_step_answers_cache_dir: Optional[str] = None,
-    causal_step_vlm_model: str = "gpt-4o",
+    causal_step_vlm_model: str = "gpt-5.4-mini",
     causal_step_vlm_prompt_version: str = "v1",
     causal_step_causal_fail_advance: bool = True,
     causal_step_judge: str = "openai",

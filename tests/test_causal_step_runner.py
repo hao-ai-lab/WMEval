@@ -58,10 +58,10 @@ def test_run_causal_step_for_video_returns_metrics(tmp_path: Path):
         causal_fail_advance=True,
         fps=30.0,
     )
-    assert "CSR" in metrics
-    assert set(metrics.keys()) >= {"CSR", "AMCL", "MCL", "RF", "WS", "DUA", "ICRA"}
+    assert "csr" in metrics
+    assert set(metrics.keys()) >= {"csr", "amcl", "mcl", "rf", "ws", "dua", "icra"}
     # _AlwaysA always returns "A"; since every correct_answer is "A", chain should succeed.
-    assert metrics["CSR"] == 100.0
+    assert metrics["csr"] == 100.0
 
 
 def _two_segment_dataset() -> dict:
