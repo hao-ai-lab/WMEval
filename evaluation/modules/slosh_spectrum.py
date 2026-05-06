@@ -42,6 +42,28 @@ def _centroid_y_trace(masks: np.ndarray) -> np.ndarray:
     return out
 
 
+def _meniscus_y_trace(masks: np.ndarray) -> np.ndarray:
+    """Mean topmost-True-row across columns per frame (the air/liquid interface).
+
+    For sealed-bottle slosh modes the meniscus oscillates with much larger
+    amplitude than the centroid (which is averaged over the full liquid mass),
+    so this trace is a more sensitive slosh signal than _centroid_y_trace.
+    NaN where the mask is empty or has no liquid columns.
+    """
+    if masks.ndim != 3:
+        raise ValueError(f"_meniscus_y_trace: expected (T,H,W) got {masks.shape}")
+    T = masks.shape[0]
+    out = np.full(T, np.nan, dtype=np.float64)
+    for t in range(T):
+        m = masks[t]
+        col_has_liquid = m.any(axis=0)
+        if not col_has_liquid.any():
+            continue
+        top_rows = np.argmax(m, axis=0)[col_has_liquid].astype(np.float64)
+        out[t] = float(top_rows.mean())
+    return out
+
+
 def _power_spectrum(trace: np.ndarray, fps: float) -> tuple[np.ndarray, np.ndarray]:
     """Return (freqs_hz, power) excluding the DC bin.
 
@@ -75,20 +97,30 @@ def _normalized(power: np.ndarray) -> np.ndarray:
     return power / total
 
 
-def compute_slosh_spectrum_from_masks(
+def _spectrum_block(
     *,
-    unity_masks: np.ndarray,
-    wm_masks: np.ndarray,
+    unity_trace: np.ndarray,
+    wm_trace: np.ndarray,
     fps: float,
+    unity_bottle_y: Optional[np.ndarray],
+    wm_bottle_y: Optional[np.ndarray],
 ) -> Dict[str, Any]:
-    if fps <= 0:
-        raise ValueError("compute_slosh_spectrum_from_masks: fps must be positive")
+    """Bottle-compensate two traces, FFT them, and emit dominant-freq / L1 stats.
 
-    unity_trace = _centroid_y_trace(unity_masks)
-    wm_trace = _centroid_y_trace(wm_masks)
+    Shared between the centroid and meniscus variants of the slosh metric so
+    each new slosh signal only has to provide its own (T,) trace function.
+    """
+    u_t = unity_trace.copy()
+    w_t = wm_trace.copy()
+    if unity_bottle_y is not None:
+        n = min(u_t.size, unity_bottle_y.size)
+        u_t = u_t[:n] - unity_bottle_y[:n]
+    if wm_bottle_y is not None:
+        n = min(w_t.size, wm_bottle_y.size)
+        w_t = w_t[:n] - wm_bottle_y[:n]
 
-    freqs_u, power_u = _power_spectrum(unity_trace, fps)
-    freqs_w, power_w = _power_spectrum(wm_trace, fps)
+    freqs_u, power_u = _power_spectrum(u_t, fps)
+    freqs_w, power_w = _power_spectrum(w_t, fps)
 
     f_u = _dominant_frequency(freqs_u, power_u)
     f_w = _dominant_frequency(freqs_w, power_w)
@@ -96,7 +128,6 @@ def compute_slosh_spectrum_from_masks(
         ratio = float(f_w / f_u)
     else:
         ratio = float("nan")
-    # Signed delta: positive = WM peak is higher than Unity's; negative = lower.
     delta_hz = float(f_w - f_u) if (np.isfinite(f_u) and np.isfinite(f_w)) else float("nan")
 
     if power_u.size > 0 and power_w.size > 0 and power_u.size == power_w.size:
@@ -107,6 +138,43 @@ def compute_slosh_spectrum_from_masks(
     return {
         "dominant_frequency_hz": {"unity": f_u, "wm": f_w, "ratio": ratio, "delta_hz": delta_hz},
         "spectral_l1": l1,
+    }
+
+
+def compute_slosh_spectrum_from_masks(
+    *,
+    unity_masks: np.ndarray,
+    wm_masks: np.ndarray,
+    fps: float,
+    unity_bottle_y: Optional[np.ndarray] = None,
+    wm_bottle_y: Optional[np.ndarray] = None,
+) -> Dict[str, Any]:
+    if fps <= 0:
+        raise ValueError("compute_slosh_spectrum_from_masks: fps must be positive")
+
+    centroid = _spectrum_block(
+        unity_trace=_centroid_y_trace(unity_masks),
+        wm_trace=_centroid_y_trace(wm_masks),
+        fps=fps,
+        unity_bottle_y=unity_bottle_y,
+        wm_bottle_y=wm_bottle_y,
+    )
+    meniscus = _spectrum_block(
+        unity_trace=_meniscus_y_trace(unity_masks),
+        wm_trace=_meniscus_y_trace(wm_masks),
+        fps=fps,
+        unity_bottle_y=unity_bottle_y,
+        wm_bottle_y=wm_bottle_y,
+    )
+
+    # Top-level keys (dominant_frequency_hz / spectral_l1) point at the
+    # CENTROID variant for backwards compatibility with the existing
+    # leaderboard CSV columns; meniscus is reported under its own block.
+    return {
+        **centroid,
+        "trace_source": "centroid",
+        "centroid": centroid,
+        "meniscus": meniscus,
     }
 
 
@@ -127,6 +195,8 @@ def analyze_slosh_spectrum_from_context(
     cache_root = Path(arts.get("liquid_cache_root", "runs/liquid_cache"))
     sam2_model = str(arts.get("liquid_sam2_model", "facebook/sam2.1-hiera-small"))
     sam2_prompt = str(arts.get("liquid_sam2_prompt", "the liquid inside the bottle"))
+    bottle_prompt = str(arts.get("liquid_bottle_prompt", "the glass bottle"))
+    compensate = bool(arts.get("liquid_camera_compensation", True))
     fps = _lc.require_matched_fps(context, module_name="slosh_spectrum")
     max_pairs = int(arts.get("liquid_max_pairs", 0)) or None
 
@@ -146,14 +216,40 @@ def analyze_slosh_spectrum_from_context(
         max_pairs=max_pairs,
         cache_dir=cache_root,
     )
+
+    unity_bottle_y = wm_bottle_y = None
+    bottle_validity_unity = bottle_validity_wm = None
+    if compensate:
+        unity_trace = _lc.get_bottle_centroid_trace(
+            video_path=context.reference_video, sam2_model=sam2_model,
+            bottle_prompt=bottle_prompt, fps=fps, max_pairs=max_pairs,
+            cache_dir=cache_root,
+        )
+        wm_trace = _lc.get_bottle_centroid_trace(
+            video_path=context.candidate_video, sam2_model=sam2_model,
+            bottle_prompt=bottle_prompt, fps=fps, max_pairs=max_pairs,
+            cache_dir=cache_root,
+        )
+        unity_bottle_y = unity_trace.centroid_xy[:, 1]
+        wm_bottle_y = wm_trace.centroid_xy[:, 1]
+        bottle_validity_unity = float(np.mean(unity_trace.valid))
+        bottle_validity_wm = float(np.mean(wm_trace.valid))
+
     n = min(unity_mask.masks.shape[0], wm_mask.masks.shape[0])
     metrics = compute_slosh_spectrum_from_masks(
         unity_masks=unity_mask.masks[:n],
         wm_masks=wm_mask.masks[:n],
         fps=fps,
+        unity_bottle_y=unity_bottle_y[:n] if unity_bottle_y is not None else None,
+        wm_bottle_y=wm_bottle_y[:n] if wm_bottle_y is not None else None,
     )
     return {
         "module": "slosh_spectrum",
         **metrics,
-        "diagnostics": {"frames_evaluated": int(n)},
+        "diagnostics": {
+            "frames_evaluated": int(n),
+            "camera_compensation": compensate,
+            "bottle_trace_validity_unity": bottle_validity_unity,
+            "bottle_trace_validity_wm": bottle_validity_wm,
+        },
     }

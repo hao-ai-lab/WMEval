@@ -150,21 +150,28 @@ def _merge_liquid_artifacts(
     liquid_cache_root: str,
     liquid_sam2_model: str,
     liquid_sam2_prompt: Optional[str],
+    liquid_bottle_prompt: Optional[str],
     liquid_piv_window_size: int,
     liquid_piv_overlap: int,
     liquid_max_pairs: int,
     liquid_camera_compensation: bool,
     liquid_camera_regime: str,
+    liquid_flow_estimator: str,
+    liquid_flow_min_mask_frac: float,
 ) -> None:
     context.artifacts["liquid_cache_root"] = str(liquid_cache_root)
     context.artifacts["liquid_sam2_model"] = str(liquid_sam2_model)
     if liquid_sam2_prompt is not None and str(liquid_sam2_prompt).strip():
         context.artifacts["liquid_sam2_prompt"] = str(liquid_sam2_prompt).strip()
+    if liquid_bottle_prompt is not None and str(liquid_bottle_prompt).strip():
+        context.artifacts["liquid_bottle_prompt"] = str(liquid_bottle_prompt).strip()
     context.artifacts["liquid_piv_window_size"] = int(liquid_piv_window_size)
     context.artifacts["liquid_piv_overlap"] = int(liquid_piv_overlap)
     context.artifacts["liquid_max_pairs"] = int(liquid_max_pairs)
     context.artifacts["liquid_camera_compensation"] = bool(liquid_camera_compensation)
     context.artifacts["liquid_camera_regime"] = str(liquid_camera_regime).strip().lower()
+    context.artifacts["liquid_flow_estimator"] = str(liquid_flow_estimator).strip().lower()
+    context.artifacts["liquid_flow_min_mask_frac"] = float(liquid_flow_min_mask_frac)
 
 
 def ensure_device(device: Optional[str] = None) -> str:
@@ -272,11 +279,14 @@ def run_world_model_evaluation(
     liquid_cache_root: str = "runs/liquid_cache",
     liquid_sam2_model: str = "facebook/sam2.1-hiera-small",
     liquid_sam2_prompt: Optional[str] = None,
+    liquid_bottle_prompt: Optional[str] = None,
     liquid_piv_window_size: int = 32,
     liquid_piv_overlap: int = 16,
     liquid_max_pairs: int = 0,
     liquid_camera_compensation: bool = True,
     liquid_camera_regime: str = "c2_static_side",
+    liquid_flow_estimator: str = "raft",
+    liquid_flow_min_mask_frac: float = 0.5,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -444,11 +454,14 @@ def run_world_model_evaluation(
         liquid_cache_root=liquid_cache_root,
         liquid_sam2_model=liquid_sam2_model,
         liquid_sam2_prompt=liquid_sam2_prompt,
+        liquid_bottle_prompt=liquid_bottle_prompt,
         liquid_piv_window_size=liquid_piv_window_size,
         liquid_piv_overlap=liquid_piv_overlap,
         liquid_max_pairs=liquid_max_pairs,
         liquid_camera_compensation=liquid_camera_compensation,
         liquid_camera_regime=liquid_camera_regime,
+        liquid_flow_estimator=liquid_flow_estimator,
+        liquid_flow_min_mask_frac=liquid_flow_min_mask_frac,
     )
     context.artifacts.update(
         {

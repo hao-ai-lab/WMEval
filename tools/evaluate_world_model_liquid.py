@@ -45,7 +45,14 @@ def main() -> None:
         help="Where to write the JSON report",
     )
     ap.add_argument("--eval_fps", type=float, default=4.0, help="Timestamp sampling rate")
-    ap.add_argument("--max_pairs", type=int, default=32, help="Maximum aligned frame pairs")
+    ap.add_argument(
+        "--max_pairs", type=int, default=512,
+        help=(
+            "Maximum aligned frame pairs sampled into the EvaluationContext. "
+            "Liquid modules also read --liquid_max_pairs to bound their own decode. "
+            "Default 512 covers a 20s clip at up to 25 fps; bump if you analyse longer clips."
+        ),
+    )
     ap.add_argument("--device", default=None, help="torch device (default: cuda if available else cpu)")
 
     g_liquid = ap.add_argument_group("liquid_* (LiquidContainer scene)")
@@ -60,6 +67,14 @@ def main() -> None:
     g_liquid.add_argument(
         "--liquid_sam2_prompt", type=str, default=None,
         help="Text prompt used to seed the SAM2 mask track (default: 'the liquid inside the bottle')",
+    )
+    g_liquid.add_argument(
+        "--liquid_bottle_prompt", type=str, default=None,
+        help=(
+            "Text prompt for the bottle-track SAM2 pass used to estimate bottle bulk "
+            "motion (default: 'the glass bottle'). Active only when "
+            "--liquid_camera_compensation is on."
+        ),
     )
     g_liquid.add_argument(
         "--liquid_piv_window_size", type=int, default=32,
@@ -80,6 +95,23 @@ def main() -> None:
     g_liquid.add_argument(
         "--liquid_camera_regime", type=str, default="c2_static_side",
         help="Camera regime label (e.g. c1_handheld, c2_static_side)",
+    )
+    g_liquid.add_argument(
+        "--liquid_flow_estimator", type=str, default="raft", choices=("raft", "openpiv"),
+        help=(
+            "Velocity estimator inside the liquid mask. 'raft' (default) uses learned "
+            "dense optical flow and works on opaque/uniform fluids. 'openpiv' uses "
+            "cross-correlation; only useful when the liquid has rich texture."
+        ),
+    )
+    g_liquid.add_argument(
+        "--liquid_flow_min_mask_frac", type=float, default=0.5,
+        help=(
+            "Min fraction of a PIV cell's window that must be inside the liquid mask "
+            "for the cell to count as valid (default 0.5). Lower values let mask-boundary "
+            "cells leak in, where on partially-transparent renders the flow signal is "
+            "actually background-through-glass apparent motion."
+        ),
     )
 
     g_lpips = ap.add_argument_group("lpips (cross-cutting perceptual)")
@@ -104,11 +136,14 @@ def main() -> None:
         liquid_cache_root=args.liquid_cache_root,
         liquid_sam2_model=args.liquid_sam2_model,
         liquid_sam2_prompt=args.liquid_sam2_prompt,
+        liquid_bottle_prompt=args.liquid_bottle_prompt,
         liquid_piv_window_size=args.liquid_piv_window_size,
         liquid_piv_overlap=args.liquid_piv_overlap,
         liquid_max_pairs=args.liquid_max_pairs,
         liquid_camera_compensation=args.liquid_camera_compensation,
         liquid_camera_regime=args.liquid_camera_regime,
+        liquid_flow_estimator=args.liquid_flow_estimator,
+        liquid_flow_min_mask_frac=args.liquid_flow_min_mask_frac,
     )
 
     out_path = Path(args.output_json)

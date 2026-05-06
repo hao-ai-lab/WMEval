@@ -18,7 +18,7 @@
 # fps achievable by every supported world model). Override per call if a
 # scene needs a different rate.
 
-CANONICAL_FPS_DEFAULT=24
+CANONICAL_FPS_DEFAULT="${WMEVAL_CANONICAL_FPS:-24}"
 FPS_TOLERANCE=0.1
 
 # Internal: parse "30000/1001" or "24/1" rationals into a decimal fps.
@@ -90,5 +90,38 @@ normalize_fps() {
   # every output frame is a genuine frame the source produced.
   echo "normalize_fps: downsampling $in (${src_fps} fps) -> $out (${target} fps)" >&2
   ffmpeg -y -loglevel error -i "$in" -vf "fps=${target}" \
+    -c:v libx264 -crf 18 -pix_fmt yuv420p "$out"
+}
+
+# normalize_video INPUT OUTPUT [TARGET_FPS] [TARGET_W] [TARGET_H]
+#
+# Combined fps + spatial resize. Different world models render at different
+# resolutions (e.g. lingbot 832x464 vs Unity 1280x720); without spatial
+# normalization the PIV grids are incompatible shapes and EPE/cosine across
+# Unity and WM is undefined. We resize with bilinear (no aspect-ratio
+# adjustment — caller must pick W/H matching the source aspect) and then
+# apply the fps filter. Defaults are tuned for the LiquidContainer scene:
+# 832x464 (lingbot's native size, the constrained side) at 16 fps (lingbot's
+# native rate, the constrained side; Unity is downsampled to match).
+normalize_video() {
+  local in="$1"
+  local out="$2"
+  local target_fps="${3:-${WMEVAL_CANONICAL_FPS:-16}}"
+  local target_w="${4:-${WMEVAL_CANONICAL_W:-832}}"
+  local target_h="${5:-${WMEVAL_CANONICAL_H:-464}}"
+
+  if [ -z "$in" ] || [ -z "$out" ]; then
+    echo "normalize_video: usage: normalize_video INPUT OUTPUT [FPS] [W] [H]" >&2
+    return 2
+  fi
+  if [ ! -f "$in" ]; then
+    echo "normalize_video: input not found: $in" >&2
+    return 2
+  fi
+
+  mkdir -p "$(dirname "$out")"
+  echo "normalize_video: $in -> $out (${target_w}x${target_h} @ ${target_fps} fps)" >&2
+  ffmpeg -y -loglevel error -i "$in" \
+    -vf "scale=${target_w}:${target_h}:flags=bilinear,fps=${target_fps}" \
     -c:v libx264 -crf 18 -pix_fmt yuv420p "$out"
 }

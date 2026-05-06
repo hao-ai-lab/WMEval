@@ -38,35 +38,42 @@ done
 
 mkdir -p "$(dirname "$OUT_JSON")"
 
-# Normalize both videos to the WMEval canonical 24 fps before the eval runs.
-# Different world models render at different native rates; without this the
-# pipeline would silently misreport velocities and slosh frequencies for any
-# WM whose fps disagrees with the reference. See WMEval/scripts/normalize_fps.sh.
+# Normalize both videos to a common (W, H, fps) before the eval runs.
+# WMEval canonical for LiquidContainer is 832x464 @ 16 fps — the lingbot
+# native resolution/rate. Unity (1280x720 @ 30 fps) is downsampled to match.
+# Without this:
+#   - PIV grid shapes differ across WMs and EPE/cosine break.
+#   - fps mismatch silently scales pixel velocities and FFT frequencies.
+# Override via WMEVAL_CANONICAL_FPS / WMEVAL_CANONICAL_W / WMEVAL_CANONICAL_H.
 # shellcheck source=normalize_fps.sh
 source "$SCRIPT_DIR/normalize_fps.sh"
 
 WORK_DIR="$(mktemp -d -t wmeval_liquid.XXXXXX)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
-REF_VIDEO_24="$WORK_DIR/ref_24.mp4"
-WM_VIDEO_24="$WORK_DIR/wm_24.mp4"
-normalize_fps "$REF_VIDEO" "$REF_VIDEO_24"
-normalize_fps "$WM_VIDEO"  "$WM_VIDEO_24"
+REF_VIDEO_NORM="$WORK_DIR/ref_norm.mp4"
+WM_VIDEO_NORM="$WORK_DIR/wm_norm.mp4"
+normalize_video "$REF_VIDEO" "$REF_VIDEO_NORM"
+normalize_video "$WM_VIDEO"  "$WM_VIDEO_NORM"
 
 python tools/evaluate_world_model_liquid.py \
-  --video "$WM_VIDEO_24" \
-  --ref_video "$REF_VIDEO_24" \
+  --video "$WM_VIDEO_NORM" \
+  --ref_video "$REF_VIDEO_NORM" \
   --modules liquid_velocity,liquid_volume_conservation,liquid_surface_orientation,slosh_spectrum,lpips,control_motion,clip4clip \
   --liquid_cache_root runs/liquid_cache \
   --liquid_sam2_model facebook/sam2.1-hiera-small \
   --liquid_sam2_prompt "the liquid inside the bottle" \
+  --liquid_bottle_prompt "the glass bottle" \
   --liquid_piv_window_size 32 \
   --liquid_piv_overlap 16 \
+  --liquid_flow_estimator raft \
+  --liquid_camera_compensation \
   --liquid_camera_regime c2_static_side \
   --lpips_vlm_scene_key liquid_container \
   --output_json "$OUT_JSON" \
   --eval_fps 4 \
-  --max_pairs 32
+  --max_pairs 512 \
+  --liquid_max_pairs 0
 
 # Tag the report with the model name for downstream leaderboard merging.
 # Atomic: write to a temp file then os.replace so an interrupt cannot
