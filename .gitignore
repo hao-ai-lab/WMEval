@@ -226,3 +226,6 @@ imports/CausalStep/2507.16878v1.pdf
 # run logs
 runs/
 tests/fixtures/*
+manifests/
+reports/
+run_logs*

@@ -1,0 +1,61 @@
+{
+  "scene": "liquid_container",
+  "scene_version": "v1",
+  "recorder_version": "1.0",
+  "fps": 30,
+  "bottle_local_volume_ml": 500.0,
+  "pour_threshold_deg": 30.0,
+  "k_pour": 0.05,
+  "initial_fill_fraction": 0.7,
+  "unity_to_world_axes": {"x":[1,0,0],"y":[0,1,0],"z":[0,0,1]},
+  "frames": [
+    {
+      "t_sim": 0.0, "frame_index": 0,
+      "bottle": {
+        "position": [0.0, 1.0, 0.0],
+        "rotation_euler": [0.0, 0.0, 0.0],
+        "rotation_quat": [0.0, 0.0, 0.0, 1.0],
+        "lin_vel": [0.0, 0.0, 0.0],
+        "ang_vel": [0.0, 0.0, 0.0],
+        "tilt_deg_from_up": 0.0
+      },
+      "actions": {"fwd": 0.0, "right": 0.0, "up": 0.0, "pitch": 0.0, "yaw": 0.0, "roll": 0.0},
+      "liquid": {
+        "fill_fraction": 0.7,
+        "surface_height": 1.21,
+        "is_pouring": false,
+        "spilled_volume": 0.0,
+        "pour_rate": 0.0
+      },
+      "camera": {
+        "position": [0.0, 1.0, -2.0],
+        "rotation_quat": [0.0, 0.0, 0.0, 1.0],
+        "intrinsics": {"fx": 600, "fy": 600, "cx": 320, "cy": 240, "near": 0.3, "far": 100.0}
+      }
+    },
+    {
+      "t_sim": 0.0333, "frame_index": 1,
+      "bottle": {
+        "position": [0.0, 1.0, 0.0],
+        "rotation_euler": [0.0, 0.0, 60.0],
+        "rotation_quat": [0.0, 0.0, 0.5, 0.866],
+        "lin_vel": [0.0, 0.0, 0.0],
+        "ang_vel": [0.0, 0.0, 1.0],
+        "tilt_deg_from_up": 60.0
+      },
+      "actions": {"fwd": 0.0, "right": 0.0, "up": 0.0, "pitch": 0.0, "yaw": 0.0, "roll": 0.6},
+      "liquid": {
+        "fill_fraction": 0.69,
+        "surface_height": 1.20,
+        "is_pouring": true,
+        "spilled_volume": 5.0,
+        "pour_rate": 150.0
+      },
+      "camera": {
+        "position": [0.0, 1.0, -2.0],
+        "rotation_quat": [0.0, 0.0, 0.0, 1.0],
+        "intrinsics": {"fx": 600, "fy": 600, "cx": 320, "cy": 240, "near": 0.3, "far": 100.0}
+      }
+    }
+  ]
+}
