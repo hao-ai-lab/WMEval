@@ -1,4 +1,3 @@
-"""OpenAI vision API wrapper for scene alignment evaluation."""
 
 from __future__ import annotations
 
@@ -37,7 +36,6 @@ def _build_image_content(b64_image: str, media_type: str = "image/jpeg") -> Dict
 
 
 def _raise_with_body(r: requests.Response) -> None:
-    """Raise an error that includes the response body for debugging."""
     try:
         body = r.json()
     except Exception:
@@ -59,7 +57,6 @@ def call_vlm(
     timeout: int = 180,
     max_retries: int = 3,
 ) -> Dict[str, Any]:
-    """Call OpenAI Responses API with vision and structured output."""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -121,7 +118,6 @@ def call_llm(
     timeout: int = 120,
     max_retries: int = 3,
 ) -> Dict[str, Any]:
-    """Call OpenAI for text (or text+image) with structured output."""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",

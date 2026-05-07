@@ -1,17 +1,8 @@
-"""Pydantic models and JSON schema utilities for VLM consistency evaluation.
-
-Design:
-- Two rubric agents split by semantic dimension: environment | object.
-  Each agent independently covers prompt coverage, atomic feature fidelity,
-  and late-frame drift detection within its semantic scope.
-- Single judge call on all timestamped frames.
-- Scoring: EnvironmentScore + ObjectScore -> alpha-weighted overall.
-"""
 
 from __future__ import annotations
 
 import copy
-from typing import Any, Dict, List, Literal, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from pydantic import BaseModel, Field
 
@@ -35,10 +26,6 @@ __all__ = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# Top-level explanation block (shared by VLM judge output and AgentResult)
-# ---------------------------------------------------------------------------
-
 class TopLevelExplanation(BaseModel):
     summary: str = Field(
         ...,
@@ -49,10 +36,6 @@ class TopLevelExplanation(BaseModel):
         description="Specific issues found across all criteria",
     )
 
-
-# ---------------------------------------------------------------------------
-# Provider-specific JSON schema transforms
-# ---------------------------------------------------------------------------
 
 _OPENAI_STRIP = {
     "examples", "default", "title",
@@ -67,20 +50,12 @@ _GEMINI_STRIP = {"examples", "default", "title", "$defs", "$ref"}
 
 
 def _transform_for_openai(schema: Dict[str, Any]) -> Dict[str, Any]:
-    """Make a JSON schema OpenAI-strict-mode compatible.
-
-    OpenAI requires:
-    - additionalProperties: false on every object
-    - ALL properties listed in required
-    - No min/max/minItems/maxItems/minLength/maxLength
-    """
     schema = copy.deepcopy(schema)
     _openai_fixup(schema)
     return schema
 
 
 def _openai_fixup(node: Any) -> None:
-    """Recursively fix a schema node for OpenAI strict mode."""
     if not isinstance(node, dict):
         return
 
@@ -102,17 +77,12 @@ def _openai_fixup(node: Any) -> None:
 
 
 def _transform_for_anthropic(schema: Dict[str, Any]) -> Dict[str, Any]:
-    """Make a JSON schema Anthropic-compatible."""
     schema = copy.deepcopy(schema)
     _strip_keys_recursive(schema, _ANTHROPIC_STRIP)
     return schema
 
 
 def _transform_for_gemini(schema: Dict[str, Any]) -> Dict[str, Any]:
-    """Make a JSON schema Gemini-compatible.
-
-    Gemini doesn't support $defs/$ref, so we inline definitions.
-    """
     schema = copy.deepcopy(schema)
     defs = schema.pop("$defs", {})
     _inline_refs(schema, defs)
@@ -136,7 +106,6 @@ def _strip_keys_recursive(node: Any, keys: set) -> None:
 
 
 def _inline_refs(node: Any, defs: Dict[str, Any]) -> None:
-    """Recursively replace $ref with the inlined definition."""
     if not isinstance(node, dict):
         return
     for k, v in list(node.items()):
@@ -162,29 +131,17 @@ def _inline_refs(node: Any, defs: Dict[str, Any]) -> None:
                         _inline_refs(item, defs)
 
 
-# ---------------------------------------------------------------------------
-# Taxonomy constants
-# ---------------------------------------------------------------------------
-
 RUBRIC_AGENTS: Tuple[str, ...] = ("environment", "object")
 
 VALID_GROUNDINGS = ("prompt_grounded", "reference_grounded")
 VALID_WEIGHTS = (1.0, 1.5, 2.0)
 
 
-# ---------------------------------------------------------------------------
-# Rubric item
-# ---------------------------------------------------------------------------
-
 class RubricItem(BaseModel):
     rubric_id: str = Field(..., description="Unique identifier, e.g. env_01 / obj_01")
     agent: Literal["environment", "object"] = Field(
         ...,
         description="environment = scene-level attributes; object = salient entities and their attributes",
-    )
-    grounding: Literal["prompt_grounded", "reference_grounded"] = Field(
-        ...,
-        description="Whether this rubric is grounded in the prompt text or GT reference frame",
     )
     weight: float = Field(
         default=1.0,
@@ -195,10 +152,6 @@ class RubricItem(BaseModel):
         description="A single clear sentence describing what to evaluate",
     )
 
-
-# ---------------------------------------------------------------------------
-# Rubric metadata & container
-# ---------------------------------------------------------------------------
 
 class RubricMetadata(BaseModel):
     generator_provider: str
@@ -226,12 +179,7 @@ class Rubric(BaseModel):
         return [i for i in self.rubric_items if i.agent == "object"]
 
 
-# ---------------------------------------------------------------------------
-# Judge result schemas — dual-agent
-# ---------------------------------------------------------------------------
-
 class ItemScore(BaseModel):
-    """Per-item judge result with chain-of-thought fields."""
     rubric_id: str
     reasoning: str
     frame_evidence: List[str]
@@ -239,10 +187,12 @@ class ItemScore(BaseModel):
 
 
 class AgentResult(BaseModel):
-    """Score and explanations for one rubric agent."""
     agent: Literal["environment", "object"]
     item_scores: List[ItemScore]
-    score: float = Field(..., ge=0.0, le=1.0, description="Weighted average judged_score [0,1]")
+    score: Optional[float] = Field(
+        ..., ge=0.0, le=1.0,
+        description="Weighted average judged_score [0,1], or null if no rubrics for this agent",
+    )
     explanations: TopLevelExplanation
 
 
@@ -266,12 +216,7 @@ class JudgeResult(BaseModel):
     )
 
 
-# ---------------------------------------------------------------------------
-# VLM judge output schemas (no checklist, no derived_score)
-# ---------------------------------------------------------------------------
-
 class VLMItemScore(BaseModel):
-    """VLM output per rubric item — chain-of-thought order enforced by field sequence."""
     rubric_id: str
     reasoning: str = Field(
         ...,
@@ -289,7 +234,6 @@ class VLMItemScore(BaseModel):
 
 
 class VLMJudgeOutput(BaseModel):
-    """VLM judge output schema."""
     item_scores: List[VLMItemScore]
     explanations: TopLevelExplanation
 
@@ -305,20 +249,11 @@ def export_judge_schema(
     return _transform_for_gemini(raw)
 
 
-# ---------------------------------------------------------------------------
-# VLM-facing candidate generation schema
-# ---------------------------------------------------------------------------
-
 class VLMCandidateItem(BaseModel):
-    """One candidate rubric produced by an agent LLM call."""
     rubric_id: str
     agent: str = Field(
         ...,
         description="One of: environment, object",
-    )
-    grounding: str = Field(
-        ...,
-        description="One of: prompt_grounded, reference_grounded",
     )
     weight: float = Field(default=1.0)
     rubric_text: str = Field(default="", description="Declarative criterion sentence")
@@ -327,7 +262,6 @@ class VLMCandidateItem(BaseModel):
 
 
 class VLMCandidateOutput(BaseModel):
-    """Full output of a single agent generation call."""
     rubric_items: List[VLMCandidateItem]
 
 

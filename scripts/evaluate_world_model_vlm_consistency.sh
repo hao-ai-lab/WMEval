@@ -1,42 +1,62 @@
 #!/usr/bin/env bash
 # VLM consistency (dual-agent rubrics + batched judge). Run from repo root.
-# Requires API keys for the chosen --provider. Defaults use tests/vlm_judge paths.
+# Requires API keys for the chosen --provider.
+#
+# Pipeline:
+#   1) build_manifest  -- scan {VIEW_DIR}/scenes.csv + {VIEW_DIR}/data/* into manifest.jsonl
+#   2) generate_rubrics -- LLM generates env+obj rubrics per scene, cached under {RUBRIC_DIR}
+#   3) evaluate         -- VLM judges every video against its scene's cached rubric
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-CSV="tests/vlm_judge/Prompt - Basic_env.csv"
+# Update VIEW_DIR to point at your evaluation set. The directory must contain:
+#   {VIEW_DIR}/scenes.csv         columns: scene_name,prompt[,ref_path]
+#   {VIEW_DIR}/data/{scene}/*.mp4 generated videos, one folder per scene
+#   {VIEW_DIR}/refs/*.png|jpg     (optional) reference frames pointed at by ref_path
+VIEW_DIR="vlm_test_data/test_first_person"
+RUBRIC_DIR="${VIEW_DIR}/rubrics"
+PROVIDER="openai"
+RUBRIC_MODEL="gpt-5.4"
+JUDGE_MODEL="gpt-5.4"
+PROMPT_VERSION="v1"
+OUTPUT="reports/world_model_vlm_consistency/$(basename "${VIEW_DIR}")_results.jsonl"
 
-# --- 1) Generate and cache rubrics (once per rubric model / prompt_version) ---
+# --- 1) Build manifest from scenes.csv + data/{scene}/*.mp4 ---
+python tools/evaluate_world_model_vlm_consistency.py build_manifest \
+  --view_dir "${VIEW_DIR}"
+
+# --- 2) Generate and cache rubrics (once per rubric model / prompt_version) ---
 python tools/evaluate_world_model_vlm_consistency.py generate_rubrics \
-  --provider openai \
-  --model gpt-5.4 \
-  --csv "$CSV" \
-  --rubric_dir rubrics \
-  --ref_dir tests/vlm_judge/ref_img \
-  --prompt_version v1
+  --manifest "${VIEW_DIR}/manifest.jsonl" \
+  --rubric_dir "${RUBRIC_DIR}" \
+  --provider "${PROVIDER}" \
+  --model "${RUBRIC_MODEL}" \
+  --prompt_version "${PROMPT_VERSION}"
 
-# --- 2) Score all videos under tests/vlm_judge/data/* ---
+# --- 3) Score all videos in the manifest ---
 python tools/evaluate_world_model_vlm_consistency.py evaluate \
-  --provider openai \
-  --model gpt-5.4 \
-  --csv "$CSV" \
-  --rubric_dir rubrics \
-  --data_dir tests/vlm_judge/data \
-  --ref_dir tests/vlm_judge/ref_img \
-  --prompt_version v1 \
-  --output reports/world_model_vlm_consistency/results.json
+  --manifest "${VIEW_DIR}/manifest.jsonl" \
+  --rubric_dir "${RUBRIC_DIR}" \
+  --provider "${PROVIDER}" \
+  --model "${JUDGE_MODEL}" \
+  --rubric_provider "${PROVIDER}" \
+  --rubric_model "${RUBRIC_MODEL}" \
+  --prompt_version "${PROMPT_VERSION}" \
+  --output "${OUTPUT}" \
+  --resume
 
-# Optional: limit to specific generator folders and/or disable reference image
+# Optional: skip reference image (rubrics + judge run on prompt + frames only)
 # python tools/evaluate_world_model_vlm_consistency.py evaluate \
-#   --provider openai \
-#   --model gpt-5.4 \
-#   --model_names Genie Unity \
+#   --manifest "${VIEW_DIR}/manifest.jsonl" \
+#   --rubric_dir "${RUBRIC_DIR}" \
+#   --provider "${PROVIDER}" --model "${JUDGE_MODEL}" \
+#   --prompt_version "${PROMPT_VERSION}" \
 #   --no_ref \
-#   --output reports/world_model_vlm_consistency/results_noref.json
+#   --output "${OUTPUT%.jsonl}_noref.jsonl"
 
-# Offline / CLI smoke tests (same OpenCV dependency chain as other evaluation tests):
+# Offline / CLI smoke tests (require pytest + OpenCV in the active env):
 # python -m pytest tests/test_vlm_consistency_batch_helpers.py \
 #   tests/test_vlm_consistency_batch_cli.py -q

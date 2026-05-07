@@ -1,8 +1,3 @@
-"""Offline rubric cache: save, load, list, and find rubric files.
-
-Convention:  rubrics/{scene_name}/{provider}_{model}_{prompt_version}.json
-Model names are sanitized (dots → dashes) so file names stay portable.
-"""
 
 from __future__ import annotations
 
@@ -29,7 +24,6 @@ def _rubric_path(
 
 
 def save_rubric(rubric: Rubric, rubric_dir: str, prompt_version: str = "v1") -> Path:
-    """Serialize a Rubric to the cache directory. Returns the file path."""
     meta = rubric.metadata
     path = _rubric_path(
         rubric_dir,
@@ -50,7 +44,6 @@ def load_rubric(
     prompt_version: str,
     rubric_dir: str,
 ) -> Rubric:
-    """Load a specific rubric from cache. Raises FileNotFoundError if missing."""
     path = _rubric_path(rubric_dir, scene_name, provider, model, prompt_version)
     if not path.is_file():
         raise FileNotFoundError(f"No cached rubric at {path}")
@@ -64,7 +57,6 @@ def find_rubric(
     provider: Optional[str] = None,
     model: Optional[str] = None,
 ) -> Optional[Path]:
-    """Find the first matching rubric file. Returns None if not found."""
     scene_dir = Path(rubric_dir) / _sanitize(scene_name)
     if not scene_dir.is_dir():
         return None
@@ -78,5 +70,4 @@ def find_rubric(
             continue
         return p
     return None
-
 

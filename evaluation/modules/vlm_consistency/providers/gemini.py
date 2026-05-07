@@ -1,4 +1,3 @@
-"""Google Gemini vision API wrapper for scene alignment evaluation."""
 
 from __future__ import annotations
 
@@ -60,7 +59,6 @@ def call_vlm(
     timeout: int = 180,
     max_retries: int = 3,
 ) -> Dict[str, Any]:
-    """Call Gemini generateContent API with vision and structured output."""
     headers = {
         "x-goog-api-key": api_key,
         "Content-Type": "application/json",
@@ -115,7 +113,6 @@ def call_llm(
     timeout: int = 120,
     max_retries: int = 3,
 ) -> Dict[str, Any]:
-    """Call Gemini for text (or text+image) with structured output."""
     headers = {
         "x-goog-api-key": api_key,
         "Content-Type": "application/json",

@@ -1,4 +1,3 @@
-"""Anthropic (Claude) vision API wrapper for scene alignment evaluation."""
 
 from __future__ import annotations
 
@@ -55,7 +54,6 @@ def call_vlm(
     timeout: int = 180,
     max_retries: int = 3,
 ) -> Dict[str, Any]:
-    """Call Anthropic Messages API with vision and structured output."""
     headers = {
         "x-api-key": api_key,
         "anthropic-version": ANTHROPIC_VERSION,
@@ -109,7 +107,6 @@ def call_llm(
     timeout: int = 120,
     max_retries: int = 3,
 ) -> Dict[str, Any]:
-    """Call Anthropic for text (or text+image) with structured output."""
     headers = {
         "x-api-key": api_key,
         "anthropic-version": ANTHROPIC_VERSION,

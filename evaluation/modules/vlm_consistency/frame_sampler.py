@@ -1,14 +1,3 @@
-"""Frame sampling from generated videos for scene alignment evaluation.
-
-Supports two modes:
-  - frame-count mode (default): take first N frames from the video, uniformly
-    subsample to K frames. Best for initial-scene evaluation because it's
-    FPS-invariant and avoids dynamics contamination.
-  - time-based mode: sample from first N seconds at a given FPS.
-
-Heavy dependencies (cv2, numpy, evaluation.video_io) are imported lazily
-so that other modules can import utility functions without triggering them.
-"""
 
 from __future__ import annotations
 
@@ -28,13 +17,6 @@ def _ensure_project_root() -> None:
 
 
 def _subsample_indices(frame_window: int, num_samples: int) -> List[int]:
-    """Uniformly pick num_samples indices from [0, frame_window).
-
-    Examples:
-        _subsample_indices(12, 4) -> [0, 4, 8, 11]
-        _subsample_indices(12, 3) -> [0, 5, 11]
-        _subsample_indices(5, 5)  -> [0, 1, 2, 3, 4]
-    """
     if frame_window <= 0 or num_samples <= 0:
         return []
     if num_samples >= frame_window:
@@ -53,14 +35,6 @@ def _time_based_indices(
     max_frames: int = 10,
     start_seconds: float = 0.0,
 ) -> List[int]:
-    """Compute frame indices for uniform sampling from [start, start+duration).
-
-    Parameters
-    ----------
-    start_seconds : float
-        Offset in seconds from the start of the video (default 0.0).
-        Backward-compatible: existing callers that omit this get v1 behavior.
-    """
     if fps <= 0 or total_frames <= 0 or duration_sec <= 0:
         return []
 
@@ -85,7 +59,6 @@ def encode_frame_b64(
     fmt: str = ".jpg",
     quality: int = 85,
 ) -> str:
-    """Encode a BGR numpy frame to base64 JPEG/PNG string."""
     import cv2
 
     params: list = []
@@ -98,7 +71,6 @@ def encode_frame_b64(
 
 
 def encode_image_file_b64(path: str) -> str:
-    """Read an image file and return base64 string."""
     return base64.b64encode(Path(path).read_bytes()).decode("ascii")
 
 
@@ -113,27 +85,6 @@ def sample_video_frames(
     start_seconds: float = 0.0,
     start_frame: int = 0,
 ) -> Tuple[List["np.ndarray"], List[float], List[int]]:
-    """Sample frames from a video for scene evaluation.
-
-    Two modes:
-      1. Frame-count mode (default): take `first_n_frames` frames starting at
-         `start_frame`, then uniformly subsample to `num_samples`.
-      2. Time-based mode: activated when `first_n_seconds` is not None.
-         Samples at `sample_fps` within [start_seconds, start_seconds + N).
-
-    Parameters
-    ----------
-    start_seconds : float
-        Time-based mode offset (default 0.0, backward-compatible).
-    start_frame : int
-        Frame-count mode offset (default 0, backward-compatible).
-
-    Returns
-    -------
-    frames : list of np.ndarray (BGR)
-    timestamps_sec : list of float
-    frame_indices : list of int
-    """
     _ensure_project_root()
     from evaluation.video_io import get_video_metadata, load_frames_by_indices
 
@@ -183,26 +134,10 @@ def prepare_frames_for_vlm(
     label_prefix: str = "sampled_frame",
     use_timestamp_labels: bool = False,
 ) -> Tuple[List[Tuple[str, str]], int]:
-    """Sample video frames and encode them for VLM API calls.
-
-    Parameters
-    ----------
-    start_seconds / start_frame : offset parameters (default 0, backward-compatible).
-    label_prefix : prefix for frame labels.
-    use_timestamp_labels : if True, label each frame as "{prefix}_t={ts:.1f}s"
-        instead of "{prefix}_{i}". Requires time-based mode (first_n_seconds).
-
-    Returns
-    -------
-    images_b64 : list of (label, base64_string) tuples
-        GT frame (if any) comes first, then sampled frames.
-    num_candidate_frames : int
-        Number of sampled video frames (excludes GT frame).
-    """
     images_b64: List[Tuple[str, str]] = []
 
     if gt_frame_path and Path(gt_frame_path).is_file():
-        images_b64.append(("gt_initial_frame", encode_image_file_b64(gt_frame_path)))
+        images_b64.append(("ref_frame", encode_image_file_b64(gt_frame_path)))
 
     frames, timestamps, indices = sample_video_frames(
         video_path,

@@ -1,28 +1,12 @@
-"""Rubric generation: dual-agent pipeline split by semantic dimension.
-
-Pipeline overview:
-  Step 1a  _generate_agent_rubrics("environment") — LLM generates 0-4 environment rubrics
-  Step 1b  _generate_agent_rubrics("object")      — LLM generates 0-4 object rubrics
-  Step 2   select_final_rubrics                    — cap to max 5 per agent
-  Step 3   inject mandatory holistic coverage rubrics (one per agent)
-
-Each agent's rubrics independently cover three sub-criteria within their semantic
-scope: prompt coverage, atomic feature fidelity, and late-frame drift.
-
-Public entry point: generate_rubric(...)
-"""
 
 from __future__ import annotations
 
-import base64
 import os
 import sys
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import List, Literal, Optional, Tuple
+from typing import List, Literal, Optional
 
 from .schemas import (
-    VALID_GROUNDINGS,
     VALID_WEIGHTS,
     RubricItem,
     RubricMetadata,
@@ -31,125 +15,78 @@ from .schemas import (
     export_candidate_schema,
 )
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Agent 1: Environment — scene-level attributes
-# ═══════════════════════════════════════════════════════════════════════════
 
 ENVIRONMENT_AGENT_PROMPT = """\
-Task: Generate ENVIRONMENT rubrics for judging how well a generated video renders
-the scene-level (non-object) content described in the prompt. Each rubric is a
-binary (yes/no) question a VLM judge can answer from timestamped frames.
+You are an expert in evaluation rubric design. Your task is to generate Environment-Consistency rubrics to help a VLM judge score whether a generated video's environment remains consistent with the prompt over time. Each rubric is a binary (yes/no) question answerable from timestamped frames, derived from the text prompt only, and grounded in something the prompt explicitly states or directly implies.
 
-Each rubric covers ONE of the following sub-criteria within the environment scope:
-  (a) Atomic feature fidelity — a specific environment attribute (structure, layout,
-      lighting, style, color, texture) matches the prompt in early frames.
-  (b) Late-frame drift — a specific environment attribute remains coherent in late
-      frames. Answer "yes" if late frames satisfy EITHER cross-frame consistency
-      with early frames OR alignment with the prompt; "no" only when both fail.
-      Do not penalize natural camera rotation or shift.
+### Important Notes:
+1. Consistency: Each rubric tests whether one environmental attribute (e.g., ground material/pattern, sky, lighting, terrain, dominant style/palette) matches the prompt AND remains the same across ALL sampled frames — it must not switch, drift, or contradict the prompt at any timestamp. The camera may rotate, but the environment is assumed static unless the prompt explicitly describes spatial variation or change.
+2. Described Variation: If the prompt itself describes an environmental change or contrast (e.g., lighting shifts, terrain changes), do NOT enforce uniform consistency; instead, generate a rubric that checks whether the described variation or contrast is preserved.
+3. Atomicity: one environmental attribute per rubric.
+4. Scope: Only scene-level attributes (ground, sky, lighting, terrain, style, palette). Salient entities, characters, or main objects are handled by the Object agent.
+5. Rubric Construction: Prefer fewer high-confidence criteria over exhaustive lists.
 
-Assign rubric_id with prefix "env_" (env_01, env_02, …). Generate 0–4 rubrics;
-prefer fewer, high-confidence criteria over exhaustive lists.
+### Output Format:
+Return valid JSON matching the provided schema. Each rubric item contains:
+- rubric_id: unique ID with the "env_" prefix (env_01, env_02, …).
+- agent: always "environment".
+- question: the binary yes/no question for the VLM judge.
+- rationale: a brief justification explaining which prompt phrase the rubric is grounded in and what it checks.
 
-Each rubric must satisfy all of the following:
-- Be atomic: evaluate a single environment attribute per rubric.
-- Be scene-level (structure, layout, lighting, sky, terrain, style) — NOT a salient
-  entity or character (reserved for the Object agent).
-- Specify grounding: "prompt_grounded" if supported by explicit prompt text;
-  "reference_grounded" only when a GT reference frame is provided and the target
-  attribute is clearly visible in that frame.
-
-Invalid and must not appear:
-- Rubrics requiring exact spatial coordinates, pairwise distances, or exact counts
-  (unless the prompt states a number).
-- Rubrics dependent on occlusion state or camera framing.
-- Rubrics assessing action quality, physics simulation, or task completion.
-- Rubrics about salient objects or characters (handled by the Object agent).
-- The holistic question "do all environmental elements in the prompt appear?" is
-  injected automatically — do NOT generate it here.
-
-Output format example:
+<example>
 {
   "rubric_items": [
     {
       "rubric_id": "env_01",
       "agent": "environment",
-      "grounding": "prompt_grounded",
-      "question": "Is the ground depicted as a black-and-white chessboard pattern?",
-      "rationale": "The chessboard ground is a scene-defining environment feature."
+      "question": "Does the ground remain a black-and-white chessboard pattern over time?",
+      "rationale": "The chessboard ground is the defining environmental attribute and should not change as the camera rotates."
     }
   ]
 }
-
-Return valid JSON matching the provided schema.
+</example>
 """
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Agent 2: Object — salient entities and their attributes
-# ═══════════════════════════════════════════════════════════════════════════
 
 OBJECT_AGENT_PROMPT = """\
-Task: Generate OBJECT rubrics for judging how well a generated video renders the
-salient entities (characters, vehicles, props, primary objects) described in the
-prompt. Each rubric is a binary (yes/no) question a VLM judge can answer from
-timestamped frames.
+You are an expert in text-to-video evaluation rubric design. Your task is to generate Object-Consistency rubrics to help a VLM judge score whether a generated video realizes the salient entities (characters, vehicles, props, primary objects) described in the text prompt, with their claimed attributes. Each rubric is a binary (yes/no) question answerable from timestamped frames, derived from the text prompt only, and grounded in something the prompt explicitly states.
 
-Each rubric covers ONE of the following sub-criteria within the object scope:
-  (a) Atomic feature fidelity — a specific object attribute (color, material,
-      texture, shape) matches the prompt in early frames.
-  (b) Late-frame drift — a specific object remains coherent in late frames.
-      Answer "yes" if late frames satisfy EITHER cross-frame consistency with
-      early frames OR alignment with the prompt; "no" only when both fail.
-      Do not penalize natural motion or expected interaction.
+### Important Notes:
+1. Attribute Fidelity: Each rubric targets claimed attributes (shape, texture, size， color, material) of one salient entity.
+2. Atomicity: one entity per rubric.
+3. Scope: Only salient entities or characters. Scene-level structure, ground, sky, lighting, and palette are handled by the Environment agent.
+4. Rubric Construction: Prefer fewer high-confidence criteria over exhaustive lists.
 
-Assign rubric_id with prefix "obj_" (obj_01, obj_02, …). Generate 0–4 rubrics;
-prefer fewer, high-confidence criteria over exhaustive lists.
+### Output Format:
+Return valid JSON matching the provided schema. Each rubric item contains:
+- rubric_id: unique ID with the "obj_" prefix (obj_01, obj_02, …).
+- agent: always "object".
+- question: the binary yes/no question for the VLM judge.
+- rationale: a brief justification explaining which prompt phrase the rubric is grounded in and what it checks.
 
-Each rubric must satisfy all of the following:
-- Be atomic: evaluate a single object or single attribute per rubric.
-- Target a salient entity or character (NOT scene-level structure or lighting,
-  which are reserved for the Environment agent).
-- Specify grounding: "prompt_grounded" if supported by explicit prompt text;
-  "reference_grounded" only when a GT reference frame is provided and the target
-  entity is clearly visible in that frame.
-
-Invalid and must not appear:
-- Rubrics requiring exact spatial coordinates, pairwise distances, or exact counts
-  (unless the prompt states a number).
-- Rubrics dependent on occlusion state or camera framing.
-- Rubrics assessing action quality, physics simulation, or task completion.
-- Rubrics about scene-level attributes (handled by the Environment agent).
-- The holistic question "do all characters/objects in the prompt appear?" is
-  injected automatically — do NOT generate it here.
-
-Output format example:
+<example>
 {
   "rubric_items": [
     {
       "rubric_id": "obj_01",
       "agent": "object",
-      "grounding": "prompt_grounded",
-      "question": "Does the red ball remain red and spherical across the video?",
-      "rationale": "Passes if late frames are consistent with early frames OR still match the prompt — fails only when both are violated."
+      "question": "When the sphere is visible and judgeable, does it have the chrome appearance specified in the prompt?",
+      "rationale": "The prompt explicitly states the sphere is chrome, so its material appearance should be correct whenever it can be judged."
     }
   ]
 }
-
-Return valid JSON matching the provided schema.
+</example>
 """
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Mandatory holistic rubrics (always injected, not subject to LLM generation)
-# ═══════════════════════════════════════════════════════════════════════════
 
 def _make_mandatory_env_coverage_rubric() -> "RubricItem":
     return RubricItem(
         rubric_id="env_00",
         agent="environment",
-        grounding="prompt_grounded",
-        weight=2.0,
+        weight=1.0,
         rubric_text=(
-            "Do all environmental elements described in the prompt "
+            "Do all scene-level attributes described in the prompt "
+            "(e.g., ground type, sky, lighting, terrain, style) "
             "appear at some point in the video?"
         ),
     )
@@ -159,18 +96,13 @@ def _make_mandatory_obj_coverage_rubric() -> "RubricItem":
     return RubricItem(
         rubric_id="obj_00",
         agent="object",
-        grounding="prompt_grounded",
-        weight=2.0,
+        weight=1.0,
         rubric_text=(
             "Do all characters and primary objects mentioned in the prompt "
-            "appear at some point in the video?"
+            "appear in the video?"
         ),
     )
 
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Helpers
-# ═══════════════════════════════════════════════════════════════════════════
 
 def _get_provider_module(provider: str):
     if provider == "openai":
@@ -182,10 +114,6 @@ def _get_provider_module(provider: str):
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     return mod
-
-
-def _encode_image(path: str) -> str:
-    return base64.b64encode(Path(path).read_bytes()).decode("ascii")
 
 
 def _resolve_api_key(provider: str) -> str:
@@ -205,19 +133,6 @@ def _clamp_weight(w: float) -> float:
     return min(allowed, key=lambda a: abs(a - w))
 
 
-def _normalize_grounding(raw: str) -> str:
-    s = raw.strip().lower()
-    if s in VALID_GROUNDINGS:
-        return s
-    if "ref" in s or "image" in s or "gt" in s:
-        return "reference_grounded"
-    return "prompt_grounded"
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# Step 1: Generate rubrics from one agent
-# ═══════════════════════════════════════════════════════════════════════════
-
 def _generate_agent_rubrics(
     agent: Literal["environment", "object"],
     system_prompt: str,
@@ -226,29 +141,13 @@ def _generate_agent_rubrics(
     provider: str,
     model: str,
     api_key: str,
-    gt_frame_path: Optional[str] = None,
 ) -> List[RubricItem]:
-    """Call one agent LLM to generate up to 5 rubrics."""
     mod = _get_provider_module(provider)
     schema = export_candidate_schema(provider)
-
-    has_gt = gt_frame_path and Path(gt_frame_path).is_file()
-    images: Optional[List[Tuple[str, str]]] = None
-    if has_gt:
-        images = [("gt_initial_frame", _encode_image(gt_frame_path))]
-
-    gt_note = (
-        "A ground-truth reference frame (gt_initial_frame) is provided. "
-        "You may add reference_grounded rubrics for MAJOR visual anchors "
-        "clearly visible in the reference image."
-        if has_gt
-        else "No GT reference frame is provided. All rubrics must be prompt_grounded."
-    )
 
     user_text = (
         f"Scene name: {scene_name}\n\n"
         f"Prompt:\n{prompt_text}\n\n"
-        f"{gt_note}\n\n"
         f"Generate up to 5 {agent} rubrics for this scene."
     )
 
@@ -258,7 +157,7 @@ def _generate_agent_rubrics(
         schema=schema,
         api_key=api_key,
         model=model,
-        images_b64=images,
+        images_b64=None,
     )
 
     vlm_out = VLMCandidateOutput.model_validate(raw)
@@ -270,16 +169,11 @@ def _generate_agent_rubrics(
         counter += 1
         rid = f"{prefix}_{counter:02d}"
 
-        grounding = _normalize_grounding(vi.grounding)
-        if not has_gt and grounding == "reference_grounded":
-            grounding = "prompt_grounded"
-
         rubric_text = vi.question.strip() or vi.rubric_text.strip()
 
         items.append(RubricItem(
             rubric_id=rid,
             agent=agent,
-            grounding=grounding,
             weight=_clamp_weight(vi.weight),
             rubric_text=rubric_text,
         ))
@@ -287,15 +181,10 @@ def _generate_agent_rubrics(
     return items
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Step 2: Select final rubrics (cap to max 5 per agent)
-# ═══════════════════════════════════════════════════════════════════════════
-
 MAX_PER_AGENT = 5
 
 
 def select_final_rubrics(items: List[RubricItem]) -> List[RubricItem]:
-    """Step 4: Cap to MAX_PER_AGENT per agent, sorted by weight descending."""
     env = sorted(
         [i for i in items if i.agent == "environment"],
         key=lambda x: -x.weight,
@@ -307,23 +196,13 @@ def select_final_rubrics(items: List[RubricItem]) -> List[RubricItem]:
     return env + obj
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-# Public API: generate_rubric
-# ═══════════════════════════════════════════════════════════════════════════
-
 def generate_rubric(
     prompt_text: str,
     scene_name: str,
     provider: Literal["openai", "anthropic", "gemini"] = "openai",
     model: Optional[str] = None,
-    gt_frame_path: Optional[str] = None,
     api_key: Optional[str] = None,
 ) -> Rubric:
-    """Dual-agent rubric generation pipeline.
-
-    Calls environment agent and object agent independently, combines them,
-    caps to MAX_PER_AGENT, and prepends mandatory holistic coverage rubrics.
-    """
     mod = _get_provider_module(provider)
     resolved_key = api_key or _resolve_api_key(provider)
     resolved_model = model or mod.DEFAULT_MODEL
@@ -333,10 +212,8 @@ def generate_rubric(
         provider=provider,
         model=resolved_model,
         api_key=resolved_key,
-        gt_frame_path=gt_frame_path,
     )
 
-    # ── Step 1a: Environment agent ───────────────────────────────────────
     print(f"  Step 1a: Environment agent via {provider}/{resolved_model}...",
           file=sys.stderr)
     env_candidates = _generate_agent_rubrics(
@@ -347,7 +224,6 @@ def generate_rubric(
     )
     print(f"    -> {len(env_candidates)} environment candidates", file=sys.stderr)
 
-    # ── Step 1b: Object agent ────────────────────────────────────────────
     print(f"  Step 1b: Object agent via {provider}/{resolved_model}...",
           file=sys.stderr)
     obj_candidates = _generate_agent_rubrics(
@@ -361,16 +237,9 @@ def generate_rubric(
     all_candidates = env_candidates + obj_candidates
     n_candidates = len(all_candidates)
 
-    # ── Step 2: Select final (max 5 per agent) ────────────────────────────
     final = select_final_rubrics(all_candidates)
 
-    # ── Inject mandatory holistic coverage rubrics ────────────────────────
-    final = [
-        _make_mandatory_env_coverage_rubric(),
-        _make_mandatory_obj_coverage_rubric(),
-    ] + final
 
-    # Re-number IDs sequentially per agent
     env_counter = 0
     obj_counter = 0
     for item in final:

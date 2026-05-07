@@ -226,3 +226,12 @@ imports/CausalStep/2507.16878v1.pdf
 # run logs
 runs/
 tests/fixtures/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# VLM consistency local artifacts
+vlm_test_data/
+tools/Sample frame result/
+evaluation/modules/vlm_consistency.local_backup/

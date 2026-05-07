@@ -1,4 +1,3 @@
-"""VLM consistency evaluation: dual-agent rubric, unified judge."""
 
 from .schemas import (
     AgentResult,
