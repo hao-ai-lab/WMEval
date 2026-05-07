@@ -21,6 +21,30 @@ SCENE_CONFIG_REGISTRY: dict[str, dict[str, Any]] = {
         "skip_cost": 0.26,
         "forbid_cross_class_matches": False,
     },
+    "liquid_container": {
+        "scene_hints": (
+            "Sealed-bottle sloshing scene (the bottle has a cap; liquid stays inside). "
+            "Evaluate (a) the fluid velocity field on the liquid mask, "
+            "(b) volume conservation via per-frame mask area stability, "
+            "(c) the liquid surface orientation relative to gravity, and "
+            "(d) the dominant slosh oscillation frequency. "
+            "Do NOT evaluate pour onset, fill-fraction depletion, or spill volume — "
+            "no liquid leaves the container."
+        ),
+        "default_sam2_prompt": "the liquid inside the bottle",
+        "default_camera_regime": "c2_static_side",
+        "default_piv_window_size": 32,
+        "default_piv_overlap": 16,
+        "applicable_modules": [
+            "liquid_velocity",
+            "liquid_volume_conservation",
+            "liquid_surface_orientation",
+            "slosh_spectrum",
+            "lpips",
+            "control_motion",
+            "clip4clip",
+        ],
+    },
 }
 
 

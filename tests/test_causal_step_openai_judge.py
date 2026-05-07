@@ -165,6 +165,73 @@ def test_openai_judge_invalidates_cache_on_num_samples_change(tmp_path: Path):
     assert fake_client.chat.completions.create.call_count == 2
 
 
+def test_openai_judge_uses_max_completion_tokens_for_gpt5(tmp_path: Path):
+    """gpt-5 family rejects `max_tokens`/`temperature` in chat.completions.
+    The judge must send `max_completion_tokens` and omit temperature, or the
+    real API returns 400 BadRequest before we even get to parse the answer."""
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))]
+    )
+
+    judge = OpenAIJudge(
+        client=fake_client,
+        model="gpt-5.4-mini",
+        cache_dir=tmp_path / "cache",
+        frames_provider=_windowed_frames_provider(60),
+    )
+    req = JudgeRequest(
+        video_path="x.mp4",
+        segment_index=1,
+        qa_type="causal",
+        question="q",
+        choices=["A) yes", "B) no"],
+        start_sec=0.0,
+        end_sec=1.0,
+        segment_frames_start=0,
+        segment_frames_end=30,
+    )
+    judge.answer(req)
+
+    kwargs = fake_client.chat.completions.create.call_args.kwargs
+    assert "max_completion_tokens" in kwargs
+    assert "max_tokens" not in kwargs
+    assert "temperature" not in kwargs
+
+
+def test_openai_judge_uses_legacy_params_for_gpt4(tmp_path: Path):
+    """gpt-4* still accepts `max_tokens`/`temperature` and is cheaper for
+    short answers — don't change its request shape."""
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))]
+    )
+
+    judge = OpenAIJudge(
+        client=fake_client,
+        model="gpt-4o",
+        cache_dir=tmp_path / "cache",
+        frames_provider=_windowed_frames_provider(60),
+    )
+    req = JudgeRequest(
+        video_path="x.mp4",
+        segment_index=1,
+        qa_type="causal",
+        question="q",
+        choices=["A) yes", "B) no"],
+        start_sec=0.0,
+        end_sec=1.0,
+        segment_frames_start=0,
+        segment_frames_end=30,
+    )
+    judge.answer(req)
+
+    kwargs = fake_client.chat.completions.create.call_args.kwargs
+    assert "max_tokens" in kwargs
+    assert "temperature" in kwargs
+    assert "max_completion_tokens" not in kwargs
+
+
 def test_openai_judge_does_not_cache_unparseable_response(tmp_path: Path):
     """An unparseable response must not poison the cache: a transient model
     glitch shouldn't lock the dataset to a permanently empty answer."""

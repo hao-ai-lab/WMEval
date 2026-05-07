@@ -134,13 +134,20 @@ def _build_judge(context: EvaluationContext) -> Judge:
 
         cache_dir = Path(context.artifacts["causal_step_answers_cache_dir"]) / "vlm_cache"
         client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        model = str(context.artifacts.get("causal_step_vlm_model", "gpt-4o"))
+        model = str(context.artifacts.get("causal_step_vlm_model", "gpt-5.4-mini"))
         prompt_version = str(context.artifacts.get("causal_step_vlm_prompt_version", "v1"))
+        # Frame count is part of the cache key (see OpenAIJudge._cache_key), so
+        # bumping it invalidates prior answers — that's intentional: at higher
+        # sampling the judge often picks differently on tight segments.
+        num_frame_samples = int(
+            context.artifacts.get("causal_step_vlm_num_frames", 4)
+        )
         return OpenAIJudge(
             client=client,
             model=model,
             cache_dir=cache_dir,
             frames_provider=_read_window_uint8,
+            num_frame_samples=num_frame_samples,
             prompt_version=prompt_version,
         )
     raise ValueError(f"unknown causal_step_judge kind: {judge_kind!r}")
@@ -177,6 +184,7 @@ def analyze_causal_step_from_context(
     video_id = str(arts["causal_step_video_id"])
     out_root = Path(arts["causal_step_answers_cache_dir"])
     causal_fail_advance = bool(arts.get("causal_step_causal_fail_advance", True))
+    wm_full_video = bool(arts.get("causal_step_wm_full_video", False))
     causalstep_root = arts.get("causalstep_root")
     ensure_causalstep_importable(str(causalstep_root) if causalstep_root else None)
 
@@ -199,6 +207,7 @@ def analyze_causal_step_from_context(
         answers_out_dir=out_root / "wm",
         causal_fail_advance=causal_fail_advance,
         fps=float(context.candidate.metadata.fps),
+        force_full_video=wm_full_video,
     )
 
     delta = compute_delta(unity=unity, wm=wm)
@@ -211,10 +220,11 @@ def analyze_causal_step_from_context(
         "wm": wm,
         "delta": delta,
         "delta_convention": DELTA_CONVENTION_STRING,
-        "vlm_model": str(arts.get("causal_step_vlm_model", "gpt-4o")),
+        "vlm_model": str(arts.get("causal_step_vlm_model", "gpt-5.4-mini")),
         "vlm_prompt_version": str(arts.get("causal_step_vlm_prompt_version", "v1")),
         "judge_kind": _judge_kind(context),
         "causal_fail_advance": causal_fail_advance,
+        "wm_full_video": wm_full_video,
     }
     if parse_failures is not None:
         result["judge_parse_failures"] = parse_failures

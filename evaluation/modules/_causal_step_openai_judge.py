@@ -65,6 +65,18 @@ def _encode_png_b64(frame: np.ndarray) -> str:
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+def _is_newer_openai_model(model: str) -> bool:
+    """Return True for OpenAI models that reject `max_tokens`/`temperature`.
+
+    gpt-5 family and the o-series reasoning models replaced `max_tokens` with
+    `max_completion_tokens` and stopped accepting non-default `temperature`.
+    Match by prefix so we cover gpt-5 / gpt-5.4 / gpt-5.4-mini / o1 / o3 etc.
+    without needing to enumerate every variant.
+    """
+    m = model.lower()
+    return m.startswith("gpt-5") or m.startswith("o1") or m.startswith("o3") or m.startswith("o4")
+
+
 def build_prompt(req: JudgeRequest) -> str:
     choices_block = "\n".join(req.choices)
     return (
@@ -151,12 +163,21 @@ class OpenAIJudge:
                 }
             )
 
-        resp = self.client.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            max_tokens=self.max_tokens,
-            messages=[{"role": "user", "content": content}],
-        )
+        # gpt-5 family / o-series reject `max_tokens` and `temperature`; route
+        # to `max_completion_tokens` and omit temperature on those models. For
+        # gpt-5 we also bump the cap because reasoning/internal tokens count
+        # toward `max_completion_tokens`, and `8` was already tight even for
+        # gpt-4o on edge cases.
+        request_kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": content}],
+        }
+        if _is_newer_openai_model(self.model):
+            request_kwargs["max_completion_tokens"] = max(self.max_tokens, 1024)
+        else:
+            request_kwargs["temperature"] = self.temperature
+            request_kwargs["max_tokens"] = self.max_tokens
+        resp = self.client.chat.completions.create(**request_kwargs)
         raw = resp.choices[0].message.content or ""
         try:
             letter = parse_letter(raw, choices=request.choices)
