@@ -229,3 +229,12 @@ tests/fixtures/*
 manifests/
 reports/
 run_logs*
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# VLM consistency local artifacts
+vlm_test_data/
+tools/Sample frame result/
+evaluation/modules/vlm_consistency.local_backup/
