@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import FrozenInstanceError
 from pathlib import Path
 from typing import Any
 
@@ -39,9 +40,18 @@ def test_discover_candidate_directory_uses_model_root_name_and_exact_patterns(
     from evaluation.lite.candidate_discovery import discover_candidate_directory
 
     model_root = tmp_path / "my-model"
+    official_cases = [
+        "beamdomino/canonical",
+        "beamdomino/glancing",
+        "beamdomino/direct_strike",
+        "liquid_container/rest",
+        "liquid_container/step_hold",
+        "liquid_container/impulse_decay",
+        "liquid_container/chirp_strafe",
+    ]
     included = [
-        model_root / "liquid_container" / "rest" / "seed-b.mp4",
-        model_root / "beamdomino" / "canonical" / "seed-a.mp4",
+        model_root / case_id / f"seed-{index}.mp4"
+        for index, case_id in enumerate(official_cases)
     ]
     excluded = [
         model_root / "beamdomino" / "unknown" / "seed-c.mp4",
@@ -56,9 +66,77 @@ def test_discover_candidate_directory_uses_model_root_name_and_exact_patterns(
 
     assert [
         (row.model, row.case_id, row.seed, row.candidate_video) for row in rows
-    ] == [
-        ("my-model", "beamdomino/canonical", "seed-a", included[1].resolve()),
-        ("my-model", "liquid_container/rest", "seed-b", included[0].resolve()),
+    ] == sorted(
+        [
+            ("my-model", case_id, path.stem, path.resolve())
+            for case_id, path in zip(official_cases, included)
+        ]
+    )
+
+
+def test_discover_candidate_directory_rejects_duplicate_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from evaluation.lite import candidate_discovery
+
+    model_root = tmp_path / "model"
+    candidate = model_root / "beamdomino" / "canonical" / "seed.mp4"
+
+    def duplicate_candidate(path: Path, pattern: str) -> list[Path]:
+        if pattern == "beamdomino/canonical/*.mp4":
+            return [candidate, candidate]
+        return []
+
+    monkeypatch.setattr(candidate_discovery.Path, "glob", duplicate_candidate)
+
+    with pytest.raises(ValueError, match="duplicate candidate identity"):
+        candidate_discovery.discover_candidate_directory(model_root)
+
+
+def test_candidate_row_is_frozen_and_orderable() -> None:
+    from evaluation.lite.candidate_discovery import CandidateRow
+
+    later = CandidateRow("model", "liquid_container/rest", "seed", Path("b.mp4"))
+    earlier = CandidateRow("model", "beamdomino/canonical", "seed", Path("a.mp4"))
+
+    assert sorted([later, earlier]) == [earlier, later]
+    with pytest.raises(FrozenInstanceError):
+        earlier.seed = "changed"  # type: ignore[misc]
+
+
+def test_candidate_validation_error_subclasses_runtime_error() -> None:
+    from evaluation.lite.validation import CandidateValidationError
+
+    assert issubclass(CandidateValidationError, RuntimeError)
+
+
+def test_load_candidate_manifest_accepts_and_ignores_auxiliary_fields(
+    tmp_path: Path,
+) -> None:
+    from evaluation.lite.candidate_discovery import CandidateRow, load_candidate_manifest
+
+    manifest = tmp_path / "inputs.jsonl"
+    _write_manifest(
+        manifest,
+        [
+            {
+                "model": "model",
+                "case_id": "beamdomino/canonical",
+                "seed": "seed",
+                "candidate_video": "candidate.mp4",
+                "metadata": {"source": "submission"},
+                "score": 0.75,
+            }
+        ],
+    )
+
+    assert load_candidate_manifest(manifest) == [
+        CandidateRow(
+            model="model",
+            case_id="beamdomino/canonical",
+            seed="seed",
+            candidate_video=(tmp_path / "candidate.mp4").resolve(),
+        )
     ]
 
 
@@ -117,11 +195,6 @@ def test_load_candidate_manifest_resolves_relative_paths_and_preserves_order(
         ("{bad json", "line 1.*invalid JSON"),
         ("[]", "line 1.*JSON object"),
         ('{"model": "m"}', "line 1.*missing required field.*case_id"),
-        (
-            '{"model": "m", "case_id": "beamdomino/canonical", "seed": "s", '
-            '"candidate_video": "v.mp4", "extra": true}',
-            "line 1.*unexpected field.*extra",
-        ),
     ],
 )
 def test_load_candidate_manifest_reports_malformed_rows(
@@ -254,6 +327,39 @@ def test_validate_candidate_video_wraps_undecodable_video(
 
 
 @pytest.mark.parametrize(
+    ("failed_role", "probe_error"),
+    [
+        ("candidate", FileNotFoundError("missing video")),
+        ("reference", PermissionError("permission denied")),
+    ],
+)
+def test_validate_candidate_video_wraps_missing_or_unreadable_video_with_context(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    failed_role: str,
+    probe_error: OSError,
+) -> None:
+    from evaluation.lite import validation
+
+    candidate = tmp_path / "missing-candidate.mp4"
+    reference = tmp_path / "unreadable-reference.mp4"
+    failed_path = candidate if failed_role == "candidate" else reference
+
+    def probe(path: str) -> VideoMetadata:
+        if path == str(failed_path):
+            raise probe_error
+        return _metadata(Path(path))
+
+    monkeypatch.setattr(validation.video_io, "get_video_metadata", probe)
+
+    with pytest.raises(
+        validation.CandidateValidationError,
+        match=rf"cannot probe {failed_role} video {failed_path}: {probe_error}",
+    ):
+        validation.validate_candidate_video(candidate, reference)
+
+
+@pytest.mark.parametrize(
     ("overrides", "message"),
     [
         ({"frame_count": 0}, "zero frames"),
@@ -262,6 +368,8 @@ def test_validate_candidate_video_wraps_undecodable_video(
         ({"duration_sec": True}, "invalid duration"),
         ({"duration_sec": 0.0}, "nonpositive duration"),
         ({"duration_sec": float("nan")}, "invalid duration"),
+        ({"duration_sec": float("inf")}, "invalid duration"),
+        ({"duration_sec": float("-inf")}, "invalid duration"),
     ],
 )
 def test_validate_candidate_video_rejects_invalid_candidate_metadata(

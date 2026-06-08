@@ -18,7 +18,6 @@ _CASE_IDS = (
     "liquid_container/chirp_strafe",
 )
 _MANIFEST_FIELD_ORDER = ("model", "case_id", "seed", "candidate_video")
-_MANIFEST_FIELDS = frozenset(_MANIFEST_FIELD_ORDER)
 
 
 @dataclass(frozen=True, order=True)
@@ -103,12 +102,6 @@ def load_candidate_manifest(path: str | Path) -> list[CandidateRow]:
                 raise _manifest_error(
                     manifest_path, line_number, f"missing required field {field!r}"
                 )
-        unexpected = raw.keys() - _MANIFEST_FIELDS
-        if unexpected:
-            field = sorted(unexpected)[0]
-            raise _manifest_error(
-                manifest_path, line_number, f"unexpected field {field!r}"
-            )
 
         model = _nonblank_manifest_string(
             raw["model"], "model", manifest_path, line_number
