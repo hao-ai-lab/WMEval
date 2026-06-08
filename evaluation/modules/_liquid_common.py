@@ -241,6 +241,48 @@ def _grounding_dino_box_xyxy(
     return boxes[best].detach().cpu().numpy().astype(np.float32)
 
 
+def liquid_mask_cache_path(
+    *,
+    video_path: str | Path,
+    sam2_model: str,
+    prompt: str,
+    fps: float,
+    max_pairs: int | None,
+    cache_dir: str | Path,
+) -> Path:
+    cfg = _config_hash({
+        "sam2_model": sam2_model,
+        "prompt": prompt,
+        "fps": fps,
+        "max_pairs": max_pairs,
+        "gdino_model": _GDINO_MODEL_ID,
+        "gdino_box_threshold": _GDINO_BOX_THRESHOLD,
+        "gdino_text_threshold": _GDINO_TEXT_THRESHOLD,
+    })
+    return _cache_path(Path(cache_dir), video_path, "sam2_mask", cfg)
+
+
+def store_liquid_mask_cache(
+    *,
+    video_path: str | Path,
+    result: LiquidMaskResult,
+    max_pairs: int | None,
+    cache_dir: str | Path,
+) -> Path:
+    cache_file = liquid_mask_cache_path(
+        video_path=video_path,
+        sam2_model=result.sam2_model,
+        prompt=result.prompt,
+        fps=result.fps,
+        max_pairs=max_pairs,
+        cache_dir=cache_dir,
+    )
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(result, f)
+    return cache_file
+
+
 def get_liquid_mask_video(
     *,
     video_path: str,
@@ -257,18 +299,15 @@ def get_liquid_mask_video(
     box. Caches the binary mask volume under cache_dir keyed on (video content
     hash, sam2 settings, grounding-dino settings).
     """
-    cache_dir = Path(cache_dir)
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    cfg = _config_hash({
-        "sam2_model": sam2_model,
-        "prompt": prompt,
-        "fps": fps,
-        "max_pairs": max_pairs,
-        "gdino_model": _GDINO_MODEL_ID,
-        "gdino_box_threshold": _GDINO_BOX_THRESHOLD,
-        "gdino_text_threshold": _GDINO_TEXT_THRESHOLD,
-    })
-    cache_file = _cache_path(cache_dir, video_path, "sam2_mask", cfg)
+    cache_file = liquid_mask_cache_path(
+        video_path=video_path,
+        sam2_model=sam2_model,
+        prompt=prompt,
+        fps=fps,
+        max_pairs=max_pairs,
+        cache_dir=cache_dir,
+    )
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
     if cache_file.exists():
         with open(cache_file, "rb") as f:
             return pickle.load(f)
@@ -312,8 +351,23 @@ def get_liquid_mask_video(
     result = LiquidMaskResult(
         masks=np.stack(masks).astype(bool), fps=float(fps), sam2_model=sam2_model, prompt=text_input
     )
-    with open(cache_file, "wb") as f:
-        pickle.dump(result, f)
+    # Preserve the legacy raw-prompt cache key when an empty prompt falls back
+    # to the default text input stored in the result.
+    cache_key_result = LiquidMaskResult(
+        masks=result.masks,
+        fps=result.fps,
+        sam2_model=result.sam2_model,
+        prompt=prompt,
+    )
+    stored_path = store_liquid_mask_cache(
+        video_path=video_path,
+        result=cache_key_result,
+        max_pairs=max_pairs,
+        cache_dir=cache_dir,
+    )
+    if cache_key_result.prompt != result.prompt:
+        with open(stored_path, "wb") as f:
+            pickle.dump(result, f)
     return result
 
 
@@ -474,6 +528,64 @@ def get_bottle_centroid_trace(
     return BottleTrace(centroid_xy=centroids, bbox_xyxy=bboxes, valid=valid)
 
 
+def raft_flow_cache_path(
+    *,
+    video_path: str | Path,
+    mask: LiquidMaskResult,
+    window_size: int,
+    overlap: int,
+    fps: float,
+    max_frames: int | None,
+    cache_dir: str | Path,
+    min_mask_frac: float = 0.5,
+) -> Path:
+    mask_bytes_hash = hashlib.sha256(
+        np.ascontiguousarray(mask.masks).tobytes()
+    ).hexdigest()[:16]
+    cfg = _config_hash(
+        {
+            "estimator": "raft_pooled_v1",
+            "window_size": window_size,
+            "overlap": overlap,
+            "fps": fps,
+            "max_frames": max_frames,
+            "sam2_model": mask.sam2_model,
+            "prompt": mask.prompt,
+            "mask_hash": mask_bytes_hash,
+            "min_mask_frac": float(min_mask_frac),
+        }
+    )
+    return _cache_path(Path(cache_dir), video_path, "raft_pooled", cfg)
+
+
+def store_raft_flow_cache(
+    *,
+    video_path: str | Path,
+    mask: LiquidMaskResult,
+    result: PIVField,
+    window_size: int,
+    overlap: int,
+    fps: float,
+    max_frames: int | None,
+    cache_dir: str | Path,
+    min_mask_frac: float = 0.5,
+) -> Path:
+    cache_file = raft_flow_cache_path(
+        video_path=video_path,
+        mask=mask,
+        window_size=window_size,
+        overlap=overlap,
+        fps=fps,
+        max_frames=max_frames,
+        cache_dir=cache_dir,
+        min_mask_frac=min_mask_frac,
+    )
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+    with open(cache_file, "wb") as f:
+        pickle.dump(result, f)
+    return cache_file
+
+
 def get_raft_flow_field(
     *,
     video_path: str,
@@ -502,23 +614,17 @@ def get_raft_flow_field(
     """
     import cv2
 
-    cache_dir = Path(cache_dir)
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    mask_bytes_hash = hashlib.sha256(np.ascontiguousarray(mask.masks).tobytes()).hexdigest()[:16]
-    cfg = _config_hash(
-        {
-            "estimator": "raft_pooled_v1",
-            "window_size": window_size,
-            "overlap": overlap,
-            "fps": fps,
-            "max_frames": max_frames,
-            "sam2_model": mask.sam2_model,
-            "prompt": mask.prompt,
-            "mask_hash": mask_bytes_hash,
-            "min_mask_frac": float(min_mask_frac),
-        }
+    cache_file = raft_flow_cache_path(
+        video_path=video_path,
+        mask=mask,
+        window_size=window_size,
+        overlap=overlap,
+        fps=fps,
+        max_frames=max_frames,
+        cache_dir=cache_dir,
+        min_mask_frac=min_mask_frac,
     )
-    cache_file = _cache_path(cache_dir, video_path, "raft_pooled", cfg)
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
     if cache_file.exists():
         with open(cache_file, "rb") as f:
             return pickle.load(f)
@@ -588,8 +694,17 @@ def get_raft_flow_field(
         valids[t] = cell_valid
 
     field = PIVField(u=us, v=vs, valid=valids)
-    with open(cache_file, "wb") as f:
-        pickle.dump(field, f)
+    store_raft_flow_cache(
+        video_path=video_path,
+        mask=mask,
+        result=field,
+        window_size=window_size,
+        overlap=overlap,
+        fps=fps,
+        max_frames=max_frames,
+        cache_dir=cache_dir,
+        min_mask_frac=min_mask_frac,
+    )
     return field
 
 
