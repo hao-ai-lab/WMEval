@@ -19,7 +19,13 @@ BOTTLE_PROMPT = "the glass bottle"
 
 def _mask(prompt: str = LIQUID_PROMPT) -> LiquidMaskResult:
     return LiquidMaskResult(
-        masks=np.array([[[True, False], [False, True]]], dtype=bool),
+        masks=np.array(
+            [
+                [[True, False], [False, True]],
+                [[False, True], [True, False]],
+            ],
+            dtype=bool,
+        ),
         fps=16.0,
         sam2_model=SAM2_MODEL,
         prompt=prompt,
@@ -83,8 +89,8 @@ def _case(tmp_path: Path, *, fps: float = 16.0) -> LiteCase:
                     "max_pairs": 512,
                     "liquid_max_pairs": 0,
                     "raft": {
-                        "window_size": 32,
-                        "overlap": 16,
+                        "window_size": 2,
+                        "overlap": 1,
                         "min_mask_frac": 0.5,
                     },
                 }
@@ -327,6 +333,127 @@ def test_portable_artifacts_reject_corrupt_npz_with_specific_error(tmp_path: Pat
         read_piv_field(path)
 
 
+@pytest.mark.parametrize("shape", [(0, 2, 2), (1, 0, 2), (1, 2, 0)])
+def test_portable_liquid_masks_reject_empty_dimensions(
+    tmp_path: Path, shape: tuple[int, int, int]
+) -> None:
+    from evaluation.lite.reference_artifacts import ReferenceArtifactError, write_liquid_mask
+
+    result = LiquidMaskResult(
+        masks=np.ones(shape, dtype=bool),
+        fps=16.0,
+        sam2_model=SAM2_MODEL,
+        prompt=LIQUID_PROMPT,
+    )
+
+    with pytest.raises(ReferenceArtifactError, match="non-empty dimensions"):
+        write_liquid_mask(tmp_path / "mask.npz", result)
+
+
+@pytest.mark.parametrize("shape", [(0, 1, 1), (1, 0, 1), (1, 1, 0)])
+def test_portable_piv_fields_reject_empty_dimensions(
+    tmp_path: Path, shape: tuple[int, int, int]
+) -> None:
+    from evaluation.lite.reference_artifacts import ReferenceArtifactError, write_piv_field
+
+    field = PIVField(
+        u=np.zeros(shape, dtype=np.float32),
+        v=np.zeros(shape, dtype=np.float32),
+        valid=np.zeros(shape, dtype=bool),
+    )
+
+    with pytest.raises(ReferenceArtifactError, match="non-empty dimensions"):
+        write_piv_field(tmp_path / "field.npz", field)
+
+
+def test_portable_piv_fields_reject_nonfinite_values_at_valid_cells(tmp_path: Path) -> None:
+    from evaluation.lite.reference_artifacts import ReferenceArtifactError, write_piv_field
+
+    field = _field()
+    field.u[0, 0, 0] = np.nan
+
+    with pytest.raises(ReferenceArtifactError, match="u and v must be finite where valid"):
+        write_piv_field(tmp_path / "field.npz", field)
+
+
+def test_portable_piv_fields_accept_nonfinite_values_at_invalid_cells(tmp_path: Path) -> None:
+    from evaluation.lite.reference_artifacts import read_piv_field, write_piv_field
+
+    field = PIVField(
+        u=np.array([[[np.nan]]], dtype=np.float32),
+        v=np.array([[[np.inf]]], dtype=np.float32),
+        valid=np.array([[[False]]], dtype=bool),
+    )
+    path = tmp_path / "field.npz"
+
+    write_piv_field(path, field)
+
+    loaded = read_piv_field(path)
+    assert np.isnan(loaded.u[0, 0, 0])
+    assert np.isinf(loaded.v[0, 0, 0])
+
+
+def test_portable_bottle_traces_reject_empty_frames(tmp_path: Path) -> None:
+    from evaluation.lite.reference_artifacts import ReferenceArtifactError, write_bottle_trace
+
+    trace = BottleTrace(
+        centroid_xy=np.empty((0, 2), dtype=np.float64),
+        bbox_xyxy=np.empty((0, 4), dtype=np.float64),
+        valid=np.empty((0,), dtype=bool),
+    )
+
+    with pytest.raises(ReferenceArtifactError, match="must not be empty"):
+        write_bottle_trace(tmp_path / "trace.npz", trace)
+
+
+def test_portable_bottle_traces_reject_nonfinite_values_at_valid_rows(tmp_path: Path) -> None:
+    from evaluation.lite.reference_artifacts import ReferenceArtifactError, write_bottle_trace
+
+    trace = _trace()
+    trace.centroid_xy[0, 0] = np.nan
+
+    with pytest.raises(
+        ReferenceArtifactError, match="centroid_xy and bbox_xyxy must be finite where valid"
+    ):
+        write_bottle_trace(tmp_path / "trace.npz", trace)
+
+
+def test_portable_bottle_traces_accept_nonfinite_values_at_invalid_rows(tmp_path: Path) -> None:
+    from evaluation.lite.reference_artifacts import read_bottle_trace, write_bottle_trace
+
+    trace = _trace()
+    trace.centroid_xy[1] = np.nan
+    trace.bbox_xyxy[1] = np.inf
+    path = tmp_path / "trace.npz"
+
+    write_bottle_trace(path, trace)
+
+    loaded = read_bottle_trace(path)
+    assert np.isnan(loaded.centroid_xy[1]).all()
+    assert np.isinf(loaded.bbox_xyxy[1]).all()
+
+
+def test_portable_npz_write_is_atomic_on_serialization_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from evaluation.lite import reference_artifacts
+
+    path = tmp_path / "mask.npz"
+    path.write_bytes(b"existing artifact")
+
+    def fail_after_partial_write(file, **arrays):
+        file.write(b"partial replacement")
+        raise RuntimeError("simulated serialization failure")
+
+    monkeypatch.setattr(reference_artifacts.np, "savez_compressed", fail_after_partial_write)
+
+    with pytest.raises(RuntimeError, match="simulated serialization failure"):
+        reference_artifacts.write_liquid_mask(path, _mask())
+
+    assert path.read_bytes() == b"existing artifact"
+    assert list(tmp_path.iterdir()) == [path]
+
+
 def test_cache_path_helpers_match_legacy_keys(tmp_path: Path) -> None:
     video = tmp_path / "reference.mp4"
     video.write_bytes(b"stable reference bytes")
@@ -539,8 +666,8 @@ def test_install_reference_artifacts_populates_existing_caches(
     loaded_field = _lc.get_raft_flow_field(
         video_path=str(case.reference_video),
         mask=liquid,
-        window_size=32,
-        overlap=16,
+        window_size=2,
+        overlap=1,
         fps=16.0,
         max_frames=None,
         cache_dir=cache_dir,
@@ -564,6 +691,127 @@ def test_install_reference_artifacts_rejects_metadata_mismatch(tmp_path: Path) -
 
     with pytest.raises(ReferenceArtifactError, match=r"normalization_fps.*15.0.*16.0"):
         install_liquid_reference_artifacts(case, tmp_path / "cache")
+
+
+def _install_artifacts(
+    case: LiteCase,
+    *,
+    liquid: LiquidMaskResult | None = None,
+    bottle: LiquidMaskResult | None = None,
+    field: PIVField | None = None,
+) -> None:
+    from evaluation.lite.reference_artifacts import write_liquid_mask, write_piv_field
+
+    write_liquid_mask(case.artifacts_dir / "liquid_mask.npz", liquid or _mask())
+    write_liquid_mask(case.artifacts_dir / "bottle_mask.npz", bottle or _mask(BOTTLE_PROMPT))
+    write_piv_field(case.artifacts_dir / "raft_pooled_flow.npz", field or _field())
+
+
+@pytest.mark.parametrize(
+    ("liquid", "bottle", "field", "message"),
+    [
+        (
+            _mask(),
+            LiquidMaskResult(
+                masks=np.ones((2, 3, 2), dtype=bool),
+                fps=16.0,
+                sam2_model=SAM2_MODEL,
+                prompt=BOTTLE_PROMPT,
+            ),
+            _field(),
+            "bottle and liquid mask shapes must match",
+        ),
+        (
+            LiquidMaskResult(
+                masks=np.ones((1, 2, 2), dtype=bool),
+                fps=16.0,
+                sam2_model=SAM2_MODEL,
+                prompt=LIQUID_PROMPT,
+            ),
+            LiquidMaskResult(
+                masks=np.ones((1, 2, 2), dtype=bool),
+                fps=16.0,
+                sam2_model=SAM2_MODEL,
+                prompt=BOTTLE_PROMPT,
+            ),
+            _field(),
+            "liquid mask must have at least 2 frames",
+        ),
+        (
+            LiquidMaskResult(
+                masks=np.ones((3, 2, 2), dtype=bool),
+                fps=16.0,
+                sam2_model=SAM2_MODEL,
+                prompt=LIQUID_PROMPT,
+            ),
+            LiquidMaskResult(
+                masks=np.ones((3, 2, 2), dtype=bool),
+                fps=16.0,
+                sam2_model=SAM2_MODEL,
+                prompt=BOTTLE_PROMPT,
+            ),
+            _field(),
+            "RAFT field shape mismatch.*expected \\(2, 1, 1\\)",
+        ),
+        (
+            LiquidMaskResult(
+                masks=np.ones((2, 3, 3), dtype=bool),
+                fps=16.0,
+                sam2_model=SAM2_MODEL,
+                prompt=LIQUID_PROMPT,
+            ),
+            LiquidMaskResult(
+                masks=np.ones((2, 3, 3), dtype=bool),
+                fps=16.0,
+                sam2_model=SAM2_MODEL,
+                prompt=BOTTLE_PROMPT,
+            ),
+            _field(),
+            "RAFT field shape mismatch.*expected \\(1, 2, 2\\)",
+        ),
+    ],
+)
+def test_install_reference_artifacts_rejects_cross_artifact_mismatches_before_writes(
+    tmp_path: Path,
+    liquid: LiquidMaskResult,
+    bottle: LiquidMaskResult,
+    field: PIVField,
+    message: str,
+) -> None:
+    from evaluation.lite.reference_artifacts import (
+        ReferenceArtifactError,
+        install_liquid_reference_artifacts,
+    )
+
+    case = _case(tmp_path)
+    _install_artifacts(case, liquid=liquid, bottle=bottle, field=field)
+    cache_dir = tmp_path / "cache"
+
+    with pytest.raises(ReferenceArtifactError, match=message):
+        install_liquid_reference_artifacts(case, cache_dir)
+
+    assert not cache_dir.exists()
+
+
+def test_install_reference_artifacts_rejects_empty_expected_raft_grid_before_writes(
+    tmp_path: Path,
+) -> None:
+    from evaluation.lite.reference_artifacts import (
+        ReferenceArtifactError,
+        install_liquid_reference_artifacts,
+    )
+
+    case = _case(tmp_path)
+    case.evaluator_lock["module_config"]["liquid"]["raft"].update(
+        {"window_size": 4, "overlap": 2}
+    )
+    _install_artifacts(case)
+    cache_dir = tmp_path / "cache"
+
+    with pytest.raises(ReferenceArtifactError, match="RAFT pooling grid is empty"):
+        install_liquid_reference_artifacts(case, cache_dir)
+
+    assert not cache_dir.exists()
 
 
 def test_legacy_pickle_at_helper_path_is_read_without_inference(

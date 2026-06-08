@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import math
+import os
+import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,7 +37,27 @@ def _unicode_scalar(value: str) -> np.ndarray:
 
 def _write(path: Path, **arrays: np.ndarray) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(path, **arrays)
+    temp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temp_path = Path(handle.name)
+            np.savez_compressed(handle, **arrays)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_path, path)
+    except Exception:
+        if temp_path is not None:
+            try:
+                temp_path.unlink()
+            except FileNotFoundError:
+                pass
+        raise
 
 
 def _read_arrays(path: Path, kind: str, required: tuple[str, ...]) -> dict[str, np.ndarray]:
@@ -81,6 +103,13 @@ def _require_array(
         )
 
 
+def _require_nonempty_dimensions(
+    array: np.ndarray, *, kind: str, path: Path, key: str
+) -> None:
+    if any(dim <= 0 for dim in array.shape):
+        raise _artifact_error(kind, path, f"{key} must have non-empty dimensions")
+
+
 def _require_unicode_scalar(
     array: np.ndarray, *, kind: str, path: Path, key: str
 ) -> str:
@@ -97,6 +126,7 @@ def _require_unicode_scalar(
 def write_liquid_mask(path: Path, result: LiquidMaskResult) -> None:
     kind = "liquid mask"
     _require_array(result.masks, kind=kind, path=path, key="masks", dtype=np.bool_, ndim=3)
+    _require_nonempty_dimensions(result.masks, kind=kind, path=path, key="masks")
     if not math.isfinite(float(result.fps)) or float(result.fps) <= 0:
         raise _artifact_error(kind, path, f"fps must be finite and positive, got {result.fps!r}")
     if not result.sam2_model or not result.prompt:
@@ -114,6 +144,7 @@ def read_liquid_mask(path: Path) -> LiquidMaskResult:
     kind = "liquid mask"
     arrays = _read_arrays(path, kind, ("masks", "fps", "sam2_model", "prompt"))
     _require_array(arrays["masks"], kind=kind, path=path, key="masks", dtype=np.bool_, ndim=3)
+    _require_nonempty_dimensions(arrays["masks"], kind=kind, path=path, key="masks")
     _require_array(arrays["fps"], kind=kind, path=path, key="fps", dtype=np.float64, ndim=0)
     fps = float(arrays["fps"].item())
     if not math.isfinite(fps) or fps <= 0:
@@ -160,12 +191,24 @@ def _validate_bottle_trace(path: Path, result: BottleTrace, kind: str) -> None:
     )
     _require_array(result.valid, kind=kind, path=path, key="valid", dtype=np.bool_, ndim=1)
     frames = result.valid.shape[0]
+    if frames == 0:
+        raise _artifact_error(kind, path, "trace must not be empty")
     if result.centroid_xy.shape[0] != frames or result.bbox_xyxy.shape[0] != frames:
         raise _artifact_error(
             kind,
             path,
             "centroid_xy, bbox_xyxy, and valid must have matching frame counts",
         )
+    if np.any(result.valid):
+        if (
+            not np.isfinite(result.centroid_xy[result.valid]).all()
+            or not np.isfinite(result.bbox_xyxy[result.valid]).all()
+        ):
+            raise _artifact_error(
+                kind,
+                path,
+                "centroid_xy and bbox_xyxy must be finite where valid is true",
+            )
 
 
 def read_bottle_trace(path: Path) -> BottleTrace:
@@ -190,6 +233,9 @@ def _validate_piv_field(path: Path, result: PIVField, kind: str) -> None:
     _require_array(result.u, kind=kind, path=path, key="u", dtype=np.float32, ndim=3)
     _require_array(result.v, kind=kind, path=path, key="v", dtype=np.float32, ndim=3)
     _require_array(result.valid, kind=kind, path=path, key="valid", dtype=np.bool_, ndim=3)
+    _require_nonempty_dimensions(result.u, kind=kind, path=path, key="u")
+    _require_nonempty_dimensions(result.v, kind=kind, path=path, key="v")
+    _require_nonempty_dimensions(result.valid, kind=kind, path=path, key="valid")
     if result.u.shape != result.v.shape or result.u.shape != result.valid.shape:
         raise _artifact_error(
             kind,
@@ -197,6 +243,12 @@ def _validate_piv_field(path: Path, result: PIVField, kind: str) -> None:
             f"u, v, and valid shapes must match, got {result.u.shape}, "
             f"{result.v.shape}, and {result.valid.shape}",
         )
+    if np.any(result.valid):
+        if (
+            not np.isfinite(result.u[result.valid]).all()
+            or not np.isfinite(result.v[result.valid]).all()
+        ):
+            raise _artifact_error(kind, path, "u and v must be finite where valid is true")
 
 
 def read_piv_field(path: Path) -> PIVField:
@@ -331,6 +383,45 @@ def _verify_mask_metadata(
             )
 
 
+def _expected_raft_shape(mask_shape: tuple[int, int, int], expected: _LiquidLock) -> tuple[int, int, int]:
+    frames, height, width = mask_shape
+    step = max(1, expected.window_size - expected.overlap)
+    half = expected.window_size // 2
+    ys = np.arange(half, height - half + 1, step, dtype=int)
+    xs = np.arange(half, width - half + 1, step, dtype=int)
+    if ys.size == 0 or xs.size == 0:
+        raise ReferenceArtifactError(
+            "RAFT pooling grid is empty for liquid mask shape "
+            f"{mask_shape} with window_size={expected.window_size} "
+            f"and overlap={expected.overlap}"
+        )
+    return (frames - 1, int(ys.size), int(xs.size))
+
+
+def _verify_liquid_artifact_consistency(
+    liquid: LiquidMaskResult,
+    bottle: LiquidMaskResult,
+    field: PIVField,
+    expected: _LiquidLock,
+) -> None:
+    if bottle.masks.shape != liquid.masks.shape:
+        raise ReferenceArtifactError(
+            "bottle and liquid mask shapes must match exactly: "
+            f"liquid={liquid.masks.shape}, bottle={bottle.masks.shape}"
+        )
+    if liquid.masks.shape[0] < 2:
+        raise ReferenceArtifactError(
+            f"liquid mask must have at least 2 frames, got {liquid.masks.shape[0]}"
+        )
+    expected_shape = _expected_raft_shape(liquid.masks.shape, expected)
+    if field.u.shape != expected_shape:
+        raise ReferenceArtifactError(
+            "RAFT field shape mismatch: "
+            f"expected {expected_shape} from liquid mask shape {liquid.masks.shape}, "
+            f"got {field.u.shape}"
+        )
+
+
 def install_liquid_reference_artifacts(case: LiteCase, cache_dir: Path) -> None:
     expected = _expected_liquid_lock(case)
     liquid = read_liquid_mask(case.artifacts_dir / "liquid_mask.npz")
@@ -342,6 +433,7 @@ def install_liquid_reference_artifacts(case: LiteCase, cache_dir: Path) -> None:
     _verify_mask_metadata(
         bottle, expected, expected_prompt=expected.bottle_prompt, artifact="bottle_mask.npz"
     )
+    _verify_liquid_artifact_consistency(liquid, bottle, field, expected)
     store_liquid_mask_cache(
         video_path=case.reference_video,
         result=liquid,

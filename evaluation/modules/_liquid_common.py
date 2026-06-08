@@ -14,7 +14,9 @@ not invalidate SAM2 caches.
 from __future__ import annotations
 
 import hashlib
+import os
 import pickle
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -159,6 +161,31 @@ def _config_hash(config: dict) -> str:
     return hashlib.sha256(repr(items).encode("utf-8")).hexdigest()[:16]
 
 
+def _atomic_pickle_dump(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temp_path = Path(handle.name)
+            pickle.dump(payload, handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_path, path)
+    except Exception:
+        if temp_path is not None:
+            try:
+                temp_path.unlink()
+            except FileNotFoundError:
+                pass
+        raise
+
+
 def _read_video_frames_uint8(path: str, max_frames: int | None = None) -> np.ndarray:
     """Decode the entire video into a (T, H, W, 3) uint8 RGB array."""
     import cv2
@@ -277,9 +304,7 @@ def store_liquid_mask_cache(
         max_pairs=max_pairs,
         cache_dir=cache_dir,
     )
-    cache_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(cache_file, "wb") as f:
-        pickle.dump(result, f)
+    _atomic_pickle_dump(cache_file, result)
     return cache_file
 
 
@@ -353,21 +378,7 @@ def get_liquid_mask_video(
     )
     # Preserve the legacy raw-prompt cache key when an empty prompt falls back
     # to the default text input stored in the result.
-    cache_key_result = LiquidMaskResult(
-        masks=result.masks,
-        fps=result.fps,
-        sam2_model=result.sam2_model,
-        prompt=prompt,
-    )
-    stored_path = store_liquid_mask_cache(
-        video_path=video_path,
-        result=cache_key_result,
-        max_pairs=max_pairs,
-        cache_dir=cache_dir,
-    )
-    if cache_key_result.prompt != result.prompt:
-        with open(stored_path, "wb") as f:
-            pickle.dump(result, f)
+    _atomic_pickle_dump(cache_file, result)
     return result
 
 
@@ -454,8 +465,7 @@ def get_piv_field(
         valids.append(valid)
 
     field = PIVField(u=np.stack(us), v=np.stack(vs), valid=np.stack(valids))
-    with open(cache_file, "wb") as f:
-        pickle.dump(field, f)
+    _atomic_pickle_dump(cache_file, field)
     return field
 
 
@@ -580,9 +590,7 @@ def store_raft_flow_cache(
         cache_dir=cache_dir,
         min_mask_frac=min_mask_frac,
     )
-    cache_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(cache_file, "wb") as f:
-        pickle.dump(result, f)
+    _atomic_pickle_dump(cache_file, result)
     return cache_file
 
 
