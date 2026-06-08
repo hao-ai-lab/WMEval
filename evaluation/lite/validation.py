@@ -16,15 +16,21 @@ class CaseValidationError(RuntimeError):
 
 
 def is_lfs_pointer(path: Path) -> bool:
-    with path.open("rb") as handle:
-        return handle.read(80).startswith(_LFS_HEADER)
+    try:
+        with path.open("rb") as handle:
+            return handle.read(80).startswith(_LFS_HEADER)
+    except OSError as exc:
+        raise CaseValidationError(f"cannot inspect {path} for Git LFS pointer: {exc}") from exc
 
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
+    try:
+        with path.open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    except OSError as exc:
+        raise CaseValidationError(f"cannot hash {path}: {exc}") from exc
     return digest.hexdigest()
 
 
@@ -51,6 +57,24 @@ def _resolve_manifest_path(case: LiteCase, relative_path: str) -> Path:
     return resolved
 
 
+def _reference_files(case: LiteCase) -> set[Path]:
+    reference_root = (case.root / "reference").resolve()
+    try:
+        files = {path.resolve() for path in reference_root.rglob("*") if path.is_file()}
+    except OSError as exc:
+        raise CaseValidationError(
+            f"cannot inspect reference directory {reference_root}: {exc}"
+        ) from exc
+    for path in files:
+        _require_path_within_root(case, path, "reference file")
+    files.discard(case.checksums_path)
+    return files
+
+
+def _display_paths(case: LiteCase, paths: set[Path]) -> str:
+    return ", ".join(sorted(str(path.relative_to(case.root)) for path in paths))
+
+
 def validate_case_bundle(case: LiteCase, verify_checksums: bool = True) -> None:
     for declared_path in (
         case.reference_video,
@@ -67,6 +91,7 @@ def validate_case_bundle(case: LiteCase, verify_checksums: bool = True) -> None:
             f"cannot read checksum manifest {case.checksums_path}: {exc}"
         ) from exc
 
+    entries: dict[Path, tuple[str, str]] = {}
     for line_number, line in enumerate(lines, start=1):
         match = _CHECKSUM_LINE.fullmatch(line)
         if match is None:
@@ -75,8 +100,26 @@ def validate_case_bundle(case: LiteCase, verify_checksums: bool = True) -> None:
             )
         expected, relative_path = match.groups()
         target = _resolve_manifest_path(case, relative_path)
+        if target in entries:
+            raise CaseValidationError(f"duplicate checksum path: {relative_path}")
         _require_bundle_file(target)
-        if verify_checksums:
+        entries[target] = (expected, relative_path)
+
+    reference_files = _reference_files(case)
+    entry_paths = set(entries)
+    missing = reference_files - entry_paths
+    extra = entry_paths - reference_files
+    if missing:
+        raise CaseValidationError(
+            f"checksum manifest is incomplete; missing: {_display_paths(case, missing)}"
+        )
+    if extra:
+        raise CaseValidationError(
+            f"checksum manifest has unexpected paths: {_display_paths(case, extra)}"
+        )
+
+    if verify_checksums:
+        for target, (expected, relative_path) in entries.items():
             actual = sha256_file(target)
             if actual != expected:
                 raise CaseValidationError(
