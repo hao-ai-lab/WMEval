@@ -1,10 +1,15 @@
 from __future__ import annotations
 
 import hashlib
+import math
 import posixpath
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from pathlib import PurePosixPath
+
+from evaluation import video_io
+from evaluation.context import VideoMetadata
 
 from .case_loader import LiteCase
 
@@ -15,6 +20,77 @@ _LFS_HEADER = b"version https://git-lfs.github.com/spec/v1"
 
 class CaseValidationError(RuntimeError):
     pass
+
+
+class CandidateValidationError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True)
+class CandidateVideoMetadata:
+    candidate: VideoMetadata
+    reference: VideoMetadata
+
+
+def is_severely_truncated(
+    *,
+    candidate_duration: float,
+    reference_duration: float,
+    min_duration_sec: float = 1.0,
+    min_duration_ratio: float = 0.5,
+) -> bool:
+    threshold = max(min_duration_sec, reference_duration * min_duration_ratio)
+    return candidate_duration < threshold
+
+
+def _probe_video(path: str | Path, role: str) -> VideoMetadata:
+    try:
+        metadata = video_io.get_video_metadata(str(path))
+    except Exception as exc:
+        raise CandidateValidationError(
+            f"cannot probe {role} video {path}: {exc}"
+        ) from exc
+
+    if metadata.frame_count <= 0:
+        raise CandidateValidationError(f"{role} video has zero frames: {path}")
+    if not math.isfinite(metadata.fps) or metadata.fps <= 0:
+        raise CandidateValidationError(f"{role} video has nonpositive FPS: {path}")
+    duration = metadata.duration_sec
+    if (
+        duration is None
+        or isinstance(duration, bool)
+        or not isinstance(duration, (int, float))
+        or not math.isfinite(duration)
+    ):
+        raise CandidateValidationError(f"{role} video has invalid duration: {path}")
+    if duration <= 0:
+        raise CandidateValidationError(f"{role} video has nonpositive duration: {path}")
+    return metadata
+
+
+def validate_candidate_video(
+    candidate_video: str | Path,
+    reference_video: str | Path,
+    *,
+    min_duration_sec: float = 1.0,
+    min_duration_ratio: float = 0.5,
+) -> CandidateVideoMetadata:
+    candidate = _probe_video(candidate_video, "candidate")
+    reference = _probe_video(reference_video, "reference")
+    assert candidate.duration_sec is not None
+    assert reference.duration_sec is not None
+    if is_severely_truncated(
+        candidate_duration=candidate.duration_sec,
+        reference_duration=reference.duration_sec,
+        min_duration_sec=min_duration_sec,
+        min_duration_ratio=min_duration_ratio,
+    ):
+        raise CandidateValidationError(
+            f"candidate video is severely truncated: {candidate_video} "
+            f"({candidate.duration_sec}s candidate, "
+            f"{reference.duration_sec}s reference)"
+        )
+    return CandidateVideoMetadata(candidate=candidate, reference=reference)
 
 
 def is_lfs_pointer(path: Path) -> bool:
