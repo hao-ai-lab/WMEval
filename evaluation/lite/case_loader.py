@@ -31,6 +31,26 @@ SCENE_MODULES = {
     ),
 }
 
+_PROTOCOL_KEYS = (
+    "candidate_normalization",
+    "min_duration_sec",
+    "min_duration_ratio",
+    "duration_threshold_mode",
+)
+_EVALUATOR_LOCK_KEYS = (
+    "release_id",
+    "code_revision",
+    "evaluator_fingerprint",
+    "module_config",
+    "artifact_schema_versions",
+    "dependency_versions",
+)
+_EVALUATOR_LOCK_MAPPING_KEYS = (
+    "module_config",
+    "artifact_schema_versions",
+    "dependency_versions",
+)
+
 
 @dataclass(frozen=True)
 class LiteCase:
@@ -61,6 +81,11 @@ def _mapping(value: Any, where: str) -> Mapping[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"{where} must contain a mapping")
     return value
+
+
+def _require_keys(mapping: Mapping[str, Any], keys: tuple[str, ...], where: str) -> None:
+    for key in keys:
+        _required(mapping, key, where)
 
 
 def _freeze(value: Any) -> Any:
@@ -105,6 +130,10 @@ def load_case(case_dir: str | Path) -> LiteCase:
     evaluator_lock = _mapping(
         _required(raw, "evaluator_lock", "case.yaml"), "evaluator_lock"
     )
+    _require_keys(protocol, _PROTOCOL_KEYS, "protocol")
+    _require_keys(evaluator_lock, _EVALUATOR_LOCK_KEYS, "evaluator_lock")
+    for key in _EVALUATOR_LOCK_MAPPING_KEYS:
+        _mapping(evaluator_lock[key], f"evaluator_lock.{key}")
 
     return LiteCase(
         root=root,

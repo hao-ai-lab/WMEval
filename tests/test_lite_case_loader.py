@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from dataclasses import FrozenInstanceError
 from pathlib import Path
+from typing import Any, Callable
 
 import pytest
+import yaml
 
 from evaluation.lite.case_loader import (
     ALLOWED_CASES,
@@ -41,12 +43,29 @@ def _write_case(
         "  checksums: reference/checksums.sha256\n"
         "protocol:\n"
         "  candidate_normalization: beamdomino_native\n"
+        "  min_duration_sec: 1.0\n"
+        "  min_duration_ratio: 0.5\n"
+        "  duration_threshold_mode: max\n"
         "  nested: {values: [one, two]}\n"
         "evaluator_lock:\n"
         "  release_id: wmeval-lite-v1\n"
-        "  module_config: {}\n",
+        "  code_revision: test\n"
+        "  evaluator_fingerprint: test-fingerprint\n"
+        "  module_config: {}\n"
+        "  artifact_schema_versions: {}\n"
+        "  dependency_versions: {}\n",
         encoding="utf-8",
     )
+
+
+def _mutate_case_yaml(
+    case_dir: Path, mutate: Callable[[dict[str, Any]], None]
+) -> None:
+    case_yaml = case_dir / "case.yaml"
+    raw = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    assert isinstance(raw, dict)
+    mutate(raw)
+    case_yaml.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
 
 
 def test_official_cases_and_scene_modules_are_exact() -> None:
@@ -136,6 +155,63 @@ def test_load_case_reports_missing_required_field(tmp_path: Path) -> None:
     )
 
     with pytest.raises(ValueError, match="missing required key 'display_name'"):
+        load_case(case_dir)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "candidate_normalization",
+        "min_duration_sec",
+        "min_duration_ratio",
+        "duration_threshold_mode",
+    ],
+)
+def test_load_case_rejects_missing_common_protocol_key(
+    tmp_path: Path, key: str
+) -> None:
+    case_dir = tmp_path / "case"
+    _write_case(case_dir)
+    _mutate_case_yaml(case_dir, lambda raw: raw["protocol"].pop(key))
+
+    with pytest.raises(ValueError, match=rf"protocol missing required key '{key}'"):
+        load_case(case_dir)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [
+        "release_id",
+        "code_revision",
+        "evaluator_fingerprint",
+        "module_config",
+        "artifact_schema_versions",
+        "dependency_versions",
+    ],
+)
+def test_load_case_rejects_missing_common_evaluator_lock_key(
+    tmp_path: Path, key: str
+) -> None:
+    case_dir = tmp_path / "case"
+    _write_case(case_dir)
+    _mutate_case_yaml(case_dir, lambda raw: raw["evaluator_lock"].pop(key))
+
+    with pytest.raises(ValueError, match=rf"evaluator_lock missing required key '{key}'"):
+        load_case(case_dir)
+
+
+@pytest.mark.parametrize(
+    "key",
+    ["module_config", "artifact_schema_versions", "dependency_versions"],
+)
+def test_load_case_rejects_malformed_evaluator_lock_mapping(
+    tmp_path: Path, key: str
+) -> None:
+    case_dir = tmp_path / "case"
+    _write_case(case_dir)
+    _mutate_case_yaml(case_dir, lambda raw: raw["evaluator_lock"].update({key: []}))
+
+    with pytest.raises(ValueError, match=rf"evaluator_lock\.{key} must contain a mapping"):
         load_case(case_dir)
 
 
