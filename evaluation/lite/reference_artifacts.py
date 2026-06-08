@@ -41,9 +41,14 @@ def _write(path: Path, **arrays: np.ndarray) -> None:
 def _read_arrays(path: Path, kind: str, required: tuple[str, ...]) -> dict[str, np.ndarray]:
     try:
         with np.load(path, allow_pickle=False) as archive:
-            missing = [key for key in required if key not in archive.files]
+            archive_keys = set(archive.files)
+            required_keys = set(required)
+            missing = [key for key in required if key not in archive_keys]
             if missing:
                 raise _artifact_error(kind, path, f"missing required keys {missing!r}")
+            unexpected = sorted(archive_keys - required_keys)
+            if unexpected:
+                raise _artifact_error(kind, path, f"unexpected keys {unexpected!r}")
             return {key: archive[key] for key in required}
     except ReferenceArtifactError:
         raise

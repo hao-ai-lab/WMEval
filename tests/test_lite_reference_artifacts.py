@@ -189,6 +189,77 @@ def test_portable_artifacts_reject_missing_keys(
 
 
 @pytest.mark.parametrize(
+    ("reader_name", "arrays", "artifact"),
+    [
+        (
+            "read_liquid_mask",
+            {
+                "masks": np.ones((1, 2, 2), dtype=bool),
+                "fps": np.array(16.0, dtype=np.float64),
+                "sam2_model": np.array("sam2"),
+                "prompt": np.array("liquid"),
+            },
+            "liquid mask",
+        ),
+        (
+            "read_bottle_trace",
+            {
+                "centroid_xy": np.ones((1, 2), dtype=np.float64),
+                "bbox_xyxy": np.ones((1, 4), dtype=np.float64),
+                "valid": np.ones((1,), dtype=bool),
+            },
+            "bottle trace",
+        ),
+        (
+            "read_piv_field",
+            {
+                "u": np.ones((1, 1, 1), dtype=np.float32),
+                "v": np.ones((1, 1, 1), dtype=np.float32),
+                "valid": np.ones((1, 1, 1), dtype=bool),
+            },
+            "PIV field",
+        ),
+    ],
+)
+def test_portable_artifacts_reject_unexpected_keys(
+    tmp_path: Path,
+    reader_name: str,
+    arrays: dict[str, np.ndarray],
+    artifact: str,
+) -> None:
+    from evaluation.lite import reference_artifacts
+
+    path = tmp_path / "extra.npz"
+    np.savez_compressed(path, **arrays, unexpected=np.array(1, dtype=np.int64))
+    with pytest.raises(
+        reference_artifacts.ReferenceArtifactError,
+        match=rf"{artifact} artifact .*unexpected keys \['unexpected'\]",
+    ):
+        getattr(reference_artifacts, reader_name)(path)
+
+
+def test_portable_artifacts_reject_unexpected_object_array_before_loading(
+    tmp_path: Path,
+) -> None:
+    from evaluation.lite.reference_artifacts import ReferenceArtifactError, read_liquid_mask
+
+    path = tmp_path / "hidden-object.npz"
+    np.savez_compressed(
+        path,
+        masks=np.ones((1, 2, 2), dtype=bool),
+        fps=np.array(16.0, dtype=np.float64),
+        sam2_model=np.array("sam2"),
+        prompt=np.array("liquid"),
+        hidden=np.array([{"unsafe": True}], dtype=object),
+    )
+    with pytest.raises(
+        ReferenceArtifactError,
+        match=r"liquid mask artifact .*unexpected keys \['hidden'\]",
+    ):
+        read_liquid_mask(path)
+
+
+@pytest.mark.parametrize(
     ("reader_name", "arrays", "detail"),
     [
         (
