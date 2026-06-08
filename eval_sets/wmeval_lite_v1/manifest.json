@@ -1,0 +1,118 @@
+{
+  "suite_name": "WMEval Lite",
+  "version": "v1",
+  "description": "Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.",
+  "dimensions": {
+    "causal_lpips": {
+      "display_name": "Causal LPIPS",
+      "description": "Collision/contact timing via reference-first causal LPIPS.",
+      "metric_config": {
+        "modules": ["lpips"],
+        "lpips_sampling": "causal_vlm_collision",
+        "lpips_causal_event_source": "reference",
+        "eval_fps": 4.0,
+        "max_pairs": 32
+      },
+      "test_cases": [
+        {
+          "test_case_id": "mirror_ball_third_person",
+          "display_name": "MirrorBall",
+          "legacy_ids": ["sample_scene", "sample_scene_third_person", "mirror_ball"],
+          "prompt": "Starting world must match this layout: low camera near a flat light gray floor. Center foreground: one highly reflective chrome mirror ball (the player). Surrounding it, a grid of many glossy yellow spheres stretching into the distance with alleys between rows. Strong light from upper right; soft shadows toward lower left. Dark horizon band and pale sky or wall above. The mirror ball sits in a central aisle with clear path forward between yellow-sphere columns.\n\nThe player controls only the silver mirror ball: roll it on the floor using standard directions. Keep physics simple and responsive.",
+          "perspective": "third_person",
+          "reference_video": "eval_sets/wmeval_lite_v1/unity_references/mirror_ball_third_person_unity.mp4",
+          "reference_video_sha256": "e3b44c57d5c30f5fb99a585af161802381f4667be6b0e1c094ad00c768460d40",
+          "reference_artifacts": {
+            "actions_file": "eval_sets/wmeval_lite_v1/reference_artifacts/mirror_ball_third_person/actions_mirror_ball_up_right_left.txt",
+            "synthetic_action_dir": "eval_sets/wmeval_lite_v1/reference_artifacts/mirror_ball_third_person/action_path"
+          },
+          "reference_metrics": {}
+        },
+        {
+          "test_case_id": "ball_roller_third_person",
+          "display_name": "BallRoller",
+          "legacy_ids": ["ball_roller"],
+          "prompt": "Starting world must match the supplied BallRoller sketch frame: a compact square arena with a flat blue-gray floor, low white walls, and a fixed side-table camera looking diagonally across the arena. The player is a smooth white ball staged close to a tight rack of billiard-style balls so an immediate collision is plausible. Keep the yellow ramp, the magenta dome, and the cyan cube visible as simple readable obstacles. Preserve the clean uncluttered look and the fixed third-person framing from the sketch.\n\nThe player controls only the white ball. Movement should feel like a responsive rolling sphere with noticeable inertia, suitable for collecting pickups and weaving around simple obstacles.",
+          "perspective": "third_person",
+          "reference_video": "eval_sets/wmeval_lite_v1/unity_references/ball_roller_third_person_unity.mp4",
+          "reference_video_sha256": "3125741aecb494524be064bdf2cbd1ad4d63f53eeebd8d70887cb91131b7e138",
+          "reference_artifacts": {
+            "actions_file": "eval_sets/wmeval_lite_v1/reference_artifacts/ball_roller_third_person/actions_ball_roller_collect_loop.txt",
+            "synthetic_action_dir": "eval_sets/wmeval_lite_v1/reference_artifacts/ball_roller_third_person/action_path"
+          },
+          "reference_metrics": {}
+        },
+        {
+          "test_case_id": "beam_domino_third_person",
+          "display_name": "BeamDomino",
+          "legacy_ids": ["beam_domino"],
+          "prompt": "Starting world must match the BeamDomino Unity scene from a third-person follow camera: a blue controllable ball on the floor in the foreground, a small three-pillar structure with a triangular roof directly ahead, a gold ball resting on top of the roof, and a radial ring of dominoes arranged around the structure beyond it. Keep the layout clean and readable so the full physics chain is visible in one shot: blue ball rolls into a front-right pillar, the roof tips, the gold ball drops from the roof, and the domino ring begins to cascade. Preserve the authored camera feeling of the Unity scene rather than switching to first-person or a cinematic orbit.\n\nThe player controls the blue floor ball. Motion should read as a short purposeful setup for the chain reaction: a brief pause, one clean forward roll into the nearest front-right pillar, then no extra steering while the structure collapses and the domino cascade plays out. The camera should continue to follow from behind and above the ball without cutting away from the collapse.",
+          "perspective": "third_person",
+          "reference_video": "eval_sets/wmeval_lite_v1/unity_references/beam_domino_third_person_unity.mp4",
+          "reference_video_sha256": "c8d9ea9de1da66b6cfb4cff9df6ed1d17712ba6ffe7031ba071d5d672caa7cf8",
+          "reference_artifacts": {
+            "actions_file": "eval_sets/wmeval_lite_v1/reference_artifacts/beam_domino_third_person/actions_beam_domino_pillar_hit.txt",
+            "synthetic_action_dir": "eval_sets/wmeval_lite_v1/reference_artifacts/beam_domino_third_person/action_path"
+          },
+          "reference_metrics": {}
+        }
+      ]
+    },
+    "controllability": {
+      "display_name": "Controllability",
+      "description": "Action-following motion via RAFT and optional synthetic-flow control_motion.",
+      "metric_config": {
+        "modules": ["control_motion"],
+        "control_camera_compensation": true,
+        "control_global_motion_mode": "median_translation",
+        "control_bad_pixel_thresholds": [1.0, 3.0],
+        "eval_fps": 4.0,
+        "max_pairs": 32
+      },
+      "test_cases": [
+        {
+          "test_case_id": "mirror_ball_third_person",
+          "display_name": "MirrorBall",
+          "legacy_ids": ["sample_scene", "sample_scene_third_person", "mirror_ball"],
+          "prompt": "Starting world must match this layout: low camera near a flat light gray floor. Center foreground: one highly reflective chrome mirror ball (the player). Surrounding it, a grid of many glossy yellow spheres stretching into the distance with alleys between rows. Strong light from upper right; soft shadows toward lower left. Dark horizon band and pale sky or wall above. The mirror ball sits in a central aisle with clear path forward between yellow-sphere columns.\n\nThe player controls only the silver mirror ball: roll it on the floor using standard directions. Keep physics simple and responsive.",
+          "perspective": "third_person",
+          "reference_video": "eval_sets/wmeval_lite_v1/unity_references/mirror_ball_third_person_unity.mp4",
+          "reference_video_sha256": "e3b44c57d5c30f5fb99a585af161802381f4667be6b0e1c094ad00c768460d40",
+          "reference_artifacts": {
+            "actions_file": "eval_sets/wmeval_lite_v1/reference_artifacts/mirror_ball_third_person/actions_mirror_ball_up_right_left.txt",
+            "synthetic_action_dir": "eval_sets/wmeval_lite_v1/reference_artifacts/mirror_ball_third_person/action_path"
+          },
+          "reference_metrics": {}
+        },
+        {
+          "test_case_id": "ball_roller_third_person",
+          "display_name": "BallRoller",
+          "legacy_ids": ["ball_roller"],
+          "prompt": "Starting world must match the supplied BallRoller sketch frame: a compact square arena with a flat blue-gray floor, low white walls, and a fixed side-table camera looking diagonally across the arena. The player is a smooth white ball staged close to a tight rack of billiard-style balls so an immediate collision is plausible. Keep the yellow ramp, the magenta dome, and the cyan cube visible as simple readable obstacles. Preserve the clean uncluttered look and the fixed third-person framing from the sketch.\n\nThe player controls only the white ball. Movement should feel like a responsive rolling sphere with noticeable inertia, suitable for collecting pickups and weaving around simple obstacles.",
+          "perspective": "third_person",
+          "reference_video": "eval_sets/wmeval_lite_v1/unity_references/ball_roller_third_person_unity.mp4",
+          "reference_video_sha256": "3125741aecb494524be064bdf2cbd1ad4d63f53eeebd8d70887cb91131b7e138",
+          "reference_artifacts": {
+            "actions_file": "eval_sets/wmeval_lite_v1/reference_artifacts/ball_roller_third_person/actions_ball_roller_collect_loop.txt",
+            "synthetic_action_dir": "eval_sets/wmeval_lite_v1/reference_artifacts/ball_roller_third_person/action_path"
+          },
+          "reference_metrics": {}
+        },
+        {
+          "test_case_id": "beam_domino_third_person",
+          "display_name": "BeamDomino",
+          "legacy_ids": ["beam_domino"],
+          "prompt": "Starting world must match the BeamDomino Unity scene from a third-person follow camera: a blue controllable ball on the floor in the foreground, a small three-pillar structure with a triangular roof directly ahead, a gold ball resting on top of the roof, and a radial ring of dominoes arranged around the structure beyond it. Keep the layout clean and readable so the full physics chain is visible in one shot: blue ball rolls into a front-right pillar, the roof tips, the gold ball drops from the roof, and the domino ring begins to cascade. Preserve the authored camera feeling of the Unity scene rather than switching to first-person or a cinematic orbit.\n\nThe player controls the blue floor ball. Motion should read as a short purposeful setup for the chain reaction: a brief pause, one clean forward roll into the nearest front-right pillar, then no extra steering while the structure collapses and the domino cascade plays out. The camera should continue to follow from behind and above the ball without cutting away from the collapse.",
+          "perspective": "third_person",
+          "reference_video": "eval_sets/wmeval_lite_v1/unity_references/beam_domino_third_person_unity.mp4",
+          "reference_video_sha256": "c8d9ea9de1da66b6cfb4cff9df6ed1d17712ba6ffe7031ba071d5d672caa7cf8",
+          "reference_artifacts": {
+            "actions_file": "eval_sets/wmeval_lite_v1/reference_artifacts/beam_domino_third_person/actions_beam_domino_pillar_hit.txt",
+            "synthetic_action_dir": "eval_sets/wmeval_lite_v1/reference_artifacts/beam_domino_third_person/action_path"
+          },
+          "reference_metrics": {}
+        }
+      ]
+    }
+  }
+}
