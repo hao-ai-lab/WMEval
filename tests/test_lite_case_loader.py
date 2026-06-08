@@ -131,6 +131,15 @@ def test_load_case_metadata_is_deeply_read_only() -> None:
         case.evaluator_lock["module_config"]["causal_step"]["judge"] = "changed"  # type: ignore[index]
 
 
+def test_load_case_rejects_nested_non_string_metadata_key(tmp_path: Path) -> None:
+    case_dir = tmp_path / "case"
+    _write_case(case_dir)
+    _mutate_case_yaml(case_dir, lambda raw: raw["protocol"].update(nested={1: "value"}))
+
+    with pytest.raises(ValueError, match=r"protocol\.nested mapping keys must be strings"):
+        load_case(case_dir)
+
+
 def test_discover_cases_is_sorted_by_case_id(tmp_path: Path) -> None:
     _write_case(tmp_path / "beamdomino" / "glancing", case_id="beamdomino/glancing")
     _write_case(tmp_path / "beamdomino" / "canonical")
@@ -409,6 +418,33 @@ def test_validate_case_bundle_rejects_unlisted_nested_artifact(tmp_path: Path) -
     artifact.write_text("{}\n", encoding="utf-8")
 
     with pytest.raises(CaseValidationError, match=r"missing.*reference/artifacts/data\.json"):
+        validate_case_bundle(load_case(case_dir), verify_checksums=False)
+
+
+def test_validate_case_bundle_rejects_unlisted_symlink_alias(tmp_path: Path) -> None:
+    case_dir = tmp_path / "case"
+    _write_case(case_dir)
+    alias = case_dir / "reference" / "reference-alias.mp4"
+    alias.symlink_to("reference.mp4")
+
+    with pytest.raises(CaseValidationError, match=r"symlink.*reference-alias\.mp4"):
+        validate_case_bundle(load_case(case_dir), verify_checksums=False)
+
+
+def test_validate_case_bundle_rejects_noncanonical_checksum_alias(
+    tmp_path: Path,
+) -> None:
+    case_dir = tmp_path / "case"
+    _write_case(case_dir)
+    checksums = case_dir / "reference" / "checksums.sha256"
+    checksums.write_text(
+        checksums.read_text(encoding="utf-8").replace(
+            "reference/reference.mp4", "reference/./reference.mp4"
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(CaseValidationError, match=r"noncanonical checksum path"):
         validate_case_bundle(load_case(case_dir), verify_checksums=False)
 
 

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+import posixpath
 import re
 from pathlib import Path
+from pathlib import PurePosixPath
 
 from .case_loader import LiteCase
 
@@ -48,31 +50,48 @@ def _require_path_within_root(case: LiteCase, path: Path, description: str) -> N
         raise CaseValidationError(f"{description} escapes case root: {path}") from exc
 
 
+def _canonical_checksum_path(relative_path: str) -> str:
+    if (
+        PurePosixPath(relative_path).is_absolute()
+        or "\\" in relative_path
+        or posixpath.normpath(relative_path) != relative_path
+    ):
+        raise CaseValidationError(f"noncanonical checksum path: {relative_path}")
+    return relative_path
+
+
 def _resolve_manifest_path(case: LiteCase, relative_path: str) -> Path:
-    manifest_entry = Path(relative_path)
-    if manifest_entry.is_absolute():
+    if PurePosixPath(relative_path).is_absolute():
         raise CaseValidationError(f"checksum path escapes case root: {relative_path}")
-    resolved = (case.root / manifest_entry).resolve()
+    resolved = (case.root / Path(relative_path)).resolve()
     _require_path_within_root(case, resolved, "checksum path")
     return resolved
 
 
-def _reference_files(case: LiteCase) -> set[Path]:
-    reference_root = (case.root / "reference").resolve()
+def _reference_files(case: LiteCase) -> dict[str, Path]:
+    reference_root = case.root / "reference"
     try:
-        files = {path.resolve() for path in reference_root.rglob("*") if path.is_file()}
+        paths = [reference_root, *reference_root.rglob("*")]
+        files: dict[str, Path] = {}
+        for path in paths:
+            if path.is_symlink():
+                raise CaseValidationError(f"symlink is not allowed under reference: {path}")
+            if not path.is_file():
+                continue
+            resolved = path.resolve()
+            _require_path_within_root(case, resolved, "reference file")
+            lexical_name = path.relative_to(case.root).as_posix()
+            files[lexical_name] = resolved
     except OSError as exc:
         raise CaseValidationError(
             f"cannot inspect reference directory {reference_root}: {exc}"
         ) from exc
-    for path in files:
-        _require_path_within_root(case, path, "reference file")
-    files.discard(case.checksums_path)
+    files.pop(case.checksums_path.relative_to(case.root).as_posix(), None)
     return files
 
 
-def _display_paths(case: LiteCase, paths: set[Path]) -> str:
-    return ", ".join(sorted(str(path.relative_to(case.root)) for path in paths))
+def _display_paths(paths: set[str]) -> str:
+    return ", ".join(sorted(paths))
 
 
 def validate_case_bundle(case: LiteCase, verify_checksums: bool = True) -> None:
@@ -91,7 +110,7 @@ def validate_case_bundle(case: LiteCase, verify_checksums: bool = True) -> None:
             f"cannot read checksum manifest {case.checksums_path}: {exc}"
         ) from exc
 
-    entries: dict[Path, tuple[str, str]] = {}
+    entries: dict[str, tuple[str, Path]] = {}
     for line_number, line in enumerate(lines, start=1):
         match = _CHECKSUM_LINE.fullmatch(line)
         if match is None:
@@ -99,27 +118,29 @@ def validate_case_bundle(case: LiteCase, verify_checksums: bool = True) -> None:
                 f"invalid checksum line {line_number} in {case.checksums_path}"
             )
         expected, relative_path = match.groups()
-        target = _resolve_manifest_path(case, relative_path)
-        if target in entries:
+        lexical_name = _canonical_checksum_path(relative_path)
+        target = _resolve_manifest_path(case, lexical_name)
+        if lexical_name in entries:
             raise CaseValidationError(f"duplicate checksum path: {relative_path}")
         _require_bundle_file(target)
-        entries[target] = (expected, relative_path)
+        entries[lexical_name] = (expected, target)
 
     reference_files = _reference_files(case)
-    entry_paths = set(entries)
-    missing = reference_files - entry_paths
-    extra = entry_paths - reference_files
+    entry_names = set(entries)
+    reference_names = set(reference_files)
+    missing = reference_names - entry_names
+    extra = entry_names - reference_names
     if missing:
         raise CaseValidationError(
-            f"checksum manifest is incomplete; missing: {_display_paths(case, missing)}"
+            f"checksum manifest is incomplete; missing: {_display_paths(missing)}"
         )
     if extra:
         raise CaseValidationError(
-            f"checksum manifest has unexpected paths: {_display_paths(case, extra)}"
+            f"checksum manifest has unexpected paths: {_display_paths(extra)}"
         )
 
     if verify_checksums:
-        for target, (expected, relative_path) in entries.items():
+        for relative_path, (expected, target) in entries.items():
             actual = sha256_file(target)
             if actual != expected:
                 raise CaseValidationError(

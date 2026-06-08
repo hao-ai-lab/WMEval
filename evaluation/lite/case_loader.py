@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from types import MappingProxyType
@@ -150,13 +150,19 @@ def _positive_number(value: Any, where: str) -> int | float:
     return value
 
 
-def _freeze(value: Any) -> Any:
+def _freeze(value: Any, where: str) -> Any:
     if isinstance(value, dict):
-        return MappingProxyType({str(key): _freeze(item) for key, item in value.items()})
+        if any(not isinstance(key, str) for key in value):
+            raise ValueError(f"{where} mapping keys must be strings")
+        return MappingProxyType(
+            {key: _freeze(item, f"{where}.{key}") for key, item in value.items()}
+        )
     if isinstance(value, list):
-        return tuple(_freeze(item) for item in value)
+        return tuple(
+            _freeze(item, f"{where}[{index}]") for index, item in enumerate(value)
+        )
     if isinstance(value, set):
-        return frozenset(_freeze(item) for item in value)
+        return frozenset(_freeze(item, where) for item in value)
     return value
 
 
@@ -235,8 +241,8 @@ def load_case(case_dir: str | Path) -> LiteCase:
         reference_video=(root / reference_video).resolve(),
         baseline_path=(root / baseline_path).resolve(),
         checksums_path=(root / checksums_path).resolve(),
-        protocol=_freeze(protocol),
-        evaluator_lock=_freeze(evaluator_lock),
+        protocol=_freeze(protocol, "protocol"),
+        evaluator_lock=_freeze(evaluator_lock, "evaluator_lock"),
     )
 
 
