@@ -68,6 +68,21 @@ def _probe_video(path: str | Path, role: str) -> VideoMetadata:
     return metadata
 
 
+def _verify_decodable(path: str | Path, role: str, metadata: VideoMetadata) -> None:
+    indices = sorted({0, metadata.frame_count - 1})
+    try:
+        frames = video_io.load_frames_by_indices(str(path), indices)
+    except Exception as exc:
+        raise CandidateValidationError(
+            f"cannot decode {role} video {path}: {exc}"
+        ) from exc
+    if len(frames) != len(indices):
+        raise CandidateValidationError(
+            f"{role} video {path} decoded too few representative frames: "
+            f"expected {len(indices)}, got {len(frames)}"
+        )
+
+
 def validate_candidate_video(
     candidate_video: str | Path,
     reference_video: str | Path,
@@ -77,6 +92,8 @@ def validate_candidate_video(
 ) -> CandidateVideoMetadata:
     candidate = _probe_video(candidate_video, "candidate")
     reference = _probe_video(reference_video, "reference")
+    _verify_decodable(candidate_video, "candidate", candidate)
+    _verify_decodable(reference_video, "reference", reference)
     assert candidate.duration_sec is not None
     assert reference.duration_sec is not None
     if is_severely_truncated(

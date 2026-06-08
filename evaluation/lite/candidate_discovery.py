@@ -8,16 +8,11 @@ from typing import Any
 from .case_loader import ALLOWED_CASES
 
 
-_CASE_IDS = (
-    "beamdomino/canonical",
-    "beamdomino/glancing",
-    "beamdomino/direct_strike",
-    "liquid_container/rest",
-    "liquid_container/step_hold",
-    "liquid_container/impulse_decay",
-    "liquid_container/chirp_strafe",
-)
 _MANIFEST_FIELD_ORDER = ("model", "case_id", "seed", "candidate_video")
+
+
+class _DuplicateJsonKey(ValueError):
+    pass
 
 
 @dataclass(frozen=True, order=True)
@@ -41,18 +36,38 @@ def _add_unique(
     rows.append(row)
 
 
+def _safe_identity_component(value: Any, field: str, where: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{where}: {field} must be a nonblank string")
+    if (
+        value in {".", ".."}
+        or Path(value).is_absolute()
+        or "/" in value
+        or "\\" in value
+        or "\0" in value
+    ):
+        raise ValueError(
+            f"{where}: {field} must be a safe single filesystem path component, "
+            f"got {value!r}"
+        )
+    return value
+
+
 def discover_candidate_directory(model_root: str | Path) -> list[CandidateRow]:
     root = Path(model_root)
-    model = root.name
+    model = _safe_identity_component(root.name, "model", f"model root {root}")
     rows: list[CandidateRow] = []
     identities: set[tuple[str, str, str]] = set()
 
-    for case_id in _CASE_IDS:
+    for case_id in sorted(ALLOWED_CASES):
         for video_path in root.glob(f"{case_id}/*.mp4"):
+            seed = _safe_identity_component(
+                video_path.stem, "seed", f"candidate video {video_path}"
+            )
             row = CandidateRow(
                 model=model,
                 case_id=case_id,
-                seed=video_path.stem,
+                seed=seed,
                 candidate_video=video_path.resolve(),
             )
             _add_unique(rows, identities, row, str(video_path))
@@ -72,6 +87,15 @@ def _nonblank_manifest_string(
     return value
 
 
+def _strict_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise _DuplicateJsonKey(f"duplicate JSON object key {key!r}")
+        result[key] = value
+    return result
+
+
 def load_candidate_manifest(path: str | Path) -> list[CandidateRow]:
     manifest_path = Path(path).resolve()
     try:
@@ -87,7 +111,9 @@ def load_candidate_manifest(path: str | Path) -> list[CandidateRow]:
         if not line.strip():
             continue
         try:
-            raw = json.loads(line)
+            raw = json.loads(line, object_pairs_hook=_strict_json_object)
+        except _DuplicateJsonKey as exc:
+            raise _manifest_error(manifest_path, line_number, str(exc)) from exc
         except json.JSONDecodeError as exc:
             raise _manifest_error(
                 manifest_path, line_number, f"invalid JSON: {exc.msg}"
@@ -103,14 +129,15 @@ def load_candidate_manifest(path: str | Path) -> list[CandidateRow]:
                     manifest_path, line_number, f"missing required field {field!r}"
                 )
 
-        model = _nonblank_manifest_string(
-            raw["model"], "model", manifest_path, line_number
+        where = f"{manifest_path}: line {line_number}"
+        model = _safe_identity_component(
+            raw["model"], "model", where
         )
         case_id = _nonblank_manifest_string(
             raw["case_id"], "case_id", manifest_path, line_number
         )
-        seed = _nonblank_manifest_string(
-            raw["seed"], "seed", manifest_path, line_number
+        seed = _safe_identity_component(
+            raw["seed"], "seed", where
         )
         candidate_video_value = _nonblank_manifest_string(
             raw["candidate_video"], "candidate_video", manifest_path, line_number
