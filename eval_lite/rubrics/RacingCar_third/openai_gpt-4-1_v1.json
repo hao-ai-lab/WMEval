@@ -1,0 +1,54 @@
+{
+  "scene_name": "RacingCar_third",
+  "prompt_text": "A very wide, straight highway under a clear blue sky, with dark roadside barriers, green grass, and long symmetrical rows of tall trees on both sides. The road begins abruptly at a starting point, with no ground behind it—only open sky, as if the road is suspended in space. A yellow sports car with two black racing stripes is parking exactly at the start of the road, centered in the frame, viewed from behind. The car faces forward into the long empty highway. Bright daytime lighting, clean and minimal environment. The character is the yellow sports car",
+  "rubric_items": [
+    {
+      "rubric_id": "env_01",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the highway remain straight, wide, and continuous under a clear blue sky throughout the video?"
+    },
+    {
+      "rubric_id": "env_02",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Are dark roadside barriers, green grass, and symmetrical rows of tall trees present on both sides of the highway in all frames?"
+    },
+    {
+      "rubric_id": "env_03",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Is there an abrupt starting point to the road with only open sky and no ground behind it in every frame where the start is visible?"
+    },
+    {
+      "rubric_id": "env_04",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the scene maintain bright daytime lighting and a clean, minimal environment throughout?"
+    },
+    {
+      "rubric_id": "obj_01",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "Is there a yellow sports car visibly centered at the starting point of the road, viewed from behind?"
+    },
+    {
+      "rubric_id": "obj_02",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "Does the yellow sports car feature two black racing stripes as specified?"
+    },
+    {
+      "rubric_id": "obj_03",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "Is the sports car's body color a clear, bright yellow as described in the prompt?"
+    }
+  ],
+  "metadata": {
+    "generator_provider": "openai",
+    "generator_model": "gpt-4.1",
+    "generated_at": "2026-06-22T06:47:37.754257+00:00",
+    "num_candidates_generated": 7
+  }
+}

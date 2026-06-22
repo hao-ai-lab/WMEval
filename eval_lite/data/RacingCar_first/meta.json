@@ -1,0 +1,15 @@
+{
+  "scene": "RacingCar",
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "frame_count": 300,
+  "start_view": "first",
+  "start_tilt_up_deg": 0,
+  "fov_vertical_deg": 65,
+  "action_key_vocab": ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "C"],
+  "action_encoding": "multi-hot; idle = all zeros",
+  "poses": "(N,4,4) row-major camera localToWorld; Unity left-handed, +Y up, meters",
+  "intrinsics": "(3,3) pinhole K in pixels",
+  "spec": "actions_racing_left10_first.txt"
+}
