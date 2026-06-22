@@ -12,55 +12,55 @@
       "rubric_id": "env_02",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Do the large, glossy yellow spheres remain in a regular, evenly spaced grid pattern on the ground in every frame?"
+      "rubric_text": "Do the yellow spheres remain arranged in a regular, roughly evenly spaced grid-like pattern across the surface throughout the video?"
     },
     {
       "rubric_id": "env_03",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Are low gray boundary walls enclosing the scene visible throughout the video?"
+      "rubric_text": "When the scene perimeter is visible, do low gray boundary walls consistently enclose the environment throughout the video?"
     },
     {
       "rubric_id": "env_04",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Is the environment consistently illuminated by bright daylight, with clear cast shadows visible in every frame?"
+      "rubric_text": "Does the scene consistently appear under bright daylight with clear cast shadows throughout the video?"
     },
     {
       "rubric_id": "env_05",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Does the environment stay clean and simple throughout the video, without extraneous details or clutter?"
+      "rubric_text": "Does the environment remain clean and visually simple throughout the video?"
     },
     {
       "rubric_id": "obj_01",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "When the central landmark sphere is visible, does it have a highly reflective chrome appearance as described in the prompt?"
+      "rubric_text": "When the central character sphere is visible and judgeable, does it appear highly reflective and chrome?"
     },
     {
       "rubric_id": "obj_02",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "When assessing the field of spheres, do the large yellow spheres appear glossy, are they yellow in color, and are they arranged in a regular, grid-like pattern?"
+      "rubric_text": "When the surrounding spheres are visible and judgeable, are they yellow?"
     },
     {
       "rubric_id": "obj_03",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "Are the yellow spheres each large in proportion to the ground and other elements, consistent with the prompt's description?"
+      "rubric_text": "When the surrounding spheres are visible and judgeable, do they have a glossy surface appearance?"
     },
     {
       "rubric_id": "obj_04",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "Is the central chrome sphere visually distinct from the yellow spheres and located near the center as a landmark, as described in the prompt?"
+      "rubric_text": "When the surrounding spheres are visible and judgeable, do they appear large as described in the prompt?"
     }
   ],
   "metadata": {
     "generator_provider": "openai",
-    "generator_model": "gpt-4.1",
-    "generated_at": "2026-06-22T06:39:23.267733+00:00",
+    "generator_model": "gpt-5.4",
+    "generated_at": "2026-06-22T07:23:48.448736+00:00",
     "num_candidates_generated": 9
   }
 }

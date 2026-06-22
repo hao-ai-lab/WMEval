@@ -6,49 +6,55 @@
       "rubric_id": "env_01",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Does the highway remain straight, wide, and continuous under a clear blue sky throughout the video?"
+      "rubric_text": "Does the highway remain very wide and straight across all sampled frames?"
     },
     {
       "rubric_id": "env_02",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Are dark roadside barriers, green grass, and symmetrical rows of tall trees present on both sides of the highway in all frames?"
+      "rubric_text": "Does the sky remain clear blue throughout the video, including behind the road's starting edge?"
     },
     {
       "rubric_id": "env_03",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Is there an abrupt starting point to the road with only open sky and no ground behind it in every frame where the start is visible?"
+      "rubric_text": "Do dark roadside barriers, green grass, and symmetrical rows of tall trees remain on both sides of the highway throughout the video?"
     },
     {
       "rubric_id": "env_04",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Does the scene maintain bright daytime lighting and a clean, minimal environment throughout?"
+      "rubric_text": "Whenever the road's starting point is visible, is there no ground behind it and only open sky, making the road appear suspended in space?"
+    },
+    {
+      "rubric_id": "env_05",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the scene maintain bright daytime lighting and a clean, minimal environment throughout the video?"
     },
     {
       "rubric_id": "obj_01",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "Is there a yellow sports car visibly centered at the starting point of the road, viewed from behind?"
+      "rubric_text": "When the car is visible and judgeable, is the sports car yellow as specified in the prompt?"
     },
     {
       "rubric_id": "obj_02",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "Does the yellow sports car feature two black racing stripes as specified?"
+      "rubric_text": "When the car is visible and judgeable, does the sports car display two black racing stripes as specified in the prompt?"
     },
     {
       "rubric_id": "obj_03",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "Is the sports car's body color a clear, bright yellow as described in the prompt?"
+      "rubric_text": "When the vehicle is visible and judgeable, does it appear to be a sports car as specified in the prompt?"
     }
   ],
   "metadata": {
     "generator_provider": "openai",
-    "generator_model": "gpt-4.1",
-    "generated_at": "2026-06-22T06:47:37.754257+00:00",
-    "num_candidates_generated": 7
+    "generator_model": "gpt-5.4",
+    "generated_at": "2026-06-22T07:24:03.958147+00:00",
+    "num_candidates_generated": 8
   }
 }

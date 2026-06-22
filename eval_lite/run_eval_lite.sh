@@ -43,7 +43,7 @@ fi
 VIEW_DIR="eval_lite"
 RUBRIC_DIR="${VIEW_DIR}/rubrics"
 PROVIDER="openai"
-MODEL="${MODEL:-gpt-4.1}"          # override via: MODEL=gpt-5.4 bash ...
+MODEL="${MODEL:-gpt-5.4}"          # override via: MODEL=gpt-4.1 bash ...
 PROMPT_VERSION="${PROMPT_VERSION:-v1}"
 ALPHA="${ALPHA:-0.6}"
 OUTPUT="reports/eval_lite/results.jsonl"
