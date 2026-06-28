@@ -287,6 +287,9 @@ def run_world_model_evaluation(
     liquid_camera_regime: str = "c2_static_side",
     liquid_flow_estimator: str = "raft",
     liquid_flow_min_mask_frac: float = 0.5,
+    shadow_text_prompt: str = "table. chair. lamp.",
+    shadow_anchor_label: str = "table",
+    shadow_hud_preset: str = "none",
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -465,6 +468,9 @@ def run_world_model_evaluation(
     )
     context.artifacts.update(
         {
+            "shadow_text_prompt": shadow_text_prompt,
+            "shadow_anchor_label": shadow_anchor_label,
+            "shadow_hud_preset": shadow_hud_preset,
             "unity_log_json": unity_log_json,
             "camera_intrinsics_json": camera_intrinsics_json,
             "unity_flow_dir": unity_flow_dir,
