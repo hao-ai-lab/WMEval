@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +10,8 @@ import yaml
 from yaml.constructor import ConstructorError
 from yaml.nodes import MappingNode
 from yaml.resolver import BaseResolver
+
+from ._validate import as_mapping, nonblank_str, positive_number, require_key
 
 
 ALLOWED_CASES = frozenset(
@@ -117,15 +118,11 @@ class LiteCase:
 
 
 def _required(mapping: Mapping[str, Any], key: str, where: str) -> Any:
-    if key not in mapping:
-        raise ValueError(f"{where} missing required key {key!r}")
-    return mapping[key]
+    return require_key(mapping, key, where, ValueError)
 
 
 def _mapping(value: Any, where: str) -> Mapping[str, Any]:
-    if not isinstance(value, dict):
-        raise ValueError(f"{where} must contain a mapping")
-    return value
+    return as_mapping(value, where, ValueError)
 
 
 def _require_keys(mapping: Mapping[str, Any], keys: tuple[str, ...], where: str) -> None:
@@ -134,20 +131,11 @@ def _require_keys(mapping: Mapping[str, Any], keys: tuple[str, ...], where: str)
 
 
 def _nonblank_string(value: Any, where: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise ValueError(f"{where} must be a nonblank string")
-    return value
+    return nonblank_str(value, where, ValueError)
 
 
 def _positive_number(value: Any, where: str) -> int | float:
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, (int, float))
-        or (isinstance(value, float) and not math.isfinite(value))
-        or value <= 0
-    ):
-        raise ValueError(f"{where} must be a finite positive number")
-    return value
+    return positive_number(value, where, ValueError)
 
 
 def _freeze(value: Any, where: str) -> Any:

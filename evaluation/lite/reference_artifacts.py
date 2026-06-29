@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import math
-import os
-import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,10 +14,12 @@ from evaluation.modules._liquid_common import (
     BottleTrace,
     LiquidMaskResult,
     PIVField,
+    atomic_write,
     store_liquid_mask_cache,
     store_raft_flow_cache,
 )
 
+from ._validate import as_mapping, finite_number, integer, nonblank_str, require_key
 from .case_loader import LiteCase
 
 
@@ -36,28 +36,7 @@ def _unicode_scalar(value: str) -> np.ndarray:
 
 
 def _write(path: Path, **arrays: np.ndarray) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="wb",
-            dir=path.parent,
-            prefix=f".{path.name}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            temp_path = Path(handle.name)
-            np.savez_compressed(handle, **arrays)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp_path, path)
-    except Exception:
-        if temp_path is not None:
-            try:
-                temp_path.unlink()
-            except FileNotFoundError:
-                pass
-        raise
+    atomic_write(path, lambda handle: np.savez_compressed(handle, **arrays))
 
 
 def _read_arrays(path: Path, kind: str, required: tuple[str, ...]) -> dict[str, np.ndarray]:
@@ -273,39 +252,29 @@ class _LiquidLock:
 
 
 def _mapping(value: Any, where: str) -> Mapping[str, Any]:
-    if not isinstance(value, Mapping):
-        raise ReferenceArtifactError(f"{where} must contain a mapping")
-    return value
+    return as_mapping(value, where, ReferenceArtifactError)
 
 
 def _required(mapping: Mapping[str, Any], key: str, where: str) -> Any:
-    if key not in mapping:
-        raise ReferenceArtifactError(f"{where} missing required key {key!r}")
-    return mapping[key]
+    return require_key(mapping, key, where, ReferenceArtifactError)
 
 
 def _string(mapping: Mapping[str, Any], key: str, where: str) -> str:
-    value = _required(mapping, key, where)
-    if not isinstance(value, str) or not value:
-        raise ReferenceArtifactError(f"{where}.{key} must be a nonempty string")
-    return value
+    return nonblank_str(
+        _required(mapping, key, where), f"{where}.{key}", ReferenceArtifactError
+    )
 
 
 def _number(mapping: Mapping[str, Any], key: str, where: str) -> float:
-    value = _required(mapping, key, where)
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ReferenceArtifactError(f"{where}.{key} must be a finite number")
-    number = float(value)
-    if not math.isfinite(number):
-        raise ReferenceArtifactError(f"{where}.{key} must be a finite number")
-    return number
+    return finite_number(
+        _required(mapping, key, where), f"{where}.{key}", ReferenceArtifactError
+    )
 
 
 def _integer(mapping: Mapping[str, Any], key: str, where: str) -> int:
-    value = _required(mapping, key, where)
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ReferenceArtifactError(f"{where}.{key} must be an integer")
-    return value
+    return integer(
+        _required(mapping, key, where), f"{where}.{key}", ReferenceArtifactError
+    )
 
 
 def _expected_liquid_lock(case: LiteCase) -> _LiquidLock:

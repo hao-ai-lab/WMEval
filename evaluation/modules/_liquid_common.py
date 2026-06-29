@@ -19,6 +19,7 @@ import pickle
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Callable
 
 import numpy as np
 
@@ -161,7 +162,15 @@ def _config_hash(config: dict) -> str:
     return hashlib.sha256(repr(items).encode("utf-8")).hexdigest()[:16]
 
 
-def _atomic_pickle_dump(path: Path, payload: object) -> None:
+def atomic_write(path: Path, writer: Callable[[Any], None]) -> None:
+    """Atomically materialize ``path`` by writing through a temp file.
+
+    ``writer`` receives the open binary handle and performs the serialization
+    (pickle, ``np.savez_compressed``, etc.). The temp file is flushed, fsynced,
+    and renamed into place; on any failure it is removed so a partial write can
+    never replace or leave a stray sibling next to an existing artifact. Shared
+    by the liquid caches here and the Lite portable artifacts.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     temp_path: Path | None = None
     try:
@@ -173,7 +182,7 @@ def _atomic_pickle_dump(path: Path, payload: object) -> None:
             delete=False,
         ) as handle:
             temp_path = Path(handle.name)
-            pickle.dump(payload, handle)
+            writer(handle)
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp_path, path)
@@ -184,6 +193,10 @@ def _atomic_pickle_dump(path: Path, payload: object) -> None:
             except FileNotFoundError:
                 pass
         raise
+
+
+def _atomic_pickle_dump(path: Path, payload: object) -> None:
+    atomic_write(path, lambda handle: pickle.dump(payload, handle))
 
 
 def _read_video_frames_uint8(path: str, max_frames: int | None = None) -> np.ndarray:
