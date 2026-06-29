@@ -532,7 +532,7 @@ def test_validate_candidate_video_decodes_unique_first_and_last_frames(
 
 
 @pytest.mark.parametrize("failed_role", ["candidate", "reference"])
-def test_validate_candidate_video_rejects_short_decode_with_context(
+def test_validate_candidate_video_rejects_undecodable_video_with_context(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, failed_role: str
 ) -> None:
     from evaluation.lite import validation
@@ -546,16 +546,42 @@ def test_validate_candidate_video_rejects_short_decode_with_context(
     monkeypatch.setattr(
         validation.video_io,
         "load_frames_by_indices",
-        lambda path, indices: [object()]
+        lambda path, indices: []
         if path == str(failed_path)
         else [object() for _ in indices],
     )
 
     with pytest.raises(
         validation.CandidateValidationError,
-        match=rf"{failed_role}.*{failed_path}.*expected 2.*got 1",
+        match=rf"{failed_role}.*{failed_path}.*could not decode any frames",
     ):
         validation.validate_candidate_video(candidate, reference)
+
+
+def test_validate_candidate_video_accepts_overestimated_frame_count_tail(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A healthy clip whose reported last index overshoots the real stream
+    (a common OpenCV CAP_PROP_FRAME_COUNT over-estimate) must not be rejected:
+    decoding the first frame succeeds even though the tail index does not."""
+    from evaluation.lite import validation
+
+    candidate = tmp_path / "candidate.mp4"
+    reference = tmp_path / "reference.mp4"
+    monkeypatch.setattr(
+        validation.video_io, "get_video_metadata", lambda path: _metadata(Path(path))
+    )
+    # The real loader stops at the first unreadable index, so requesting
+    # [0, last] returns only the first frame when the tail is over-reported.
+    monkeypatch.setattr(
+        validation.video_io,
+        "load_frames_by_indices",
+        lambda path, indices: [object()],
+    )
+
+    result = validation.validate_candidate_video(candidate, reference)
+
+    assert result.candidate.frame_count == 100
 
 
 @pytest.mark.parametrize("failed_role", ["candidate", "reference"])
@@ -724,35 +750,72 @@ def test_normalize_liquid_video_uses_locked_ffmpeg_command_and_creates_parent(
 
     source = tmp_path / "source.mp4"
     destination = tmp_path / "nested" / "normalized.mp4"
-    calls: list[tuple[list[str], bool]] = []
+    calls: list[tuple[list[str], dict[str, Any]]] = []
     monkeypatch.setattr(
         normalization.subprocess,
         "run",
-        lambda command, check: calls.append((command, check)),
+        lambda command, **kwargs: calls.append((command, kwargs)),
     )
 
     normalization.normalize_liquid_video(source, destination)
 
     assert destination.parent.is_dir()
-    assert calls == [
-        (
-            [
-                "ffmpeg",
-                "-y",
-                "-loglevel",
-                "error",
-                "-i",
-                str(source),
-                "-vf",
-                "scale=832:464:flags=bilinear,fps=16",
-                "-c:v",
-                "libx264",
-                "-crf",
-                "18",
-                "-pix_fmt",
-                "yuv420p",
-                str(destination),
-            ],
-            True,
-        )
+    assert len(calls) == 1
+    command, kwargs = calls[0]
+    assert command == [
+        "ffmpeg",
+        "-y",
+        "-loglevel",
+        "error",
+        "-i",
+        str(source),
+        "-vf",
+        "scale=832:464:flags=bilinear,fps=16",
+        "-c:v",
+        "libx264",
+        "-crf",
+        "18",
+        "-pix_fmt",
+        "yuv420p",
+        str(destination),
     ]
+    assert kwargs["check"] is True
+    assert kwargs["capture_output"] is True
+    assert kwargs["text"] is True
+    assert kwargs["timeout"] == normalization.DEFAULT_NORMALIZATION_TIMEOUT_SEC
+
+
+def test_normalize_liquid_video_surfaces_ffmpeg_stderr_on_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from evaluation.lite import normalization
+
+    def fail(command: list[str], **kwargs: Any) -> None:
+        raise normalization.subprocess.CalledProcessError(
+            returncode=1, cmd=command, stderr="moov atom not found"
+        )
+
+    monkeypatch.setattr(normalization.subprocess, "run", fail)
+
+    with pytest.raises(
+        normalization.NormalizationError, match="exit 1.*moov atom not found"
+    ):
+        normalization.normalize_liquid_video(
+            tmp_path / "in.mp4", tmp_path / "out.mp4"
+        )
+
+
+def test_normalize_liquid_video_reports_missing_ffmpeg(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from evaluation.lite import normalization
+
+    def missing(command: list[str], **kwargs: Any) -> None:
+        raise FileNotFoundError("ffmpeg")
+
+    monkeypatch.setattr(normalization.subprocess, "run", missing)
+
+    with pytest.raises(normalization.NormalizationError, match="ffmpeg executable not found"):
+        normalization.normalize_liquid_video(
+            tmp_path / "in.mp4", tmp_path / "out.mp4"
+        )

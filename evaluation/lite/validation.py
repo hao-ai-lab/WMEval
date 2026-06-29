@@ -17,6 +17,13 @@ from .case_loader import LiteCase
 _CHECKSUM_LINE = re.compile(r"([0-9a-f]{64})  (\S(?:.*\S)?)")
 _LFS_HEADER = b"version https://git-lfs.github.com/spec/v1"
 
+# Locked v1 severe-truncation defaults, mirrored in every case.yaml protocol as
+# `min_duration_sec` / `min_duration_ratio`. Kept here as the single source for
+# the function defaults; the execution layer should pass each case's protocol
+# values explicitly rather than relying on these.
+DEFAULT_MIN_DURATION_SEC = 1.0
+DEFAULT_MIN_DURATION_RATIO = 0.5
+
 
 class CaseValidationError(RuntimeError):
     pass
@@ -36,8 +43,8 @@ def is_severely_truncated(
     *,
     candidate_duration: float,
     reference_duration: float,
-    min_duration_sec: float = 1.0,
-    min_duration_ratio: float = 0.5,
+    min_duration_sec: float = DEFAULT_MIN_DURATION_SEC,
+    min_duration_ratio: float = DEFAULT_MIN_DURATION_RATIO,
 ) -> bool:
     threshold = max(min_duration_sec, reference_duration * min_duration_ratio)
     return candidate_duration < threshold
@@ -69,17 +76,28 @@ def _probe_video(path: str | Path, role: str) -> VideoMetadata:
 
 
 def _verify_decodable(path: str | Path, role: str, metadata: VideoMetadata) -> None:
-    indices = sorted({0, metadata.frame_count - 1})
+    """Confirm the stream actually yields a decoded frame.
+
+    OpenCV's ``CAP_PROP_FRAME_COUNT`` is frequently an over-estimate (it is
+    derived from duration x fps for many containers/codecs), so seeking to the
+    reported final index can fail on a perfectly healthy clip and previously
+    triggered a false "cannot decode" rejection. We probe the first and
+    reported-last indices but only require that *some* frame decodes: a healthy
+    clip whose tail index overshoots the real stream is accepted, while a
+    corrupt or empty clip (no frame decodes, or decoding raises) is rejected.
+    Severe truncation is handled separately by the duration check.
+    """
+    indices = sorted({0, max(metadata.frame_count - 1, 0)})
     try:
         frames = video_io.load_frames_by_indices(str(path), indices)
     except Exception as exc:
         raise CandidateValidationError(
             f"cannot decode {role} video {path}: {exc}"
         ) from exc
-    if len(frames) != len(indices):
+    if not frames:
         raise CandidateValidationError(
-            f"{role} video {path} decoded too few representative frames: "
-            f"expected {len(indices)}, got {len(frames)}"
+            f"{role} video {path} could not decode any frames "
+            f"(reported {metadata.frame_count} frames)"
         )
 
 
@@ -87,8 +105,8 @@ def validate_candidate_video(
     candidate_video: str | Path,
     reference_video: str | Path,
     *,
-    min_duration_sec: float = 1.0,
-    min_duration_ratio: float = 0.5,
+    min_duration_sec: float = DEFAULT_MIN_DURATION_SEC,
+    min_duration_ratio: float = DEFAULT_MIN_DURATION_RATIO,
 ) -> CandidateVideoMetadata:
     candidate = _probe_video(candidate_video, "candidate")
     reference = _probe_video(reference_video, "reference")
