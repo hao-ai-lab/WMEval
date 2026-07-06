@@ -78,6 +78,17 @@ def _run_shadow(context: EvaluationContext, device: Optional[str] = None) -> Dic
         }
     return analyze_shadow_from_context(context=context, device=device)
 
+
+def _run_shadow_consistency(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+    try:
+        from .modules.shadow_consistency import analyze_shadow_consistency_from_context
+    except Exception as exc:
+        return {
+            "module": "shadow_consistency",
+            "error": f"failed to import shadow_consistency module: {exc}",
+        }
+    return analyze_shadow_consistency_from_context(context=context, device=device)
+
 def _run_clip4clip(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
     try:
         from .modules.clip4clip import run_clip4clip
@@ -163,6 +174,7 @@ MODULE_REGISTRY: Dict[str, EvaluationModule] = {
     "lighting": _run_lighting,
     "motion": _run_motion,
     "shadow": _run_shadow,
+    "shadow_consistency": _run_shadow_consistency,
     "slosh_spectrum": _run_slosh_spectrum,
 }
 
