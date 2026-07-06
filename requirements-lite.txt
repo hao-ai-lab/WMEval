@@ -1,2 +1,8 @@
-# Heavyweight evaluator dependencies remain the same as the existing causal and liquid READMEs.
+# Suite loading / validation / dry-run needs only PyYAML.
 PyYAML>=6.0,<7
+
+# Running dimensions pulls in the module dependencies:
+# - prompt_consistency: numpy, opencv-python, pydantic, requests (+ OPENAI_API_KEY)
+# - causal_lpips / controllability / shadow_consistency / liquid / causal_step:
+#   heavyweight evaluator dependencies per the existing dimension READMEs
+#   (torch, torchvision, lpips, transformers, sam2, openpiv, ffmpeg, ...).
