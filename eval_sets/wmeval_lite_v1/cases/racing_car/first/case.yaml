@@ -1,0 +1,28 @@
+schema_version: 2
+case_id: racing_car/first
+scene: racing_car
+display_name: RacingCar first
+prompt: "A very wide, straight highway under a clear blue sky, with dark roadside\
+  \ barriers, green grass, and long symmetrical rows of tall trees on both sides.\
+  \ The road begins abruptly at a starting point, with no ground behind it\u2014only\
+  \ open sky, as if the road is suspended in space. Bright daytime lighting, clean\
+  \ and minimal environment. First person view."
+perspective: first_person
+rubric_scene_name: RacingCar_first
+modules: []
+reference:
+  first_frame: reference/ref.png
+  baseline: reference/baseline.json
+  checksums: reference/checksums.sha256
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: cac80a497ca543248d5cbeed791a393f8e6dfaf8
+  evaluator_fingerprint: f2112a5c02fd2f67a0845c7b3f7b53a5
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}

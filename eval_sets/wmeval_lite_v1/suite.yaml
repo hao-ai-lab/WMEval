@@ -49,6 +49,28 @@ dimensions:
       - epe_mean_raw
       - bad_pixel_rate_1px_mean
       - bad_pixel_rate_3px_mean
+  prompt_consistency:
+    display_name: Prompt Consistency
+    description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only).
+    evaluator: vlm_consistency
+    requires_reference: false
+    vlm:
+      provider: openai
+      model: gpt-5.4
+      prompt_version: v1
+      alpha: 0.6
+      rubric_dir: rubrics
+    cases:
+    - mirror_rolling_ball/first
+    - mirror_rolling_ball/third
+    - racing_car/first
+    - racing_car/third
+    aggregate:
+      headline: overall_score
+      direction: higher
+      extra_means:
+      - env_score
+      - obj_score
 legacy_case_aliases:
   causal_lpips:
     mirror_ball_third_person: mirror_ball/third_person
