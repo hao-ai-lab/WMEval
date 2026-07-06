@@ -186,7 +186,7 @@ def test_load_case_reports_missing_required_field(tmp_path: Path) -> None:
         load_case(case_dir)
 
 
-@pytest.mark.parametrize("value", [True, False, 2, 1.0, "1"])
+@pytest.mark.parametrize("value", [True, False, 3, 1.0, "1"])
 def test_load_case_rejects_unsupported_schema_version(
     tmp_path: Path, value: object
 ) -> None:
@@ -194,7 +194,7 @@ def test_load_case_rejects_unsupported_schema_version(
     _write_case(case_dir)
     _mutate_case_yaml(case_dir, lambda raw: raw.update(schema_version=value))
 
-    with pytest.raises(ValueError, match="schema_version must be integer 1"):
+    with pytest.raises(ValueError, match="schema_version must be integer 1 or 2"):
         load_case(case_dir)
 
 

@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from .case_loader import ALLOWED_CASES
 
 
 _MANIFEST_FIELD_ORDER = ("model", "case_id", "seed", "candidate_video")
+_EMPTY_PARAMS: Mapping[str, Any] = MappingProxyType({})
 
 
 class _DuplicateJsonKey(ValueError):
@@ -21,6 +24,9 @@ class CandidateRow:
     case_id: str
     seed: str
     candidate_video: Path
+    # Optional per-candidate parameters (e.g. shadow_hud_preset). Excluded
+    # from identity/ordering: (model, case_id, seed) stays the identity.
+    params: Mapping[str, Any] = field(default=_EMPTY_PARAMS, compare=False)
 
 
 def _add_unique(
@@ -53,13 +59,18 @@ def _safe_identity_component(value: Any, field: str, where: str) -> str:
     return value
 
 
-def discover_candidate_directory(model_root: str | Path) -> list[CandidateRow]:
+def discover_candidate_directory(
+    model_root: str | Path,
+    *,
+    allowed_cases: Iterable[str] | None = None,
+) -> list[CandidateRow]:
     root = Path(model_root)
     model = _safe_identity_component(root.name, "model", f"model root {root}")
     rows: list[CandidateRow] = []
     identities: set[tuple[str, str, str]] = set()
 
-    for case_id in sorted(ALLOWED_CASES):
+    case_ids = ALLOWED_CASES if allowed_cases is None else frozenset(allowed_cases)
+    for case_id in sorted(case_ids):
         for video_path in root.glob(f"{case_id}/*.mp4"):
             seed = _safe_identity_component(
                 video_path.stem, "seed", f"candidate video {video_path}"
@@ -96,8 +107,13 @@ def _strict_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
-def load_candidate_manifest(path: str | Path) -> list[CandidateRow]:
+def load_candidate_manifest(
+    path: str | Path,
+    *,
+    allowed_cases: Iterable[str] | None = None,
+) -> list[CandidateRow]:
     manifest_path = Path(path).resolve()
+    allowed = ALLOWED_CASES if allowed_cases is None else frozenset(allowed_cases)
     try:
         lines = manifest_path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeError) as exc:
@@ -142,17 +158,29 @@ def load_candidate_manifest(path: str | Path) -> list[CandidateRow]:
         candidate_video_value = _nonblank_manifest_string(
             raw["candidate_video"], "candidate_video", manifest_path, line_number
         )
-        if case_id not in ALLOWED_CASES:
+        if case_id not in allowed:
             raise _manifest_error(
                 manifest_path,
                 line_number,
                 f"unsupported official Lite case_id {case_id!r}",
             )
+        params: Mapping[str, Any] = _EMPTY_PARAMS
+        if "params" in raw:
+            params_value = raw["params"]
+            if not isinstance(params_value, dict) or any(
+                not isinstance(key, str) for key in params_value
+            ):
+                raise _manifest_error(
+                    manifest_path,
+                    line_number,
+                    "params must be a JSON object with string keys",
+                )
+            params = MappingProxyType(dict(params_value))
 
         candidate_video = Path(candidate_video_value)
         if not candidate_video.is_absolute():
             candidate_video = manifest_path.parent / candidate_video
-        row = CandidateRow(model, case_id, seed, candidate_video.resolve())
+        row = CandidateRow(model, case_id, seed, candidate_video.resolve(), params)
         _add_unique(
             rows,
             identities,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
@@ -14,6 +14,11 @@ from yaml.resolver import BaseResolver
 from ._validate import as_mapping, nonblank_str, positive_number, require_key
 
 
+_EMPTY_MAPPING: Mapping[str, Any] = MappingProxyType({})
+
+# Hard-coded v1 registry. schema_version 1 cases are always checked against
+# these; schema_version 2 cases are checked against whatever the caller (the
+# suite layer) passes via ``allowed_cases`` / ``expected_modules`` instead.
 ALLOWED_CASES = frozenset(
     {
         "beamdomino/canonical",
@@ -106,11 +111,17 @@ class LiteCase:
     scene: str
     display_name: str
     modules: tuple[str, ...]
-    reference_video: Path
+    reference_video: Path | None
     baseline_path: Path
     checksums_path: Path
     protocol: Mapping[str, Any]
     evaluator_lock: Mapping[str, Any]
+    # schema_version 2 additions; v1 cases keep the defaults.
+    prompt: str | None = None
+    perspective: str | None = None
+    rubric_scene_name: str | None = None
+    first_frame: Path | None = None
+    module_params: Mapping[str, Any] = field(default=_EMPTY_MAPPING)
 
     @property
     def artifacts_dir(self) -> Path:
@@ -154,7 +165,20 @@ def _freeze(value: Any, where: str) -> Any:
     return value
 
 
-def load_case(case_dir: str | Path) -> LiteCase:
+def load_case(
+    case_dir: str | Path,
+    *,
+    allowed_cases: Iterable[str] | None = None,
+    expected_modules: Mapping[str, tuple[str, ...]] | None = None,
+) -> LiteCase:
+    """Parse and validate one ``case.yaml``.
+
+    ``allowed_cases`` / ``expected_modules`` default to the hard-coded v1
+    registries for ``schema_version: 1`` cases (preserving the original strict
+    behaviour). For ``schema_version: 2`` cases they default to ``None``,
+    meaning the caller (the suite layer, which derives them from
+    ``suite.yaml``) is responsible for membership checks.
+    """
     root = Path(case_dir).resolve()
     manifest_path = root / "case.yaml"
     try:
@@ -168,8 +192,8 @@ def load_case(case_dir: str | Path) -> LiteCase:
 
     raw = _mapping(raw, str(manifest_path))
     schema_version = _required(raw, "schema_version", "case.yaml")
-    if type(schema_version) is not int or schema_version != 1:
-        raise ValueError("schema_version must be integer 1")
+    if type(schema_version) is not int or schema_version not in (1, 2):
+        raise ValueError("schema_version must be integer 1 or 2")
     case_id = _nonblank_string(_required(raw, "case_id", "case.yaml"), "case_id")
     scene = _nonblank_string(_required(raw, "scene", "case.yaml"), "scene")
     display_name = _nonblank_string(
@@ -182,14 +206,27 @@ def load_case(case_dir: str | Path) -> LiteCase:
         raise ValueError("modules entries must be nonblank strings")
     modules = tuple(modules_value)
 
-    if case_id not in ALLOWED_CASES:
+    resolved_allowed = (
+        frozenset(allowed_cases)
+        if allowed_cases is not None
+        else (ALLOWED_CASES if schema_version == 1 else None)
+    )
+    if resolved_allowed is not None and case_id not in resolved_allowed:
         raise ValueError(f"unsupported official Lite case_id {case_id!r}")
     expected_scene = case_id.partition("/")[0]
     if scene != expected_scene:
         raise ValueError(f"{case_id}: case_id does not match scene {scene!r}")
-    expected_modules = SCENE_MODULES[scene]
-    if modules != expected_modules:
-        raise ValueError(f"{case_id}: modules must be {expected_modules!r}")
+    resolved_modules = (
+        expected_modules
+        if expected_modules is not None
+        else (SCENE_MODULES if schema_version == 1 else None)
+    )
+    if resolved_modules is not None:
+        expected = resolved_modules.get(scene)
+        if expected is None:
+            raise ValueError(f"{case_id}: no expected modules for scene {scene!r}")
+        if modules != tuple(expected):
+            raise ValueError(f"{case_id}: modules must be {tuple(expected)!r}")
 
     reference = _mapping(_required(raw, "reference", "case.yaml"), "reference")
     protocol = _mapping(_required(raw, "protocol", "case.yaml"), "protocol")
@@ -209,15 +246,48 @@ def load_case(case_dir: str | Path) -> LiteCase:
         _nonblank_string(evaluator_lock[key], f"evaluator_lock.{key}")
     for key in _EVALUATOR_LOCK_MAPPING_KEYS:
         _mapping(evaluator_lock[key], f"evaluator_lock.{key}")
-    reference_video = _nonblank_string(
-        _required(reference, "video", "reference"), "reference.video"
-    )
+
+    # reference.video is required for schema_version 1; optional for
+    # schema_version 2 so reference-free dimensions (prompt/shadow
+    # consistency) can ship a bundle with only auxiliary reference assets.
+    reference_video: str | None
+    if schema_version == 1 or "video" in reference:
+        reference_video = _nonblank_string(
+            _required(reference, "video", "reference"), "reference.video"
+        )
+    else:
+        reference_video = None
+    first_frame: str | None = None
+    if schema_version >= 2 and "first_frame" in reference:
+        first_frame = _nonblank_string(
+            reference["first_frame"], "reference.first_frame"
+        )
     baseline_path = _nonblank_string(
         _required(reference, "baseline", "reference"), "reference.baseline"
     )
     checksums_path = _nonblank_string(
         _required(reference, "checksums", "reference"), "reference.checksums"
     )
+
+    prompt: str | None = None
+    perspective: str | None = None
+    rubric_scene_name: str | None = None
+    module_params: Mapping[str, Any] = _EMPTY_MAPPING
+    if schema_version >= 2:
+        if "prompt" in raw:
+            prompt = _nonblank_string(raw["prompt"], "prompt")
+        if "perspective" in raw:
+            perspective = _nonblank_string(raw["perspective"], "perspective")
+        if "rubric_scene_name" in raw:
+            rubric_scene_name = _nonblank_string(
+                raw["rubric_scene_name"], "rubric_scene_name"
+            )
+        if "module_params" in raw:
+            module_params = _freeze(
+                _mapping(raw["module_params"], "module_params"), "module_params"
+            )
+            for module_name, params in module_params.items():
+                as_mapping(params, f"module_params.{module_name}", ValueError)
 
     return LiteCase(
         root=root,
@@ -226,17 +296,38 @@ def load_case(case_dir: str | Path) -> LiteCase:
         scene=scene,
         display_name=display_name,
         modules=modules,
-        reference_video=(root / reference_video).resolve(),
+        reference_video=(
+            (root / reference_video).resolve() if reference_video is not None else None
+        ),
         baseline_path=(root / baseline_path).resolve(),
         checksums_path=(root / checksums_path).resolve(),
         protocol=_freeze(protocol, "protocol"),
         evaluator_lock=_freeze(evaluator_lock, "evaluator_lock"),
+        prompt=prompt,
+        perspective=perspective,
+        rubric_scene_name=rubric_scene_name,
+        first_frame=(
+            (root / first_frame).resolve() if first_frame is not None else None
+        ),
+        module_params=module_params,
     )
 
 
-def discover_cases(cases_root: str | Path) -> list[LiteCase]:
+def discover_cases(
+    cases_root: str | Path,
+    *,
+    allowed_cases: Iterable[str] | None = None,
+    expected_modules: Mapping[str, tuple[str, ...]] | None = None,
+) -> list[LiteCase]:
     root = Path(cases_root)
     return sorted(
-        (load_case(path.parent) for path in root.glob("*/*/case.yaml")),
+        (
+            load_case(
+                path.parent,
+                allowed_cases=allowed_cases,
+                expected_modules=expected_modules,
+            )
+            for path in root.glob("*/*/case.yaml")
+        ),
         key=lambda case: case.case_id,
     )

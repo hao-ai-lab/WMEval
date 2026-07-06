@@ -36,7 +36,8 @@ class CandidateValidationError(RuntimeError):
 @dataclass(frozen=True)
 class CandidateVideoMetadata:
     candidate: VideoMetadata
-    reference: VideoMetadata
+    # None for reference-free dimensions (no reference video to compare with).
+    reference: VideoMetadata | None
 
 
 def is_severely_truncated(
@@ -103,12 +104,30 @@ def _verify_decodable(path: str | Path, role: str, metadata: VideoMetadata) -> N
 
 def validate_candidate_video(
     candidate_video: str | Path,
-    reference_video: str | Path,
+    reference_video: str | Path | None = None,
     *,
     min_duration_sec: float = DEFAULT_MIN_DURATION_SEC,
     min_duration_ratio: float = DEFAULT_MIN_DURATION_RATIO,
 ) -> CandidateVideoMetadata:
+    """Validate a candidate video, optionally against a reference video.
+
+    ``reference_video=None`` (reference-free dimensions) still checks that the
+    candidate decodes and meets the absolute ``min_duration_sec`` floor; the
+    reference-relative ratio check is skipped.
+    """
     candidate = _probe_video(candidate_video, "candidate")
+
+    if reference_video is None:
+        _verify_decodable(candidate_video, "candidate", candidate)
+        assert candidate.duration_sec is not None
+        if candidate.duration_sec < min_duration_sec:
+            raise CandidateValidationError(
+                f"candidate video is severely truncated: {candidate_video} "
+                f"({candidate.duration_sec}s candidate, "
+                f"{min_duration_sec}s minimum)"
+            )
+        return CandidateVideoMetadata(candidate=candidate, reference=None)
+
     reference = _probe_video(reference_video, "reference")
     _verify_decodable(candidate_video, "candidate", candidate)
     _verify_decodable(reference_video, "reference", reference)
@@ -206,11 +225,17 @@ def _display_paths(paths: set[str]) -> str:
 
 
 def validate_case_bundle(case: LiteCase, verify_checksums: bool = True) -> None:
-    for declared_path in (
-        case.reference_video,
-        case.baseline_path,
-        case.checksums_path,
-    ):
+    declared_paths = [
+        path
+        for path in (
+            case.reference_video,
+            case.first_frame,
+            case.baseline_path,
+            case.checksums_path,
+        )
+        if path is not None
+    ]
+    for declared_path in declared_paths:
         _require_path_within_root(case, declared_path, "declared reference path")
         _require_bundle_file(declared_path)
 
