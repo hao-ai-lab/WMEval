@@ -227,6 +227,42 @@ def test_v1_case_ignores_v2_only_reference_keys(tmp_path: Path) -> None:
     assert case.module_params == {}
 
 
+def test_load_v2_case_resolves_reference_artifacts(tmp_path: Path) -> None:
+    case_dir = tmp_path / "racing_car" / "first"
+    _write_v2_case(case_dir)
+    artifacts_dir = case_dir / "reference" / "artifacts" / "action_path"
+    artifacts_dir.mkdir(parents=True)
+    (artifacts_dir / "action.npy").write_bytes(b"fake")
+
+    def add_artifacts(raw: dict[str, Any]) -> None:
+        raw["reference"]["artifacts"] = {
+            "synthetic_action_dir": "reference/artifacts/action_path",
+        }
+
+    raw = yaml.safe_load((case_dir / "case.yaml").read_text(encoding="utf-8"))
+    add_artifacts(raw)
+    (case_dir / "case.yaml").write_text(
+        yaml.safe_dump(raw, sort_keys=False), encoding="utf-8"
+    )
+
+    case = load_case(case_dir)
+
+    assert case.reference_artifacts["synthetic_action_dir"] == artifacts_dir.resolve()
+
+
+def test_load_v2_case_rejects_blank_reference_artifact_path(tmp_path: Path) -> None:
+    case_dir = tmp_path / "racing_car" / "first"
+    _write_v2_case(case_dir)
+    raw = yaml.safe_load((case_dir / "case.yaml").read_text(encoding="utf-8"))
+    raw["reference"]["artifacts"] = {"qa_dataset": "  "}
+    (case_dir / "case.yaml").write_text(
+        yaml.safe_dump(raw, sort_keys=False), encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="reference.artifacts.qa_dataset"):
+        load_case(case_dir)
+
+
 def test_validate_case_bundle_accepts_reference_free_v2(tmp_path: Path) -> None:
     case_dir = tmp_path / "racing_car" / "first"
     _write_v2_case(case_dir)

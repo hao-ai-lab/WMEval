@@ -122,6 +122,9 @@ class LiteCase:
     rubric_scene_name: str | None = None
     first_frame: Path | None = None
     module_params: Mapping[str, Any] = field(default=_EMPTY_MAPPING)
+    # Named auxiliary reference assets (e.g. synthetic_action_dir, actions_file,
+    # qa_dataset), resolved to absolute paths under the case root.
+    reference_artifacts: Mapping[str, Path] = field(default=_EMPTY_MAPPING)
 
     @property
     def artifacts_dir(self) -> Path:
@@ -268,6 +271,16 @@ def load_case(
     checksums_path = _nonblank_string(
         _required(reference, "checksums", "reference"), "reference.checksums"
     )
+    reference_artifacts: Mapping[str, Path] = _EMPTY_MAPPING
+    if schema_version >= 2 and "artifacts" in reference:
+        artifacts_raw = _mapping(reference["artifacts"], "reference.artifacts")
+        resolved_artifacts: dict[str, Path] = {}
+        for name, value in artifacts_raw.items():
+            if not isinstance(name, str) or not name.strip():
+                raise ValueError("reference.artifacts keys must be nonblank strings")
+            relative = _nonblank_string(value, f"reference.artifacts.{name}")
+            resolved_artifacts[name] = (root / relative).resolve()
+        reference_artifacts = MappingProxyType(resolved_artifacts)
 
     prompt: str | None = None
     perspective: str | None = None
@@ -310,6 +323,7 @@ def load_case(
             (root / first_frame).resolve() if first_frame is not None else None
         ),
         module_params=module_params,
+        reference_artifacts=reference_artifacts,
     )
 
 
