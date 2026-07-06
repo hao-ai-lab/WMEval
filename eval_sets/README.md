@@ -9,20 +9,37 @@ Path: `eval_sets/wmeval_lite_v1/`
 
 One suite, one CLI, every dimension. `suite.yaml` declares the dimensions;
 each case ships as a checksummed bundle under `cases/<scene>/<variant>/`.
-Cases are **shared** across dimensions where it makes sense (e.g. the same
-third-person scenes serve both `causal_lpips` and `controllability`).
+
+### Naming convention
+
+- **scene** — the Unity scene's CamelCase name, from the fixed roster:
+  `BallRoller`, `BeamDomino`, `BilliardGame`, `ChessBoard`,
+  `MirrorRollingBall`, `LiquidContainer`, `RacingCar`, `SunRisesAndSets`,
+  `WanderingGarden`.
+- **variant** — lowercase snake describing the evaluation setup: perspective
+  (`first`, `third`) plus a rollout/protocol suffix when one scene carries
+  several setups (`third_collision`, and later `canonical`, `rest`,
+  `step_hold`, ...).
+
+A **case is one atomic setup** (one prompt + one reference rollout + one
+action protocol), not a scene: dimensions share a case only when a single
+candidate video can serve them all. When dimensions need different rollouts
+of the same scene, they are different variants — e.g. `MirrorRollingBall`
+currently has `first`/`third` (free rollouts, prompt/shadow consistency) and
+`third_collision` (scripted collision rollout, causal LPIPS +
+controllability).
 
 | Dimension | Evaluator | Needs reference video | Cases |
 | --- | --- | --- | --- |
-| `causal_lpips` | registry (`lpips`, causal VLM collision) | yes | mirror_ball, ball_roller, beam_domino (third_person) |
-| `controllability` | registry (`control_motion`) | yes (+ `action.npy`) | mirror_ball, ball_roller, beam_domino (third_person) |
-| `prompt_consistency` | vlm_consistency judge | no (first frame only) | mirror_rolling_ball, racing_car (first/third) |
-| `shadow_consistency` | registry (`shadow_consistency`) | no | reference-free scenes |
-| `causal_step` | registry (`causal_step`) | yes (+ QA dataset) | beamdomino variants |
-| `liquid` | registry (4 liquid modules) | yes (+ `.npz` artifacts) | liquid_container variants |
+| `causal_lpips` | registry (`lpips`, causal VLM collision) | yes | MirrorRollingBall/third_collision, BallRoller/third, BeamDomino/third |
+| `controllability` | registry (`control_motion`) | yes (+ `action.npy`) | same three as causal_lpips |
+| `prompt_consistency` | vlm_consistency judge | no (first frame only) | MirrorRollingBall + RacingCar, first/third |
+| `shadow_consistency` | registry (`shadow_consistency`) | no | MirrorRollingBall first/third, RacingCar/third |
+| `causal_step` | registry (`causal_step`) | yes (+ QA dataset) | BeamDomino canonical/glancing/direct_strike (data pending) |
+| `liquid` | registry (4 liquid modules) | yes (+ `.npz` artifacts) | LiquidContainer rest/step_hold/impulse_decay/chirp_strafe (data pending) |
 
-(Dimensions appear in `suite.yaml` as their data lands; run `list-cases` for
-the current truth.)
+(`suite.yaml` is the single source of truth; run `list-cases` for the current
+state.)
 
 ### Layout
 
@@ -69,13 +86,13 @@ name; optional `model.yaml` for per-model params such as `shadow_hud_preset`)
 or a strict JSONL manifest:
 
 ```json
-{"model":"genie3","case_id":"mirror_ball/third_person","seed":"0001","candidate_video":"/path/to/rollout.mp4"}
-{"model":"genie3","case_id":"racing_car/first","seed":"0001","candidate_video":"/path/to/other.mp4","params":{"shadow_hud_preset":"genie"}}
+{"model":"genie3","case_id":"MirrorRollingBall/third_collision","seed":"0001","candidate_video":"/path/to/rollout.mp4"}
+{"model":"genie3","case_id":"RacingCar/first","seed":"0001","candidate_video":"/path/to/other.mp4","params":{"shadow_hud_preset":"genie"}}
 ```
 
 Legacy ids from the pre-suite manifests (e.g. `sample_scene`,
-`mirror_ball_third_person`) are recorded in `suite.yaml` under
-`legacy_case_aliases`; convert old candidate files with
+`mirror_ball_third_person`, and the retired snake_case case ids) are recorded
+in `suite.yaml` under `legacy_case_aliases`; convert old candidate files with
 `tools/convert_legacy_candidates.py`.
 
 ### Output

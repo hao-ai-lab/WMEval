@@ -1,6 +1,6 @@
 schema_version: 2
-case_id: mirror_rolling_ball/first
-scene: mirror_rolling_ball
+case_id: MirrorRollingBall/first
+scene: MirrorRollingBall
 display_name: MirrorRollingBall first
 prompt: A flat, light-colored ground populated with many large, glossy yellow spheres arranged in a regular grid-like pattern, appearing roughly evenly spaced across the surface. The scene is enclosed by low gray boundary walls. Bright daylight produces clear cast shadows. The environment is clean and simple. The character is a ball. First person view.
 perspective: first_person

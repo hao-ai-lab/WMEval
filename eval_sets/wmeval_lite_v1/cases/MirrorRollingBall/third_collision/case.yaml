@@ -1,17 +1,11 @@
 schema_version: 2
-case_id: mirror_ball/third_person
-scene: mirror_ball
+case_id: MirrorRollingBall/third_collision
+scene: MirrorRollingBall
 display_name: MirrorBall
-prompt: 'Starting world must match this layout: low camera near a flat light gray
-  floor. Center foreground: one highly reflective chrome mirror ball (the player).
-  Surrounding it, a grid of many glossy yellow spheres stretching into the distance
-  with alleys between rows. Strong light from upper right; soft shadows toward lower
-  left. Dark horizon band and pale sky or wall above. The mirror ball sits in a central
-  aisle with clear path forward between yellow-sphere columns.
+prompt: 'Starting world must match this layout: low camera near a flat light gray floor. Center foreground: one highly reflective chrome mirror ball (the player). Surrounding it, a grid of many glossy yellow spheres stretching into the distance with alleys between rows. Strong light from upper right; soft shadows toward lower left. Dark horizon band and pale sky or wall above. The mirror ball sits in a central aisle with clear path forward between yellow-sphere columns.
 
 
-  The player controls only the silver mirror ball: roll it on the floor using standard
-  directions. Keep physics simple and responsive.'
+  The player controls only the silver mirror ball: roll it on the floor using standard directions. Keep physics simple and responsive.'
 perspective: third_person
 modules:
 - lpips

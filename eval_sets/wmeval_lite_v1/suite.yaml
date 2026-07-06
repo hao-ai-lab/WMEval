@@ -15,9 +15,9 @@ dimensions:
       eval_fps: 4.0
       max_pairs: 32
     cases:
-    - mirror_ball/third_person
-    - ball_roller/third_person
-    - beam_domino/third_person
+    - MirrorRollingBall/third_collision
+    - BallRoller/third
+    - BeamDomino/third
     aggregate:
       headline: lpips_mean
       direction: lower
@@ -39,9 +39,9 @@ dimensions:
       eval_fps: 4.0
       max_pairs: 32
     cases:
-    - mirror_ball/third_person
-    - ball_roller/third_person
-    - beam_domino/third_person
+    - MirrorRollingBall/third_collision
+    - BallRoller/third
+    - BeamDomino/third
     aggregate:
       headline: epe_dynamic_mean_compensated
       direction: lower
@@ -61,10 +61,10 @@ dimensions:
       alpha: 0.6
       rubric_dir: rubrics
     cases:
-    - mirror_rolling_ball/first
-    - mirror_rolling_ball/third
-    - racing_car/first
-    - racing_car/third
+    - MirrorRollingBall/first
+    - MirrorRollingBall/third
+    - RacingCar/first
+    - RacingCar/third
     aggregate:
       headline: overall_score
       direction: higher
@@ -82,9 +82,9 @@ dimensions:
       eval_fps: 24.0
       max_pairs: 0
     cases:
-    - mirror_rolling_ball/first
-    - mirror_rolling_ball/third
-    - racing_car/third
+    - MirrorRollingBall/first
+    - MirrorRollingBall/third
+    - RacingCar/third
     aggregate:
       headline: shadow_direction_jitter_deg_per_frame
       direction: lower
@@ -96,20 +96,35 @@ dimensions:
       - shadow_shape_drift
 legacy_case_aliases:
   causal_lpips:
-    mirror_ball_third_person: mirror_ball/third_person
-    sample_scene: mirror_ball/third_person
-    sample_scene_third_person: mirror_ball/third_person
-    mirror_ball: mirror_ball/third_person
-    ball_roller_third_person: ball_roller/third_person
-    ball_roller: ball_roller/third_person
-    beam_domino_third_person: beam_domino/third_person
-    beam_domino: beam_domino/third_person
+    mirror_ball_third_person: MirrorRollingBall/third_collision
+    sample_scene: MirrorRollingBall/third_collision
+    sample_scene_third_person: MirrorRollingBall/third_collision
+    mirror_ball: MirrorRollingBall/third_collision
+    ball_roller_third_person: BallRoller/third
+    ball_roller: BallRoller/third
+    beam_domino_third_person: BeamDomino/third
+    beam_domino: BeamDomino/third
+    mirror_ball/third_person: MirrorRollingBall/third_collision
+    ball_roller/third_person: BallRoller/third
+    beam_domino/third_person: BeamDomino/third
   controllability:
-    mirror_ball_third_person: mirror_ball/third_person
-    sample_scene: mirror_ball/third_person
-    sample_scene_third_person: mirror_ball/third_person
-    mirror_ball: mirror_ball/third_person
-    ball_roller_third_person: ball_roller/third_person
-    ball_roller: ball_roller/third_person
-    beam_domino_third_person: beam_domino/third_person
-    beam_domino: beam_domino/third_person
+    mirror_ball_third_person: MirrorRollingBall/third_collision
+    sample_scene: MirrorRollingBall/third_collision
+    sample_scene_third_person: MirrorRollingBall/third_collision
+    mirror_ball: MirrorRollingBall/third_collision
+    ball_roller_third_person: BallRoller/third
+    ball_roller: BallRoller/third
+    beam_domino_third_person: BeamDomino/third
+    beam_domino: BeamDomino/third
+    mirror_ball/third_person: MirrorRollingBall/third_collision
+    ball_roller/third_person: BallRoller/third
+    beam_domino/third_person: BeamDomino/third
+  prompt_consistency:
+    mirror_rolling_ball/first: MirrorRollingBall/first
+    mirror_rolling_ball/third: MirrorRollingBall/third
+    racing_car/first: RacingCar/first
+    racing_car/third: RacingCar/third
+  shadow_consistency:
+    mirror_rolling_ball/first: MirrorRollingBall/first
+    mirror_rolling_ball/third: MirrorRollingBall/third
+    racing_car/third: RacingCar/third
