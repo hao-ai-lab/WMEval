@@ -2,8 +2,8 @@ suite_name: WMEval Lite
 version: v1
 description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
 dimensions:
-  causal_lpips:
-    display_name: Causal LPIPS
+  lpips:
+    display_name: LPIPS (causal)
     description: Collision/contact timing via reference-first causal LPIPS.
     evaluator: registry
     requires_reference: true
@@ -23,8 +23,8 @@ dimensions:
       direction: lower
       extra_means:
       - lpips_median
-  controllability:
-    display_name: Controllability
+  action_controllability:
+    display_name: Action Controllability
     description: Action-following motion via RAFT and optional synthetic-flow control_motion.
     evaluator: registry
     requires_reference: true
@@ -49,8 +49,8 @@ dimensions:
       - epe_mean_raw
       - bad_pixel_rate_1px_mean
       - bad_pixel_rate_3px_mean
-  prompt_consistency:
-    display_name: Prompt Consistency
+  prompt_scene_consistency:
+    display_name: Prompt-Scene Consistency
     description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only).
     evaluator: vlm_consistency
     requires_reference: false
@@ -71,8 +71,8 @@ dimensions:
       extra_means:
       - env_score
       - obj_score
-  shadow_consistency:
-    display_name: Shadow Consistency
+  lighting_shading:
+    display_name: Lighting & Shading
     description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD).'
     evaluator: registry
     requires_reference: false
@@ -95,7 +95,7 @@ dimensions:
       - shadow_area_stability_pct
       - shadow_shape_drift
 legacy_case_aliases:
-  causal_lpips:
+  lpips:
     mirror_ball_third_person: MirrorRollingBall/third_collision
     sample_scene: MirrorRollingBall/third_collision
     sample_scene_third_person: MirrorRollingBall/third_collision
@@ -107,7 +107,7 @@ legacy_case_aliases:
     mirror_ball/third_person: MirrorRollingBall/third_collision
     ball_roller/third_person: BallRoller/third
     beam_domino/third_person: BeamDomino/third
-  controllability:
+  action_controllability:
     mirror_ball_third_person: MirrorRollingBall/third_collision
     sample_scene: MirrorRollingBall/third_collision
     sample_scene_third_person: MirrorRollingBall/third_collision
@@ -119,12 +119,12 @@ legacy_case_aliases:
     mirror_ball/third_person: MirrorRollingBall/third_collision
     ball_roller/third_person: BallRoller/third
     beam_domino/third_person: BeamDomino/third
-  prompt_consistency:
+  prompt_scene_consistency:
     mirror_rolling_ball/first: MirrorRollingBall/first
     mirror_rolling_ball/third: MirrorRollingBall/third
     racing_car/first: RacingCar/first
     racing_car/third: RacingCar/third
-  shadow_consistency:
+  lighting_shading:
     mirror_rolling_ball/first: MirrorRollingBall/first
     mirror_rolling_ball/third: MirrorRollingBall/third
     racing_car/third: RacingCar/third

@@ -136,6 +136,24 @@ def _cmd_list_cases(args: argparse.Namespace) -> int:
         print(f"\n{dimension_id} ({dimension.display_name}) [{ref}; {kind}]")
         for case_id in dimension.cases:
             print(f"  - {case_id}")
+
+    # Case × dimension matrix: which dimensions evaluate each case.
+    dimension_ids = list(suite.dimensions)
+    all_cases = sorted(suite.all_case_ids())
+    print("\nCase × dimension matrix:")
+    for index, dimension_id in enumerate(dimension_ids, start=1):
+        print(f"  d{index} = {dimension_id}")
+    width = max(len(case_id) for case_id in all_cases) + 2
+    header = " " * width + "  ".join(
+        f"d{index}" for index in range(1, len(dimension_ids) + 1)
+    )
+    print(f"\n{header}")
+    for case_id in all_cases:
+        marks = "  ".join(
+            "✓ " if case_id in suite.dimensions[dimension_id].cases else "· "
+            for dimension_id in dimension_ids
+        )
+        print(f"{case_id:<{width}}{marks}")
     return 0
 
 

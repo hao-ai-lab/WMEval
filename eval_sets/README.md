@@ -38,17 +38,33 @@ prompt/shadow-consistency cases, whose actions move the camera through the
 scene so consistency is judged across views, not on a static shot. Dimensions
 differ only in what the **evaluator** consumes:
 
+Dimension ids follow the paper taxonomy:
+
 | Dimension | Evaluator | Evaluation-side reference | Cases |
 | --- | --- | --- | --- |
-| `causal_lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/third_collision, BallRoller/third, BeamDomino/third |
-| `controllability` | registry (`control_motion`) | reference video + `action.npy` | same three as causal_lpips |
-| `prompt_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, first/third |
-| `shadow_consistency` | registry (`shadow_consistency`) | none (candidate-internal physics) | MirrorRollingBall first/third, RacingCar/third |
-| `causal_step` | registry (`causal_step`) | reference video + QA dataset | BeamDomino canonical/glancing/direct_strike (data pending) |
-| `liquid` | registry (4 liquid modules) | reference video + `.npz` artifacts | LiquidContainer rest/step_hold/impulse_decay/chirp_strafe (data pending) |
+| `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/third_collision, BallRoller/third, BeamDomino/third |
+| `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | same three as `lpips` |
+| `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, first/third |
+| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | MirrorRollingBall first/third, RacingCar/third |
+| `physical_causality` | registry (`causal_step`) | reference video + QA dataset | BeamDomino canonical/glancing/direct_strike (data pending) |
+| `fluid_mechanics` | registry (4 liquid modules) | reference video + `.npz` artifacts | LiquidContainer rest/step_hold/impulse_decay/chirp_strafe (data pending) |
+| `kinematics_mechanics` | (reserved) | — | data pending |
+| `scene_character_consistency` | (reserved) | — | data pending |
 
-(`suite.yaml` is the single source of truth; run `list-cases` for the current
-state.)
+### Case × dimension matrix
+
+| case | lpips | action_controllability | prompt_scene_consistency | lighting_shading |
+| --- | :-: | :-: | :-: | :-: |
+| BallRoller/third | ✓ | ✓ | | |
+| BeamDomino/third | ✓ | ✓ | | |
+| MirrorRollingBall/first | | | ✓ | ✓ |
+| MirrorRollingBall/third | | | ✓ | ✓ |
+| MirrorRollingBall/third_collision | ✓ | ✓ | | |
+| RacingCar/first | | | ✓ | |
+| RacingCar/third | | | ✓ | ✓ |
+
+(`suite.yaml` is the single source of truth; `list-cases` prints this matrix
+from it.)
 
 ### Layout
 
@@ -59,7 +75,7 @@ eval_sets/wmeval_lite_v1/
     case.yaml                      # schema_version 2: prompt, modules, protocol, evaluator_lock
     reference/
       reference.mp4                # reference video (reference-based dimensions)
-      ref.png                      # first frame (reference-free prompt_consistency)
+      ref.png                      # first frame (reference-free prompt_scene_consistency)
       baseline.json
       checksums.sha256             # covers every file under reference/
       artifacts/                   # actions_file, action_path/action.npy, qa_dataset, .npz ...
@@ -85,7 +101,7 @@ python tools/run_wmeval_lite.py run \
 python tools/run_wmeval_lite.py run \
   --suite eval_sets/wmeval_lite_v1 \
   --model-root runs/genie3 \
-  --dimensions causal_lpips,controllability \
+  --dimensions lpips,action_controllability \
   --resume \
   --output-dir reports/wmeval_lite/genie3
 ```
