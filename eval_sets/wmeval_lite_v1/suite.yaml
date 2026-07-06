@@ -71,6 +71,29 @@ dimensions:
       extra_means:
       - env_score
       - obj_score
+  shadow_consistency:
+    display_name: Shadow Consistency
+    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD).'
+    evaluator: registry
+    requires_reference: false
+    modules:
+    - shadow_consistency
+    metric_config:
+      eval_fps: 24.0
+      max_pairs: 0
+    cases:
+    - mirror_rolling_ball/first
+    - mirror_rolling_ball/third
+    - racing_car/third
+    aggregate:
+      headline: shadow_direction_jitter_deg_per_frame
+      direction: lower
+      extra_means:
+      - scene_retention_rate_pct
+      - shadow_detection_rate_pct
+      - multi_object_sun_disagreement_deg
+      - shadow_area_stability_pct
+      - shadow_shape_drift
 legacy_case_aliases:
   causal_lpips:
     mirror_ball_third_person: mirror_ball/third_person
