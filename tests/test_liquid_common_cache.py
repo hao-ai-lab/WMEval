@@ -10,6 +10,7 @@ numerics of the PIV call itself are covered elsewhere.
 from __future__ import annotations
 import sys
 import types
+import pickle
 from pathlib import Path
 import unittest.mock as mock
 
@@ -119,3 +120,150 @@ def test_different_mask_content_misses_cache(synthetic_video, tmp_path):
     assert stub.calls > after_first, (
         "mask CONTENT change must bust the PIV cache even when sam2_model/prompt strings match"
     )
+
+
+def test_pickle_cache_write_is_atomic_on_serialization_failure(
+    synthetic_video: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from evaluation.modules import _liquid_common as _lc
+
+    cache_dir = tmp_path / "cache"
+    mask = _make_mask_result(np.ones((2, 2, 2), dtype=bool), fps=4.0)
+    path = _lc.liquid_mask_cache_path(
+        video_path=synthetic_video,
+        sam2_model=mask.sam2_model,
+        prompt=mask.prompt,
+        fps=mask.fps,
+        max_pairs=None,
+        cache_dir=cache_dir,
+    )
+    path.parent.mkdir(parents=True)
+    original = _make_mask_result(np.zeros((2, 2, 2), dtype=bool), fps=4.0)
+    with path.open("wb") as handle:
+        pickle.dump(original, handle)
+
+    def fail_after_partial_write(payload, handle):
+        handle.write(b"partial replacement")
+        raise RuntimeError("simulated pickle failure")
+
+    monkeypatch.setattr(_lc.pickle, "dump", fail_after_partial_write)
+
+    with pytest.raises(RuntimeError, match="simulated pickle failure"):
+        _lc.store_liquid_mask_cache(
+            video_path=synthetic_video,
+            result=mask,
+            max_pairs=None,
+            cache_dir=cache_dir,
+        )
+
+    with path.open("rb") as handle:
+        loaded = pickle.load(handle)
+    np.testing.assert_array_equal(loaded.masks, original.masks)
+    assert list(path.parent.iterdir()) == [path]
+
+
+def test_empty_prompt_uses_raw_prompt_key_with_final_prompt_payload_once(
+    synthetic_video: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from evaluation.modules import _liquid_common as _lc
+
+    class _FakeMaskLogits:
+        def __getitem__(self, _index):
+            return self
+
+        def __gt__(self, _other):
+            return self
+
+        def cpu(self):
+            return self
+
+        def numpy(self):
+            return np.ones((1, 2, 2), dtype=np.float32)
+
+    class _FakePredictor:
+        def init_state(self, *, video_path):
+            return {"video_path": video_path}
+
+        def add_new_points_or_box(self, **_kwargs):
+            return None
+
+        def propagate_in_video(self, _state):
+            yield 0, [0], _FakeMaskLogits()
+            yield 1, [0], _FakeMaskLogits()
+
+    fake_build_sam = types.ModuleType("sam2.build_sam")
+    fake_build_sam.build_sam2_video_predictor_hf = lambda *args, **kwargs: _FakePredictor()
+    fake_build_sam.build_sam2_video_predictor = lambda *args, **kwargs: _FakePredictor()
+    fake_torch = types.ModuleType("torch")
+    fake_torch.cuda = types.SimpleNamespace(is_available=lambda: False)
+    monkeypatch.setitem(sys.modules, "sam2", types.ModuleType("sam2"))
+    monkeypatch.setitem(sys.modules, "sam2.build_sam", fake_build_sam)
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setattr(
+        _lc,
+        "_read_video_frames_uint8",
+        lambda *args, **kwargs: np.zeros((2, 2, 2, 3), dtype=np.uint8),
+    )
+    monkeypatch.setattr(
+        _lc,
+        "_grounding_dino_box_xyxy",
+        lambda *args, **kwargs: np.array([0, 0, 1, 1], dtype=np.float32),
+    )
+    real_pickle_dump = pickle.dump
+    dumped_prompts: list[str] = []
+
+    def record_pickle_dump(payload, handle):
+        dumped_prompts.append(payload.prompt)
+        return real_pickle_dump(payload, handle)
+
+    monkeypatch.setattr(_lc.pickle, "dump", record_pickle_dump)
+
+    cache_dir = tmp_path / "cache"
+    result = _lc.get_liquid_mask_video(
+        video_path=str(synthetic_video),
+        sam2_model="facebook/sam2.1-hiera-small",
+        prompt="",
+        fps=4.0,
+        max_pairs=None,
+        cache_dir=cache_dir,
+    )
+
+    assert result.prompt == "the liquid inside the bottle"
+    assert dumped_prompts == [result.prompt]
+    raw_prompt_path = _lc.liquid_mask_cache_path(
+        video_path=synthetic_video,
+        sam2_model="facebook/sam2.1-hiera-small",
+        prompt="",
+        fps=4.0,
+        max_pairs=None,
+        cache_dir=cache_dir,
+    )
+    final_prompt_path = _lc.liquid_mask_cache_path(
+        video_path=synthetic_video,
+        sam2_model="facebook/sam2.1-hiera-small",
+        prompt=result.prompt,
+        fps=4.0,
+        max_pairs=None,
+        cache_dir=cache_dir,
+    )
+    assert raw_prompt_path.exists()
+    assert not final_prompt_path.exists()
+    assert list(raw_prompt_path.parent.iterdir()) == [raw_prompt_path]
+    with raw_prompt_path.open("rb") as handle:
+        cached = pickle.load(handle)
+    assert cached.prompt == result.prompt
+
+    monkeypatch.setattr(
+        _lc,
+        "_read_video_frames_uint8",
+        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("inference ran")),
+    )
+    cached_result = _lc.get_liquid_mask_video(
+        video_path=str(synthetic_video),
+        sam2_model="facebook/sam2.1-hiera-small",
+        prompt="",
+        fps=4.0,
+        max_pairs=None,
+        cache_dir=cache_dir,
+    )
+    assert cached_result.prompt == result.prompt

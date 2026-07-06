@@ -1,0 +1,2 @@
+# Heavyweight evaluator dependencies remain the same as the existing causal and liquid READMEs.
+PyYAML>=6.0,<7
