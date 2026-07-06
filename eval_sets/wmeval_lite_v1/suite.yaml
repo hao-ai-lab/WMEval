@@ -1,0 +1,70 @@
+suite_name: WMEval Lite
+version: v1
+description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
+dimensions:
+  causal_lpips:
+    display_name: Causal LPIPS
+    description: Collision/contact timing via reference-first causal LPIPS.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - lpips
+    metric_config:
+      lpips_sampling: causal_vlm_collision
+      lpips_causal_event_source: reference
+      eval_fps: 4.0
+      max_pairs: 32
+    cases:
+    - mirror_ball/third_person
+    - ball_roller/third_person
+    - beam_domino/third_person
+    aggregate:
+      headline: lpips_mean
+      direction: lower
+      extra_means:
+      - lpips_median
+  controllability:
+    display_name: Controllability
+    description: Action-following motion via RAFT and optional synthetic-flow control_motion.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - control_motion
+    metric_config:
+      control_camera_compensation: true
+      control_global_motion_mode: median_translation
+      control_bad_pixel_thresholds:
+      - 1.0
+      - 3.0
+      eval_fps: 4.0
+      max_pairs: 32
+    cases:
+    - mirror_ball/third_person
+    - ball_roller/third_person
+    - beam_domino/third_person
+    aggregate:
+      headline: epe_dynamic_mean_compensated
+      direction: lower
+      extra_means:
+      - epe_mean_raw
+      - bad_pixel_rate_1px_mean
+      - bad_pixel_rate_3px_mean
+legacy_case_aliases:
+  causal_lpips:
+    mirror_ball_third_person: mirror_ball/third_person
+    sample_scene: mirror_ball/third_person
+    sample_scene_third_person: mirror_ball/third_person
+    mirror_ball: mirror_ball/third_person
+    ball_roller_third_person: ball_roller/third_person
+    ball_roller: ball_roller/third_person
+    beam_domino_third_person: beam_domino/third_person
+    beam_domino: beam_domino/third_person
+  controllability:
+    mirror_ball_third_person: mirror_ball/third_person
+    sample_scene: mirror_ball/third_person
+    sample_scene_third_person: mirror_ball/third_person
+    mirror_ball: mirror_ball/third_person
+    ball_roller_third_person: ball_roller/third_person
+    ball_roller: ball_roller/third_person
+    beam_domino_third_person: beam_domino/third_person
+    beam_domino: beam_domino/third_person

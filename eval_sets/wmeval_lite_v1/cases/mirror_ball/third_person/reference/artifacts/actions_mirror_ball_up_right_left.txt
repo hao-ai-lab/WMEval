@@ -1,0 +1,14 @@
+# GenieRollingBall / ball_controller.py axis mapping (continuous move_x, move_z -> BallAgent Heuristic keys):
+# Forward:  move_x=0,  move_z=+1  -> KeyW
+# Right:    move_x=+1, move_z=0   -> KeyD
+# Backward: move_x=0,  move_z=-1 -> KeyS
+# Left:     move_x=-1, move_z=0  -> KeyA
+# Durations match ball_controller.py one 6s cycle: Forward 2s, Right 1s, Backward 2s, Left 1s.
+
+{"op":"hold","key":"KeyW","ms":2000}
+{"op":"wait","ms":100}
+{"op":"hold","key":"KeyD","ms":1000}
+{"op":"wait","ms":100}
+{"op":"hold","key":"KeyS","ms":2000}
+{"op":"wait","ms":100}
+{"op":"hold","key":"KeyA","ms":1000}

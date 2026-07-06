@@ -1,0 +1,43 @@
+schema_version: 2
+case_id: beam_domino/third_person
+scene: beam_domino
+display_name: BeamDomino
+prompt: 'Starting world must match the BeamDomino Unity scene from a third-person
+  follow camera: a blue controllable ball on the floor in the foreground, a small
+  three-pillar structure with a triangular roof directly ahead, a gold ball resting
+  on top of the roof, and a radial ring of dominoes arranged around the structure
+  beyond it. Keep the layout clean and readable so the full physics chain is visible
+  in one shot: blue ball rolls into a front-right pillar, the roof tips, the gold
+  ball drops from the roof, and the domino ring begins to cascade. Preserve the authored
+  camera feeling of the Unity scene rather than switching to first-person or a cinematic
+  orbit.
+
+
+  The player controls the blue floor ball. Motion should read as a short purposeful
+  setup for the chain reaction: a brief pause, one clean forward roll into the nearest
+  front-right pillar, then no extra steering while the structure collapses and the
+  domino cascade plays out. The camera should continue to follow from behind and above
+  the ball without cutting away from the collapse.'
+perspective: third_person
+modules:
+- lpips
+- control_motion
+reference:
+  video: reference/reference.mp4
+  baseline: reference/baseline.json
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions_beam_domino_pillar_hit.txt
+    synthetic_action_dir: reference/artifacts/action_path
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 7d01b17018f4d151329b3b71568154cd0cc18b1b
+  evaluator_fingerprint: 4d9f1fe433bf0d88de25cc1df3d2840f
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}

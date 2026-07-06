@@ -1,0 +1,18 @@
+# BeamDomino chain-reaction clip:
+# Design goals:
+# 1. Read the setup first: blue floor ball, roof ball, table, and inner domino arcs.
+# 2. Make one clear, glancing hit on the front-right pillar instead of blasting straight through.
+# 3. Bleed speed and recenter immediately after impact so the ball stays in the table/domino region.
+# 4. Finish with a small follow-up nudge while the collapse plays out nearby.
+
+{"op":"wait","ms":450}
+{"op":"down","key":"KeyW","ms":0}
+{"op":"hold","key":"KeyD","ms":120}
+{"op":"wait","ms":430}
+{"op":"up","key":"KeyW","ms":0}
+{"op":"hold","key":"KeyA","ms":220}
+{"op":"hold","key":"KeyS","ms":170}
+{"op":"wait","ms":140}
+{"op":"hold","key":"KeyD","ms":110}
+{"op":"hold","key":"KeyW","ms":180}
+{"op":"wait","ms":5600}
