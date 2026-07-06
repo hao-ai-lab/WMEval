@@ -73,10 +73,11 @@ def main() -> None:
         eval_fps=args.eval_fps,
         max_pairs=args.max_pairs,
         device=args.device,
+        shadow_text_prompt=args.text_prompt,
+        shadow_anchor_label=args.anchor_label,
+        shadow_hud_preset=args.hud_preset,
     )
 
-    # Inject the shadow-specific artifacts before they are needed
-    # (these are passed via context.artifacts in the module)
     result = report.get("results", {}).get("shadow_consistency", {})
 
     out_path = Path(args.output_json)
