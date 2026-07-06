@@ -25,18 +25,27 @@ A **case is one atomic setup** (one prompt + one reference rollout + one
 action protocol), not a scene: dimensions share a case only when a single
 candidate video can serve them all. When dimensions need different rollouts
 of the same scene, they are different variants — e.g. `MirrorRollingBall`
-currently has `first`/`third` (free rollouts, prompt/shadow consistency) and
-`third_collision` (scripted collision rollout, causal LPIPS +
+currently has `first`/`third` (look-around rollouts, prompt/shadow
+consistency) and `third_collision` (collision rollout, causal LPIPS +
 controllability).
 
-| Dimension | Evaluator | Needs reference video | Cases |
+**Generation conditions are uniform across all cases**: every case bundles a
+`prompt` (case.yaml), a first frame (`reference/ref.png` or frame 0 of
+`reference/reference.mp4`), and an **action script**
+(`reference/artifacts/actions_*.txt`, numeric form `action.npy`). Candidates
+must be generated following the case's action script — including the
+prompt/shadow-consistency cases, whose actions move the camera through the
+scene so consistency is judged across views, not on a static shot. Dimensions
+differ only in what the **evaluator** consumes:
+
+| Dimension | Evaluator | Evaluation-side reference | Cases |
 | --- | --- | --- | --- |
-| `causal_lpips` | registry (`lpips`, causal VLM collision) | yes | MirrorRollingBall/third_collision, BallRoller/third, BeamDomino/third |
-| `controllability` | registry (`control_motion`) | yes (+ `action.npy`) | same three as causal_lpips |
-| `prompt_consistency` | vlm_consistency judge | no (first frame only) | MirrorRollingBall + RacingCar, first/third |
-| `shadow_consistency` | registry (`shadow_consistency`) | no | MirrorRollingBall first/third, RacingCar/third |
-| `causal_step` | registry (`causal_step`) | yes (+ QA dataset) | BeamDomino canonical/glancing/direct_strike (data pending) |
-| `liquid` | registry (4 liquid modules) | yes (+ `.npz` artifacts) | LiquidContainer rest/step_hold/impulse_decay/chirp_strafe (data pending) |
+| `causal_lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/third_collision, BallRoller/third, BeamDomino/third |
+| `controllability` | registry (`control_motion`) | reference video + `action.npy` | same three as causal_lpips |
+| `prompt_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, first/third |
+| `shadow_consistency` | registry (`shadow_consistency`) | none (candidate-internal physics) | MirrorRollingBall first/third, RacingCar/third |
+| `causal_step` | registry (`causal_step`) | reference video + QA dataset | BeamDomino canonical/glancing/direct_strike (data pending) |
+| `liquid` | registry (4 liquid modules) | reference video + `.npz` artifacts | LiquidContainer rest/step_hold/impulse_decay/chirp_strafe (data pending) |
 
 (`suite.yaml` is the single source of truth; run `list-cases` for the current
 state.)

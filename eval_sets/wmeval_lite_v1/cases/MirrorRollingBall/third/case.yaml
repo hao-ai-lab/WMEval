@@ -11,6 +11,9 @@ reference:
   first_frame: reference/ref.png
   baseline: reference/baseline.json
   checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions_third.txt
+    synthetic_action_dir: reference/artifacts
 protocol:
   candidate_normalization: none
   min_duration_sec: 1.0
