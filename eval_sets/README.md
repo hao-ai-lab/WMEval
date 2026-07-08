@@ -16,18 +16,24 @@ each case ships as a checksummed bundle under `cases/<scene>/<variant>/`.
   `BallRoller`, `BeamDomino`, `BilliardGame`, `ChessBoard`,
   `MirrorRollingBall`, `LiquidContainer`, `RacingCar`, `SunRisesAndSets`,
   `WanderingGarden`.
-- **variant** — lowercase snake describing the evaluation setup: perspective
-  (`first`, `third`) plus a rollout/protocol suffix when one scene carries
-  several setups (`third_collision`, and later `canonical`, `rest`,
-  `step_hold`, ...).
+- **variant** — `<dimension-tag>[_<perspective>][_<setting>]`:
+  - dimension tags: `lpips`, `ctrl` (action_controllability), `prompt`
+    (prompt_scene_consistency), `lighting`, `kinematics`, `scene`
+    (scene_character_consistency), `causal` (physical_causality), `fluid`
+  - perspective (`first`/`third`) appears only for the two-view dimensions
+    (`prompt`, `scene`); every other dimension is third-person by rule
+  - setting suffix when the protocol varies: `collision`, `canonical`,
+    `glancing`, `rest`, `step_hold`, ...
+  - examples: `MirrorRollingBall/lpips_collision`, `RacingCar/prompt_first`,
+    `BallRoller/ctrl`, `LiquidContainer/fluid_rest`
 
 A **case is one atomic setup** (one prompt + one reference rollout + one
-action protocol), not a scene: dimensions share a case only when a single
-candidate video can serve them all. When dimensions need different rollouts
-of the same scene, they are different variants — e.g. `MirrorRollingBall`
-currently has `first`/`third` (look-around rollouts, prompt/shadow
-consistency) and `third_collision` (collision rollout, causal LPIPS +
-controllability).
+action protocol) owned by the dimension its variant names. When another
+dimension evaluates the same video, suite.yaml lists the case under both
+dimensions (**borrowing** — the variant keeps the owner's name and the
+borrow is visible in the case × dimension matrix). Example: until the
+ChessBoard/SunRisesAndSets data lands, `lighting_shading` temporarily borrows
+`MirrorRollingBall/prompt_third` and `RacingCar/prompt_third`.
 
 **Generation conditions are uniform across all cases**: every case bundles a
 `prompt` (case.yaml), a first frame (`reference/ref.png` or frame 0 of
@@ -50,31 +56,33 @@ scene × dimension mapping:
 | SunRisesAndSets | lighting_shading | data pending |
 | WanderingGarden | scene_character_consistency | data pending |
 | LiquidContainer | fluid_mechanics | data pending (PR #19 artifacts) |
-| BeamDomino | physical_causality | data pending (qa_dataset); `cases/BeamDomino/third` earmarked |
+| BeamDomino | physical_causality | data pending (qa_dataset); `cases/BeamDomino/causal` earmarked |
 | BilliardGame | (unmapped — confirm with team) | — |
 
 Currently wired dimensions:
 
 | Dimension | Evaluator | Evaluation-side reference | Cases |
 | --- | --- | --- | --- |
-| `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/third_collision |
-| `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | BallRoller/third |
-| `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, first/third |
-| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | **temporary** (third-person only): MirrorRollingBall/third, RacingCar/third — moves to ChessBoard/SunRisesAndSets when their data lands |
+| `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/lpips_collision |
+| `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | BallRoller/ctrl |
+| `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, prompt_first/prompt_third |
+| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | **temporary borrow**: MirrorRollingBall/prompt_third, RacingCar/prompt_third — moves to ChessBoard/SunRisesAndSets when their data lands |
 
 ### Case × dimension matrix (current)
 
 | case | lpips | action_controllability | prompt_scene_consistency | lighting_shading |
 | --- | :-: | :-: | :-: | :-: |
-| BallRoller/third | | ✓ | | |
-| MirrorRollingBall/first | | | ✓ | |
-| MirrorRollingBall/third | | | ✓ | ✓ |
-| MirrorRollingBall/third_collision | ✓ | | | |
-| RacingCar/first | | | ✓ | |
-| RacingCar/third | | | ✓ | ✓ |
+| BallRoller/ctrl | | ✓ | | |
+| MirrorRollingBall/lpips_collision | ✓ | | | |
+| MirrorRollingBall/prompt_first | | | ✓ | |
+| MirrorRollingBall/prompt_third | | | ✓ | ✓* |
+| RacingCar/prompt_first | | | ✓ | |
+| RacingCar/prompt_third | | | ✓ | ✓* |
+
+(* = temporary borrow by lighting_shading)
 
 (`suite.yaml` is the single source of truth; `list-cases` prints this matrix
-from it. `cases/BeamDomino/third` is bundled but currently unreferenced —
+from it. `cases/BeamDomino/causal` is bundled but currently unreferenced —
 earmarked for `physical_causality`.)
 
 ### Layout
@@ -122,8 +130,8 @@ name; optional `model.yaml` for per-model params such as `shadow_hud_preset`)
 or a strict JSONL manifest:
 
 ```json
-{"model":"genie3","case_id":"MirrorRollingBall/third_collision","seed":"0001","candidate_video":"/path/to/rollout.mp4"}
-{"model":"genie3","case_id":"RacingCar/first","seed":"0001","candidate_video":"/path/to/other.mp4","params":{"shadow_hud_preset":"genie"}}
+{"model":"genie3","case_id":"MirrorRollingBall/lpips_collision","seed":"0001","candidate_video":"/path/to/rollout.mp4"}
+{"model":"genie3","case_id":"RacingCar/prompt_first","seed":"0001","candidate_video":"/path/to/other.mp4","params":{"shadow_hud_preset":"genie"}}
 ```
 
 Legacy ids from the pre-suite manifests (e.g. `sample_scene`,

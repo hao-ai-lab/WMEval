@@ -1,5 +1,5 @@
 schema_version: 2
-case_id: BallRoller/third
+case_id: BallRoller/ctrl
 scene: BallRoller
 display_name: BallRoller
 prompt: 'Starting world must match the supplied BallRoller sketch frame: a compact square arena with a flat blue-gray floor, low white walls, and a fixed side-table camera looking diagonally across the arena. The player is a smooth white ball staged close to a tight rack of billiard-style balls so an immediate collision is plausible. Keep the yellow ramp, the magenta dome, and the cyan cube visible as simple readable obstacles. Preserve the clean uncluttered look and the fixed third-person framing from the sketch.

@@ -1,5 +1,5 @@
 schema_version: 2
-case_id: MirrorRollingBall/third
+case_id: MirrorRollingBall/prompt_third
 scene: MirrorRollingBall
 display_name: MirrorRollingBall third
 prompt: A flat, light-colored ground populated with many large, glossy yellow spheres arranged in a regular grid-like pattern, appearing roughly evenly spaced across the surface. A single highly reflective chrome sphere stands near the center as a distinct central landmark. The scene is enclosed by low gray boundary walls. Bright daylight produces clear cast shadows. The environment is clean and simple. The character is the chrome sphere.

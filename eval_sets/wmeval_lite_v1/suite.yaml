@@ -9,18 +9,23 @@
 #   WanderingGarden   -> scene_character_consistency                     (data pending)
 #   SunRisesAndSets   -> lighting_shading                                (data pending)
 #   LiquidContainer   -> fluid_mechanics                                 (data pending, PR #19 artifacts)
-#   BeamDomino        -> physical_causality (cases/BeamDomino/third is earmarked
+#   BeamDomino        -> physical_causality (cases/BeamDomino/causal is earmarked
 #                        for it: the rollout is the full causal chain; needs qa_dataset)
 #   BilliardGame      -> (in the scene roster but unmapped — confirm with team)
 #
 # Dimensions not yet wired (add here when ready):
-#   kinematics_mechanics       registry `motion` module proposed; cases BallRoller/third +
-#                              RacingCar/third (its bundled unity_groundtruth.mp4 would be
-#                              declared as reference.video) — pending team confirmation.
-#   scene_character_consistency  WanderingGarden first/third — pending data + judge config.
-#   physical_causality         BeamDomino causal cases + qa_dataset — pending PR #19 data.
-#   fluid_mechanics            LiquidContainer rest/step_hold/impulse_decay/chirp_strafe —
-#                              pending PR #19 .npz reference artifacts.
+#   kinematics_mechanics       registry `motion` module proposed; either own rollouts
+#                              (BallRoller/kinematics, RacingCar/kinematics) or borrow
+#                              BallRoller/ctrl + RacingCar/prompt_third (whose bundled
+#                              unity_groundtruth.mp4 would be declared reference.video)
+#                              — pending team confirmation.
+#   scene_character_consistency  WanderingGarden/scene_first + scene_third — pending data
+#                              + judge config.
+#   physical_causality         BeamDomino/causal (earmarked) + qa_dataset; more strike
+#                              variants (causal_glancing, ...) as data lands — PR #19.
+#   fluid_mechanics            LiquidContainer/fluid_rest, fluid_step_hold,
+#                              fluid_impulse_decay, fluid_chirp_strafe — pending PR #19
+#                              .npz reference artifacts.
 suite_name: WMEval Lite
 version: v1
 description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
@@ -38,7 +43,7 @@ dimensions:
       eval_fps: 4.0
       max_pairs: 32
     cases:
-    - MirrorRollingBall/third_collision
+    - MirrorRollingBall/lpips_collision
     aggregate:
       headline: lpips_mean
       direction: lower
@@ -60,7 +65,7 @@ dimensions:
       eval_fps: 4.0
       max_pairs: 32
     cases:
-    - BallRoller/third
+    - BallRoller/ctrl
     aggregate:
       headline: epe_dynamic_mean_compensated
       direction: lower
@@ -81,10 +86,10 @@ dimensions:
       rubric_dir: rubrics
     # Target adds ChessBoard first/third once its data lands.
     cases:
-    - MirrorRollingBall/first
-    - MirrorRollingBall/third
-    - RacingCar/first
-    - RacingCar/third
+    - MirrorRollingBall/prompt_first
+    - MirrorRollingBall/prompt_third
+    - RacingCar/prompt_first
+    - RacingCar/prompt_third
     aggregate:
       headline: overall_score
       direction: higher
@@ -101,10 +106,11 @@ dimensions:
     metric_config:
       eval_fps: 24.0
       max_pairs: 0
-    # third-person only (per the dimension perspective rules)
+    # third-person only; TEMPORARILY borrowing prompt_scene_consistency's videos
+    # (variant names the owning dimension; the borrow shows in the matrix)
     cases:
-    - MirrorRollingBall/third
-    - RacingCar/third
+    - MirrorRollingBall/prompt_third
+    - RacingCar/prompt_third
     aggregate:
       headline: shadow_direction_jitter_deg_per_frame
       direction: lower
@@ -116,20 +122,28 @@ dimensions:
       - shadow_shape_drift
 legacy_case_aliases:
   lpips:
-    mirror_ball_third_person: MirrorRollingBall/third_collision
-    sample_scene: MirrorRollingBall/third_collision
-    sample_scene_third_person: MirrorRollingBall/third_collision
-    mirror_ball: MirrorRollingBall/third_collision
-    mirror_ball/third_person: MirrorRollingBall/third_collision
+    mirror_ball_third_person: MirrorRollingBall/lpips_collision
+    sample_scene: MirrorRollingBall/lpips_collision
+    sample_scene_third_person: MirrorRollingBall/lpips_collision
+    mirror_ball: MirrorRollingBall/lpips_collision
+    mirror_ball/third_person: MirrorRollingBall/lpips_collision
+    MirrorRollingBall/third_collision: MirrorRollingBall/lpips_collision
   action_controllability:
-    ball_roller_third_person: BallRoller/third
-    ball_roller: BallRoller/third
-    ball_roller/third_person: BallRoller/third
+    ball_roller_third_person: BallRoller/ctrl
+    ball_roller: BallRoller/ctrl
+    ball_roller/third_person: BallRoller/ctrl
+    BallRoller/third: BallRoller/ctrl
   prompt_scene_consistency:
-    mirror_rolling_ball/first: MirrorRollingBall/first
-    mirror_rolling_ball/third: MirrorRollingBall/third
-    racing_car/first: RacingCar/first
-    racing_car/third: RacingCar/third
+    mirror_rolling_ball/first: MirrorRollingBall/prompt_first
+    mirror_rolling_ball/third: MirrorRollingBall/prompt_third
+    racing_car/first: RacingCar/prompt_first
+    racing_car/third: RacingCar/prompt_third
+    MirrorRollingBall/first: MirrorRollingBall/prompt_first
+    MirrorRollingBall/third: MirrorRollingBall/prompt_third
+    RacingCar/first: RacingCar/prompt_first
+    RacingCar/third: RacingCar/prompt_third
   lighting_shading:
-    mirror_rolling_ball/third: MirrorRollingBall/third
-    racing_car/third: RacingCar/third
+    mirror_rolling_ball/third: MirrorRollingBall/prompt_third
+    racing_car/third: RacingCar/prompt_third
+    MirrorRollingBall/third: MirrorRollingBall/prompt_third
+    RacingCar/third: RacingCar/prompt_third

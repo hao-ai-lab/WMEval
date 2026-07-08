@@ -1,5 +1,5 @@
 schema_version: 2
-case_id: RacingCar/first
+case_id: RacingCar/prompt_first
 scene: RacingCar
 display_name: RacingCar first
 prompt: A very wide, straight highway under a clear blue sky, with dark roadside barriers, green grass, and long symmetrical rows of tall trees on both sides. The road begins abruptly at a starting point, with no ground behind it—only open sky, as if the road is suspended in space. Bright daytime lighting, clean and minimal environment. First person view.

@@ -1,5 +1,5 @@
 schema_version: 2
-case_id: BeamDomino/third
+case_id: BeamDomino/causal
 scene: BeamDomino
 display_name: BeamDomino
 prompt: 'Starting world must match the BeamDomino Unity scene from a third-person follow camera: a blue controllable ball on the floor in the foreground, a small three-pillar structure with a triangular roof directly ahead, a gold ball resting on top of the roof, and a radial ring of dominoes arranged around the structure beyond it. Keep the layout clean and readable so the full physics chain is visible in one shot: blue ball rolls into a front-right pillar, the roof tips, the gold ball drops from the roof, and the domino ring begins to cascade. Preserve the authored camera feeling of the Unity scene rather than switching to first-person or a cinematic orbit.
