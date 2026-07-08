@@ -300,7 +300,7 @@ def test_run_suite_vlm_dimension_via_injected_adapter(
     from evaluation.lite.adapters.vlm_consistency_adapter import VlmConsistencyAdapter
 
     suite_root = build_default_suite_dir(tmp_path / "suite")
-    write_rubric(suite_root)
+    write_rubric(suite_root / "cases" / "scene_b" / "first")
     model_root = tmp_path / "genie3"
     write_candidates(model_root, ["scene_a/main", "scene_b/first"])
     mock_video_probing(monkeypatch)

@@ -158,6 +158,7 @@ def _cmd_list_cases(args: argparse.Namespace) -> int:
 
 
 def _cmd_generate_rubrics(args: argparse.Namespace) -> int:
+    from evaluation.lite.authoring import author_case
     from evaluation.lite.case_loader import load_case
     from evaluation.lite.suite_loader import EVALUATOR_VLM_CONSISTENCY, load_suite
     from evaluation.modules.vlm_consistency.rubric_cache import find_rubric, save_rubric
@@ -178,11 +179,12 @@ def _cmd_generate_rubrics(args: argparse.Namespace) -> int:
         provider = str(cfg["provider"])
         model = str(cfg["model"])
         prompt_version = str(cfg["prompt_version"])
-        rubric_dir = suite.root / str(cfg["rubric_dir"])
         for case_id in dimension.cases:
             case = load_case(
                 suite.cases_root / case_id, allowed_cases=suite.all_case_ids()
             )
+            # case-relative: the rubric lives inside the checksummed bundle
+            rubric_dir = case.root / str(cfg["rubric_dir"])
             scene_name = case.rubric_scene_name or case.scene
             if case.prompt is None:
                 print(
@@ -204,7 +206,9 @@ def _cmd_generate_rubrics(args: argparse.Namespace) -> int:
                 model=model,
             )
             path = save_rubric(rubric, str(rubric_dir), prompt_version=prompt_version)
-            print(f"wrote {path}")
+            # the bundle changed: refresh checksums + evaluator lock
+            author_case(case.root, relock=True)
+            print(f"wrote {path} (case re-authored)")
     return 0
 
 

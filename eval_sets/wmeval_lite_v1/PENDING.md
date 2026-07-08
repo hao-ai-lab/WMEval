@@ -27,7 +27,7 @@ Delete each section (and finally this file) as data lands.
 | case.yaml `prompt:` | scene description text |
 | case.yaml `rubric_scene_name:` | `ChessBoard_first` / `ChessBoard_third` |
 
-After bundling: `run_wmeval_lite.py generate-rubrics` (needs `OPENAI_API_KEY`), commit the rubrics.
+After bundling: `run_wmeval_lite.py generate-rubrics` (needs `OPENAI_API_KEY`) — writes the rubric into `reference/artifacts/rubrics/` and re-authors the bundle; commit the result.
 
 **`ChessBoard/lighting`** — team decision first: if lighting judges the same
 video as `prompt_third`, do NOT create a case — just list

@@ -176,7 +176,24 @@ def write_candidates(model_root: Path, case_ids: list[str], seed: str = "0001") 
         video.write_text(f"fake candidate {case_id} {seed}\n", encoding="utf-8")
 
 
-def write_rubric(suite_root: Path, scene_name: str = RUBRIC_SCENE_NAME) -> Path:
+def regenerate_checksums(case_dir: Path) -> None:
+    """Rewrite the case's checksum manifest over everything under reference/."""
+    reference_root = case_dir / "reference"
+    checksums_path = reference_root / "checksums.sha256"
+    lines = []
+    for path in sorted(reference_root.rglob("*")):
+        if not path.is_file() or path == checksums_path:
+            continue
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        lines.append(f"{digest}  {path.relative_to(case_dir).as_posix()}")
+    checksums_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_rubric(
+    case_dir: Path, scene_name: str = RUBRIC_SCENE_NAME
+) -> Path:
+    """Write a rubric into the case bundle (case-relative rubric cache) and
+    refresh the checksum manifest to keep the bundle valid."""
     rubric = {
         "scene_name": scene_name,
         "prompt_text": "A red car drives around a track.",
@@ -201,9 +218,17 @@ def write_rubric(suite_root: Path, scene_name: str = RUBRIC_SCENE_NAME) -> Path:
             "num_candidates_generated": 2,
         },
     }
-    path = suite_root / "rubrics" / scene_name / RUBRIC_FILENAME
+    path = (
+        case_dir
+        / "reference"
+        / "artifacts"
+        / "rubrics"
+        / scene_name
+        / RUBRIC_FILENAME
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(rubric, indent=2), encoding="utf-8")
+    regenerate_checksums(case_dir)
     return path
 
 

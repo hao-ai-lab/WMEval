@@ -40,7 +40,8 @@ def test_load_suite_parses_dimensions_and_aliases(tmp_path: Path) -> None:
     assert promptcons.vlm["model"] == "gpt-5.4"
     assert promptcons.vlm["prompt_version"] == "v1"
     assert promptcons.vlm["alpha"] == 0.6
-    assert promptcons.vlm["rubric_dir"] == "rubrics"
+    # case-relative rubric cache inside the checksummed bundle
+    assert promptcons.vlm["rubric_dir"] == "reference/artifacts/rubrics"
 
     assert suite.all_case_ids() == {"scene_a/main", "scene_b/first"}
     assert suite.dimensions_for_case("scene_a/main") == ("toy_metric",)

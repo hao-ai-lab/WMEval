@@ -32,10 +32,16 @@ def _setup(tmp_path: Path):
 
 def test_vlm_adapter_hits_pr17_rubric_naming(tmp_path: Path) -> None:
     suite, dimension, case, candidate, video = _setup(tmp_path)
-    rubric_path = write_rubric(suite.root)
-    # PR #17's committed layout: rubrics/<OriginalSceneName>/<provider>_<model>_<version>.json
+    rubric_path = write_rubric(case.root)
+    # rubric ships inside the case bundle, keeping PR #17's
+    # <SceneName>/<provider>_<model>_<version>.json cache convention
     assert rubric_path == (
-        suite.root / "rubrics" / RUBRIC_SCENE_NAME / "openai_gpt-5-4_v1.json"
+        case.root
+        / "reference"
+        / "artifacts"
+        / "rubrics"
+        / RUBRIC_SCENE_NAME
+        / "openai_gpt-5-4_v1.json"
     )
 
     judge_calls: list[dict[str, Any]] = []
@@ -107,7 +113,7 @@ def test_vlm_adapter_skips_without_api_key(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     suite, dimension, case, candidate, video = _setup(tmp_path)
-    write_rubric(suite.root)
+    write_rubric(case.root)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
 
     adapter = VlmConsistencyAdapter()  # real judge would need a key

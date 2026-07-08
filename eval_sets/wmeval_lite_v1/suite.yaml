@@ -83,7 +83,8 @@ dimensions:
       model: gpt-5.4
       prompt_version: v1
       alpha: 0.6
-      rubric_dir: rubrics
+      # case-relative: rubrics live inside each case's checksummed bundle
+      rubric_dir: reference/artifacts/rubrics
     # Target adds ChessBoard first/third once its data lands.
     cases:
     - MirrorRollingBall/prompt_first

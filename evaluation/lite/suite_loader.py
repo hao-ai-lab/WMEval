@@ -36,12 +36,14 @@ _EMPTY_MAPPING: Mapping[str, Any] = MappingProxyType({})
 # Default VLM judge settings for vlm_consistency dimensions; ``model`` is
 # deliberately required (no default) so the judge model is always pinned by
 # the suite manifest rather than drifting with provider defaults.
+# ``rubric_dir`` is resolved against each CASE root (rubrics ship inside the
+# checksummed case bundle).
 _VLM_DEFAULTS: Mapping[str, Any] = MappingProxyType(
     {
         "provider": "openai",
         "prompt_version": "v1",
         "alpha": 0.6,
-        "rubric_dir": "rubrics",
+        "rubric_dir": "reference/artifacts/rubrics",
     }
 )
 

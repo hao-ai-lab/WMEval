@@ -2,10 +2,12 @@
 
 Wraps the existing ``evaluation.modules.vlm_consistency`` pipeline (PR #14 /
 PR #17) as a suite dimension WITHOUT touching its internals: rubrics are read
-from the suite's committed rubric cache via ``find_rubric`` (missing rubric →
-``missing_rubric`` row, never generated inline — generation stays an offline
-authoring step), frames are sampled with the exact ``batch.py`` constants, and
-scoring goes through ``judge_scene``.
+from the case bundle's committed rubric cache (``vlm.rubric_dir`` is
+case-relative, default ``reference/artifacts/rubrics`` — inside the
+checksummed bundle, so the judging basis is tamper-evident) via
+``find_rubric`` (missing rubric → ``missing_rubric`` row, never generated
+inline — generation stays an offline authoring step), frames are sampled with
+the exact ``batch.py`` constants, and scoring goes through ``judge_scene``.
 
 The heavyweight imports (cv2, pydantic, provider clients) happen inside
 ``evaluate`` so dry runs and suite loading stay dependency-light.
@@ -58,7 +60,8 @@ class VlmConsistencyAdapter:
         model = str(cfg["model"])
         prompt_version = str(cfg["prompt_version"])
         alpha = float(cfg["alpha"])
-        rubric_dir = suite.root / str(cfg["rubric_dir"])
+        # case-relative: the rubric ships inside the case's checksummed bundle
+        rubric_dir = case.root / str(cfg["rubric_dir"])
 
         from evaluation.modules.vlm_consistency.rubric_cache import find_rubric
         from evaluation.modules.vlm_consistency.schemas import Rubric

@@ -99,9 +99,13 @@ eval_sets/wmeval_lite_v1/
       ref.png                      # first frame (reference-free prompt_scene_consistency)
       baseline.json
       checksums.sha256             # covers every file under reference/
-      artifacts/                   # actions.txt, action.npy (+intrinsics/poses/meta),
-                                   #   qa_dataset.json (causal), *.npz (fluid)
-  rubrics/<SceneName>/<provider>_<model>_<version>.json   # committed prompt-consistency rubrics
+      artifacts/
+        actions.txt                # keyboard action script (standard name)
+        action.npy                 # numeric actions (+intrinsics.npy/poses.npy)
+        rubrics/<SceneName>/<provider>_<model>_<version>.json
+                                   # committed judge rubrics (vlm dimensions) —
+                                   #   inside the bundle, so checksummed
+        qa_dataset.json / *.npz    # dimension-specific payloads (causal/fluid)
 ```
 
 ### Quick start
@@ -163,5 +167,8 @@ in `suite.yaml` under `legacy_case_aliases`; convert old candidate files with
 Reference files in place → `python tools/build_lite_case.py <case_dir>` writes
 `checksums.sha256` and fills `evaluator_lock` (git revision + fingerprint).
 Prompt-consistency rubrics: `python tools/run_wmeval_lite.py generate-rubrics`
-(requires `OPENAI_API_KEY`; rubrics are committed, so this is an authoring
-step, not part of evaluation).
+(requires `OPENAI_API_KEY`) writes each rubric into its case bundle and
+re-authors the case (checksums + lock) automatically. Rubrics are committed:
+generation is an authoring step, not part of evaluation — and since the
+rubric is checksummed, changing the judging basis visibly changes the case
+fingerprint.
