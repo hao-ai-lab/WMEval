@@ -12,7 +12,6 @@ rubric_scene_name: MirrorRollingBall_first
 modules: []
 reference:
   first_frame: reference/ref.png
-  baseline: reference/baseline.json
   checksums: reference/checksums.sha256
   artifacts:
     actions_file: reference/artifacts/actions.txt
@@ -24,8 +23,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: da5c56d0db07352ca982716673505353a14530c2
-  evaluator_fingerprint: 6cc55bd6da50e0afdd6699db9a437a8f
+  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
+  evaluator_fingerprint: 7eee6d923cc800fc5a825e764bd71534
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

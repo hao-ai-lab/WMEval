@@ -112,7 +112,9 @@ class LiteCase:
     display_name: str
     modules: tuple[str, ...]
     reference_video: Path | None
-    baseline_path: Path
+    # Required for schema_version 1; optional in v2 (a baseline file exists
+    # only when real baseline scores exist — no `{}` placeholders).
+    baseline_path: Path | None
     checksums_path: Path
     protocol: Mapping[str, Any]
     evaluator_lock: Mapping[str, Any]
@@ -265,9 +267,13 @@ def load_case(
         first_frame = _nonblank_string(
             reference["first_frame"], "reference.first_frame"
         )
-    baseline_path = _nonblank_string(
-        _required(reference, "baseline", "reference"), "reference.baseline"
-    )
+    baseline_path: str | None
+    if schema_version == 1 or "baseline" in reference:
+        baseline_path = _nonblank_string(
+            _required(reference, "baseline", "reference"), "reference.baseline"
+        )
+    else:
+        baseline_path = None
     checksums_path = _nonblank_string(
         _required(reference, "checksums", "reference"), "reference.checksums"
     )
@@ -312,7 +318,9 @@ def load_case(
         reference_video=(
             (root / reference_video).resolve() if reference_video is not None else None
         ),
-        baseline_path=(root / baseline_path).resolve(),
+        baseline_path=(
+            (root / baseline_path).resolve() if baseline_path is not None else None
+        ),
         checksums_path=(root / checksums_path).resolve(),
         protocol=_freeze(protocol, "protocol"),
         evaluator_lock=_freeze(evaluator_lock, "evaluator_lock"),

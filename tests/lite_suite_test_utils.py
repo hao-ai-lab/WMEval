@@ -69,17 +69,15 @@ def write_reference_case(
     reference = case_dir / "reference"
     reference.mkdir(parents=True)
     (reference / "reference.mp4").write_text("tiny reference\n", encoding="utf-8")
-    (reference / "baseline.json").write_text("{}\n", encoding="utf-8")
     raw = _base_case(case_id, scene, modules if modules is not None else ["lpips"])
     raw["prompt"] = prompt
     raw["reference"] = {
         "video": "reference/reference.mp4",
-        "baseline": "reference/baseline.json",
         "checksums": "reference/checksums.sha256",
     }
     if module_params:
         raw["module_params"] = module_params
-    write_checksums(case_dir, ["reference/reference.mp4", "reference/baseline.json"])
+    write_checksums(case_dir, ["reference/reference.mp4"])
     (case_dir / "case.yaml").write_text(
         yaml.safe_dump(raw, sort_keys=False), encoding="utf-8"
     )
@@ -99,7 +97,6 @@ def write_reference_free_case(
     case_dir = cases_root / case_id
     reference = case_dir / "reference"
     reference.mkdir(parents=True)
-    (reference / "baseline.json").write_text("{}\n", encoding="utf-8")
     (reference / "ref.png").write_text("tiny first frame\n", encoding="utf-8")
     raw = _base_case(case_id, scene, modules if modules is not None else [])
     raw["prompt"] = prompt
@@ -107,12 +104,11 @@ def write_reference_free_case(
     raw["rubric_scene_name"] = rubric_scene_name
     raw["reference"] = {
         "first_frame": "reference/ref.png",
-        "baseline": "reference/baseline.json",
         "checksums": "reference/checksums.sha256",
     }
     if module_params:
         raw["module_params"] = module_params
-    write_checksums(case_dir, ["reference/baseline.json", "reference/ref.png"])
+    write_checksums(case_dir, ["reference/ref.png"])
     (case_dir / "case.yaml").write_text(
         yaml.safe_dump(raw, sort_keys=False), encoding="utf-8"
     )

@@ -97,8 +97,10 @@ eval_sets/wmeval_lite_v1/
     reference/
       reference.mp4                # reference video (reference-based dimensions)
       ref.png                      # first frame (reference-free prompt_scene_consistency)
-      baseline.json
-      checksums.sha256             # covers every file under reference/
+      checksums.sha256             # covers every file under reference/ (tamper check;
+                                   #   feeds the evaluator fingerprint)
+      baseline.json                # OPTIONAL: real reference baseline scores only —
+                                   #   no empty placeholders
       artifacts/
         actions.txt                # keyboard action script (standard name)
         action.npy                 # numeric actions (+intrinsics.npy/poses.npy)

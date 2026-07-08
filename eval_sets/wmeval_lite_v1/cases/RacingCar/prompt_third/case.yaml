@@ -16,7 +16,6 @@ modules:
 - shadow_consistency
 reference:
   first_frame: reference/ref.png
-  baseline: reference/baseline.json
   checksums: reference/checksums.sha256
   artifacts:
     actions_file: reference/artifacts/actions.txt
@@ -28,8 +27,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: da5c56d0db07352ca982716673505353a14530c2
-  evaluator_fingerprint: 273ba092e9c625b00f8f7d9cc8fad65d
+  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
+  evaluator_fingerprint: 788ce2b702b3efb62c402150d27027b2
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

@@ -23,7 +23,6 @@ modules:
 - causal_step
 reference:
   video: reference/reference.mp4
-  baseline: reference/baseline.json
   checksums: reference/checksums.sha256
   artifacts:
     actions_file: reference/artifacts/actions.txt
@@ -35,8 +34,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 0ffd9b73bbdf0ec5a182433c88fbd9254877d2de
-  evaluator_fingerprint: 3bd9d5933269e641766e67f5086b8af4
+  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
+  evaluator_fingerprint: 5d5231d862d2b8df98a8b7e13ee9271b
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

@@ -38,12 +38,10 @@ def _write_v2_case(
 ) -> None:
     reference = case_dir / "reference"
     reference.mkdir(parents=True)
-    (reference / "baseline.json").write_text("{}\n", encoding="utf-8")
     (reference / "ref.png").write_text("tiny first frame\n", encoding="utf-8")
-    checksum_paths = ["reference/baseline.json", "reference/ref.png"]
+    checksum_paths = ["reference/ref.png"]
     reference_block: dict[str, Any] = {
         "first_frame": "reference/ref.png",
-        "baseline": "reference/baseline.json",
         "checksums": "reference/checksums.sha256",
     }
     if with_video:
@@ -103,7 +101,33 @@ def test_load_v2_reference_free_case_populates_new_fields(tmp_path: Path) -> Non
     assert case.perspective == "first_person"
     assert case.rubric_scene_name == "RacingCar_first"
     assert case.modules == ()
+    assert case.baseline_path is None  # v2: baseline exists only when real
     assert case.module_params["shadow_consistency"]["shadow_anchor_label"] == "car"
+
+
+def test_load_v2_case_accepts_declared_baseline(tmp_path: Path) -> None:
+    case_dir = tmp_path / "racing_car" / "first"
+    _write_v2_case(case_dir)
+    (case_dir / "reference" / "baseline.json").write_text(
+        '{"overall_score": 0.97}\n', encoding="utf-8"
+    )
+    _write_checksums(
+        case_dir, ["reference/ref.png", "reference/baseline.json"]
+    )
+
+    def add_baseline(raw: dict[str, Any]) -> None:
+        raw["reference"]["baseline"] = "reference/baseline.json"
+
+    raw = yaml.safe_load((case_dir / "case.yaml").read_text(encoding="utf-8"))
+    add_baseline(raw)
+    (case_dir / "case.yaml").write_text(
+        yaml.safe_dump(raw, sort_keys=False), encoding="utf-8"
+    )
+
+    case = load_case(case_dir)
+
+    assert case.baseline_path == (case_dir / "reference" / "baseline.json").resolve()
+    validate_case_bundle(case)
 
 
 def test_load_v2_case_with_reference_video(tmp_path: Path) -> None:
