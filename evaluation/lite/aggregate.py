@@ -189,6 +189,14 @@ def _mean(values: Sequence[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def _sample_std(values: Sequence[float]) -> float | None:
+    """Sample standard deviation (ddof=1); None below two observations."""
+    if len(values) < 2:
+        return None
+    mean = sum(values) / len(values)
+    return (sum((value - mean) ** 2 for value in values) / (len(values) - 1)) ** 0.5
+
+
 def _metric_names(rows: Sequence[Mapping[str, Any]]) -> list[str]:
     names: set[str] = set()
     for row in rows:
@@ -200,27 +208,47 @@ def _metric_names(rows: Sequence[Mapping[str, Any]]) -> list[str]:
     return sorted(names)
 
 
-def _two_level_means(
+def _two_level_stats(
     completed_rows: Sequence[Mapping[str, Any]],
-) -> dict[str, float | None]:
-    """Seeds average within a case, then cases average within the dimension."""
+) -> dict[str, dict[str, Any]]:
+    """Two-level statistics: seeds within a case, then cases within the dimension.
+
+    Per metric: the headline mean (mean over case means) plus the dispersion a
+    reviewer needs to judge it — spread across cases (sample std / min / max of
+    case means) and per-case seed variability (sample std over seeds, None for
+    single-seed cases). Deliberately no case-level bootstrap/CI: with a handful
+    of cases per dimension a resampled interval would overstate rigor; the raw
+    case means are reported instead.
+    """
     by_case: dict[str, list[Mapping[str, Any]]] = {}
     for row in completed_rows:
         by_case.setdefault(str(row.get("case_id")), []).append(row)
 
-    means: dict[str, float | None] = {}
+    stats: dict[str, dict[str, Any]] = {}
     for metric_name in _metric_names(completed_rows):
-        case_means: list[float] = []
-        for case_rows in by_case.values():
+        case_means: dict[str, float] = {}
+        seed_std_by_case: dict[str, float | None] = {}
+        for case_id in sorted(by_case):
             values = [
                 value
-                for row in case_rows
+                for row in by_case[case_id]
                 if (value := _numeric(_get(row, "metrics", metric_name))) is not None
             ]
-            if values:
-                case_means.append(sum(values) / len(values))
-        means[metric_name] = _mean(case_means)
-    return means
+            if not values:
+                continue
+            case_means[case_id] = sum(values) / len(values)
+            seed_std_by_case[case_id] = _sample_std(values)
+        mean_values = list(case_means.values())
+        stats[metric_name] = {
+            "mean": _mean(mean_values),
+            "std_across_cases": _sample_std(mean_values),
+            "min_case_mean": min(mean_values) if mean_values else None,
+            "max_case_mean": max(mean_values) if mean_values else None,
+            "n_cases": len(mean_values),
+            "case_means": case_means,
+            "seed_std_by_case": seed_std_by_case,
+        }
+    return stats
 
 
 def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -238,12 +266,15 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
             if not dimension_rows:
                 continue
             done = [row for row in dimension_rows if row.get("status") == "completed"]
-            means = _two_level_means(done)
+            stats = _two_level_stats(done)
+            means = {metric: payload["mean"] for metric, payload in stats.items()}
             headline: dict[str, Any] | None = None
             if dimension.aggregate is not None:
+                headline_stats = stats.get(dimension.aggregate.headline, {})
                 headline = {
                     "metric": dimension.aggregate.headline,
-                    "value": means.get(dimension.aggregate.headline),
+                    "value": headline_stats.get("mean"),
+                    "std_across_cases": headline_stats.get("std_across_cases"),
                     "direction": dimension.aggregate.direction,
                 }
             dimension_summaries[dimension_id] = {
@@ -253,6 +284,7 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                 "num_completed": len(done),
                 "headline": headline,
                 "means": means,
+                "stats": stats,
                 "per_case": [
                     {
                         "case_id": row.get("case_id"),
@@ -287,7 +319,7 @@ def write_aggregate_json(path: str | Path, aggregate: Mapping[str, Any]) -> None
 def write_summary_csv(
     path: str | Path, suite: Suite, aggregate: Mapping[str, Any]
 ) -> None:
-    """One row per model; one column per dimension headline metric."""
+    """One row per model; per dimension: headline mean + std across cases."""
     dimension_ids = list(suite.dimensions)
     fieldnames = ["model"]
     for dimension_id in dimension_ids:
@@ -296,6 +328,7 @@ def write_summary_csv(
             dimension.aggregate.headline if dimension.aggregate is not None else "n/a"
         )
         fieldnames.append(f"{dimension_id}:{headline_name}")
+        fieldnames.append(f"{dimension_id}:{headline_name}_std")
 
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -309,4 +342,5 @@ def write_summary_csv(
                 summary = dimensions.get(dimension_id) or {}
                 headline = summary.get("headline") or {}
                 row.append(headline.get("value"))
+                row.append(headline.get("std_across_cases"))
             writer.writerow(row)

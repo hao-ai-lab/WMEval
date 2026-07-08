@@ -89,6 +89,7 @@ def test_run_suite_registry_dimension_end_to_end(
     assert summary["headline"] == {
         "metric": "lpips_mean",
         "value": 0.3,
+        "std_across_cases": None,  # single case — no fabricated spread
         "direction": "lower",
     }
     assert (tmp_path / "out" / "aggregate_summary.json").is_file()

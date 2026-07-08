@@ -128,8 +128,13 @@ in `suite.yaml` under `legacy_case_aliases`; convert old candidate files with
   `status`, flat `metrics`, the untouched module `full_report`, and the case's
   `evaluator_lock` stamp.
 - `aggregate_summary.json` — per model × dimension: two-level means
-  (seeds within a case, then across cases) and the suite-declared headline.
-- `aggregate_summary.csv` — rows = models, columns = dimension headlines.
+  (seeds within a case, then across cases) **with dispersion** — per metric
+  `stats` carry `std_across_cases`, `min/max_case_mean`, the raw `case_means`,
+  and per-case seed stds (`seed_std_by_case`, null for single-seed cases).
+  No case-level bootstrap/CI is fabricated at these case counts; report
+  mean ± std_across_cases and the case means themselves.
+- `aggregate_summary.csv` — rows = models; per dimension two columns:
+  headline mean and `_std` (std across cases; empty when only one case).
 
 ### Authoring cases
 

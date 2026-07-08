@@ -145,6 +145,20 @@ def test_two_level_mean_over_seeds_then_cases() -> None:
     assert summary["num_completed"] == 3
     assert aggregate["aggregation"] == AGGREGATION_LABEL
 
+    # dispersion is reported alongside the mean
+    stats = summary["stats"]["lpips_mean"]
+    assert stats["n_cases"] == 2
+    assert abs(stats["case_means"]["scene_a/main"] - 0.3) < 1e-9
+    assert abs(stats["case_means"]["scene_b/main"] - 0.5) < 1e-9
+    # std across the two case means (sample std of 0.3, 0.5)
+    assert abs(stats["std_across_cases"] - 0.1414213562) < 1e-6
+    assert abs(stats["min_case_mean"] - 0.3) < 1e-9
+    assert abs(stats["max_case_mean"] - 0.5) < 1e-9
+    # per-case seed std: two seeds in case A, single seed in case B → None
+    assert abs(stats["seed_std_by_case"]["scene_a/main"] - 0.1414213562) < 1e-6
+    assert stats["seed_std_by_case"]["scene_b/main"] is None
+    assert summary["headline"]["std_across_cases"] == stats["std_across_cases"]
+
 
 def test_aggregate_excludes_non_completed_rows_from_means() -> None:
     suite = _suite_with({"toy_metric": _dimension("toy_metric")})
@@ -164,8 +178,9 @@ def test_aggregate_excludes_non_completed_rows_from_means() -> None:
 def test_write_summary_csv_one_row_per_model(tmp_path: Path) -> None:
     suite = _suite_with({"toy_metric": _dimension("toy_metric")})
     rows = [
-        _row(model="genie3", metrics={"lpips_mean": 0.2}),
-        _row(model="other", metrics={"lpips_mean": 0.6}),
+        _row(model="genie3", case_id="scene_a/main", metrics={"lpips_mean": 0.2}),
+        _row(model="genie3", case_id="scene_b/main", metrics={"lpips_mean": 0.4}),
+        _row(model="other", case_id="scene_a/main", metrics={"lpips_mean": 0.6}),
     ]
     aggregate = build_aggregate(suite, rows)
 
@@ -174,9 +189,15 @@ def test_write_summary_csv_one_row_per_model(tmp_path: Path) -> None:
 
     with csv_path.open(newline="") as handle:
         parsed = list(csv.reader(handle))
-    assert parsed[0] == ["model", "toy_metric:lpips_mean"]
-    assert parsed[1] == ["genie3", "0.2"]
-    assert parsed[2] == ["other", "0.6"]
+    assert parsed[0] == ["model", "toy_metric:lpips_mean", "toy_metric:lpips_mean_std"]
+    genie_row = parsed[1]
+    assert genie_row[0] == "genie3"
+    assert abs(float(genie_row[1]) - 0.3) < 1e-9
+    assert abs(float(genie_row[2]) - 0.1414213562) < 1e-6
+    # single case → std is empty, not fabricated
+    assert parsed[2][0] == "other"
+    assert parsed[2][1] == "0.6"
+    assert parsed[2][2] == ""
 
 
 def test_extract_metrics_control_motion() -> None:
