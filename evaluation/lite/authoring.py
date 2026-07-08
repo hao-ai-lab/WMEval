@@ -80,7 +80,11 @@ def update_lock(case_dir: Path, *, relock: bool) -> None:
             lock[key] = value
 
     fill("code_revision", git_revision())
-    fill("evaluator_fingerprint", _fingerprint(case_dir, raw))
+    # evaluator_fingerprint is DERIVED from checksums+protocol — recompute it
+    # unconditionally so a bundle edit can never leave a silently stale stamp
+    # (--relock only governs code_revision, which is a deliberate declaration
+    # of when/at which revision the case was locked).
+    lock["evaluator_fingerprint"] = _fingerprint(case_dir, raw)
     lock.setdefault("release_id", "wmeval-lite-v1")
     lock.setdefault("module_config", {})
     lock.setdefault("artifact_schema_versions", {})

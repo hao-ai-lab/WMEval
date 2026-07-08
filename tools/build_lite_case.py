@@ -3,9 +3,10 @@
 
 Given a case directory whose ``reference/`` files are already in place, this
 tool rewrites ``reference/checksums.sha256`` covering every file under
-``reference/`` and fills ``evaluator_lock.code_revision`` /
-``evaluator_fingerprint`` (pass ``--relock`` to overwrite existing values),
-then validates the bundle.
+``reference/``, recomputes ``evaluator_lock.evaluator_fingerprint``
+(always — it is derived from checksums+protocol and must never go stale),
+fills ``evaluator_lock.code_revision`` when empty (pass ``--relock`` to
+refresh it to the current git HEAD), then validates the bundle.
 
 Usage::
 
@@ -33,7 +34,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--relock",
         action="store_true",
-        help="Overwrite code_revision/evaluator_fingerprint even when set",
+        help="Refresh code_revision to the current git HEAD even when set "
+        "(the fingerprint is always recomputed regardless)",
     )
     parser.add_argument(
         "--skip-validate",
