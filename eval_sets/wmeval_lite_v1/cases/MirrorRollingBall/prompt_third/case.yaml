@@ -2,7 +2,12 @@ schema_version: 2
 case_id: MirrorRollingBall/prompt_third
 scene: MirrorRollingBall
 display_name: MirrorRollingBall third
-prompt: A flat, light-colored ground populated with many large, glossy yellow spheres arranged in a regular grid-like pattern, appearing roughly evenly spaced across the surface. A single highly reflective chrome sphere stands near the center as a distinct central landmark. The scene is enclosed by low gray boundary walls. Bright daylight produces clear cast shadows. The environment is clean and simple. The character is the chrome sphere.
+prompt: A flat, light-colored ground populated with many large, glossy yellow spheres
+  arranged in a regular grid-like pattern, appearing roughly evenly spaced across
+  the surface. A single highly reflective chrome sphere stands near the center as
+  a distinct central landmark. The scene is enclosed by low gray boundary walls. Bright
+  daylight produces clear cast shadows. The environment is clean and simple. The character
+  is the chrome sphere.
 perspective: third_person
 rubric_scene_name: MirrorRollingBall_third
 modules:
@@ -12,7 +17,7 @@ reference:
   baseline: reference/baseline.json
   checksums: reference/checksums.sha256
   artifacts:
-    actions_file: reference/artifacts/actions_third.txt
+    actions_file: reference/artifacts/actions.txt
     synthetic_action_dir: reference/artifacts
 protocol:
   candidate_normalization: none
@@ -21,8 +26,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: cac80a497ca543248d5cbeed791a393f8e6dfaf8
-  evaluator_fingerprint: f413c13a0b65931d5f7c719bff5bb399
+  code_revision: 0ffd9b73bbdf0ec5a182433c88fbd9254877d2de
+  evaluator_fingerprint: 2e0b16b7191aeb5b6e09098bf5ad4cdb
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

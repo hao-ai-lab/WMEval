@@ -22,7 +22,7 @@ Delete each section (and finally this file) as data lands.
 | --- | --- |
 | `reference/ref.png` | first frame |
 | `reference/unity_groundtruth.mp4` | GT rollout (smoke-test candidate) |
-| `reference/artifacts/actions_first.txt` / `actions_third.txt` | keyboard script that drove the rollout (camera moves through the scene) |
+| `reference/artifacts/actions.txt` | keyboard script that drove the rollout (camera moves through the scene) |
 | `reference/artifacts/action.npy` (+ `intrinsics.npy`, `poses.npy`, `meta.json`) | numeric action data |
 | case.yaml `prompt:` | scene description text |
 | case.yaml `rubric_scene_name:` | `ChessBoard_first` / `ChessBoard_third` |

@@ -2,10 +2,22 @@ schema_version: 2
 case_id: BeamDomino/causal
 scene: BeamDomino
 display_name: BeamDomino
-prompt: 'Starting world must match the BeamDomino Unity scene from a third-person follow camera: a blue controllable ball on the floor in the foreground, a small three-pillar structure with a triangular roof directly ahead, a gold ball resting on top of the roof, and a radial ring of dominoes arranged around the structure beyond it. Keep the layout clean and readable so the full physics chain is visible in one shot: blue ball rolls into a front-right pillar, the roof tips, the gold ball drops from the roof, and the domino ring begins to cascade. Preserve the authored camera feeling of the Unity scene rather than switching to first-person or a cinematic orbit.
+prompt: 'Starting world must match the BeamDomino Unity scene from a third-person
+  follow camera: a blue controllable ball on the floor in the foreground, a small
+  three-pillar structure with a triangular roof directly ahead, a gold ball resting
+  on top of the roof, and a radial ring of dominoes arranged around the structure
+  beyond it. Keep the layout clean and readable so the full physics chain is visible
+  in one shot: blue ball rolls into a front-right pillar, the roof tips, the gold
+  ball drops from the roof, and the domino ring begins to cascade. Preserve the authored
+  camera feeling of the Unity scene rather than switching to first-person or a cinematic
+  orbit.
 
 
-  The player controls the blue floor ball. Motion should read as a short purposeful setup for the chain reaction: a brief pause, one clean forward roll into the nearest front-right pillar, then no extra steering while the structure collapses and the domino cascade plays out. The camera should continue to follow from behind and above the ball without cutting away from the collapse.'
+  The player controls the blue floor ball. Motion should read as a short purposeful
+  setup for the chain reaction: a brief pause, one clean forward roll into the nearest
+  front-right pillar, then no extra steering while the structure collapses and the
+  domino cascade plays out. The camera should continue to follow from behind and above
+  the ball without cutting away from the collapse.'
 perspective: third_person
 modules:
 - causal_step
@@ -14,8 +26,8 @@ reference:
   baseline: reference/baseline.json
   checksums: reference/checksums.sha256
   artifacts:
-    actions_file: reference/artifacts/actions_beam_domino_pillar_hit.txt
-    synthetic_action_dir: reference/artifacts/action_path
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
 protocol:
   candidate_normalization: none
   min_duration_sec: 1.0
@@ -23,8 +35,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 7d01b17018f4d151329b3b71568154cd0cc18b1b
-  evaluator_fingerprint: 4d9f1fe433bf0d88de25cc1df3d2840f
+  code_revision: 0ffd9b73bbdf0ec5a182433c88fbd9254877d2de
+  evaluator_fingerprint: 3bd9d5933269e641766e67f5086b8af4
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

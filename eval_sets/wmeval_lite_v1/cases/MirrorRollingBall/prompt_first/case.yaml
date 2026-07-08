@@ -2,7 +2,11 @@ schema_version: 2
 case_id: MirrorRollingBall/prompt_first
 scene: MirrorRollingBall
 display_name: MirrorRollingBall first
-prompt: A flat, light-colored ground populated with many large, glossy yellow spheres arranged in a regular grid-like pattern, appearing roughly evenly spaced across the surface. The scene is enclosed by low gray boundary walls. Bright daylight produces clear cast shadows. The environment is clean and simple. The character is a ball. First person view.
+prompt: A flat, light-colored ground populated with many large, glossy yellow spheres
+  arranged in a regular grid-like pattern, appearing roughly evenly spaced across
+  the surface. The scene is enclosed by low gray boundary walls. Bright daylight produces
+  clear cast shadows. The environment is clean and simple. The character is a ball.
+  First person view.
 perspective: first_person
 rubric_scene_name: MirrorRollingBall_first
 modules: []
@@ -11,7 +15,7 @@ reference:
   baseline: reference/baseline.json
   checksums: reference/checksums.sha256
   artifacts:
-    actions_file: reference/artifacts/actions_first.txt
+    actions_file: reference/artifacts/actions.txt
     synthetic_action_dir: reference/artifacts
 protocol:
   candidate_normalization: none
@@ -20,8 +24,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: cac80a497ca543248d5cbeed791a393f8e6dfaf8
-  evaluator_fingerprint: 2ed126610a12975a3e976bb760f612e5
+  code_revision: 0ffd9b73bbdf0ec5a182433c88fbd9254877d2de
+  evaluator_fingerprint: 963b681d0ff1739c9db9d1cfd2e95c6b
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

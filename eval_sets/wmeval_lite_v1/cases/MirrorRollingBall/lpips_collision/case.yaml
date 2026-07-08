@@ -2,10 +2,16 @@ schema_version: 2
 case_id: MirrorRollingBall/lpips_collision
 scene: MirrorRollingBall
 display_name: MirrorBall
-prompt: 'Starting world must match this layout: low camera near a flat light gray floor. Center foreground: one highly reflective chrome mirror ball (the player). Surrounding it, a grid of many glossy yellow spheres stretching into the distance with alleys between rows. Strong light from upper right; soft shadows toward lower left. Dark horizon band and pale sky or wall above. The mirror ball sits in a central aisle with clear path forward between yellow-sphere columns.
+prompt: 'Starting world must match this layout: low camera near a flat light gray
+  floor. Center foreground: one highly reflective chrome mirror ball (the player).
+  Surrounding it, a grid of many glossy yellow spheres stretching into the distance
+  with alleys between rows. Strong light from upper right; soft shadows toward lower
+  left. Dark horizon band and pale sky or wall above. The mirror ball sits in a central
+  aisle with clear path forward between yellow-sphere columns.
 
 
-  The player controls only the silver mirror ball: roll it on the floor using standard directions. Keep physics simple and responsive.'
+  The player controls only the silver mirror ball: roll it on the floor using standard
+  directions. Keep physics simple and responsive.'
 perspective: third_person
 modules:
 - lpips
@@ -14,8 +20,8 @@ reference:
   baseline: reference/baseline.json
   checksums: reference/checksums.sha256
   artifacts:
-    actions_file: reference/artifacts/actions_mirror_ball_up_right_left.txt
-    synthetic_action_dir: reference/artifacts/action_path
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
 protocol:
   candidate_normalization: none
   min_duration_sec: 1.0
@@ -23,8 +29,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 7d01b17018f4d151329b3b71568154cd0cc18b1b
-  evaluator_fingerprint: d7f0db141a42cd3114fd8bdd08e9b756
+  code_revision: 0ffd9b73bbdf0ec5a182433c88fbd9254877d2de
+  evaluator_fingerprint: 880831e1626268ec42c82b25fb381639
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

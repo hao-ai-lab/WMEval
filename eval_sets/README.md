@@ -99,7 +99,8 @@ eval_sets/wmeval_lite_v1/
       ref.png                      # first frame (reference-free prompt_scene_consistency)
       baseline.json
       checksums.sha256             # covers every file under reference/
-      artifacts/                   # actions_file, action_path/action.npy, qa_dataset, .npz ...
+      artifacts/                   # actions.txt, action.npy (+intrinsics/poses/meta),
+                                   #   qa_dataset.json (causal), *.npz (fluid)
   rubrics/<SceneName>/<provider>_<model>_<version>.json   # committed prompt-consistency rubrics
 ```
 
