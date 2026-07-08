@@ -101,8 +101,8 @@ dimensions:
     metric_config:
       eval_fps: 24.0
       max_pairs: 0
+    # third-person only (per the dimension perspective rules)
     cases:
-    - MirrorRollingBall/first
     - MirrorRollingBall/third
     - RacingCar/third
     aggregate:
@@ -131,6 +131,5 @@ legacy_case_aliases:
     racing_car/first: RacingCar/first
     racing_car/third: RacingCar/third
   lighting_shading:
-    mirror_rolling_ball/first: MirrorRollingBall/first
     mirror_rolling_ball/third: MirrorRollingBall/third
     racing_car/third: RacingCar/third

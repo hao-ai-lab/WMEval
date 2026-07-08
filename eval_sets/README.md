@@ -60,14 +60,14 @@ Currently wired dimensions:
 | `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/third_collision |
 | `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | BallRoller/third |
 | `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, first/third |
-| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | **temporary**: MirrorRollingBall first/third, RacingCar/third — moves to ChessBoard/SunRisesAndSets when their data lands |
+| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | **temporary** (third-person only): MirrorRollingBall/third, RacingCar/third — moves to ChessBoard/SunRisesAndSets when their data lands |
 
 ### Case × dimension matrix (current)
 
 | case | lpips | action_controllability | prompt_scene_consistency | lighting_shading |
 | --- | :-: | :-: | :-: | :-: |
 | BallRoller/third | | ✓ | | |
-| MirrorRollingBall/first | | | ✓ | ✓ |
+| MirrorRollingBall/first | | | ✓ | |
 | MirrorRollingBall/third | | | ✓ | ✓ |
 | MirrorRollingBall/third_collision | ✓ | | | |
 | RacingCar/first | | | ✓ | |

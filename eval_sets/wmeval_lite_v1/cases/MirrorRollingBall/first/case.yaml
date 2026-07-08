@@ -5,8 +5,7 @@ display_name: MirrorRollingBall first
 prompt: A flat, light-colored ground populated with many large, glossy yellow spheres arranged in a regular grid-like pattern, appearing roughly evenly spaced across the surface. The scene is enclosed by low gray boundary walls. Bright daylight produces clear cast shadows. The environment is clean and simple. The character is a ball. First person view.
 perspective: first_person
 rubric_scene_name: MirrorRollingBall_first
-modules:
-- shadow_consistency
+modules: []
 reference:
   first_frame: reference/ref.png
   baseline: reference/baseline.json
@@ -26,7 +25,3 @@ evaluator_lock:
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}
-module_params:
-  shadow_consistency:
-    shadow_text_prompt: sphere. ball.
-    shadow_anchor_label: sphere
