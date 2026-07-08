@@ -101,7 +101,3 @@ never drift from the data.
    Values for the 4 prompt cases exist verbatim in git history (the removed
    `meta.json`); the 3 PR-#16-derived cases need the original author to
    confirm their key vocab.
-5. **Scene naming in `personal/feat/v2-pipeline`**: its CSV uses
-   `ChessBoardwithSphere` / `GenieRollingBall`, not in the 9-scene roster —
-   align before merging (that branch also has 40MB+ mp4s and pyc committed;
-   clean before any publish).
