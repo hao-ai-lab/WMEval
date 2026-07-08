@@ -83,7 +83,9 @@ Currently wired dimensions:
 
 (`suite.yaml` is the single source of truth; `list-cases` prints this matrix
 from it. `cases/BeamDomino/causal` is bundled but currently unreferenced —
-earmarked for `physical_causality`.)
+earmarked for `physical_causality`. Case folders are created only when their
+data lands; per-case deliverables for everything pending are listed in
+[`wmeval_lite_v1/PENDING.md`](wmeval_lite_v1/PENDING.md).)
 
 ### Layout
 
