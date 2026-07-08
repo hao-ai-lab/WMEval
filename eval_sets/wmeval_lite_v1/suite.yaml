@@ -1,3 +1,26 @@
+# WMEval Lite suite manifest — hand-maintained single source of truth.
+# (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
+#
+# Target scene x dimension mapping (paper, 2026-07-08):
+#   ChessBoard        -> prompt_scene_consistency, lighting_shading      (data pending)
+#   BallRoller        -> kinematics_mechanics, action_controllability
+#   RacingCar         -> kinematics_mechanics, prompt_scene_consistency
+#   MirrorRollingBall -> lpips, prompt_scene_consistency
+#   WanderingGarden   -> scene_character_consistency                     (data pending)
+#   SunRisesAndSets   -> lighting_shading                                (data pending)
+#   LiquidContainer   -> fluid_mechanics                                 (data pending, PR #19 artifacts)
+#   BeamDomino        -> physical_causality (cases/BeamDomino/third is earmarked
+#                        for it: the rollout is the full causal chain; needs qa_dataset)
+#   BilliardGame      -> (in the scene roster but unmapped — confirm with team)
+#
+# Dimensions not yet wired (add here when ready):
+#   kinematics_mechanics       registry `motion` module proposed; cases BallRoller/third +
+#                              RacingCar/third (its bundled unity_groundtruth.mp4 would be
+#                              declared as reference.video) — pending team confirmation.
+#   scene_character_consistency  WanderingGarden first/third — pending data + judge config.
+#   physical_causality         BeamDomino causal cases + qa_dataset — pending PR #19 data.
+#   fluid_mechanics            LiquidContainer rest/step_hold/impulse_decay/chirp_strafe —
+#                              pending PR #19 .npz reference artifacts.
 suite_name: WMEval Lite
 version: v1
 description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
@@ -16,8 +39,6 @@ dimensions:
       max_pairs: 32
     cases:
     - MirrorRollingBall/third_collision
-    - BallRoller/third
-    - BeamDomino/third
     aggregate:
       headline: lpips_mean
       direction: lower
@@ -39,9 +60,7 @@ dimensions:
       eval_fps: 4.0
       max_pairs: 32
     cases:
-    - MirrorRollingBall/third_collision
     - BallRoller/third
-    - BeamDomino/third
     aggregate:
       headline: epe_dynamic_mean_compensated
       direction: lower
@@ -60,6 +79,7 @@ dimensions:
       prompt_version: v1
       alpha: 0.6
       rubric_dir: rubrics
+    # Target adds ChessBoard first/third once its data lands.
     cases:
     - MirrorRollingBall/first
     - MirrorRollingBall/third
@@ -73,7 +93,7 @@ dimensions:
       - obj_score
   lighting_shading:
     display_name: Lighting & Shading
-    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD).'
+    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD). TEMPORARY cases: target mapping moves this dimension to ChessBoard/third + SunRisesAndSets/third once their data lands.'
     evaluator: registry
     requires_reference: false
     modules:
@@ -100,25 +120,11 @@ legacy_case_aliases:
     sample_scene: MirrorRollingBall/third_collision
     sample_scene_third_person: MirrorRollingBall/third_collision
     mirror_ball: MirrorRollingBall/third_collision
-    ball_roller_third_person: BallRoller/third
-    ball_roller: BallRoller/third
-    beam_domino_third_person: BeamDomino/third
-    beam_domino: BeamDomino/third
     mirror_ball/third_person: MirrorRollingBall/third_collision
-    ball_roller/third_person: BallRoller/third
-    beam_domino/third_person: BeamDomino/third
   action_controllability:
-    mirror_ball_third_person: MirrorRollingBall/third_collision
-    sample_scene: MirrorRollingBall/third_collision
-    sample_scene_third_person: MirrorRollingBall/third_collision
-    mirror_ball: MirrorRollingBall/third_collision
     ball_roller_third_person: BallRoller/third
     ball_roller: BallRoller/third
-    beam_domino_third_person: BeamDomino/third
-    beam_domino: BeamDomino/third
-    mirror_ball/third_person: MirrorRollingBall/third_collision
     ball_roller/third_person: BallRoller/third
-    beam_domino/third_person: BeamDomino/third
   prompt_scene_consistency:
     mirror_rolling_ball/first: MirrorRollingBall/first
     mirror_rolling_ball/third: MirrorRollingBall/third

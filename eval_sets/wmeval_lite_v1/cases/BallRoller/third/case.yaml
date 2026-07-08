@@ -8,7 +8,6 @@ prompt: 'Starting world must match the supplied BallRoller sketch frame: a compa
   The player controls only the white ball. Movement should feel like a responsive rolling sphere with noticeable inertia, suitable for collecting pickups and weaving around simple obstacles.'
 perspective: third_person
 modules:
-- lpips
 - control_motion
 reference:
   video: reference/reference.mp4

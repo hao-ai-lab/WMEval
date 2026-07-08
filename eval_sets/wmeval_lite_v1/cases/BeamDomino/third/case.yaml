@@ -8,8 +8,7 @@ prompt: 'Starting world must match the BeamDomino Unity scene from a third-perso
   The player controls the blue floor ball. Motion should read as a short purposeful setup for the chain reaction: a brief pause, one clean forward roll into the nearest front-right pillar, then no extra steering while the structure collapses and the domino cascade plays out. The camera should continue to follow from behind and above the ball without cutting away from the collapse.'
 perspective: third_person
 modules:
-- lpips
-- control_motion
+- causal_step
 reference:
   video: reference/reference.mp4
   baseline: reference/baseline.json

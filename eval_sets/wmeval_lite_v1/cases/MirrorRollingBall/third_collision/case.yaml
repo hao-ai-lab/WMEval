@@ -9,7 +9,6 @@ prompt: 'Starting world must match this layout: low camera near a flat light gra
 perspective: third_person
 modules:
 - lpips
-- control_motion
 reference:
   video: reference/reference.mp4
   baseline: reference/baseline.json

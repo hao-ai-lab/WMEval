@@ -38,33 +38,44 @@ prompt/shadow-consistency cases, whose actions move the camera through the
 scene so consistency is judged across views, not on a static shot. Dimensions
 differ only in what the **evaluator** consumes:
 
-Dimension ids follow the paper taxonomy:
+Dimension ids follow the paper taxonomy. The authoritative target
+scene × dimension mapping:
+
+| Scene | Dimensions (target) | Status |
+| --- | --- | --- |
+| MirrorRollingBall | lpips, prompt_scene_consistency | ✅ live |
+| BallRoller | action_controllability, kinematics_mechanics | ctrl live; kinematics pending module confirmation |
+| RacingCar | prompt_scene_consistency, kinematics_mechanics | prompt live; kinematics pending |
+| ChessBoard | prompt_scene_consistency, lighting_shading | data pending |
+| SunRisesAndSets | lighting_shading | data pending |
+| WanderingGarden | scene_character_consistency | data pending |
+| LiquidContainer | fluid_mechanics | data pending (PR #19 artifacts) |
+| BeamDomino | physical_causality | data pending (qa_dataset); `cases/BeamDomino/third` earmarked |
+| BilliardGame | (unmapped — confirm with team) | — |
+
+Currently wired dimensions:
 
 | Dimension | Evaluator | Evaluation-side reference | Cases |
 | --- | --- | --- | --- |
-| `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/third_collision, BallRoller/third, BeamDomino/third |
-| `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | same three as `lpips` |
+| `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/third_collision |
+| `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | BallRoller/third |
 | `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, first/third |
-| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | MirrorRollingBall first/third, RacingCar/third |
-| `physical_causality` | registry (`causal_step`) | reference video + QA dataset | BeamDomino canonical/glancing/direct_strike (data pending) |
-| `fluid_mechanics` | registry (4 liquid modules) | reference video + `.npz` artifacts | LiquidContainer rest/step_hold/impulse_decay/chirp_strafe (data pending) |
-| `kinematics_mechanics` | (reserved) | — | data pending |
-| `scene_character_consistency` | (reserved) | — | data pending |
+| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | **temporary**: MirrorRollingBall first/third, RacingCar/third — moves to ChessBoard/SunRisesAndSets when their data lands |
 
-### Case × dimension matrix
+### Case × dimension matrix (current)
 
 | case | lpips | action_controllability | prompt_scene_consistency | lighting_shading |
 | --- | :-: | :-: | :-: | :-: |
-| BallRoller/third | ✓ | ✓ | | |
-| BeamDomino/third | ✓ | ✓ | | |
+| BallRoller/third | | ✓ | | |
 | MirrorRollingBall/first | | | ✓ | ✓ |
 | MirrorRollingBall/third | | | ✓ | ✓ |
-| MirrorRollingBall/third_collision | ✓ | ✓ | | |
+| MirrorRollingBall/third_collision | ✓ | | | |
 | RacingCar/first | | | ✓ | |
 | RacingCar/third | | | ✓ | ✓ |
 
 (`suite.yaml` is the single source of truth; `list-cases` prints this matrix
-from it.)
+from it. `cases/BeamDomino/third` is bundled but currently unreferenced —
+earmarked for `physical_causality`.)
 
 ### Layout
 
