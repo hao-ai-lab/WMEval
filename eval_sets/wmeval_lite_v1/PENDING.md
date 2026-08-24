@@ -178,6 +178,22 @@ translation, or a different metric formulation that doesn't require it.
 candidate's monocular trajectory into a metric 3D frame) — a distinct,
 already-documented paper-blueprint gap (see suite.yaml comments).
 
+**Attempted and rejected: empirically recovering the missing rotation.**
+Since we know both objects' real 3D positions and can detect their real 2D
+pixel positions, tried solving for the camera's 3-DOF rotation (translation
+held fixed at the known value) via least-squares reprojection-error
+minimization over the 2 known correspondences (`ramp`, `dome`; 200 random
+restarts, Nelder-Mead). Best fit: **~77px residual per point** — nowhere
+near the sub-pixel-to-few-pixel residual a correct model should produce.
+Real camera-pose recovery (PnP) needs ≥3 non-collinear correspondences to
+be verifiable; with exactly 2, this is fundamentally underdetermined —
+the "best fit" cannot be distinguished from an equally-plausible wrong
+one. Do not ship this (or repeat this exact attempt) as ground truth
+without at least one more independent static anchor object in the scene.
+The only real ways forward: (a) a 3rd+ static anchor object captured in a
+future case-authoring pass, so PnP becomes well-posed, or (b) the original
+capture harness's actual camera rotation, if it exists in a log somewhere.
+
 ## BilliardGame
 
 In the scene roster but unmapped to any dimension — confirm intent before
