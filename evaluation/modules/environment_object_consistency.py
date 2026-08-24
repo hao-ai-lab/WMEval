@@ -194,6 +194,50 @@ def _unity_ground_truth_depths_and_distances(
 # ---------------------------------------------------------------------------
 # Candidate-side tracking
 # ---------------------------------------------------------------------------
+_DEGENERATE_BOX_AREA_FRACTION = 0.6
+
+
+def _dedupe_seed_detections(
+    boxes: np.ndarray,
+    scores: np.ndarray,
+    labels: List[str],
+    frame_width: int,
+    frame_height: int,
+) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    """Drop degenerate whole-frame boxes and collapse duplicate detections
+    that share the same text label to their single highest-scoring instance.
+
+    GroundingDINO with a multi-noun prompt (e.g. "ramp. dome.") can emit a
+    spurious box spanning nearly the entire frame under a merged label (e.g.
+    "ramp dome"), and/or multiple distinct boxes under the same single-noun
+    label. Downstream depth/distance aggregation buckets purely by label
+    string, so unfiltered duplicates silently average a real detection with
+    a spurious one. We assume one tracked instance per label, matching how
+    ground-truth object_transforms.json is keyed.
+    """
+    frame_area = float(frame_width * frame_height)
+    keep_idx = [
+        i for i in range(len(boxes))
+        if frame_area <= 0 or _box_area(boxes[i]) / frame_area < _DEGENERATE_BOX_AREA_FRACTION
+    ]
+    if not keep_idx:
+        keep_idx = list(range(len(boxes)))  # all degenerate: keep as-is rather than drop everything
+
+    best_by_label: Dict[str, int] = {}
+    for i in keep_idx:
+        label = labels[i]
+        if label not in best_by_label or scores[i] > scores[best_by_label[label]]:
+            best_by_label[label] = i
+
+    final_idx = sorted(best_by_label.values())
+    return boxes[final_idx], scores[final_idx], [labels[i] for i in final_idx]
+
+
+def _box_area(box: np.ndarray) -> float:
+    x0, y0, x1, y1 = float(box[0]), float(box[1]), float(box[2]), float(box[3])
+    return max(0.0, x1 - x0) * max(0.0, y1 - y0)
+
+
 def _track_objects(
     video_path: str,
     text_prompt: str,
@@ -224,6 +268,9 @@ def _track_objects(
     )
     char_boxes, char_scores, char_labels = _detect_objects_groundingdino(
         first_frame, character_prompt, gd_model_id, gd_threshold, gd_text_threshold, device
+    )
+    obj_boxes, obj_scores, obj_labels = _dedupe_seed_detections(
+        obj_boxes, obj_scores, obj_labels, frame_width=width, frame_height=height,
     )
 
     if len(obj_boxes) == 0 and len(char_boxes) == 0:

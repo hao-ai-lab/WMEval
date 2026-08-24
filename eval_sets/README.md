@@ -50,7 +50,7 @@ scene × dimension mapping:
 | Scene | Dimensions (target) | Status |
 | --- | --- | --- |
 | MirrorRollingBall | lpips, prompt_scene_consistency | ✅ live |
-| BallRoller | action_controllability, kinematics_mechanics | ctrl live; kinematics pending module confirmation |
+| BallRoller | action_controllability, kinematics_mechanics, environment_object_consistency | ctrl + environment_object_consistency (object-only) live; kinematics blocked (data-provenance conflict, see PENDING.md) |
 | RacingCar | prompt_scene_consistency, kinematics_mechanics | prompt live; kinematics pending |
 | ChessBoard | prompt_scene_consistency, lighting_shading | data pending |
 | SunRisesAndSets | lighting_shading | data pending |
@@ -67,17 +67,18 @@ Currently wired dimensions:
 | `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | BallRoller/ctrl |
 | `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, prompt_first/prompt_third |
 | `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | **temporary borrow**: MirrorRollingBall/prompt_third, RacingCar/prompt_third — moves to ChessBoard/SunRisesAndSets when their data lands |
+| `environment_object_consistency` | registry (`environment_object_consistency`) | reference video + Unity object transforms | BallRoller/ctrl (object-only: static ramp/dome; character half not attempted, see PENDING.md) |
 
 ### Case × dimension matrix (current)
 
-| case | lpips | action_controllability | prompt_scene_consistency | lighting_shading |
-| --- | :-: | :-: | :-: | :-: |
-| BallRoller/ctrl | | ✓ | | |
-| MirrorRollingBall/lpips_collision | ✓ | | | |
-| MirrorRollingBall/prompt_first | | | ✓ | |
-| MirrorRollingBall/prompt_third | | | ✓ | ✓* |
-| RacingCar/prompt_first | | | ✓ | |
-| RacingCar/prompt_third | | | ✓ | ✓* |
+| case | lpips | action_controllability | prompt_scene_consistency | lighting_shading | environment_object_consistency |
+| --- | :-: | :-: | :-: | :-: | :-: |
+| BallRoller/ctrl | | ✓ | | | ✓ |
+| MirrorRollingBall/lpips_collision | ✓ | | | | |
+| MirrorRollingBall/prompt_first | | | ✓ | | |
+| MirrorRollingBall/prompt_third | | | ✓ | ✓* | |
+| RacingCar/prompt_first | | | ✓ | | |
+| RacingCar/prompt_third | | | ✓ | ✓* | |
 
 (* = temporary borrow by lighting_shading)
 

@@ -46,6 +46,23 @@ the point of this scene — shadow-direction metrics (MOSD/SDJ) assume a static
 sun; confirm with the dimension owner how the moving-sun protocol is scored
 before authoring.
 
+## BallRoller/ctrl — environment_object_consistency (LIVE, object half only)
+
+Resolved and wired into suite.yaml (2026-08). Scoped to the case's static
+`ramp`/`dome` obstacles only — ground truth (`reference/artifacts/
+object_transforms.json`) was computed by reading their world positions
+directly from the Unity scene file in Edit mode (no rendering needed for
+static objects), combined with the case's already-shipped `poses.npy`/
+`intrinsics.npy`. `object_permanence_pct` self-validates clean (100%).
+`depth_absrel_pct`/`pairwise_distance_mae_pct` are real and correctly wired
+but show large (~70-80%) self-match error — see suite.yaml's header comment
+for the root cause (a real-world-trained monocular depth model has a
+systematic scale bias on synthetic content; not a wiring bug). The
+`character_consistency_pct` half is explicitly disabled for this case
+(`eoc_character_prompt` set to a non-matching string) — the ball ("player")
+was never reviewed as a character-identity subject; see the WanderingGarden
+section below for the actual paper-mapped character-consistency dimension.
+
 ## WanderingGarden — scene_character_consistency
 
 **`WanderingGarden/scene_first`, `WanderingGarden/scene_third`**
@@ -116,6 +133,20 @@ wiring a real `kinematics_mechanics` dimension into suite.yaml:
    borrow `BallRoller/ctrl` + `RacingCar/prompt_third` as candidate videos
    (`requires_reference: false` — the module only reads
    `context.candidate_video`).
+
+   **Known blocker on borrowing `BallRoller/ctrl` specifically**: a
+   from-scratch physics replay of its shipped `action.npy` (33-step
+   collect-loop) against the checked-out `Roll-a-ball.unity` scene produces
+   a large multi-unit ball displacement, but the case's shipped `poses.npy`
+   (its `CameraController`-driven camera) only shows a ~0.1-0.25 unit delta
+   across the whole video — inconsistent with a camera that tracks the
+   player 1:1. Either the checked-out scene/physics params aren't what
+   generated the shipped reference video, or the camera behavior differs
+   from what `CameraController.cs` implies. Don't trust this case's data for
+   a *moving*-object ground truth (its static objects were fine to use for
+   `environment_object_consistency` above — this conflict is specific to the
+   ball's trajectory) without resolving the discrepancy against the original
+   capture harness/logs first.
 2. `reference/artifacts/unity_object_transforms.json` — per-frame per-object
    3D world positions (schema in the module docstring). Without it the
    module still reports the reconstructed candidate-side trajectories for

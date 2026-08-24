@@ -23,14 +23,30 @@
 #                              kin_unity_poses_npy/kin_unity_intrinsics_npy can reuse
 #                              the poses.npy/intrinsics.npy already bundled in
 #                              BallRoller/ctrl + RacingCar cases. See PENDING.md.
-#   scene_character_consistency  registry `environment_object_consistency` module now
-#                              exists (evaluation/modules/environment_object_consistency.py,
-#                              paper appendix B.1: GroundingDINO + SAM2 + DINOv2).
-#                              WanderingGarden/scene_first + scene_third data still
-#                              pending, plus eoc_unity_object_transforms_json /
-#                              eoc_unity_poses_npy for the depth/pairwise-distance
-#                              metrics (object_permanence_pct/character_consistency_pct
-#                              are reference-free and don't need it). See PENDING.md.
+#   environment_object_consistency  LIVE (BallRoller/ctrl only) as of 2026-08. Paper
+#                              appendix B.1's object-consistency half only (depth
+#                              AbsRel, pairwise-distance MAE, object permanence) —
+#                              scoped to the case's static "ramp"/"dome" obstacles,
+#                              with Unity-analytical ground truth read directly from
+#                              the scene (no rendering needed: static-object world
+#                              transforms + the case's already-shipped poses.npy/
+#                              intrinsics.npy). object_permanence_pct is clean
+#                              (100% self-match). depth_absrel_pct/pairwise_distance_
+#                              mae_pct are real and correctly wired but show large
+#                              (~70-80%) self-match error: a real-world-trained
+#                              monocular depth model (Depth-Anything-V2-Metric)
+#                              applied zero-shot to synthetic Unity content has a
+#                              ~4-5x systematic scale bias — a known domain-gap
+#                              limitation of the estimator, not a wiring bug. Treat
+#                              those two sub-metrics as directionally noisy until a
+#                              domain-appropriate depth model or calibration step is
+#                              adopted.
+#   scene_character_consistency  Paper B.1's CHARACTER-identity half (DINOv2 main-
+#                              character tracking) — distinct from the above, still
+#                              fully blocked: WanderingGarden (the paper-mapped
+#                              scene) has zero case data. Not attempted on
+#                              BallRoller/ctrl (its "player" ball is deliberately
+#                              excluded via eoc_character_prompt — unreviewed).
 #   physical_causality         BeamDomino/causal (earmarked) + qa_dataset; more strike
 #                              variants (causal_glancing, ...) as data lands — PR #19.
 #   fluid_mechanics            LiquidContainer/fluid_rest, fluid_step_hold,
@@ -131,6 +147,24 @@ dimensions:
       - multi_object_sun_disagreement_deg
       - shadow_area_stability_pct
       - shadow_shape_drift
+  environment_object_consistency:
+    display_name: Environment Object Consistency
+    description: 'Paper B.1 (object half only, not character): GroundingDINO + SAM2 tracking for depth AbsRel / pairwise-distance MAE against Unity-analytical ground truth, plus reference-free object permanence. Scoped to BallRoller/ctrl''s static "ramp"/"dome" obstacles; see suite.yaml header for the depth-estimator domain-gap caveat.'
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - environment_object_consistency
+    metric_config:
+      eval_fps: 4.0
+      max_pairs: 32
+    cases:
+    - BallRoller/ctrl
+    aggregate:
+      headline: object_permanence_pct
+      direction: higher
+      extra_means:
+      - depth_absrel_pct
+      - pairwise_distance_mae_pct
 legacy_case_aliases:
   lpips:
     mirror_ball_third_person: MirrorRollingBall/lpips_collision
