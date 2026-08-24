@@ -202,6 +202,24 @@ The only real ways forward: (a) a 3rd+ static anchor object captured in a
 future case-authoring pass, so PnP becomes well-posed, or (b) the original
 capture harness's actual camera rotation, if it exists in a log somewhere.
 
+**Unexplored lead, not yet pursued**: unlike `BallRoller/ctrl`,
+`RacingCar/prompt_third`'s `poses.npy` has genuine non-identity,
+time-varying rotation (`reference/artifacts/poses.npy`, a following-camera
+shot down the highway) — so this specific data-quality problem may be
+scene-specific rather than universal across the whole external capture
+pipeline. That said, switching to `RacingCar` for `kinematics_mechanics`
+is not a quick fix: it only gives rotation *relative to frame 0*, not
+frame 0's own absolute orientation, which is the same unknown that broke
+`BallRoller/ctrl` (whose rotation is identity because the camera doesn't
+pan, not necessarily because the pipeline never captures real
+orientation). Confirming whether `RacingCar`'s frame-0 orientation is
+itself trustworthy, then repeating the full case-authoring process there
+(Edit-mode static-object dump, scene-fidelity check against the shipped
+`unity_groundtruth.mp4`, 3+-point correspondence collection), is
+comparable in scope to everything already done for `BallRoller/ctrl` in
+this branch — a real path, but a separate significant effort, not
+something to bolt on speculatively.
+
 ## BilliardGame
 
 In the scene roster but unmapped to any dimension — confirm intent before
