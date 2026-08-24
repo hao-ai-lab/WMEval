@@ -157,6 +157,43 @@ def _extract_shadow_consistency(result: Mapping[str, Any]) -> dict[str, Any]:
     return {key: _numeric(result.get(key)) for key in _SHADOW_METRIC_KEYS}
 
 
+def _extract_environment_object_consistency(result: Mapping[str, Any]) -> dict[str, Any]:
+    # depth_absrel_pct / pairwise_distance_mae_pct are None while Unity
+    # analytical ground truth (see PENDING.md) is unavailable; object
+    # permanence and character consistency are reference-free and always
+    # populated when detection succeeds.
+    return {
+        "depth_absrel_pct": _numeric(result.get("depth_absrel_pct")),
+        "pairwise_distance_mae_pct": _numeric(result.get("pairwise_distance_mae_pct")),
+        "object_permanence_pct": _numeric(result.get("object_permanence_pct")),
+        "character_consistency_pct": _numeric(result.get("character_consistency_pct")),
+    }
+
+
+def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
+    # trajectory_fidelity / mechanical_quantities are per-label dicts (module
+    # currently supports pending/proxy statuses rather than final paper
+    # metrics -- see evaluation/modules/kinematics_mechanics.py docstring);
+    # surface a single dimension-level summary: the best (lowest) FDE/DTW
+    # proxy across tracked labels, when available.
+    fidelity = result.get("trajectory_fidelity")
+    fde_values: list[float] = []
+    dtw_values: list[float] = []
+    if isinstance(fidelity, Mapping):
+        for entry in fidelity.values():
+            if isinstance(entry, Mapping):
+                fde = _numeric(entry.get("fde_px"))
+                dtw = _numeric(entry.get("dtw_px"))
+                if fde is not None:
+                    fde_values.append(fde)
+                if dtw is not None:
+                    dtw_values.append(dtw)
+    return {
+        "fde_px_mean": _mean(fde_values),
+        "dtw_px_mean": _mean(dtw_values),
+    }
+
+
 MODULE_METRIC_EXTRACTORS: dict[str, Callable[[Mapping[str, Any]], dict[str, Any]]] = {
     "lpips": _extract_lpips,
     "control_motion": _extract_control_motion,
@@ -166,6 +203,8 @@ MODULE_METRIC_EXTRACTORS: dict[str, Callable[[Mapping[str, Any]], dict[str, Any]
     "liquid_surface_orientation": _extract_liquid_surface_orientation,
     "slosh_spectrum": _extract_slosh_spectrum,
     "shadow_consistency": _extract_shadow_consistency,
+    "environment_object_consistency": _extract_environment_object_consistency,
+    "kinematics_mechanics": _extract_kinematics_mechanics,
 }
 
 

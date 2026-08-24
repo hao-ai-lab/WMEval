@@ -80,6 +80,32 @@ METRIC_CONFIG_KEYS = frozenset(
         "shadow_hud_preset",
         # shared model knobs
         "sam2_model",
+        # environment_object_consistency (paper appendix B.1)
+        "eoc_text_prompt",
+        "eoc_character_prompt",
+        "eoc_tau_det",
+        "eoc_tau_mask",
+        "eoc_tau_id",
+        "eoc_max_objects",
+        "eoc_depth_model",
+        "eoc_gd_model",
+        "eoc_unity_object_transforms_json",
+        "eoc_unity_poses_npy",
+        "eoc_unity_intrinsics_npy",
+        # kinematics_mechanics (paper appendix B.3)
+        "kin_text_prompt",
+        "kin_static_anchor_labels",
+        "kin_track_thresh",
+        "kin_track_buffer",
+        "kin_match_thresh",
+        "kin_min_track_len",
+        "kin_gd_threshold",
+        "kin_gd_text_threshold",
+        "kin_gd_model",
+        "kin_unity_object_transforms_json",
+        "kin_unity_poses_npy",
+        "kin_unity_intrinsics_npy",
+        "kin_unity_object_masses_json",
     }
 )
 
