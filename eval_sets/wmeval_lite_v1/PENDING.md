@@ -55,6 +55,22 @@ which judge configuration (the PR #14 vlm_consistency pipeline is the
 candidate), what the rubrics are generated from, and its suite.yaml
 `vlm:`/aggregate spec.
 
+**Open conflict to resolve (flagging for a human decision, not silently
+picking one):** this note predates
+`evaluation/modules/environment_object_consistency.py`, which implements the
+paper's appendix-B.1 spec verbatim (GroundingDINO + SAM2 + DINOv2, registry
+evaluator, `requires_reference: false` for its two candidate-only metrics).
+That is a different evaluator family than the `vlm_consistency` judge this
+note assumed. Before wiring `scene_character_consistency` in suite.yaml,
+decide: (a) `evaluator: registry`, `modules: [environment_object_consistency]`
+per the paper, (b) the VLM judge as originally planned here, or (c) both,
+reported side by side. Once decided, this dimension also needs:
+
+| file | notes |
+| --- | --- |
+| `reference/artifacts/unity_object_transforms.json` | per-frame per-object 3D world positions (schema in the module docstring) — only needed for `depth_absrel_pct`/`pairwise_distance_mae_pct`, not for `object_permanence_pct`/`character_consistency_pct` |
+| `reference/artifacts/poses.npy`, `intrinsics.npy` | camera-to-world + intrinsics, same convention already bundled in `BallRoller/ctrl` |
+
 ## BeamDomino — physical_causality
 
 **`BeamDomino/causal`** — reference video + actions are ALREADY bundled
@@ -89,11 +105,38 @@ liquid_832x464_16fps`. suite.yaml gains the `fluid_mechanics` dimension
 
 ## BallRoller / RacingCar — kinematics_mechanics
 
-Blocked on module confirmation (`motion` proposed). Then either own rollouts
-(`BallRoller/kinematics`, `RacingCar/kinematics`) or borrow
-`BallRoller/ctrl` + `RacingCar/prompt_third` (declare its bundled
-`unity_groundtruth.mp4` as `reference.video`). Plus a `motion` metric
-extractor in `evaluation/lite/aggregate.py`.
+Module confirmed: `evaluation/modules/kinematics_mechanics.py`
+(`kinematics_mechanics` registry entry, paper appendix B.3: GroundingDINO +
+ByteTrack trajectory reconstruction, camera-motion compensation via static
+anchors) plus its `evaluation/lite/aggregate.py` extractor
+(`_extract_kinematics_mechanics`) both now exist. Remaining blockers before
+wiring a real `kinematics_mechanics` dimension into suite.yaml:
+
+1. Either own rollouts (`BallRoller/kinematics`, `RacingCar/kinematics`) or
+   borrow `BallRoller/ctrl` + `RacingCar/prompt_third` as candidate videos
+   (`requires_reference: false` — the module only reads
+   `context.candidate_video`).
+2. `reference/artifacts/unity_object_transforms.json` — per-frame per-object
+   3D world positions (schema in the module docstring). Without it the
+   module still reports the reconstructed candidate-side trajectories for
+   inspection, but `trajectory_fidelity`/`mechanical_quantities` stay
+   `null` with `ground_truth_status: "pending"`.
+3. `reference/artifacts/object_masses.json` — `{"<label>": mass_kg}` — only
+   needed for the momentum/kinetic-energy metrics.
+4. `BallRoller/ctrl` already bundles `poses.npy`/`intrinsics.npy` (Unity
+   camera-to-world + intrinsics per frame); these can be pointed at directly
+   via `kin_unity_poses_npy`/`kin_unity_intrinsics_npy` once (2) lands.
+
+**Known gap to flag for a human:** even with (2)+(3), the module's
+`trajectory_fidelity` is a 2D pixel-space reprojection proxy (candidate
+raw pixel trajectory vs. Unity's 3D trajectory reprojected through Unity's
+*own* camera), and `mechanical_quantities` only reports pixel/frame speed,
+not true momentum/kinetic-energy in SI units — both because there is no
+per-frame *candidate* camera-pose artifact to lift the candidate's monocular
+pixel trajectory into a metric 3D frame. Closing that gap needs either a
+candidate-side pose-recovery step (e.g. structure-from-motion against the
+static anchors) or a metric-depth model, neither of which exists in this
+repo yet.
 
 ## BilliardGame
 

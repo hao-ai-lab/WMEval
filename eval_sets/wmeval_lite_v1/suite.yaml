@@ -14,13 +14,23 @@
 #   BilliardGame      -> (in the scene roster but unmapped — confirm with team)
 #
 # Dimensions not yet wired (add here when ready):
-#   kinematics_mechanics       registry `motion` module proposed; either own rollouts
-#                              (BallRoller/kinematics, RacingCar/kinematics) or borrow
-#                              BallRoller/ctrl + RacingCar/prompt_third (whose bundled
-#                              unity_groundtruth.mp4 would be declared reference.video)
-#                              — pending team confirmation.
-#   scene_character_consistency  WanderingGarden/scene_first + scene_third — pending data
-#                              + judge config.
+#   kinematics_mechanics       registry `kinematics_mechanics` module now exists
+#                              (evaluation/modules/kinematics_mechanics.py, paper
+#                              appendix B.3: GroundingDINO + ByteTrack trajectory
+#                              reconstruction). Blocked on case data: needs
+#                              kin_unity_object_transforms_json (per-frame per-object
+#                              3D world positions) + kin_unity_object_masses_json;
+#                              kin_unity_poses_npy/kin_unity_intrinsics_npy can reuse
+#                              the poses.npy/intrinsics.npy already bundled in
+#                              BallRoller/ctrl + RacingCar cases. See PENDING.md.
+#   scene_character_consistency  registry `environment_object_consistency` module now
+#                              exists (evaluation/modules/environment_object_consistency.py,
+#                              paper appendix B.1: GroundingDINO + SAM2 + DINOv2).
+#                              WanderingGarden/scene_first + scene_third data still
+#                              pending, plus eoc_unity_object_transforms_json /
+#                              eoc_unity_poses_npy for the depth/pairwise-distance
+#                              metrics (object_permanence_pct/character_consistency_pct
+#                              are reference-free and don't need it). See PENDING.md.
 #   physical_causality         BeamDomino/causal (earmarked) + qa_dataset; more strike
 #                              variants (causal_glancing, ...) as data lands — PR #19.
 #   fluid_mechanics            LiquidContainer/fluid_rest, fluid_step_hold,
