@@ -72,7 +72,11 @@ except ImportError:
 
 from ..context import EvaluationContext
 from .shadow_consistency import GD_DEFAULT_MODEL, _detect_objects_groundingdino
-from .environment_object_consistency import _load_camera_intrinsics, _load_camera_poses
+from .environment_object_consistency import (
+    _dedupe_seed_detections,
+    _load_camera_intrinsics,
+    _load_camera_poses,
+)
 
 EPS = 1e-6
 
@@ -141,6 +145,14 @@ def _detect_all_frames(
         boxes, scores, labels = _detect_objects_groundingdino(
             frame, text_prompt, gd_model_id, gd_threshold, gd_text_threshold, device
         )
+        # Same degenerate/duplicate-detection issue as _track_objects in
+        # environment_object_consistency.py: a multi-noun prompt can produce
+        # a spurious near-full-frame merged-label box and/or duplicate
+        # same-label boxes, which would otherwise confuse ByteTrack's
+        # nearest-centroid label assignment below.
+        boxes, scores, labels = _dedupe_seed_detections(
+            boxes, scores, labels, frame_width=width, frame_height=height,
+        )
         per_frame.append({"frame": f_idx, "boxes": boxes, "scores": scores, "labels": labels})
         f_idx += 1
     cap.release()
@@ -205,7 +217,13 @@ def _compensate_camera_motion(
                 )
 
     if not anchor_positions_by_frame:
-        return tracks  # no anchors configured/detected; nothing to compensate
+        # No anchors configured/detected: nothing to compensate, but downstream
+        # code always reads "centroid_compensated", so default it to the raw
+        # (uncompensated) centroid rather than omitting the key.
+        return {
+            tid: [{**p, "centroid_compensated": list(p["centroid"])} for p in pts]
+            for tid, pts in tracks.items()
+        }
 
     frame_ids = sorted(anchor_positions_by_frame)
     anchor_mean = {

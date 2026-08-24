@@ -120,54 +120,63 @@ The `.npz` artifacts MUST be produced with
 liquid_832x464_16fps`. suite.yaml gains the `fluid_mechanics` dimension
 (4 liquid modules).
 
-## BallRoller / RacingCar — kinematics_mechanics
+## BallRoller / RacingCar — kinematics_mechanics (still NOT live — new root cause found)
 
-Module confirmed: `evaluation/modules/kinematics_mechanics.py`
-(`kinematics_mechanics` registry entry, paper appendix B.3: GroundingDINO +
-ByteTrack trajectory reconstruction, camera-motion compensation via static
-anchors) plus its `evaluation/lite/aggregate.py` extractor
-(`_extract_kinematics_mechanics`) both now exist. Remaining blockers before
-wiring a real `kinematics_mechanics` dimension into suite.yaml:
+Module confirmed working end-to-end: `evaluation/modules/kinematics_mechanics.py`
+(paper appendix B.3: GroundingDINO + ByteTrack trajectory reconstruction,
+camera-motion compensation via static anchors). `BallRoller/ctrl`'s
+`case.yaml` already has `module_params.kinematics_mechanics` fully
+configured (text prompt, GT artifacts, a tuned `kin_track_thresh`) and
+`reference/artifacts/object_masses.json` is bundled — this is ready
+infrastructure, kept even though the dimension isn't wired live, because
+the blocker below is about ground-truth data quality, not this module.
 
-1. Either own rollouts (`BallRoller/kinematics`, `RacingCar/kinematics`) or
-   borrow `BallRoller/ctrl` + `RacingCar/prompt_third` as candidate videos
-   (`requires_reference: false` — the module only reads
-   `context.candidate_video`).
+Three real bugs were found and fixed while getting this far (all in
+`evaluation/modules/kinematics_mechanics.py`):
+1. `_compensate_camera_motion` omitted the `centroid_compensated` key
+   entirely when no static anchors were configured, crashing downstream
+   with `KeyError`. Now defaults to the raw (uncompensated) centroid.
+2. `_detect_all_frames` had no defense against the same degenerate/
+   duplicate GroundingDINO detection issue found in
+   `environment_object_consistency.py` (see below) — a completely separate
+   detection pipeline that didn't inherit that fix. Now reuses
+   `_dedupe_seed_detections`.
+3. The default `kin_track_thresh=0.5` sat above GroundingDINO's actual
+   detection confidence on this content (~0.37-0.43), so ByteTrack's
+   two-stage association never had a high-confidence detection to *start* a
+   new track — zero tracks formed despite clean per-frame detection. Fixed
+   via a per-case `kin_track_thresh: 0.3` override (not a module-default
+   change, since that threshold should be tuned per detector/content, not
+   hardcoded repo-wide).
 
-   **Known blocker on borrowing `BallRoller/ctrl` specifically**: a
-   from-scratch physics replay of its shipped `action.npy` (33-step
-   collect-loop) against the checked-out `Roll-a-ball.unity` scene produces
-   a large multi-unit ball displacement, but the case's shipped `poses.npy`
-   (its `CameraController`-driven camera) only shows a ~0.1-0.25 unit delta
-   across the whole video — inconsistent with a camera that tracks the
-   player 1:1. Either the checked-out scene/physics params aren't what
-   generated the shipped reference video, or the camera behavior differs
-   from what `CameraController.cs` implies. Don't trust this case's data for
-   a *moving*-object ground truth (its static objects were fine to use for
-   `environment_object_consistency` above — this conflict is specific to the
-   ball's trajectory) without resolving the discrepancy against the original
-   capture harness/logs first.
-2. `reference/artifacts/unity_object_transforms.json` — per-frame per-object
-   3D world positions (schema in the module docstring). Without it the
-   module still reports the reconstructed candidate-side trajectories for
-   inspection, but `trajectory_fidelity`/`mechanical_quantities` stay
-   `null` with `ground_truth_status: "pending"`.
-3. `reference/artifacts/object_masses.json` — `{"<label>": mass_kg}` — only
-   needed for the momentum/kinetic-energy metrics.
-4. `BallRoller/ctrl` already bundles `poses.npy`/`intrinsics.npy` (Unity
-   camera-to-world + intrinsics per frame); these can be pointed at directly
-   via `kin_unity_poses_npy`/`kin_unity_intrinsics_npy` once (2) lands.
+With all three fixed, tracking genuinely works (`dome`: 171/173 frames,
+`ramp`: 17/173 — real, non-fabricated ByteTrack output on `BallRoller/ctrl`'s
+static ramp/dome, scoped the same way as `environment_object_consistency`
+above; the moving ball remains excluded for the data-provenance reason
+already documented).
 
-**Known gap to flag for a human:** even with (2)+(3), the module's
-`trajectory_fidelity` is a 2D pixel-space reprojection proxy (candidate
-raw pixel trajectory vs. Unity's 3D trajectory reprojected through Unity's
-*own* camera), and `mechanical_quantities` only reports pixel/frame speed,
-not true momentum/kinetic-energy in SI units — both because there is no
-per-frame *candidate* camera-pose artifact to lift the candidate's monocular
-pixel trajectory into a metric 3D frame. Closing that gap needs either a
-candidate-side pose-recovery step (e.g. structure-from-motion against the
-static anchors) or a metric-depth model, neither of which exists in this
-repo yet.
+**Why it's still not wired live: `poses.npy`'s rotation component is not
+real camera-orientation data.** `trajectory_fidelity` needs to reproject the
+Unity 3D ground truth into 2D pixels through `poses.npy`'s camera-to-world
+matrix. Doing that for `dome` (a perfectly static object, per its own
+detected pixel trajectory) lands at `v≈-1151.85`, while the real detected
+pixel is `v≈548.7` — over 1700px off. `poses.npy`'s rotation block is
+identity at every single frame of this case, despite the case's own prompt
+describing "a fixed side-table camera looking **diagonally** across the
+arena" — i.e. whatever produced `poses.npy` only encoded real translation,
+not real orientation. `environment_object_consistency`'s depth/distance
+metrics were unaffected by this because Euclidean distance is
+rotation-invariant; `kinematics_mechanics`'s pixel reprojection is not.
+
+This likely affects every case built on the same external capture
+pipeline, not just `BallRoller/ctrl` — worth checking before trusting
+`poses.npy` for reprojection-dependent metrics anywhere else in the suite.
+Fixing this needs either real per-frame camera rotation captured alongside
+translation, or a different metric formulation that doesn't require it.
+`mechanical_quantities` is separately still capped at pixel units only
+(no per-frame *candidate* camera-pose artifact exists to lift the
+candidate's monocular trajectory into a metric 3D frame) — a distinct,
+already-documented paper-blueprint gap (see suite.yaml comments).
 
 ## BilliardGame
 

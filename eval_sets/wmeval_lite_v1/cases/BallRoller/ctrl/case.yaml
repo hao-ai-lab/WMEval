@@ -18,13 +18,21 @@ perspective: third_person
 modules:
 - control_motion
 - environment_object_consistency
+- kinematics_mechanics
 module_params:
   environment_object_consistency:
     eoc_text_prompt: ramp. dome.
-    eoc_character_prompt: no_character_configured_for_this_case_xyz.
+    eoc_character_prompt: white ball. player ball.
     eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
     eoc_unity_poses_npy: reference/artifacts/poses.npy
     eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+  kinematics_mechanics:
+    kin_text_prompt: ramp. dome.
+    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/poses.npy
+    kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    kin_unity_object_masses_json: reference/artifacts/object_masses.json
+    kin_track_thresh: 0.3
 reference:
   video: reference/reference.mp4
   checksums: reference/checksums.sha256
@@ -38,8 +46,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: d110cf886fd95e8ed760f7e8351312639b623d7e
-  evaluator_fingerprint: 430a368ce916067bfdb0f035322fb13f
+  code_revision: d02b82d2f945290ad25472c903ecad3f4dc2066a
+  evaluator_fingerprint: eb10d2e065a21cb01d4574dbf29b54fa
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

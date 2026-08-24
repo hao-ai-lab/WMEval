@@ -149,7 +149,7 @@ dimensions:
       - shadow_shape_drift
   environment_object_consistency:
     display_name: Environment Object Consistency
-    description: 'Paper B.1 (object half only, not character): GroundingDINO + SAM2 tracking for depth AbsRel / pairwise-distance MAE against Unity-analytical ground truth, plus reference-free object permanence. Scoped to BallRoller/ctrl''s static "ramp"/"dome" obstacles; see suite.yaml header for the depth-estimator domain-gap caveat.'
+    description: 'Paper B.1, object + character halves: GroundingDINO + SAM2 tracking for depth AbsRel / pairwise-distance MAE against Unity-analytical ground truth, reference-free object permanence, and reference-free DINOv2 character-identity consistency on the case''s controllable "player" ball. Scoped to BallRoller/ctrl''s static "ramp"/"dome" obstacles for the GT-dependent metrics; see suite.yaml header for the depth-estimator domain-gap caveat. Full anthropomorphic-character coverage (a distinct WanderingGarden scene) is separately tracked as scene_character_consistency below -- still blocked on missing scene data.'
     evaluator: registry
     requires_reference: true
     modules:
@@ -165,6 +165,19 @@ dimensions:
       extra_means:
       - depth_absrel_pct
       - pairwise_distance_mae_pct
+      - character_consistency_pct
+  # kinematics_mechanics: NOT wired live -- see PENDING.md. The module
+  # (evaluation/modules/kinematics_mechanics.py) is real and its
+  # GroundingDINO+ByteTrack tracking now works correctly on BallRoller/ctrl
+  # (module_params already configured on that case, artifacts already
+  # bundled), but its headline FDE/DTW metric is not trustworthy: it
+  # requires reprojecting the Unity 3D ground truth through poses.npy, and
+  # poses.npy's rotation component is identity at every frame despite this
+  # case's own prompt describing a camera "looking diagonally across the
+  # arena" -- i.e. poses.npy only carries real translation data, not real
+  # camera orientation. Reprojecting a known-static object through it lands
+  # >1700px away from its actual detected pixel position. This affects any
+  # case built on the same external capture pipeline, not just this one.
 legacy_case_aliases:
   lpips:
     mirror_ball_third_person: MirrorRollingBall/lpips_collision

@@ -73,7 +73,12 @@ def test_compensate_camera_motion_noop_without_anchors():
 
     tracks = {1: [{"frame": 0, "label": "ball", "score": 0.9, "centroid": [1.0, 2.0]}]}
     compensated = _compensate_camera_motion(tracks, [], 1)
-    assert compensated is tracks
+    # No anchors configured: no actual compensation math runs, but downstream
+    # code always reads "centroid_compensated", so it must default to the raw
+    # centroid rather than being omitted (regression test for a real crash:
+    # KeyError when kin_static_anchor_labels is left empty).
+    assert compensated[1][0]["centroid_compensated"] == [1.0, 2.0]
+    assert compensated[1][0]["centroid"] == [1.0, 2.0]
 
 
 def test_round_sig2():
