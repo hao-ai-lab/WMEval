@@ -188,8 +188,16 @@ near the sub-pixel-to-few-pixel residual a correct model should produce.
 Real camera-pose recovery (PnP) needs ≥3 non-collinear correspondences to
 be verifiable; with exactly 2, this is fundamentally underdetermined —
 the "best fit" cannot be distinguished from an equally-plausible wrong
-one. Do not ship this (or repeat this exact attempt) as ground truth
-without at least one more independent static anchor object in the scene.
+one. **Empirically confirmed, not just theoretical**: tested the
+recovered rotation against a genuine held-out 3rd point (the case's
+"player" ball, whose known Edit-mode initial position is `(-7, 0.3, 0)`
+and whose real frame-0 pixel position was independently detected at
+`(729.34, 409.86)`, not used in the original 2-point fit). The recovered
+rotation predicts `(545.85, 785.62)` for it — a **418px residual**, 5x
+worse than the ~77px training-set fit. That's the textbook signature of
+overfitting to too few points, not a real generalizable camera pose. Do
+not ship this (or repeat this exact attempt) as ground truth without at
+least one more independent static anchor object in the scene.
 The only real ways forward: (a) a 3rd+ static anchor object captured in a
 future case-authoring pass, so PnP becomes well-posed, or (b) the original
 capture harness's actual camera rotation, if it exists in a log somewhere.
