@@ -202,23 +202,84 @@ The only real ways forward: (a) a 3rd+ static anchor object captured in a
 future case-authoring pass, so PnP becomes well-posed, or (b) the original
 capture harness's actual camera rotation, if it exists in a log somewhere.
 
-**Unexplored lead, not yet pursued**: unlike `BallRoller/ctrl`,
-`RacingCar/prompt_third`'s `poses.npy` has genuine non-identity,
-time-varying rotation (`reference/artifacts/poses.npy`, a following-camera
-shot down the highway) — so this specific data-quality problem may be
-scene-specific rather than universal across the whole external capture
-pipeline. That said, switching to `RacingCar` for `kinematics_mechanics`
-is not a quick fix: it only gives rotation *relative to frame 0*, not
-frame 0's own absolute orientation, which is the same unknown that broke
-`BallRoller/ctrl` (whose rotation is identity because the camera doesn't
-pan, not necessarily because the pipeline never captures real
-orientation). Confirming whether `RacingCar`'s frame-0 orientation is
-itself trustworthy, then repeating the full case-authoring process there
-(Edit-mode static-object dump, scene-fidelity check against the shipped
-`unity_groundtruth.mp4`, 3+-point correspondence collection), is
-comparable in scope to everything already done for `BallRoller/ctrl` in
-this branch — a real path, but a separate significant effort, not
-something to bolt on speculatively.
+**`RacingCar/prompt_third` lead — pursued (2026-08), also rejected, for a
+different and more fundamental reason than `BallRoller/ctrl`.**
+
+`poses.npy`'s rotation is confirmed genuinely non-identity and time-varying
+(frame 0 already differs from identity by a Frobenius norm of 0.14, rising
+to 0.86 by frame 299) — that part of the original lead holds up. Checked
+the actual reference video (`reference/unity_groundtruth.mp4`, 1280x720,
+300 frames @ 30fps, matches `intrinsics.npy`'s cx/cy=640/360 exactly) and
+confirmed frame-by-frame: this clip is a **camera orbiting a stationary
+parked car** (the `hold ArrowLeft 10000ms` action in `actions.txt`), not a
+car driving down the road — the car's lane position never changes across
+frames 0/75/150/225/299, only the viewing angle sweeps roughly 90°+ around
+it. That matches the case prompt ("parking exactly at the start of the
+road"). `poses.npy`'s translation (z: 10.7 -> 13.6, x: 0.09 -> 4.8) is
+consistent with an orbit around a car parked at local `(0, 0, 20)` inside
+the scene's `Cars` root (see below) offset by the shipped `CarCamera.cs`'s
+`(0, 3.5, -8)` follow offset — a real, corroborating cross-check that
+`poses.npy` is at least self-consistent with the checked-out scene.
+
+**Where it broke down: this scene has no individually distinguishable
+static anchor objects at all**, which is a structurally different (and
+worse) problem than `BallRoller/ctrl`'s identity-rotation issue. Checked
+out `Assets/ARCADE - FREE Racing Car/Scenes/Day.unity` (the actual scene
+with `CarController`/`CarCamera` attached — `Assets/Scenes/SampleScene.unity`
+and `.../Night.unity` are decoys with no road content). Day.unity contains
+exactly two `PrefabInstance`s: the car (`Free Racing Car.prefab`, at local
+`(0,0,20)` under `Cars`) and one road prefab,
+`Assets/KajamansRoads/Free/Prefabs/l20km_cc2_sl30_..._MeshV00.prefab`,
+placed at the world origin with identity rotation. That road prefab is a
+**single `GameObject` with one `MeshFilter`/`MeshRenderer`** — the road
+surface, guardrails, grass, and tree line are ALL baked into one ~15.5km
+static mesh asset (`l20km_cc2_..._MeshV00.asset`, 10,724 vertices, 4
+submeshes by material: `6RoadMat`, `GuardRailMat`, `GrassMat`, `TreesMat`).
+Dumped every submesh's vertices directly from the mesh asset in Edit mode
+(no scene/Play needed — see the now-deleted `Assets/Editor/DumpRoadMesh.cs`
+diagnostic script, run via `-batchmode -nographics -quit
+-executeMethod DumpRoadMesh.Dump`). Near the visible region of this case
+(z in roughly 0-60, matching the camera's 10.7-13.6 range), each submesh
+has only **4-8 vertices total** — the entire ~15.5km mesh only has ~3,064
+vertices per submesh, i.e. sparse cross-section rings roughly every 20-30m,
+not per-tree/per-barrier instances. The "long symmetrical rows of tall
+trees" visible in the video are a repeating texture (`TreesMat`) painted on
+a low-poly continuous strip, not discrete tree meshes — there is no 3D
+position corresponding to "the 3rd tree from the camera" because that tree
+does not exist as separate geometry. Same for the guardrail (`GuardRailMat`)
+— one continuous rail strip, not discrete barrier segments.
+
+Net effect: the only individually-distinguishable static-position object in
+this entire scene is the car itself (one point, and even that one is only
+usable because the car happens to be parked/stationary in this specific
+clip). Recovering a 3-DOF rotation needs >=3 non-collinear correspondences
+(this is exactly the lesson from `BallRoller/ctrl`'s rejected 2-point fit);
+with at most 1 usable point here, this is not just underdetermined but
+categorically inapplicable — there is nothing to add a 2nd or 3rd point
+from. GroundingDINO/ByteTrack anchor detection (the mechanism this whole
+approach depends on, matching `environment_object_consistency`'s pattern)
+fundamentally requires anchors that exist as separate objects; this scene
+was authored with the environment as one non-instanced background mesh,
+which is a reasonable and common way to build a racing-game asset but is
+incompatible with this ground-truth strategy.
+
+**Verdict: rejected, no wiring attempted.** Unlike `BallRoller/ctrl`, this
+was caught before running any GroundingDINO detection or optimization pass
+(the missing-anchors problem is visible directly from the mesh/prefab
+structure), so this investigation cost substantially less compute than the
+`BallRoller/ctrl` effort — no detector inference, no least-squares fit, no
+held-out validation was run, because there was nothing to feed them. The
+one genuinely new/positive finding worth keeping: `poses.npy`'s rotation
+*can* be non-identity and self-consistent with a real scene when the
+capture pipeline is asked to produce it (this orbit shot proves the
+pipeline isn't incapable of real orientation), which narrows
+`BallRoller/ctrl`'s identity-rotation problem to "this specific
+non-panning capture," not "the pipeline can never record rotation." Do not
+retry `RacingCar/prompt_third` for `kinematics_mechanics` without either
+(a) a different reference clip/scene where the environment has real
+per-instance tree/barrier objects, or (b) a non-anchor-based way to recover
+absolute frame-0 orientation (e.g. from the original capture harness, if
+its logs exist).
 
 ## BilliardGame
 
