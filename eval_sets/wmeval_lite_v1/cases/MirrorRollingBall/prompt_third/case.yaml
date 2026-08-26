@@ -12,8 +12,10 @@ perspective: third_person
 rubric_scene_name: MirrorRollingBall_third
 modules:
 - shadow_consistency
+- environment_object_consistency
 reference:
   first_frame: reference/ref.png
+  video: reference/unity_groundtruth.mp4
   checksums: reference/checksums.sha256
   artifacts:
     actions_file: reference/artifacts/actions.txt
@@ -25,8 +27,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
-  evaluator_fingerprint: 39bc5360809f407c5529a92b2738df8a
+  code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
+  evaluator_fingerprint: eb83149cfc864e2f8b8810d1c3154b21
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}
@@ -34,3 +36,9 @@ module_params:
   shadow_consistency:
     shadow_text_prompt: sphere. ball.
     shadow_anchor_label: sphere
+  environment_object_consistency:
+    eoc_text_prompt: yellow sphere.
+    eoc_character_prompt: no_character_configured_for_this_case_xyz.
+    eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    eoc_unity_poses_npy: reference/artifacts/poses.npy
+    eoc_unity_intrinsics_npy: reference/artifacts/intrinsics_t4.npy

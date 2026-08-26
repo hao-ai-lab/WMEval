@@ -2,51 +2,191 @@
 # (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
 #
 # Target scene x dimension mapping (paper, 2026-07-08):
-#   ChessBoard        -> prompt_scene_consistency, lighting_shading      (data pending)
-#   BallRoller        -> kinematics_mechanics, action_controllability
-#   RacingCar         -> kinematics_mechanics, prompt_scene_consistency
+#   ChessBoard        -> prompt_scene_consistency, lighting_shading      (data pending),
+#                        environment_object_consistency (live, scoped, see below)
+#   BallRoller        -> kinematics_mechanics (live, scoped), action_controllability,
+#                        environment_object_consistency (live, scoped)
+#   RacingCar         -> kinematics_mechanics (data unusable -- no static anchors,
+#                        see PENDING.md), prompt_scene_consistency
 #   MirrorRollingBall -> lpips, prompt_scene_consistency
-#   WanderingGarden   -> scene_character_consistency                     (data pending)
+#   WanderingGarden   -> scene_character_consistency                     (data pending),
+#                        environment_object_consistency (live, scoped, see below)
 #   SunRisesAndSets   -> lighting_shading                                (data pending)
 #   LiquidContainer   -> fluid_mechanics                                 (data pending, PR #19 artifacts)
 #   BeamDomino        -> physical_causality (cases/BeamDomino/causal is earmarked
 #                        for it: the rollout is the full causal chain; needs qa_dataset)
-#   BilliardGame      -> (in the scene roster but unmapped — confirm with team)
+#   BilliardGame      -> per paper Table 10 + Sec 4.2 results narrative, its REAL
+#                        primary dimension is kinematics_mechanics (paper explicitly
+#                        compares Billiard Game vs Racing Car there), not
+#                        environment_object_consistency -- now live, scoped, see below
+#                        (added 2026-08 since a real capture now exists). Also wired
+#                        into environment_object_consistency (live, scoped) though the
+#                        paper's own object-consistency results narrative only reports
+#                        Garden/BilliardGame/MirrorRollingBall for that dimension, and
+#                        additionally expects character consistency on BilliardGame
+#                        (currently disabled here -- see PENDING.md).
 #
 # Dimensions not yet wired (add here when ready):
-#   kinematics_mechanics       registry `kinematics_mechanics` module now exists
-#                              (evaluation/modules/kinematics_mechanics.py, paper
-#                              appendix B.3: GroundingDINO + ByteTrack trajectory
-#                              reconstruction). Blocked on case data: needs
-#                              kin_unity_object_transforms_json (per-frame per-object
-#                              3D world positions) + kin_unity_object_masses_json;
-#                              kin_unity_poses_npy/kin_unity_intrinsics_npy can reuse
-#                              the poses.npy/intrinsics.npy already bundled in
-#                              BallRoller/ctrl + RacingCar cases. See PENDING.md.
-#   environment_object_consistency  LIVE (BallRoller/ctrl only) as of 2026-08. Paper
-#                              appendix B.1's object-consistency half only (depth
-#                              AbsRel, pairwise-distance MAE, object permanence) —
-#                              scoped to the case's static "ramp"/"dome" obstacles,
-#                              with Unity-analytical ground truth read directly from
-#                              the scene (no rendering needed: static-object world
-#                              transforms + the case's already-shipped poses.npy/
-#                              intrinsics.npy). object_permanence_pct is clean
-#                              (100% self-match). depth_absrel_pct/pairwise_distance_
-#                              mae_pct are real and correctly wired but show large
-#                              (~70-80%) self-match error: a real-world-trained
-#                              monocular depth model (Depth-Anything-V2-Metric)
-#                              applied zero-shot to synthetic Unity content has a
-#                              ~4-5x systematic scale bias — a known domain-gap
-#                              limitation of the estimator, not a wiring bug. Treat
-#                              those two sub-metrics as directionally noisy until a
+#   environment_object_consistency  LIVE (BallRoller/ctrl, MirrorRollingBall/prompt_third,
+#                              ChessBoard/walk_third, WanderingGarden/scene_first,
+#                              BilliardGame/prompt_first) as of 2026-08. BallRoller/ctrl
+#                              updated 2026-08 with a
+#                              recovered camera pose (see below). Covers both halves of
+#                              paper appendix B.1 for that case: object consistency
+#                              (depth AbsRel, pairwise-distance MAE, object permanence
+#                              -- scoped to static "ramp"/"dome"/"cube" obstacles) AND
+#                              character consistency (DINOv2 identity check on the
+#                              "player" ball, reference-free).
+#                              object_permanence_pct / character_consistency_pct are
+#                              clean (100% self-match each). depth_absrel_pct/
+#                              pairwise_distance_mae_pct are real and correctly wired;
+#                              after the camera-pose fix below they improved from
+#                              ~80%/70% to ~62%/60% self-match error -- the remaining
+#                              error is a SEPARATE, already-diagnosed cause: a
+#                              real-world-trained monocular depth model
+#                              (Depth-Anything-V2-Metric) applied zero-shot to
+#                              synthetic Unity content has a ~4-5x systematic scale
+#                              bias, unrelated to camera pose. Treat those two
+#                              sub-metrics as directionally noisy until a
 #                              domain-appropriate depth model or calibration step is
 #                              adopted.
-#   scene_character_consistency  Paper B.1's CHARACTER-identity half (DINOv2 main-
-#                              character tracking) — distinct from the above, still
-#                              fully blocked: WanderingGarden (the paper-mapped
-#                              scene) has zero case data. Not attempted on
-#                              BallRoller/ctrl (its "player" ball is deliberately
-#                              excluded via eoc_character_prompt — unreviewed).
+#
+#   MirrorRollingBall/prompt_third (added 2026-08): unlike BallRoller/RacingCar, this
+#                              case's shipped poses.npy/intrinsics.npy needed NO
+#                              correction at all -- verified by reprojecting the known,
+#                              Edit-mode-read Player world position (0, 0.5, 0) through
+#                              every one of the 300 frames' camera poses and landing
+#                              exactly on the image center (640, 360) every time (a
+#                              real look-at/orbit chase camera; translation traces a
+#                              clean circular orbit of radius ~2.23 around the origin,
+#                              confirmed via x^2+z^2 = const across all 300 frames).
+#                              Scoped to ONE static anchor: the 48 "YellowBall"
+#                              GameObjects in the scene's grid are visually identical,
+#                              so eoc_text_prompt ("yellow sphere.") can only ever seed
+#                              ONE tracked instance (the module's own dedupe logic
+#                              collapses same-label detections to their single
+#                              highest-scoring box) -- identified as `YellowBall (30)`
+#                              at world (-2, 0.5, -0.05) by reprojecting all 48 known
+#                              ball positions into frame 0 and matching against
+#                              GroundingDINO's top-scoring box, cross-validated with an
+#                              independent VLM pixel-center estimate: reprojection
+#                              (145.4, 357.3) vs GroundingDINO (142.7, 357.4) vs VLM
+#                              (137, 351), all agreeing within 8px. `wall.` detections
+#                              are degenerate (the low gray boundary wall spans >60% of
+#                              the frame at this FOV, tripping the module's own
+#                              whole-frame-box filter) so pairwise_distance_mae_pct is
+#                              expected/left None for this case -- not a bug, just no
+#                              second distinguishable anchor available in this scene.
+#                              Self-consistency check (candidate = reference video,
+#                              first 60 of 300 frames -- the object's continuous
+#                              visibility window is frames 0-152; 60 was used only to
+#                              keep the validation run's wall-clock time reasonable,
+#                              the shipped case artifacts cover the full 300-frame/
+#                              201-visible-frame span): object_permanence_pct 100.0,
+#                              depth_absrel_pct 7.22% (self-match error -- far better
+#                              than BallRoller/ctrl's ~62%, consistent with this case
+#                              needing no camera-pose correction at all),
+#                              character_consistency_pct null (eoc_character_prompt
+#                              deliberately non-matching, same as BallRoller/ctrl --
+#                              character identity unreviewed), pairwise_distance_mae_pct
+#                              null (single usable anchor, see above).
+#
+#   ChessBoard/walk_third (added 2026-08): a fresh capture, not a re-analysis of an
+#                              existing case. Built a standalone macOS Player of
+#                              GameScenes/ChessBoardwithSphere's real scene
+#                              (`Assets/Scenes/Chess Demo.unity`, NOT the empty
+#                              `SampleScene.unity` decoy) with a runtime capture
+#                              MonoBehaviour (`Assets/Scripts/ChessCaptureBootstrap.cs`,
+#                              left uncommitted in the scene repo) that drives a
+#                              scripted 90-frame/3s third-person walk-turn-sprint-jump
+#                              rollout of the PlayerArmature humanoid and logs, per
+#                              frame, the camera-to-world matrix (CV convention: x
+#                              right, y down, z forward -- built directly from
+#                              Camera.transform.right/-up/forward, matching this
+#                              module's `pc = w2c @ [x,y,z,1]` pinhole formula),
+#                              intrinsics derived from the real runtime vertical FOV
+#                              and 640x360 resolution, and the world position of the
+#                              scene's reflective "sphere" plus 4 further-background
+#                              decorative king statues that turned out to be out of
+#                              frame for this entire rollout (King_Gold/Wood/Metal/
+#                              Marble -- real Edit-mode-read positions, kept in the
+#                              capture log but not used as anchors since they're never
+#                              actually visible in these frames). `ScreenCapture.
+#                              CaptureScreenshotAsTexture()` returns null in this
+#                              batchmode standalone-Player context (no window
+#                              backbuffer to grab, confirmed empirically -- a genuinely
+#                              new finding this session, distinct from the earlier
+#                              Editor-Play-mode rendering blocker); fixed by rendering
+#                              Main Camera into an explicit RenderTexture via ReadPixels
+#                              instead. Also found and fixed a real input-driving bug:
+#                              PlayerArmature ships with an ML-Agents DecisionRequester
+#                              that periodically overwrites scripted input with
+#                              PlayerAgent.Heuristic()'s all-zero Keyboard.current
+#                              reading (no real keyboard in batchmode) -- disabled at
+#                              capture-script startup so the scripted walk actually
+#                              moves the character (confirmed visually: player x/z and
+#                              camera dolly both change frame-to-frame; before the fix
+#                              they were frozen every frame despite driven input).
+#                              Reprojection self-check (before trusting anything):
+#                              projected the logged "sphere" world position through the
+#                              logged pose/intrinsics for two independent frames (0 and
+#                              60, genuinely different camera positions) and confirmed
+#                              the predicted pixel visually lands inside the sphere's
+#                              rendered disk both times; cross-validated independently
+#                              via a real GroundingDINO "sphere." detection on frame 0,
+#                              whose top-scoring box center (306.4, 154.6) landed within
+#                              ~2px of the analytical reprojection (306.9, 152.9).
+#                              Self-consistency check (candidate = reference video, all
+#                              90 frames): object_permanence_pct 100.0,
+#                              character_consistency_pct 43.33 (eoc_character_prompt
+#                              "person." -- a real, intentionally-reviewed character
+#                              check, unlike BallRoller/ctrl's/MirrorRollingBall's
+#                              disabled-character scope), depth_absrel_pct 91.85%
+#                              (self-match error -- same real-world-trained monocular
+#                              depth-model domain-gap bias documented above, on the
+#                              higher end of the range seen across cases so far),
+#                              pairwise_distance_mae_pct null (single usable anchor --
+#                              same structural limitation as MirrorRollingBall/
+#                              RacingCar; the other 4 King_* statues are real objects
+#                              with real positions but never enter frame in this
+#                              rollout, so they cannot serve as a second anchor here).
+#   kinematics_mechanics       LIVE (BallRoller/ctrl only) as of 2026-08. Paper
+#                              appendix B.3, scoped to the case's static "dome"/"cube"
+#                              obstacles (2D pixel-space FDE/DTW proxy, not the
+#                              paper's full 3D metric -- see module docstring).
+#                              "ramp" is excluded: it doesn't survive ByteTrack
+#                              (weakest/most ambiguous detection of the 3 static
+#                              objects -- wedge shape, worst pose-fit residual).
+#                              FDE: dome 27.8px, cube 25.2px (down from >1700px
+#                              before the camera-pose fix below). The case's moving
+#                              ball remains excluded -- its trajectory ground truth is
+#                              a separate, still-unresolved data-provenance question
+#                              (see PENDING.md).
+#
+#   Camera-pose fix behind both of the above (2026-08): the case's shipped
+#   `poses.npy` turned out to have TWO real problems, not one -- its rotation was
+#   identity at every frame (already known), AND its implied camera translation
+#   (the Editor-authored static Main Camera transform, (0,18,-20)) was also wrong.
+#   Recovered the camera's real 6-DOF pose (position + rotation) via least-squares
+#   reprojection-error minimization against 4 real 3D-2D correspondences (ramp,
+#   dome, cube, ball -- all independently cross-validated: GroundingDINO box-centers
+#   agreed with an independent VLM-judge center estimate within 1-13px, ruling out
+#   detection noise as the error source). This is genuinely overdetermined (8
+#   constraint equations, 6 unknowns), unlike two earlier, explicitly-rejected
+#   attempts that used only 2-3 points held against the WRONG fixed translation
+#   (both failed decisively on held-out validation -- see PENDING.md for that full,
+#   preserved history). Residual on the 4-point fit: 20-70px per point (worst:
+#   ramp). Recovered pose lives at
+#   `cases/BallRoller/ctrl/reference/artifacts/poses_recovered.npy` -- the ORIGINAL
+#   shipped `poses.npy` is left untouched (other dimensions, e.g.
+#   action_controllability, still reference it). Known simplification: this is ONE
+#   static pose applied across the whole 173-frame clip, not per-frame; the
+#   original poses.npy implied a small real camera drift this doesn't model.
+#   scene_character_consistency  Paper B.1's full CHARACTER-identity half on a
+#                              dedicated character scene -- distinct from the
+#                              "player" ball check above, still fully blocked:
+#                              WanderingGarden (the paper-mapped scene) has zero
+#                              case data.
 #   physical_causality         BeamDomino/causal (earmarked) + qa_dataset; more strike
 #                              variants (causal_glancing, ...) as data lands — PR #19.
 #   fluid_mechanics            LiquidContainer/fluid_rest, fluid_step_hold,
@@ -149,7 +289,7 @@ dimensions:
       - shadow_shape_drift
   environment_object_consistency:
     display_name: Environment Object Consistency
-    description: 'Paper B.1, object + character halves: GroundingDINO + SAM2 tracking for depth AbsRel / pairwise-distance MAE against Unity-analytical ground truth, reference-free object permanence, and reference-free DINOv2 character-identity consistency on the case''s controllable "player" ball. Scoped to BallRoller/ctrl''s static "ramp"/"dome" obstacles for the GT-dependent metrics; see suite.yaml header for the depth-estimator domain-gap caveat. Full anthropomorphic-character coverage (a distinct WanderingGarden scene) is separately tracked as scene_character_consistency below -- still blocked on missing scene data.'
+    description: 'Paper B.1, object + character halves: GroundingDINO + SAM2 tracking for depth AbsRel / pairwise-distance MAE against Unity-analytical ground truth, reference-free object permanence, and reference-free DINOv2 character-identity consistency. BallRoller/ctrl is scoped to its static "ramp"/"dome" obstacles and the "player" ball (character consistency, unreviewed); see suite.yaml header for its depth-estimator domain-gap caveat. MirrorRollingBall/prompt_third is scoped to a single static "yellow sphere" anchor (all 48 grid balls are visually identical, so only one is ever trackable) -- its shipped camera pose needed no correction at all, giving a much cleaner depth_absrel_pct self-match (~7% vs BallRoller/ctrl''s ~62%); pairwise_distance_mae_pct is expected null (no second distinguishable anchor in this scene). RacingCar/prompt_third is scoped to its stationary "car" (single anchor, pairwise_distance_mae_pct also expected null); depth_absrel_pct self-match ~28%, between the other two cases -- consistent with needing only a small offset correction (not full pose recovery) but still carrying the same depth-model domain-gap bias. Known quirk on this case: character_consistency_pct returns a non-null, non-meaningful value (44.33 in self-match) despite eoc_character_prompt being set to a deliberately non-matching string -- GroundingDINO occasionally returns a spurious low-confidence detection even for a nonsense prompt; treat this case''s character_consistency_pct as noise, not signal, until that''s tightened up. ChessBoard/walk_third is a freshly-captured rollout (not a re-analysis) of the real `Chess Demo.unity` scene, scoped to a single static "sphere" anchor (a large reflective chrome/glass sphere; a further 4 decorative king statues have real logged positions but never enter frame in this rollout, so pairwise_distance_mae_pct is expected null here too) AND a genuinely reviewed "person." character-consistency check on the walking humanoid (character_consistency_pct 43.33 in self-match -- unlike the other three cases, this one''s eoc_character_prompt is a real, matching prompt, not a deliberately-disabled placeholder); depth_absrel_pct self-match 91.85% (same depth-model domain-gap bias as the other cases, on the higher end of the range seen so far). See suite.yaml header for the full capture-pipeline and reprojection-validation writeup. WanderingGarden/scene_first is a freshly-captured 360-degree in-place yaw sweep of the real `GardenScene.unity`, scoped to a single static "tree" anchor (`Cherry_tree_01`; the other 4 paper-described landmarks are geometrically valid but occluded by a closed door at this camera position, so pairwise_distance_mae_pct is expected null); character_consistency_pct is deliberately null (no main character in this scene per the paper''s WanderingGarden protocol -- full anthropomorphic-character coverage for this scene is separately tracked as scene_character_consistency below); reprojection self-check landed within ~3.9px of the tree''s true rendered position; depth_absrel_pct self-match 98.67% (same depth-model domain-gap bias, on the higher end -- not further diagnosed, disclosed as-is). BilliardGame/prompt_first is a freshly-captured real physics rollout (cue ball struck via the game''s own `BilliardPhysicsManager.Shot()` API, colliding with a target ball) of the real `CaromBilliard.unity` scene, scoped to TWO real anchors by color -- "yellow ball" (the struck, moving target) and "red ball" (a real static ball, never hit) -- giving this dimension its first genuinely non-null pairwise_distance_mae_pct (127.71% self-match; the two anchors have very different tracking difficulty -- red ball is near-static and easy, yellow ball flies off-frame mid-rollout, so this number carries real per-anchor tracking-quality variance on top of the usual depth-model domain-gap bias). object_permanence_pct dropped from a single-anchor 100.0 to 84.0 once the yellow ball''s off-frame flight is counted against permanence (expected, not a regression). character_consistency_pct is deliberately null (no character in this scene); reprojection self-check (world position vs. independent color-blob pixel detection) landed at 1.72px mean / 4.01px max residual across 17/18 sampled points -- the cleanest cross-validation in this dimension so far; depth_absrel_pct self-match 63.69% (same depth-model domain-gap bias, slightly worse than the single-anchor 55.33% since it now averages in the harder-to-track yellow ball).'
     evaluator: registry
     requires_reference: true
     modules:
@@ -159,6 +299,11 @@ dimensions:
       max_pairs: 32
     cases:
     - BallRoller/ctrl
+    - MirrorRollingBall/prompt_third
+    - RacingCar/prompt_third
+    - ChessBoard/walk_third
+    - WanderingGarden/scene_first
+    - BilliardGame/prompt_first
     aggregate:
       headline: object_permanence_pct
       direction: higher
@@ -166,18 +311,25 @@ dimensions:
       - depth_absrel_pct
       - pairwise_distance_mae_pct
       - character_consistency_pct
-  # kinematics_mechanics: NOT wired live -- see PENDING.md. The module
-  # (evaluation/modules/kinematics_mechanics.py) is real and its
-  # GroundingDINO+ByteTrack tracking now works correctly on BallRoller/ctrl
-  # (module_params already configured on that case, artifacts already
-  # bundled), but its headline FDE/DTW metric is not trustworthy: it
-  # requires reprojecting the Unity 3D ground truth through poses.npy, and
-  # poses.npy's rotation component is identity at every frame despite this
-  # case's own prompt describing a camera "looking diagonally across the
-  # arena" -- i.e. poses.npy only carries real translation data, not real
-  # camera orientation. Reprojecting a known-static object through it lands
-  # >1700px away from its actual detected pixel position. This affects any
-  # case built on the same external capture pipeline, not just this one.
+  kinematics_mechanics:
+    display_name: Kinematics & Mechanics
+    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction, 2D pixel-space FDE/DTW proxy (not the paper''s full 3D metric -- see module docstring) against Unity ground truth reprojected through a (recovered or shipped) camera pose. BallRoller/ctrl is scoped to its static "dome"/"cube" obstacles (zero velocity by construction, "ramp" excluded -- doesn''t survive ByteTrack); needed a recovered 6-DOF camera pose (~20-70px residual, see suite.yaml header). RacingCar/prompt_third is scoped to its stationary parked "car" (also zero velocity by construction); needed only a small physically-sensible 3D offset correction to the case''s already-real, already-correct shipped poses.npy (car Transform pivot vs. visual body-center height, ~15-23px residual after correction) -- FDE 19.41px self-match across all 300 frames. Both cases''s own ground truth is static-anchor-only: BallRoller/ctrl''s ball has a separate, unresolved data-provenance conflict (see PENDING.md); RacingCar/prompt_third''s car never moves in this rollout at all (a genuinely static parked-car shot). BilliardGame/prompt_first (added 2026-08) is the FIRST genuinely moving-object case in this dimension: its "yellow ball" is struck by the cue ball and rolls/collides for real, and "red ball" is a real static second anchor (see environment_object_consistency description above for the capture pipeline); this is also its paper-primary dimension per Table 10 + the Sec 4.2 results narrative (the paper explicitly compares Billiard Game vs Racing Car here), not environment_object_consistency. **Real bug found and fixed 2026-08**: the first wiring attempt gave dtw_px 3451.6 for "yellow ball", which turned out to be a genuine ByteTrack identity swap, not metric noise -- GroundingDINO''s "yellow ball." prompt falsely fired on the WHITE cue ball once it came to rest near the yellow ball''s start position (confirmed by reprojecting all 3 balls'' real positions: the wrongly-tracked pixels matched Ball_0, not Ball_1, for ~106 frames), and the module''s track-merging logic blindly concatenated the resulting track segments without checking they were the same physical object. Fixed via a new HSV color-consistency filter (`kin_color_filter`, opt-in) that locks each label''s color signature from its first detection and rejects same-label detections that don''t match; also added `kin_track_thresh: 0.3` (same fix class as BallRoller). Post-fix self-match: yellow ball fde_px 0.25 / dtw_px 26.4 (44/150 frames survive the color filter -- the rest are correctly rejected as ambiguous/occluded rather than silently mistracked); red ball fde_px 0.29 / dtw_px 52.0 (144/150 frames, near-static so easy). mechanical_quantities (momentum/kinetic-energy exact-match, the paper''s other B.3 headline metric) is now REAL and WIRED (new `kin_depth_lift` opt-in flag: lifts the tracked pixel centroid to a metric 3D point via the same monocular depth model B.1 uses + known camera intrinsics, differences the last two tracked frames for terminal velocity, per Eq 11-13) but the resulting numbers are not yet usable: error_rate_pct is 381% (yellow ball) to 141,129% (red ball, whose near-zero ground-truth speed blows up the relative-error denominator). Root cause: a 2-point finite-difference velocity estimate is extremely sensitive to per-frame depth-map noise; a real fix needs multi-frame smoothing (e.g. a short linear/parabolic fit across several tracked frames instead of a raw 2-point difference), not yet implemented. Treat momentum/energy numbers as "wired but not yet trustworthy" -- exact-match/error-rate are computed and present in every case''s output, but should not be read as real signal until the velocity-estimation noise is addressed.'
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - kinematics_mechanics
+    metric_config:
+      eval_fps: 4.0
+      max_pairs: 32
+    cases:
+    - BallRoller/ctrl
+    - RacingCar/prompt_third
+    - BilliardGame/prompt_first
+    aggregate:
+      headline: fde_px_mean
+      direction: lower
+      extra_means:
+      - dtw_px_mean
 legacy_case_aliases:
   lpips:
     mirror_ball_third_person: MirrorRollingBall/lpips_collision

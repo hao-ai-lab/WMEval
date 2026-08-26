@@ -21,15 +21,15 @@ modules:
 - kinematics_mechanics
 module_params:
   environment_object_consistency:
-    eoc_text_prompt: ramp. dome.
+    eoc_text_prompt: ramp. dome. cube.
     eoc_character_prompt: white ball. player ball.
     eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
-    eoc_unity_poses_npy: reference/artifacts/poses.npy
+    eoc_unity_poses_npy: reference/artifacts/poses_recovered.npy
     eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
   kinematics_mechanics:
-    kin_text_prompt: ramp. dome.
+    kin_text_prompt: dome. cube.
     kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
-    kin_unity_poses_npy: reference/artifacts/poses.npy
+    kin_unity_poses_npy: reference/artifacts/poses_recovered.npy
     kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
     kin_unity_object_masses_json: reference/artifacts/object_masses.json
     kin_track_thresh: 0.3
@@ -46,8 +46,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: d02b82d2f945290ad25472c903ecad3f4dc2066a
-  evaluator_fingerprint: eb10d2e065a21cb01d4574dbf29b54fa
+  code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
+  evaluator_fingerprint: f5d8f3e18651fb70efed31f83e28b8a2
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

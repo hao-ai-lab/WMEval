@@ -1,0 +1,21 @@
+# WMEval: scripted action log for ChessBoard/walk_third's reference rollout.
+#
+# Captured via a runtime MonoBehaviour (Assets/Scripts/ChessCaptureBootstrap.cs,
+# left uncommitted in WorldModelBenchScenePrivate/GameScenes/ChessBoardwithSphere)
+# that writes StarterAssetsInputs.move/jump/sprint directly each frame (no
+# real keyboard device; batchmode standalone Player has none), driving the
+# ThirdPersonController-based PlayerArmature. 30 fps, 90 captured frames
+# (15 warmup frames before frame 0, not captured) = 3.0s of rollout.
+#
+# frame range   move.x  move.y  jump   sprint   note
+# 0-24          0.0     1.0     false  false    walk forward
+# 25-44         0.8     0.6     false* false    diagonal turn (*jump=true at frame 30 only)
+# 45-69         0.0     1.0     false  true     sprint forward
+# 70-89         -0.5    1.0     false  false    turn back left, walk forward
+#
+# The scene's PlayerArmature ships with an ML-Agents DecisionRequester +
+# PlayerAgent (Assets/Scripts/PlayerAgent.cs) that would otherwise
+# periodically overwrite these values with whatever PlayerAgent.Heuristic()
+# computes from Keyboard.current (all-zero in this headless context) --
+# both components are disabled at capture-script startup so the scripted
+# input above actually reaches ThirdPersonController.

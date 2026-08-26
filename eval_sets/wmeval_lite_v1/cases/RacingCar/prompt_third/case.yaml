@@ -14,8 +14,11 @@ perspective: third_person
 rubric_scene_name: RacingCar_third
 modules:
 - shadow_consistency
+- environment_object_consistency
+- kinematics_mechanics
 reference:
   first_frame: reference/ref.png
+  video: reference/unity_groundtruth.mp4
   checksums: reference/checksums.sha256
   artifacts:
     actions_file: reference/artifacts/actions.txt
@@ -27,8 +30,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
-  evaluator_fingerprint: 788ce2b702b3efb62c402150d27027b2
+  code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
+  evaluator_fingerprint: c0556b0ff30e28a48edcf917a3d5011f
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}
@@ -36,3 +39,15 @@ module_params:
   shadow_consistency:
     shadow_text_prompt: car. tree.
     shadow_anchor_label: car
+  environment_object_consistency:
+    eoc_text_prompt: car.
+    eoc_character_prompt: no_character_configured_for_this_case_xyz.
+    eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    eoc_unity_poses_npy: reference/artifacts/poses.npy
+    eoc_unity_intrinsics_npy: reference/artifacts/intrinsics_t4.npy
+  kinematics_mechanics:
+    kin_text_prompt: car.
+    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/poses.npy
+    kin_unity_intrinsics_npy: reference/artifacts/intrinsics_t4.npy
+    kin_unity_object_masses_json: reference/artifacts/object_masses.json

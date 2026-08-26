@@ -76,6 +76,8 @@ from .environment_object_consistency import (
     _dedupe_seed_detections,
     _load_camera_intrinsics,
     _load_camera_poses,
+    _load_depth_estimator,
+    DEPTH_DEFAULT_MODEL,
 )
 
 EPS = 1e-6
@@ -123,6 +125,27 @@ def _unity_trajectory(gt: Dict[str, Any], label: str) -> Optional[List[Tuple[int
 # ---------------------------------------------------------------------------
 # Candidate-side detection + tracking
 # ---------------------------------------------------------------------------
+def _median_hsv(frame: np.ndarray, box: np.ndarray) -> Optional[np.ndarray]:
+    """Median HSV color inside a detection box, used to catch a zero-shot
+    detector firing on the wrong same-label object (e.g. GroundingDINO's
+    "yellow ball." occasionally matching a white ball once it comes to rest
+    near the yellow ball's start position -- observed on BilliardGame)."""
+    x1, y1, x2, y2 = [int(round(v)) for v in box]
+    h, w = frame.shape[:2]
+    x1, y1 = max(x1, 0), max(y1, 0)
+    x2, y2 = min(x2, w), min(y2, h)
+    if x2 <= x1 or y2 <= y1:
+        return None
+    patch = frame[y1:y2, x1:x2]
+    hsv = cv2.cvtColor(patch, cv2.COLOR_BGR2HSV).reshape(-1, 3).astype(np.float64)
+    return np.median(hsv, axis=0)
+
+
+def _hue_distance_deg(h1: float, h2: float) -> float:
+    d = abs(h1 - h2) % 180.0
+    return min(d, 180.0 - d)
+
+
 def _detect_all_frames(
     video_path: str,
     text_prompt: str,
@@ -130,12 +153,15 @@ def _detect_all_frames(
     gd_model_id: str,
     gd_threshold: float,
     gd_text_threshold: float,
+    color_filter_enabled: bool = False,
+    color_hue_tolerance_deg: float = 25.0,
 ) -> Tuple[List[Dict[str, Any]], float, Tuple[int, int]]:
     cap = cv2.VideoCapture(video_path)
     fps = float(cap.get(cv2.CAP_PROP_FPS) or 24.0)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+    seed_hue: Dict[str, float] = {}
     per_frame: List[Dict[str, Any]] = []
     f_idx = 0
     while True:
@@ -153,6 +179,28 @@ def _detect_all_frames(
         boxes, scores, labels = _dedupe_seed_detections(
             boxes, scores, labels, frame_width=width, frame_height=height,
         )
+        if color_filter_enabled and len(boxes):
+            keep = []
+            for i, (box, label) in enumerate(zip(boxes, labels)):
+                hsv = _median_hsv(frame, box)
+                if hsv is None:
+                    keep.append(i)
+                    continue
+                hue = float(hsv[0])
+                if label not in seed_hue:
+                    # First time we see this label: trust it (matches the
+                    # seed-detection convention used elsewhere) and lock in
+                    # its color signature for every later frame.
+                    seed_hue[label] = hue
+                    keep.append(i)
+                elif _hue_distance_deg(hue, seed_hue[label]) <= color_hue_tolerance_deg:
+                    keep.append(i)
+                # else: same text label, wrong object color -- drop it so a
+                # later frame's false positive can't hijack the track.
+            if keep:
+                boxes, scores, labels = boxes[keep], scores[keep], [labels[i] for i in keep]
+            else:
+                boxes, scores, labels = boxes[:0], scores[:0], []
         per_frame.append({"frame": f_idx, "boxes": boxes, "scores": scores, "labels": labels})
         f_idx += 1
     cap.release()
@@ -310,6 +358,76 @@ def _round_sig2(value: float) -> float:
     return round(value, digits)
 
 
+def _estimate_metric_points(
+    video_path: str,
+    frames_uv: Dict[int, np.ndarray],
+    intrinsics: np.ndarray,
+    depth_model_id: str,
+    device: str,
+) -> Dict[int, np.ndarray]:
+    """Lift a candidate's tracked pixel centroids to metric 3D points via
+    monocular depth estimation (same model/approach as
+    environment_object_consistency.py's candidate-side depth), so that
+    velocity -- and therefore momentum/kinetic-energy (paper Eq 11) -- can be
+    computed in real units instead of pixels/sec. Only requested frames are
+    depth-estimated (not every frame in the video) to keep this affordable.
+
+    Inherits the same real-world-trained-depth-model domain-gap bias already
+    documented for environment_object_consistency's depth_absrel_pct -- this
+    is a known, disclosed limitation, not a bug in this lifting step.
+    """
+    from PIL import Image
+
+    depth_pipe = _load_depth_estimator(depth_model_id, device)
+    wanted = set(frames_uv)
+    cap = cv2.VideoCapture(video_path)
+    n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    out: Dict[int, np.ndarray] = {}
+    for f_idx in range(n_frames):
+        ok, frame = cap.read()
+        if not ok:
+            break
+        if f_idx not in wanted:
+            continue
+        u, v = frames_uv[f_idx]
+        image_rgb = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        depth_out = depth_pipe(image_rgb)
+        depth_map = np.asarray(depth_out["predicted_depth"])
+        if depth_map.shape != frame.shape[:2]:
+            depth_map = cv2.resize(depth_map, (frame.shape[1], frame.shape[0]))
+        ui = min(max(int(round(u)), 0), depth_map.shape[1] - 1)
+        vi = min(max(int(round(v)), 0), depth_map.shape[0] - 1)
+        d = float(depth_map[vi, ui])
+        ifr = min(max(f_idx, 0), intrinsics.shape[0] - 1)
+        fx, fy, cx, cy = intrinsics[ifr]
+        x = (u - cx) * d / fx
+        y = (v - cy) * d / fy
+        out[f_idx] = np.asarray([x, y, d], dtype=np.float64)
+    cap.release()
+    return out
+
+
+def _mechanical_quantities_exact_match(
+    q_hat: Dict[str, float], q_gt: Dict[str, float]
+) -> Tuple[float, float]:
+    """Paper Eq 12/13: ExactMatch% (rounded to 2 significant digits) and mean
+    relative ErrorRate%, both over the object set ``O`` (here, whichever
+    tracked labels have both an estimate and a ground-truth value)."""
+    labels = sorted(set(q_hat) & set(q_gt))
+    if not labels:
+        return float("nan"), float("nan")
+    matches = 0
+    rel_errors = []
+    for label in labels:
+        qh, qg = q_hat[label], q_gt[label]
+        if _round_sig2(qh) == _round_sig2(qg):
+            matches += 1
+        rel_errors.append(abs(qh - qg) / (abs(qg) + EPS))
+    exact_match_pct = 100.0 * matches / len(labels)
+    error_rate_pct = 100.0 * float(np.mean(rel_errors))
+    return exact_match_pct, error_rate_pct
+
+
 # ---------------------------------------------------------------------------
 # Registry entry point
 # ---------------------------------------------------------------------------
@@ -346,13 +464,17 @@ def analyze_kinematics_mechanics_from_context(
     gd_threshold = float(artifacts.get("kin_gd_threshold", 0.30))
     gd_text_threshold = float(artifacts.get("kin_gd_text_threshold", 0.25))
     gd_model_id = str(artifacts.get("kin_gd_model") or GD_DEFAULT_MODEL)
+    color_filter_enabled = bool(artifacts.get("kin_color_filter", False))
+    color_hue_tolerance_deg = float(artifacts.get("kin_color_hue_tolerance_deg", 25.0))
 
     video_path = context.candidate_video
     if not video_path:
         return {"module": "kinematics_mechanics", "error": "candidate_video is required"}
 
     per_frame, fps, frame_size = _detect_all_frames(
-        video_path, text_prompt, device, gd_model_id, gd_threshold, gd_text_threshold
+        video_path, text_prompt, device, gd_model_id, gd_threshold, gd_text_threshold,
+        color_filter_enabled=color_filter_enabled,
+        color_hue_tolerance_deg=color_hue_tolerance_deg,
     )
     if not any(len(f["boxes"]) for f in per_frame):
         return {
@@ -439,6 +561,8 @@ def analyze_kinematics_mechanics_from_context(
     fidelity: Dict[str, Any] = {}
     mechanics: Dict[str, Any] = {}
     dt = 1.0 / fps if fps > 0 else 1.0
+    depth_lift_enabled = bool(artifacts.get("kin_depth_lift", False))
+    depth_model_id = str(artifacts.get("kin_depth_model") or DEPTH_DEFAULT_MODEL)
 
     for label, pts in trajectories_out.items():
         traj_world = _unity_trajectory(gt, label)
@@ -486,6 +610,54 @@ def analyze_kinematics_mechanics_from_context(
             }
             continue
 
+        if depth_lift_enabled and len(common_frames) >= 2:
+            f_prev, f_last = common_frames[-2], common_frames[-1]
+            dt_real = (f_last - f_prev) / fps if fps > 0 else dt
+            metric_pts = _estimate_metric_points(
+                video_path,
+                {f_prev: cand_by_frame[f_prev], f_last: cand_by_frame[f_last]},
+                intrinsics, depth_model_id, device,
+            )
+            world_by_frame = {f: pos for f, pos in traj_world}
+            if (
+                dt_real > 0
+                and f_prev in metric_pts and f_last in metric_pts
+                and f_prev in world_by_frame and f_last in world_by_frame
+            ):
+                v_hat = (metric_pts[f_last] - metric_pts[f_prev]) / dt_real
+                v_gt = (world_by_frame[f_last] - world_by_frame[f_prev]) / dt_real
+                p_hat = mass_kg * float(np.linalg.norm(v_hat))
+                p_gt = mass_kg * float(np.linalg.norm(v_gt))
+                e_hat = 0.5 * mass_kg * float(np.linalg.norm(v_hat)) ** 2
+                e_gt = 0.5 * mass_kg * float(np.linalg.norm(v_gt)) ** 2
+                mom_match, mom_err = _mechanical_quantities_exact_match({label: p_hat}, {label: p_gt})
+                e_match, e_err = _mechanical_quantities_exact_match({label: e_hat}, {label: e_gt})
+                mechanics[label] = {
+                    "status": "metric_depth_lifted",
+                    "note": (
+                        "Momentum/kinetic-energy (paper Eq 11-13) via monocular-depth-"
+                        "lifted terminal velocity: the tracked pixel centroid at the "
+                        "last two tracked frames is unprojected to a 3D metric point "
+                        "using a monocular depth model + the case's known camera "
+                        "intrinsics, differenced for velocity. Inherits the same "
+                        "depth-model domain-gap bias already documented for "
+                        "environment_object_consistency's depth_absrel_pct -- real "
+                        "numbers, but expect a systematic scale bias, not yet "
+                        "calibrated."
+                    ),
+                    "momentum_kg_m_s": {
+                        "estimated": round(p_hat, 4), "ground_truth": round(p_gt, 4),
+                        "exact_match_pct": mom_match, "error_rate_pct": round(mom_err, 2),
+                    },
+                    "kinetic_energy_j": {
+                        "estimated": round(e_hat, 4), "ground_truth": round(e_gt, 4),
+                        "exact_match_pct": e_match, "error_rate_pct": round(e_err, 2),
+                    },
+                    "terminal_frames_used": [int(f_prev), int(f_last)],
+                    "mass_kg": mass_kg,
+                }
+                continue
+
         v_hat_series = _velocity_series(traj_hat, dt)
         if len(v_hat_series) == 0:
             continue
@@ -493,9 +665,10 @@ def analyze_kinematics_mechanics_from_context(
         mechanics[label] = {
             "status": "pixel_units_only",
             "note": (
-                "momentum/kinetic-energy require metric-scale velocity; without a "
-                "candidate camera-pose artifact, velocity here is in px/sec, not "
-                "m/s, so p_hat/E_hat cannot be compared to Unity's SI-unit "
+                "momentum/kinetic-energy require metric-scale velocity; depth-lifting "
+                "was not enabled for this case (kin_depth_lift) or failed to produce a "
+                "3D point at the terminal frames, so velocity here is in px/sec, not "
+                "m/s, and p_hat/E_hat cannot be compared to Unity's SI-unit "
                 "references. Reporting the raw terminal pixel speed for inspection."
             ),
             "estimated_terminal_speed_px_per_sec": round(speed_hat, 3),
