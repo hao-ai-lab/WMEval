@@ -16,6 +16,22 @@ from ._validate import as_mapping, nonblank_str, positive_number, require_key
 
 _EMPTY_MAPPING: Mapping[str, Any] = MappingProxyType({})
 
+# module_params keys whose value is a Unity ground-truth artifact path,
+# authored relative to the case bundle directory -- resolved to absolute at
+# load time in load_case(), the same way reference.artifacts.* already is.
+_MODULE_PARAM_PATH_KEYS = frozenset(
+    {
+        "eoc_unity_object_transforms_json",
+        "eoc_unity_poses_npy",
+        "eoc_unity_intrinsics_npy",
+        "eoc_unity_object_diameters_json",
+        "kin_unity_object_transforms_json",
+        "kin_unity_poses_npy",
+        "kin_unity_intrinsics_npy",
+        "kin_unity_object_masses_json",
+    }
+)
+
 # Hard-coded v1 registry. schema_version 1 cases are always checked against
 # these; schema_version 2 cases are checked against whatever the caller (the
 # suite layer) passes via ``allowed_cases`` / ``expected_modules`` instead.
@@ -302,11 +318,30 @@ def load_case(
                 raw["rubric_scene_name"], "rubric_scene_name"
             )
         if "module_params" in raw:
-            module_params = _freeze(
-                _mapping(raw["module_params"], "module_params"), "module_params"
-            )
-            for module_name, params in module_params.items():
-                as_mapping(params, f"module_params.{module_name}", ValueError)
+            module_params_raw = _mapping(raw["module_params"], "module_params")
+            resolved_module_params: dict[str, Any] = {}
+            for module_name, params in module_params_raw.items():
+                params_map = as_mapping(
+                    params, f"module_params.{module_name}", ValueError
+                )
+                # Unity-ground-truth artifact paths (kin_unity_*/eoc_unity_*)
+                # are authored in case.yaml relative to the case bundle
+                # directory, exactly like reference.artifacts.* just above --
+                # but unlike reference.artifacts.*, nothing was resolving
+                # them to absolute paths, so any case relying on them (every
+                # environment_object_consistency/kinematics_mechanics case in
+                # the suite) would fail with a spurious "file does not exist"
+                # the moment it's run from any working directory other than
+                # the case's own bundle dir. (root / value) is a no-op for an
+                # already-absolute value, matching reference.artifacts's own
+                # (root / relative).resolve() convention.
+                resolved_params = dict(params_map)
+                for key in _MODULE_PARAM_PATH_KEYS:
+                    value = resolved_params.get(key)
+                    if isinstance(value, str) and value.strip():
+                        resolved_params[key] = str((root / value).resolve())
+                resolved_module_params[module_name] = resolved_params
+            module_params = _freeze(resolved_module_params, "module_params")
 
     return LiteCase(
         root=root,

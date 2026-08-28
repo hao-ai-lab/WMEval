@@ -84,7 +84,22 @@ from .shadow_consistency import (
 )
 
 EPS = 1e-6
-DEPTH_DEFAULT_MODEL = "depth-anything/Depth-Anything-V2-Small-hf"
+# "-Small-hf" (no "-Metric-" prefix) is a RELATIVE depth model: its output has
+# an arbitrary per-image scale/shift, not real metric units, so comparing it
+# directly to Unity's metric-scale depth (as depth_absrel_pct does) is a
+# scale-mismatched comparison by construction -- empirically confirmed this
+# was responsible for most of the ~55-99% depth_absrel_pct self-match error
+# seen across every case before this fix (see PENDING.md).
+DEPTH_DEFAULT_MODEL = "depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf"
+DEPTH_METRIC_INDOOR_MODEL = "depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf"
+# Candidate checkpoints _auto_select_depth_model chooses between when a
+# case doesn't explicitly override eoc_depth_model/kin_depth_model. A
+# human manually picking indoor vs. outdoor per scene is a silent-wrong-
+# by-default failure mode (BilliardGame needed indoor: 6-24% error vs.
+# 64-95%+ outdoor -- a large, silent accuracy hit for anyone who forgot to
+# set the override); auto-selecting by testing both against a real,
+# known Unity ground-truth depth removes the guesswork entirely.
+DEPTH_AUTO_SELECT_CANDIDATES = (DEPTH_DEFAULT_MODEL, DEPTH_METRIC_INDOOR_MODEL)
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +151,34 @@ def _load_camera_intrinsics(path: str) -> np.ndarray:
 def _camera_position_at_frame(poses: np.ndarray, frame_idx: int) -> np.ndarray:
     idx = min(max(frame_idx, 0), poses.shape[0] - 1)
     return poses[idx, :3, 3]
+
+
+def _load_flat_label_json(path: str, description: str) -> Dict[str, float]:
+    """Shared loader for every "known physical constant per label" artifact
+    (masses, diameters, and any future one): a flat {label: value} JSON
+    file, resolved to an absolute path at case-load time, keyed by a
+    case-insensitive label lookup. Both kinematics_mechanics.py's
+    _load_object_masses and this module's _load_object_diameters delegate
+    here instead of each re-implementing the identical
+    exists/parse/validate/lowercase logic."""
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"unity {description} artifact does not exist: {path}")
+    with p.open("r", encoding="utf-8") as handle:
+        payload = json.load(handle)
+    if not isinstance(payload, dict):
+        raise ValueError(f"unity {description} artifact must be a flat {{label: value}} dict: {path}")
+    return {str(k).strip().lower(): float(v) for k, v in payload.items()}
+
+
+def _load_object_diameters(path: str) -> Dict[str, float]:
+    """Real per-label object diameter in meters, a known physical constant
+    like object_masses.json's masses -- same file-artifact convention
+    (flat {label: value} JSON, resolved to an absolute path at case-load
+    time, loaded with the same case-insensitive-label lookup), rather than
+    a second, differently-shaped mechanism (an inline JSON string in
+    case.yaml) for the same kind of "known ground truth constant" data."""
+    return _load_flat_label_json(path, "object diameters")
 
 
 def _unity_ground_truth_depths_and_distances(
@@ -412,10 +455,262 @@ def _track_objects(
 # ---------------------------------------------------------------------------
 # Candidate-side depth / distance estimation
 # ---------------------------------------------------------------------------
+_DEPTH_ESTIMATOR_CACHE: Dict[Tuple[str, str], Any] = {}
+
+
 def _load_depth_estimator(model_id: str, device: str):
+    """Load (and cache) a depth-estimation pipeline, mirroring
+    shadow_consistency.py's _load_groundingdino cache. Without this,
+    _auto_select_depth_model reloads up to 2 full checkpoints per case
+    (one per candidate) and analyze_environment_object_consistency_from_
+    context reloads a 3rd for the actual estimation -- the same
+    "uncached per-call model loading is the actual reason evaluation runs
+    took tens of minutes" problem this session already fixed for
+    GroundingDINO, just missed one function over in this same file."""
+    key = (model_id, device)
+    cached = _DEPTH_ESTIMATOR_CACHE.get(key)
+    if cached is not None:
+        return cached
     from transformers import pipeline
 
-    return pipeline("depth-estimation", model=model_id, device=(0 if device == "cuda" else -1))
+    pipe = pipeline("depth-estimation", model=model_id, device=(0 if device == "cuda" else -1))
+    _DEPTH_ESTIMATOR_CACHE[key] = pipe
+    return pipe
+
+
+def _depth_map_for_frame(depth_pipe: Any, frame_bgr: np.ndarray) -> np.ndarray:
+    """Run a loaded depth-estimation pipeline on one BGR video frame,
+    returning a depth map resized to the frame's own resolution. Shared by
+    every depth-lifting call site (environment_object_consistency.py's
+    candidate-side depth/distance estimation and kinematics_mechanics.py's
+    metric-velocity lifting) so the resize/units convention can't drift
+    between them."""
+    from PIL import Image
+
+    image_rgb = Image.fromarray(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB))
+    depth_out = depth_pipe(image_rgb)
+    depth_map = np.asarray(depth_out["predicted_depth"])
+    if depth_map.shape != frame_bgr.shape[:2]:
+        depth_map = cv2.resize(depth_map, (frame_bgr.shape[1], frame_bgr.shape[0]))
+    return depth_map
+
+
+def _read_frame_verified(cap: Any, f_idx: int) -> Optional[np.ndarray]:
+    """Read frame ``f_idx``, verifying the seek actually landed there.
+
+    ``CAP_PROP_POS_FRAMES`` seeking is not guaranteed frame-exact for
+    compressed video with a non-trivial keyframe interval -- OpenCV/ffmpeg
+    can silently land on the nearest keyframe instead of the requested
+    frame, and ``cap.read()`` still reports ``ok=True``. Reading
+    ``CAP_PROP_POS_FRAMES`` again *after* the read (not just after the
+    seek) reports where the decoder's bookkeeping actually ended up, which
+    is a real verification, not an echo of the requested value -- if it
+    doesn't match, we know the seek was inexact rather than just hoping it
+    wasn't. On mismatch, fall back to a sequential decode from frame 0
+    (the one position with no seek ambiguity at all): slower, but always
+    exact by construction, since ``cap.read()`` always advances exactly
+    one frame regardless of codec. This only pays that cost for the
+    specific frames where the fast seek path is actually wrong, not for
+    every read -- for a well-formed, densely-keyframed video (true of
+    every case captured in this repo) the fast path verifies every time.
+
+    Shared by kinematics_mechanics.py's depth-lifting path and this
+    module's _auto_select_depth_model, rather than one of them using a
+    raw, unverified seek while the other has the safety net.
+    """
+    cap.set(cv2.CAP_PROP_POS_FRAMES, f_idx)
+    ok, frame = cap.read()
+    if not ok:
+        return None
+    landed = int(round(cap.get(cv2.CAP_PROP_POS_FRAMES))) - 1
+    if landed == f_idx:
+        return frame
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    frame = None
+    for _ in range(f_idx + 1):
+        ok, frame = cap.read()
+        if not ok:
+            return None
+    return frame
+
+
+def _unproject_pixel(
+    u: float, v: float, depth_map: np.ndarray, fx: float, fy: float, cx: float, cy: float
+) -> np.ndarray:
+    """Pinhole-unproject one pixel to a metric 3D point using a depth map
+    sampled at that pixel (nearest, clamped to the map bounds)."""
+    ui = min(max(int(round(u)), 0), depth_map.shape[1] - 1)
+    vi = min(max(int(round(v)), 0), depth_map.shape[0] - 1)
+    d = float(depth_map[vi, ui])
+    x = (u - cx) * d / fx
+    y = (v - cy) * d / fy
+    return np.asarray([x, y, d], dtype=np.float64)
+
+
+def _auto_select_depth_model(
+    video_path: str,
+    track: Dict[str, Any],
+    gt: Dict[str, Any],
+    poses: np.ndarray,
+    intrinsics: Optional[np.ndarray],
+    device: str,
+    candidate_model_ids: Sequence[str] = DEPTH_AUTO_SELECT_CANDIDATES,
+) -> str:
+    """Pick the depth-estimation checkpoint that's empirically most accurate
+    for THIS specific case, by testing each candidate against one real,
+    known Unity ground-truth depth -- instead of a human guessing indoor
+    vs. outdoor per scene and silently getting it wrong by default (see
+    DEPTH_AUTO_SELECT_CANDIDATES's docstring). Finds the first (frame,
+    label) pair with both a real detected pixel centroid and a real Unity
+    3D position at that exact frame, computes the true camera-to-object
+    depth there, then measures each candidate model's error at that pixel
+    against that real number. Falls back to the first candidate if no
+    valid calibration point exists in this case's data (e.g. no tracked
+    object has both a real trajectory entry and a detected centroid at
+    the same frame) -- this can only happen if depth_absrel_pct itself
+    would also come back None -- but this is a real, disclosed
+    approximation, not a guarantee: this function requires only a
+    NEARBY (not necessarily frame-exact) ground-truth sample for its
+    single calibration point (see FRAME_TOLERANCE below), while
+    depth_absrel_pct averages each label's GT independently over all its
+    own available frames with no such requirement -- so a sparsely-
+    sampled GT track can, in principle, still fail calibration even
+    though depth_absrel_pct itself succeeds. That case falls back to
+    candidate_model_ids[0] rather than silently fabricating a pick."""
+    # How many frames away a GT sample may be from the candidate detection
+    # it's paired with for calibration. This trades a small amount of
+    # position staleness (real for a moving object across that many
+    # frames) for a much higher chance of finding a usable calibration
+    # point at all when GT is only sampled sparsely -- calibration only
+    # needs to be informative about *relative* model accuracy, not
+    # pixel-perfect, so this approximation is acceptable here even though
+    # it would not be for the actual depth_absrel_pct/pairwise_distance_
+    # mae_pct metrics themselves (which use exact per-frame GT).
+    FRAME_TOLERANCE = 5
+    gt_objects = gt.get("objects", {})
+    lower_index = {str(k).strip().lower(): v for k, v in gt_objects.items()}
+    cap = cv2.VideoCapture(video_path)
+    try:
+        for fr in track["frames"]:
+            f_idx = fr["frame"]
+            for obj in fr["objects"]:
+                centroid = obj.get("centroid_uv")
+                if not centroid:
+                    continue
+                entry = lower_index.get(str(obj["label"]).strip().lower())
+                if entry is None:
+                    continue
+                frames_list = entry.get("frames", [])
+                if not frames_list:
+                    continue
+                nearest_gt_frame = min(frames_list, key=lambda gf: abs(gf - f_idx))
+                if abs(nearest_gt_frame - f_idx) > FRAME_TOLERANCE:
+                    continue
+                pos_world = np.asarray(
+                    entry["positions_world"][frames_list.index(nearest_gt_frame)],
+                    dtype=np.float64,
+                )
+                cam_pos = _camera_position_at_frame(poses, f_idx)
+                calib_depth = float(np.linalg.norm(pos_world - cam_pos))
+                if calib_depth <= EPS:
+                    continue
+
+                frame = _read_frame_verified(cap, f_idx)
+                if frame is None:
+                    continue
+                u, v = centroid
+
+                best_model, best_rel_err = candidate_model_ids[0], float("inf")
+                for model_id in candidate_model_ids:
+                    try:
+                        depth_map = _depth_map_for_frame(_load_depth_estimator(model_id, device), frame)
+                        ui = min(max(int(round(u)), 0), depth_map.shape[1] - 1)
+                        vi = min(max(int(round(v)), 0), depth_map.shape[0] - 1)
+                        predicted = float(depth_map[vi, ui])
+                    except Exception:
+                        continue
+                    rel_err = abs(predicted - calib_depth) / (calib_depth + EPS)
+                    if rel_err < best_rel_err:
+                        best_rel_err, best_model = rel_err, model_id
+                return best_model
+    finally:
+        cap.release()
+    return candidate_model_ids[0]
+
+
+def _estimate_depth_via_apparent_size(
+    track: Dict[str, Any],
+    real_diameter_m: Dict[str, float],
+    intrinsics: Optional[np.ndarray],
+    frame_shape: Tuple[int, int],
+) -> Tuple[Dict[str, List[float]], Dict[str, List[np.ndarray]]]:
+    """Classic photogrammetric depth: depth = real_diameter_m * fx /
+    apparent_diameter_px, using each object's already-tracked SAM2 mask
+    bounding box (``bbox_xyxy``) -- no depth model, no video re-read needed.
+
+    For a known-geometry rigid object (a sphere, in practice) this sidesteps
+    monocular depth estimation entirely, which matters because reflective/
+    mirror surfaces confuse depth models structurally (they see a reflection
+    of the environment, not the object's own surface): empirically ~18-27%
+    error here vs. ~79-91% for every monocular depth model tried on
+    MirrorRollingBall's chrome sphere (see suite.yaml/PENDING.md).
+
+    ``real_diameter_m`` must be a real physical constant, not something
+    re-derived per eval run -- callers should calibrate it once (e.g. from
+    a case's known first-frame Unity ground truth) and store it in the
+    case's artifacts, the same way object_masses.json stores real,
+    Unity-read masses rather than recomputing them live."""
+    height, width = frame_shape
+    depth_series: Dict[str, List[float]] = {label: [] for label in real_diameter_m}
+    point3d_series: Dict[str, List[np.ndarray]] = {label: [] for label in real_diameter_m}
+    for fr in track["frames"]:
+        f_idx = fr["frame"]
+        if intrinsics is not None:
+            row = intrinsics[min(f_idx, intrinsics.shape[0] - 1)]
+            fx, fy, cx, cy = float(row[0]), float(row[1]), float(row[2]), float(row[3])
+        else:
+            fx = fy = float(max(width, height))
+            cx, cy = width / 2.0, height / 2.0
+        for o in fr["objects"]:
+            label = o["label"]
+            bbox = o.get("bbox_xyxy")
+            diam_m = real_diameter_m.get(label)
+            if bbox is None or diam_m is None:
+                continue
+            x1, y1, x2, y2 = bbox
+            diam_px = ((x2 - x1) + (y2 - y1)) / 2.0
+            if diam_px < EPS:
+                continue
+            d = diam_m * fx / diam_px
+            u, v = o["centroid_uv"]
+            x = (u - cx) * d / fx
+            y = (v - cy) * d / fy
+            depth_series[label].append(d)
+            point3d_series[label].append(np.asarray([x, y, d], dtype=np.float64))
+    return depth_series, point3d_series
+
+
+def _pairwise_distances_from_point3d(
+    point3d_series: Dict[str, List[np.ndarray]], labels: Sequence[str]
+) -> Dict[Tuple[str, str], float]:
+    """Mean pairwise 3D distance between every pair of labels with a
+    non-empty point3d series, paired positionally (k-th point of label A
+    against k-th point of label B) -- shared by the monocular-depth path
+    and the caller merging in apparent-size points for specific labels."""
+    distance_by_pair: Dict[Tuple[str, str], float] = {}
+    present = [label for label in labels if point3d_series.get(label)]
+    for i in range(len(present)):
+        for j in range(i + 1, len(present)):
+            li, lj = present[i], present[j]
+            n = min(len(point3d_series[li]), len(point3d_series[lj]))
+            if n == 0:
+                continue
+            dists = [
+                float(np.linalg.norm(point3d_series[li][k] - point3d_series[lj][k]))
+                for k in range(n)
+            ]
+            distance_by_pair[(li, lj)] = float(np.mean(dists))
+    return distance_by_pair
 
 
 def _estimate_candidate_depths_and_distances(
@@ -424,13 +719,13 @@ def _estimate_candidate_depths_and_distances(
     depth_model_id: str,
     device: str,
     intrinsics: Optional[np.ndarray],
-) -> Tuple[Dict[str, float], Dict[Tuple[str, str], float]]:
-    """Monocular depth estimate at each object's mask centroid (relative
-    depth units, per the depth model's own scale -- see module docstring),
+) -> Tuple[Dict[str, float], Dict[Tuple[str, str], float], Dict[str, List[np.ndarray]]]:
+    """Monocular depth estimate at each object's mask centroid (metric units
+    if a metric depth model is configured -- see DEPTH_DEFAULT_MODEL),
     back-projected with pinhole intrinsics into candidate-side pairwise
-    3D distances."""
-    from PIL import Image
-
+    3D distances. Also returns the raw per-label point3d series so a caller
+    can substitute a different depth source (e.g. apparent-size) for
+    specific labels and recompute pairwise distances consistently."""
     depth_pipe = _load_depth_estimator(depth_model_id, device)
 
     labels = [o["label"] for o in track["objects"]]
@@ -451,11 +746,7 @@ def _estimate_candidate_depths_and_distances(
         if not objects_here:
             continue
 
-        image_rgb = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        depth_out = depth_pipe(image_rgb)
-        depth_map = np.asarray(depth_out["predicted_depth"])
-        if depth_map.shape != frame.shape[:2]:
-            depth_map = cv2.resize(depth_map, (frame.shape[1], frame.shape[0]))
+        depth_map = _depth_map_for_frame(depth_pipe, frame)
 
         if intrinsics is not None:
             row = intrinsics[min(f_idx, intrinsics.shape[0] - 1)]
@@ -466,35 +757,16 @@ def _estimate_candidate_depths_and_distances(
 
         for o in objects_here:
             u, v = o["centroid_uv"]
-            ui, vi = int(round(u)), int(round(v))
-            ui = min(max(ui, 0), depth_map.shape[1] - 1)
-            vi = min(max(vi, 0), depth_map.shape[0] - 1)
-            d = float(depth_map[vi, ui])
-            depth_series[o["label"]].append(d)
-            x = (u - cx) * d / fx
-            y = (v - cy) * d / fy
-            point3d_series[o["label"]].append(np.asarray([x, y, d], dtype=np.float64))
+            point3d = _unproject_pixel(u, v, depth_map, fx, fy, cx, cy)
+            depth_series[o["label"]].append(float(point3d[2]))
+            point3d_series[o["label"]].append(point3d)
     cap.release()
 
     depth_by_label = {
         label: float(np.mean(vals)) for label, vals in depth_series.items() if vals
     }
-
-    distance_by_pair: Dict[Tuple[str, str], float] = {}
-    present = [label for label in labels if point3d_series.get(label)]
-    for i in range(len(present)):
-        for j in range(i + 1, len(present)):
-            li, lj = present[i], present[j]
-            n = min(len(point3d_series[li]), len(point3d_series[lj]))
-            if n == 0:
-                continue
-            dists = [
-                float(np.linalg.norm(point3d_series[li][k] - point3d_series[lj][k]))
-                for k in range(n)
-            ]
-            distance_by_pair[(li, lj)] = float(np.mean(dists))
-
-    return depth_by_label, distance_by_pair
+    distance_by_pair = _pairwise_distances_from_point3d(point3d_series, labels)
+    return depth_by_label, distance_by_pair, point3d_series
 
 
 # ---------------------------------------------------------------------------
@@ -672,7 +944,15 @@ def analyze_environment_object_consistency_from_context(
     tau_mask = float(artifacts.get("eoc_tau_mask", 0.50))
     tau_id = float(artifacts.get("eoc_tau_id", 0.50))
     max_objects = int(artifacts.get("eoc_max_objects", 6))
-    depth_model_id = str(artifacts.get("eoc_depth_model", DEPTH_DEFAULT_MODEL))
+    depth_model_override = artifacts.get("eoc_depth_model")
+    diameters_path = artifacts.get("eoc_unity_object_diameters_json")
+    real_diameter_m: Dict[str, float] = {}
+    diameter_artifact_error: Optional[str] = None
+    if diameters_path:
+        try:
+            real_diameter_m = _load_object_diameters(str(diameters_path))
+        except Exception as exc:
+            diameter_artifact_error = str(exc)
 
     video_path = context.candidate_video
     if not video_path:
@@ -701,6 +981,8 @@ def analyze_environment_object_consistency_from_context(
         "character_prompt": character_prompt,
         "objects": track.get("objects", []),
     }
+    if diameter_artifact_error is not None:
+        result["diameter_artifact_error"] = diameter_artifact_error
 
     # -- Reference-free metrics -------------------------------------------
     result["object_permanence_pct"] = _object_permanence(track, tau_det)
@@ -750,8 +1032,16 @@ def analyze_environment_object_consistency_from_context(
     if missing_labels:
         result["ground_truth_missing_labels"] = missing_labels
 
+    if depth_model_override:
+        depth_model_id = str(depth_model_override)
+        result["depth_model_selection"] = "explicit_override"
+    else:
+        depth_model_id = _auto_select_depth_model(video_path, track, gt, poses, intrinsics, device)
+        result["depth_model_selection"] = "auto"
+    result["depth_model_used"] = depth_model_id
+
     try:
-        cand_depth, cand_distance = _estimate_candidate_depths_and_distances(
+        cand_depth, cand_distance, cand_point3d = _estimate_candidate_depths_and_distances(
             video_path, track, depth_model_id, device, intrinsics
         )
     except Exception as exc:
@@ -760,6 +1050,30 @@ def analyze_environment_object_consistency_from_context(
         result["depth_absrel_pct"] = None
         result["pairwise_distance_mae_pct"] = None
         return result
+
+    if real_diameter_m:
+        # Apparent-size depth (photogrammetric, no depth model) overrides
+        # the monocular estimate for any label with a known real diameter --
+        # see _estimate_depth_via_apparent_size's docstring for why (reflective
+        # objects like MirrorRollingBall's chrome sphere confuse monocular
+        # depth models structurally; apparent size does not depend on
+        # surface appearance). Overrides depth AND the 3D points feeding
+        # pairwise_distance_mae_pct -- using apparent-size depth for one and
+        # leaving the other on the (worse, for these objects) monocular
+        # estimate would silently desync the two reported metrics.
+        size_depth_series, size_point3d_series = _estimate_depth_via_apparent_size(
+            track, real_diameter_m, intrinsics, (track["height"], track["width"])
+        )
+        for label, vals in size_depth_series.items():
+            if vals:
+                cand_depth[label] = float(np.mean(vals))
+                cand_point3d[label] = size_point3d_series[label]
+        result["apparent_size_depth_labels"] = [
+            label for label, vals in size_depth_series.items() if vals
+        ]
+        cand_distance = _pairwise_distances_from_point3d(
+            cand_point3d, [o["label"] for o in track["objects"]]
+        )
 
     result["ground_truth_status"] = "available"
 

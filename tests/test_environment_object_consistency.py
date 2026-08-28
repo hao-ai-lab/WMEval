@@ -90,6 +90,106 @@ def test_unity_ground_truth_depths_and_distances():
     assert missing == ["missing_object"]
 
 
+def test_estimate_depth_via_apparent_size_matches_pinhole_formula():
+    from evaluation.modules.environment_object_consistency import (
+        _estimate_depth_via_apparent_size,
+    )
+
+    fx = 500.0
+    real_diameter_m = 2.0
+    true_depth = 10.0
+    # A sphere of real diameter 2.0m at depth 10.0m, seen through fx=500,
+    # has apparent pixel diameter = real_diameter_m * fx / depth = 100px.
+    apparent_diam_px = real_diameter_m * fx / true_depth
+    half = apparent_diam_px / 2.0
+    cx, cy = 320.0, 240.0
+    bbox = [cx - half, cy - half, cx + half, cy + half]
+
+    track = {
+        "frames": [
+            {
+                "frame": 0,
+                "objects": [
+                    {"label": "sphere", "centroid_uv": [cx, cy], "bbox_xyxy": bbox}
+                ],
+            }
+        ]
+    }
+    intrinsics = np.array([[fx, fx, cx, cy]])
+
+    depth_series, point3d_series = _estimate_depth_via_apparent_size(
+        track, {"sphere": real_diameter_m}, intrinsics, (480, 640)
+    )
+
+    assert depth_series["sphere"] == pytest.approx([true_depth], rel=1e-6)
+    # Centroid is at the principal point, so the unprojected (x, y) should
+    # be ~0, leaving z == the recovered depth.
+    assert point3d_series["sphere"][0] == pytest.approx([0.0, 0.0, true_depth], abs=1e-6)
+
+
+def test_estimate_depth_via_apparent_size_skips_labels_without_known_diameter():
+    from evaluation.modules.environment_object_consistency import (
+        _estimate_depth_via_apparent_size,
+    )
+
+    track = {
+        "frames": [
+            {
+                "frame": 0,
+                "objects": [
+                    {"label": "unknown_object", "centroid_uv": [10.0, 10.0], "bbox_xyxy": [0, 0, 20, 20]}
+                ],
+            }
+        ]
+    }
+    intrinsics = np.array([[100.0, 100.0, 50.0, 50.0]])
+
+    depth_series, point3d_series = _estimate_depth_via_apparent_size(
+        track, {"sphere": 1.0}, intrinsics, (100, 100)
+    )
+
+    # "unknown_object" has no entry in real_diameter_m, so it must be
+    # silently skipped, not crash or fabricate a depth for it.
+    assert depth_series == {"sphere": []}
+    assert point3d_series == {"sphere": []}
+
+
+def test_load_object_diameters_schema_validation(tmp_path):
+    from evaluation.modules.environment_object_consistency import _load_object_diameters
+
+    with pytest.raises(FileNotFoundError):
+        _load_object_diameters(str(tmp_path / "missing.json"))
+
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps([1, 2, 3]), encoding="utf-8")
+    with pytest.raises(ValueError):
+        _load_object_diameters(str(bad))
+
+    good = tmp_path / "good.json"
+    good.write_text(json.dumps({"Yellow Sphere": 1.3814}), encoding="utf-8")
+    diameters = _load_object_diameters(str(good))
+    # Case-insensitive lookup convention, matching _load_object_masses.
+    assert diameters["yellow sphere"] == pytest.approx(1.3814)
+
+
+def test_pairwise_distances_from_point3d_matches_original_inline_logic():
+    from evaluation.modules.environment_object_consistency import (
+        _pairwise_distances_from_point3d,
+    )
+
+    point3d_series = {
+        "a": [np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0])],
+        "b": [np.array([3.0, 0.0, 0.0]), np.array([5.0, 0.0, 0.0])],
+        "c": [],  # no detections -- must be excluded, not crash
+    }
+
+    distances = _pairwise_distances_from_point3d(point3d_series, ["a", "b", "c"])
+
+    assert distances[("a", "b")] == pytest.approx(4.0)  # mean of 3.0 and 5.0
+    assert ("a", "c") not in distances
+    assert ("b", "c") not in distances
+
+
 def test_analyze_environment_object_consistency_requires_candidate_video():
     from evaluation.context import EvaluationContext, SampledVideoFrames, VideoMetadata
     from evaluation.modules.environment_object_consistency import (

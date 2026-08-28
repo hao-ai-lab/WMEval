@@ -93,6 +93,28 @@ def _apply_hud_mask(
     return out
 
 
+def _load_groundingdino(model_id: str, device: str) -> Tuple[Any, Any]:
+    """Load (and cache) a GroundingDINO processor+model pair.
+
+    ``_detect_objects_groundingdino`` is called once per video frame (by
+    both this module and kinematics_mechanics.py/environment_object_
+    consistency.py's per-frame re-detection loops), so without a cache
+    every single frame of every case re-downloads/re-instantiates the model
+    from scratch -- the actual reason evaluation runs took tens of minutes
+    even on 150-300 frame videos this session; the per-frame "Loading
+    weights" log spam was this bug, not routine startup cost.
+
+    Delegates to ``_liquid_common._get_grounding_dino``, which already
+    implements this exact (model_id, device) -> (processor, model) cache
+    for the four ``liquid_*`` modules -- reusing it here instead of a
+    second, independently-maintained cache keeps GroundingDINO loading
+    behavior (eviction, key shape, etc.) in one place for the whole
+    package."""
+    from ._liquid_common import _get_grounding_dino
+
+    return _get_grounding_dino(model_id, device)
+
+
 def _detect_objects_groundingdino(
     frame_bgr: np.ndarray,
     text_prompt: str,
@@ -102,8 +124,7 @@ def _detect_objects_groundingdino(
     device: str,
 ) -> Tuple[np.ndarray, np.ndarray, List[str]]:
     image_pil = Image.fromarray(cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB))
-    processor = AutoProcessor.from_pretrained(model_id)
-    model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(device)
+    processor, model = _load_groundingdino(model_id, device)
     inputs = processor(images=image_pil, text=text_prompt, return_tensors="pt").to(device)
     with torch.no_grad():
         outputs = model(**inputs)

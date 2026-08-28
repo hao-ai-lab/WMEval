@@ -89,6 +89,94 @@ def test_round_sig2():
     assert _round_sig2(0.0) == 0.0
 
 
+def test_linear_velocity_fit_recovers_known_slope():
+    from evaluation.modules.kinematics_mechanics import _linear_velocity_fit
+
+    fps = 10.0
+    frames = [0, 1, 2, 3, 4, 5]
+    true_velocity = np.array([2.0, -1.0, 0.5])
+    points = np.array([true_velocity * (f / fps) for f in frames])
+
+    v_hat = _linear_velocity_fit(frames, points, fps)
+
+    assert v_hat == pytest.approx(true_velocity, abs=1e-9)
+
+
+def test_linear_velocity_fit_two_points_falls_back_to_finite_difference():
+    from evaluation.modules.kinematics_mechanics import _linear_velocity_fit
+
+    points = np.array([[0.0, 0.0, 0.0], [1.0, 2.0, 3.0]])
+    v_hat = _linear_velocity_fit([0, 5], points, fps=10.0)
+
+    # (x1 - x0) / ((5 - 0) / 10) = (1,2,3) / 0.5
+    assert v_hat == pytest.approx([2.0, 4.0, 6.0])
+
+
+def test_linear_velocity_fit_smooths_noise_better_than_two_point_diff():
+    from evaluation.modules.kinematics_mechanics import _linear_velocity_fit
+
+    fps = 10.0
+    frames = list(range(6))
+    true_velocity = np.array([1.0, 0.0, 0.0])
+    rng = np.random.default_rng(0)
+    clean = np.array([true_velocity * (f / fps) for f in frames])
+    noisy = clean.copy()
+    # Perturb only the endpoints heavily -- a 2-point finite difference
+    # would be fully corrupted by this; a multi-point linear fit should
+    # stay close to the true slope since it uses every point.
+    noisy[0] += [0.5, 0.0, 0.0]
+    noisy[-1] += [-0.5, 0.0, 0.0]
+
+    fit_velocity = _linear_velocity_fit(frames, noisy, fps)
+    two_point_velocity = (noisy[-1] - noisy[0]) / ((frames[-1] - frames[0]) / fps)
+
+    fit_error = float(np.linalg.norm(fit_velocity - true_velocity))
+    two_point_error = float(np.linalg.norm(two_point_velocity - true_velocity))
+    assert fit_error < two_point_error
+
+
+def test_mechanical_quantities_exact_match_paper_formula_explodes_near_zero():
+    from evaluation.modules.kinematics_mechanics import _mechanical_quantities_exact_match
+
+    # Real absolute error is small (0.02), but Eq 13's default denominator
+    # (|q_gt|) is near-zero, so the paper's own formula explodes -- this
+    # locks in that the formula is intentionally left unmodified (paper
+    # fidelity), not "fixed" by changing what error_rate_pct means.
+    _, error_rate_pct, diag = _mechanical_quantities_exact_match(
+        {"ball": 0.02}, {"ball": 0.0001}
+    )
+    assert error_rate_pct > 1000.0
+    assert diag["absolute_errors"]["ball"] == pytest.approx(0.0199, abs=1e-4)
+
+
+def test_mechanical_quantities_exact_match_near_zero_threshold_flags_label():
+    from evaluation.modules.kinematics_mechanics import _mechanical_quantities_exact_match
+
+    _, _, diag = _mechanical_quantities_exact_match(
+        {"ball": 0.02}, {"ball": 0.0001}, near_zero_threshold={"ball": 0.001}
+    )
+    assert diag["near_zero_ground_truth_baseline_labels"] == ["ball"]
+
+    _, _, diag_not_near_zero = _mechanical_quantities_exact_match(
+        {"ball": 1.02}, {"ball": 1.0}, near_zero_threshold={"ball": 0.001}
+    )
+    assert "near_zero_ground_truth_baseline_labels" not in diag_not_near_zero
+
+
+def test_mechanical_quantities_exact_match_reference_scale_denominator():
+    from evaluation.modules.kinematics_mechanics import _mechanical_quantities_exact_match
+
+    # Same absolute error as the near-zero-baseline case above, but with a
+    # real reference-scale denominator (e.g. this object's own peak
+    # momentum elsewhere in its rollout) instead of the near-zero
+    # instantaneous q_gt -- this is the actual fix: a sane, bounded
+    # percentage instead of Eq 13's default explosion.
+    _, error_rate_pct, _ = _mechanical_quantities_exact_match(
+        {"ball": 0.02}, {"ball": 0.0001}, denominator={"ball": 1.0}
+    )
+    assert error_rate_pct == pytest.approx(1.99, abs=0.01)
+
+
 def test_analyze_kinematics_mechanics_requires_candidate_video():
     from evaluation.context import EvaluationContext, SampledVideoFrames, VideoMetadata
     from evaluation.modules.kinematics_mechanics import (

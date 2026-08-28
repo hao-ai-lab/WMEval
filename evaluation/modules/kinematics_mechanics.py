@@ -73,10 +73,15 @@ except ImportError:
 from ..context import EvaluationContext
 from .shadow_consistency import GD_DEFAULT_MODEL, _detect_objects_groundingdino
 from .environment_object_consistency import (
+    _auto_select_depth_model,
     _dedupe_seed_detections,
+    _depth_map_for_frame,
     _load_camera_intrinsics,
     _load_camera_poses,
     _load_depth_estimator,
+    _load_flat_label_json,
+    _read_frame_verified,
+    _unproject_pixel,
     DEPTH_DEFAULT_MODEL,
 )
 
@@ -98,14 +103,12 @@ def _load_unity_object_transforms(path: str) -> Dict[str, Any]:
 
 
 def _load_object_masses(path: str) -> Dict[str, float]:
-    p = Path(path)
-    if not p.exists():
-        raise FileNotFoundError(f"unity object masses artifact does not exist: {path}")
-    with p.open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
-    if not isinstance(payload, dict):
-        raise ValueError(f"unity object masses artifact must be a flat {{label: mass_kg}} dict: {path}")
-    return {str(k).strip().lower(): float(v) for k, v in payload.items()}
+    """Real per-label object mass in kg. Delegates to environment_object_
+    consistency.py's _load_flat_label_json, the shared loader for every
+    "known physical constant per label" artifact (masses, diameters, and
+    any future one) -- avoids two independently-maintained copies of the
+    identical exists/parse/validate/lowercase logic."""
+    return _load_flat_label_json(path, "object masses")
 
 
 def _unity_trajectory(gt: Dict[str, Any], label: str) -> Optional[List[Tuple[int, np.ndarray]]]:
@@ -171,6 +174,24 @@ def _detect_all_frames(
         boxes, scores, labels = _detect_objects_groundingdino(
             frame, text_prompt, gd_model_id, gd_threshold, gd_text_threshold, device
         )
+        if color_filter_enabled and len(boxes):
+            # Filter by color BEFORE dedup, not after: dedup already
+            # collapses same-label boxes to the single highest-scoring one,
+            # so a same-frame false positive that happens to outscore the
+            # real object would survive dedup and never reach a post-dedup
+            # filter. Only labels with an already-established seed color
+            # are filtered here; a label's first-ever appearance still has
+            # no reference color, so it passes through untouched and gets
+            # its seed established below, from whatever dedup keeps.
+            keep = []
+            for i, (box, label) in enumerate(zip(boxes, labels)):
+                if label not in seed_hue:
+                    keep.append(i)
+                    continue
+                hsv = _median_hsv(frame, box)
+                if hsv is None or _hue_distance_deg(float(hsv[0]), seed_hue[label]) <= color_hue_tolerance_deg:
+                    keep.append(i)
+            boxes, scores, labels = (boxes[keep], scores[keep], [labels[i] for i in keep]) if keep else (boxes[:0], scores[:0], [])
         # Same degenerate/duplicate-detection issue as _track_objects in
         # environment_object_consistency.py: a multi-noun prompt can produce
         # a spurious near-full-frame merged-label box and/or duplicate
@@ -179,28 +200,15 @@ def _detect_all_frames(
         boxes, scores, labels = _dedupe_seed_detections(
             boxes, scores, labels, frame_width=width, frame_height=height,
         )
-        if color_filter_enabled and len(boxes):
-            keep = []
-            for i, (box, label) in enumerate(zip(boxes, labels)):
-                hsv = _median_hsv(frame, box)
-                if hsv is None:
-                    keep.append(i)
-                    continue
-                hue = float(hsv[0])
+        if color_filter_enabled:
+            for box, label in zip(boxes, labels):
                 if label not in seed_hue:
-                    # First time we see this label: trust it (matches the
-                    # seed-detection convention used elsewhere) and lock in
-                    # its color signature for every later frame.
-                    seed_hue[label] = hue
-                    keep.append(i)
-                elif _hue_distance_deg(hue, seed_hue[label]) <= color_hue_tolerance_deg:
-                    keep.append(i)
-                # else: same text label, wrong object color -- drop it so a
-                # later frame's false positive can't hijack the track.
-            if keep:
-                boxes, scores, labels = boxes[keep], scores[keep], [labels[i] for i in keep]
-            else:
-                boxes, scores, labels = boxes[:0], scores[:0], []
+                    # First time we see this label (post-filter, post-dedup):
+                    # trust dedup's highest-scoring pick and lock in its
+                    # color signature for every later frame.
+                    hsv = _median_hsv(frame, box)
+                    if hsv is not None:
+                        seed_hue[label] = float(hsv[0])
         per_frame.append({"frame": f_idx, "boxes": boxes, "scores": scores, "labels": labels})
         f_idx += 1
     cap.release()
@@ -322,6 +330,28 @@ def _velocity_series(traj: np.ndarray, dt: float) -> np.ndarray:
     return (traj[1:] - traj[:-1]) / dt
 
 
+def _linear_velocity_fit(frame_numbers: Sequence[int], points: np.ndarray, fps: float) -> np.ndarray:
+    """Least-squares linear-in-time fit velocity across several points,
+    instead of a raw 2-point finite difference. A 2-point difference is
+    extremely sensitive to per-frame noise (e.g. monocular-depth-map noise
+    at a single pixel) since the entire velocity estimate rests on just two
+    noisy samples; fitting a line's slope across a short trailing window
+    averages that noise out. Falls back to a 2-point difference when fewer
+    than 3 points are available (a line fit is underdetermined below that)."""
+    if len(points) < 2:
+        return np.zeros(points.shape[1] if points.ndim > 1 else 3)
+    if len(points) == 2 or fps <= 0:
+        dt_pair = max((frame_numbers[-1] - frame_numbers[0]) / fps, EPS) if fps > 0 else 1.0
+        return (points[-1] - points[0]) / dt_pair
+    t = np.asarray(frame_numbers, dtype=np.float64) / fps
+    t_centered = t - t.mean()
+    denom = float(np.sum(t_centered ** 2))
+    if denom < EPS:
+        return np.zeros(points.shape[1])
+    p_centered = points - points.mean(axis=0, keepdims=True)
+    return (t_centered @ p_centered) / denom
+
+
 def _project_unity_trajectory_to_pixels(
     traj_world: List[Tuple[int, np.ndarray]],
     poses: np.ndarray,
@@ -359,11 +389,10 @@ def _round_sig2(value: float) -> float:
 
 
 def _estimate_metric_points(
-    video_path: str,
+    cap: Any,
     frames_uv: Dict[int, np.ndarray],
     intrinsics: np.ndarray,
-    depth_model_id: str,
-    device: str,
+    depth_pipe: Any,
 ) -> Dict[int, np.ndarray]:
     """Lift a candidate's tracked pixel centroids to metric 3D points via
     monocular depth estimation (same model/approach as
@@ -371,61 +400,205 @@ def _estimate_metric_points(
     velocity -- and therefore momentum/kinetic-energy (paper Eq 11) -- can be
     computed in real units instead of pixels/sec. Only requested frames are
     depth-estimated (not every frame in the video) to keep this affordable.
+    ``depth_pipe`` is loaded once by the caller and shared across every
+    tracked label in a case, not reloaded per call. ``cap`` is likewise an
+    already-open ``cv2.VideoCapture`` shared across every label and both
+    stages (terminal + peak_motion), not reopened per call -- opening a
+    fresh capture per call was real, measurable redundant work once two
+    stages started calling this per label.
 
-    Inherits the same real-world-trained-depth-model domain-gap bias already
-    documented for environment_object_consistency's depth_absrel_pct -- this
-    is a known, disclosed limitation, not a bug in this lifting step.
+    Inherits the same depth-estimator behavior (and, for a relative-depth
+    model, the same domain-gap risk) already documented for
+    environment_object_consistency's depth_absrel_pct -- see
+    DEPTH_DEFAULT_MODEL's docstring for the metric-vs-relative distinction.
     """
-    from PIL import Image
-
-    depth_pipe = _load_depth_estimator(depth_model_id, device)
-    wanted = set(frames_uv)
-    cap = cv2.VideoCapture(video_path)
-    n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     out: Dict[int, np.ndarray] = {}
-    for f_idx in range(n_frames):
-        ok, frame = cap.read()
-        if not ok:
-            break
-        if f_idx not in wanted:
+    for f_idx in sorted(frames_uv):
+        # Seek directly to each wanted frame instead of decoding every
+        # frame of the video sequentially -- callers only ever ask for a
+        # handful of frames (a trailing/peak window), and with two stages
+        # (terminal + peak_motion) now calling this per label, decoding the
+        # full video on every call would double an already-expensive cost
+        # for no benefit. _read_frame_verified guards the correctness risk
+        # this introduces (unverified seeking is not always frame-exact).
+        frame = _read_frame_verified(cap, f_idx)
+        if frame is None:
             continue
         u, v = frames_uv[f_idx]
-        image_rgb = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-        depth_out = depth_pipe(image_rgb)
-        depth_map = np.asarray(depth_out["predicted_depth"])
-        if depth_map.shape != frame.shape[:2]:
-            depth_map = cv2.resize(depth_map, (frame.shape[1], frame.shape[0]))
-        ui = min(max(int(round(u)), 0), depth_map.shape[1] - 1)
-        vi = min(max(int(round(v)), 0), depth_map.shape[0] - 1)
-        d = float(depth_map[vi, ui])
+        depth_map = _depth_map_for_frame(depth_pipe, frame)
         ifr = min(max(f_idx, 0), intrinsics.shape[0] - 1)
         fx, fy, cx, cy = intrinsics[ifr]
-        x = (u - cx) * d / fx
-        y = (v - cy) * d / fy
-        out[f_idx] = np.asarray([x, y, d], dtype=np.float64)
-    cap.release()
+        out[f_idx] = _unproject_pixel(u, v, depth_map, fx, fy, cx, cy)
     return out
 
 
+# The ONE physical constant this module's near-zero handling derives from:
+# below this ground-truth speed, an object isn't meaningfully in motion.
+# Every other near-zero threshold in this module (the momentum/energy
+# baseline check below, and the reference-scale gate in _mechanics_stage)
+# is computed FROM this single speed constant and the object's own real
+# mass, rather than being independently-chosen absolute values in
+# momentum/energy units -- two unrelated hardcoded numbers can silently
+# drift out of sync (tuned for one quantity, forgotten for the other);
+# one physical speed threshold, converted through p=mv / E=0.5*m*v^2 per
+# quantity and per object's real mass, cannot.
+NEAR_ZERO_SPEED_M_S = 0.01
+
+
 def _mechanical_quantities_exact_match(
-    q_hat: Dict[str, float], q_gt: Dict[str, float]
-) -> Tuple[float, float]:
+    q_hat: Dict[str, float], q_gt: Dict[str, float],
+    denominator: Optional[Dict[str, float]] = None,
+    near_zero_threshold: Optional[Dict[str, float]] = None,
+) -> Tuple[float, float, Dict[str, Any]]:
     """Paper Eq 12/13: ExactMatch% (rounded to 2 significant digits) and mean
     relative ErrorRate%, both over the object set ``O`` (here, whichever
-    tracked labels have both an estimate and a ground-truth value)."""
+    tracked labels have both an estimate and a ground-truth value).
+
+    By default (``denominator=None``) this is exactly the paper's Eq 13
+    formula (divide by |q_gt|, for paper fidelity). Pass ``denominator`` to
+    instead divide by a per-label reference scale (e.g. the object's own
+    peak momentum/energy across its full ground-truth trajectory) -- see
+    ``analyze_kinematics_mechanics_from_context`` for why: near a
+    near-motionless ground-truth instant, dividing by |q_gt| explodes
+    regardless of how small the absolute error is, which is a real,
+    fixable weakness of evaluating only at one (possibly resting) instant,
+    not something inherent to the mechanics being measured.
+
+    A third return value carries diagnostics -- per-label absolute error
+    and a flag for near-zero ground-truth baselines -- useful even when a
+    reference-scale denominator is used, since |q_gt| near zero still
+    means "this instant isn't a meaningful test of momentum/energy
+    accuracy" regardless of what the error is measured relative to."""
     labels = sorted(set(q_hat) & set(q_gt))
     if not labels:
-        return float("nan"), float("nan")
+        return float("nan"), float("nan"), {}
     matches = 0
     rel_errors = []
+    abs_errors: Dict[str, float] = {}
+    near_zero_labels: List[str] = []
     for label in labels:
         qh, qg = q_hat[label], q_gt[label]
         if _round_sig2(qh) == _round_sig2(qg):
             matches += 1
-        rel_errors.append(abs(qh - qg) / (abs(qg) + EPS))
+        denom = denominator[label] if denominator and label in denominator else abs(qg)
+        rel_errors.append(abs(qh - qg) / (denom + EPS))
+        abs_errors[label] = round(abs(qh - qg), 6)
+        threshold = (
+            near_zero_threshold[label]
+            if near_zero_threshold and label in near_zero_threshold
+            else EPS
+        )
+        if abs(qg) < threshold:
+            near_zero_labels.append(label)
     exact_match_pct = 100.0 * matches / len(labels)
     error_rate_pct = 100.0 * float(np.mean(rel_errors))
-    return exact_match_pct, error_rate_pct
+    diagnostics: Dict[str, Any] = {"absolute_errors": abs_errors}
+    if near_zero_labels:
+        diagnostics["near_zero_ground_truth_baseline_labels"] = near_zero_labels
+        diagnostics["note"] = (
+            "error_rate_pct for these labels divides by a near-zero ground-truth "
+            "value (Eq 13's own formula, unmodified here for paper fidelity), "
+            "inflating the relative error astronomically regardless of how small "
+            "the absolute error is -- read absolute_errors for these labels "
+            "instead of error_rate_pct."
+        )
+    return exact_match_pct, error_rate_pct, diagnostics
+
+
+# Below this ground-truth peak speed, an object doesn't move meaningfully
+# anywhere in its own rollout, so there is no physically real reference
+# scale to normalize against either -- error_rate_pct_normalized would
+# just be a smaller-but-still-fake number, not a genuinely meaningful one.
+# Report it as not applicable rather than compute a misleadingly precise
+# figure for an object that was never really in motion. See
+# NEAR_ZERO_SPEED_M_S above -- this reuses the same single physical
+# constant rather than an independently-chosen momentum/energy value.
+
+
+def _mechanics_stage(
+    label: str,
+    mass_kg: float,
+    frames_window: List[int],
+    cand_by_frame: Dict[int, np.ndarray],
+    world_by_frame: Dict[int, np.ndarray],
+    cap: Any,
+    intrinsics: np.ndarray,
+    depth_pipe: Any,
+    fps: float,
+    ref_momentum: float,
+    ref_energy: float,
+    peak_speed: float,
+) -> Optional[Dict[str, Any]]:
+    """Momentum/kinetic-energy (paper Eq 11) for one evaluation window,
+    reported two ways: `error_rate_pct` (Eq 13, unmodified, divides by
+    |q_gt|) and `error_rate_pct_normalized` (divides by this object's own
+    peak momentum/energy across its FULL ground-truth trajectory instead --
+    see analyze_kinematics_mechanics_from_context for why). ``cap`` is an
+    already-open VideoCapture shared across every label/stage by the
+    caller, not opened fresh here."""
+    frames_available = [f for f in frames_window if f in cand_by_frame]
+    metric_pts = _estimate_metric_points(
+        cap, {f: cand_by_frame[f] for f in frames_available}, intrinsics, depth_pipe,
+    )
+    usable = [f for f in frames_window if f in metric_pts and f in world_by_frame]
+    if len(usable) < 2:
+        return None
+    hat_pts = np.stack([metric_pts[f] for f in usable])
+    gt_pts = np.stack([world_by_frame[f] for f in usable])
+    v_hat = _linear_velocity_fit(usable, hat_pts, fps)
+    v_gt = _linear_velocity_fit(usable, gt_pts, fps)
+    p_hat = mass_kg * float(np.linalg.norm(v_hat))
+    p_gt = mass_kg * float(np.linalg.norm(v_gt))
+    e_hat = 0.5 * mass_kg * float(np.linalg.norm(v_hat)) ** 2
+    e_gt = 0.5 * mass_kg * float(np.linalg.norm(v_gt)) ** 2
+
+    # Near-zero baseline thresholds, derived from the ONE physical speed
+    # constant (NEAR_ZERO_SPEED_M_S) through this object's own real mass --
+    # not independently-chosen absolute values in momentum/energy units.
+    near_zero_momentum = mass_kg * NEAR_ZERO_SPEED_M_S
+    near_zero_energy = 0.5 * mass_kg * NEAR_ZERO_SPEED_M_S ** 2
+    mom_match, mom_err, mom_diag = _mechanical_quantities_exact_match(
+        {label: p_hat}, {label: p_gt}, near_zero_threshold={label: near_zero_momentum}
+    )
+    e_match, e_err, e_diag = _mechanical_quantities_exact_match(
+        {label: e_hat}, {label: e_gt}, near_zero_threshold={label: near_zero_energy}
+    )
+    object_never_moves = peak_speed < NEAR_ZERO_SPEED_M_S
+    if object_never_moves:
+        mom_err_norm: Optional[float] = None
+        e_err_norm: Optional[float] = None
+    else:
+        _, mom_err_norm, _ = _mechanical_quantities_exact_match(
+            {label: p_hat}, {label: p_gt}, denominator={label: ref_momentum}
+        )
+        _, e_err_norm, _ = _mechanical_quantities_exact_match(
+            {label: e_hat}, {label: e_gt}, denominator={label: ref_energy}
+        )
+    normalized_note = (
+        {"error_rate_pct_normalized_note": (
+            "not applicable: this object's peak ground-truth speed "
+            f"({peak_speed:.4f} m/s) never exceeds {NEAR_ZERO_SPEED_M_S} "
+            "m/s anywhere in its own rollout, so there's no real reference "
+            "scale to normalize against either -- see absolute_errors instead."
+        )} if object_never_moves else {}
+    )
+    return {
+        "momentum_kg_m_s": {
+            "estimated": round(p_hat, 4), "ground_truth": round(p_gt, 4),
+            "exact_match_pct": mom_match,
+            "error_rate_pct": round(mom_err, 2),
+            "error_rate_pct_normalized": round(mom_err_norm, 2) if mom_err_norm is not None else None,
+            **mom_diag, **normalized_note,
+        },
+        "kinetic_energy_j": {
+            "estimated": round(e_hat, 4), "ground_truth": round(e_gt, 4),
+            "exact_match_pct": e_match,
+            "error_rate_pct": round(e_err, 2),
+            "error_rate_pct_normalized": round(e_err_norm, 2) if e_err_norm is not None else None,
+            **e_diag, **normalized_note,
+        },
+        "frames_used": [int(f) for f in usable],
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -562,7 +735,62 @@ def analyze_kinematics_mechanics_from_context(
     mechanics: Dict[str, Any] = {}
     dt = 1.0 / fps if fps > 0 else 1.0
     depth_lift_enabled = bool(artifacts.get("kin_depth_lift", False))
-    depth_model_id = str(artifacts.get("kin_depth_model") or DEPTH_DEFAULT_MODEL)
+    # max(2, ...) guards two misconfigurations: 0 (or negative), where
+    # Python's list[-0:] is list[0:] -- the WHOLE list, not an empty
+    # trailing window, silently ballooning "terminal" to the full
+    # trajectory instead of failing loudly -- and 1, which is equally
+    # degenerate in a different way: _mechanics_stage always needs >=2
+    # points to fit a velocity, so a 1-frame window can never succeed and
+    # would silently fall back to pixel_units_only for every label.
+    depth_lift_window = max(2, int(artifacts.get("kin_depth_lift_window", 6)))
+    depth_pipe = None
+    if depth_lift_enabled:
+        try:
+            kin_depth_model_override = artifacts.get("kin_depth_model")
+            if kin_depth_model_override:
+                depth_model_id = str(kin_depth_model_override)
+                result["depth_model_selection"] = "explicit_override"
+            else:
+                # Same auto-selection as environment_object_consistency.py's
+                # eoc_depth_model (see _auto_select_depth_model's docstring):
+                # test candidate checkpoints against a real, known Unity
+                # depth instead of a human guessing indoor vs. outdoor per
+                # scene. Reshape this module's own {label: [{"frame",
+                # "centroid_uv"}]} trajectories into the {"frames": [{
+                # "frame", "objects": [...]}]} shape _auto_select_depth_model
+                # expects, rather than a second implementation.
+                frame_to_objects: Dict[int, List[Dict[str, Any]]] = {}
+                for lbl, pts in trajectories_out.items():
+                    for p in pts:
+                        frame_to_objects.setdefault(p["frame"], []).append(
+                            {"label": lbl, "centroid_uv": p["centroid_uv"]}
+                        )
+                pseudo_track = {
+                    "frames": [
+                        {"frame": f, "objects": objs}
+                        for f, objs in sorted(frame_to_objects.items())
+                    ]
+                }
+                depth_model_id = _auto_select_depth_model(
+                    video_path, pseudo_track, gt, poses, intrinsics, device
+                )
+                result["depth_model_selection"] = "auto"
+            result["depth_model_used"] = depth_model_id
+            depth_pipe = _load_depth_estimator(depth_model_id, device)
+        except Exception as exc:
+            result["depth_lift_error"] = (
+                f"kin_depth_lift was requested but the depth model failed to load: {exc}. "
+                "Falling back to pixel_units_only for every label's mechanical_quantities."
+            )
+            depth_lift_enabled = False
+
+    # One shared, already-open capture for every label and both stages
+    # (terminal + peak_motion) below, instead of _estimate_metric_points
+    # opening a fresh cv2.VideoCapture per call -- for N labels that was
+    # up to 2N redundant container opens of the same file. Released just
+    # before this function returns, below; nothing in the loop body
+    # returns early, so no try/finally is needed for that release to run.
+    metric_points_cap = cv2.VideoCapture(video_path) if depth_lift_enabled else None
 
     for label, pts in trajectories_out.items():
         traj_world = _unity_trajectory(gt, label)
@@ -611,49 +839,115 @@ def analyze_kinematics_mechanics_from_context(
             continue
 
         if depth_lift_enabled and len(common_frames) >= 2:
-            f_prev, f_last = common_frames[-2], common_frames[-1]
-            dt_real = (f_last - f_prev) / fps if fps > 0 else dt
-            metric_pts = _estimate_metric_points(
-                video_path,
-                {f_prev: cand_by_frame[f_prev], f_last: cand_by_frame[f_last]},
-                intrinsics, depth_model_id, device,
-            )
             world_by_frame = {f: pos for f, pos in traj_world}
-            if (
-                dt_real > 0
-                and f_prev in metric_pts and f_last in metric_pts
-                and f_prev in world_by_frame and f_last in world_by_frame
-            ):
-                v_hat = (metric_pts[f_last] - metric_pts[f_prev]) / dt_real
-                v_gt = (world_by_frame[f_last] - world_by_frame[f_prev]) / dt_real
-                p_hat = mass_kg * float(np.linalg.norm(v_hat))
-                p_gt = mass_kg * float(np.linalg.norm(v_gt))
-                e_hat = 0.5 * mass_kg * float(np.linalg.norm(v_hat)) ** 2
-                e_gt = 0.5 * mass_kg * float(np.linalg.norm(v_gt)) ** 2
-                mom_match, mom_err = _mechanical_quantities_exact_match({label: p_hat}, {label: p_gt})
-                e_match, e_err = _mechanical_quantities_exact_match({label: e_hat}, {label: e_gt})
+
+            # Reference scale: this object's own peak speed across its FULL
+            # ground-truth trajectory (not just the evaluation window). The
+            # paper's Eq 13 divides by the ground-truth value AT THE INSTANT
+            # BEING EVALUATED, which is fine when that instant has real
+            # motion, but explodes for a near-motionless instant regardless
+            # of how small the absolute error is (e.g. an object that's
+            # never hit: BilliardGame's stationary "red ball" produced
+            # error_rate_pct in the tens of thousands of percent). That's a
+            # real, fixable weakness of evaluating only one instant, not
+            # something inherent to momentum/energy error -- normalizing
+            # against the object's own peak momentum/energy instead gives a
+            # stable, physically meaningful scale, and correctly degrades to
+            # "no reference scale" (both peak values ~0) for an object that
+            # truly never moves, rather than fabricating a number.
+            traj_world_sorted = sorted(traj_world, key=lambda t: t[0])
+            peak_frame_gt = traj_world_sorted[0][0] if traj_world_sorted else None
+            peak_speed = 0.0
+            for (f0, x0), (f1, x1) in zip(traj_world_sorted, traj_world_sorted[1:]):
+                dt_pair = (f1 - f0) / fps if fps > 0 else 1.0
+                if dt_pair <= 0:
+                    continue
+                speed = float(np.linalg.norm(x1 - x0)) / dt_pair
+                if speed > peak_speed:
+                    peak_speed = speed
+                    peak_frame_gt = f1
+            ref_momentum = mass_kg * peak_speed
+            ref_energy = 0.5 * mass_kg * peak_speed ** 2
+
+            stages: Dict[str, Any] = {}
+            terminal_window = common_frames[-depth_lift_window:]
+            terminal_result = _mechanics_stage(
+                label, mass_kg, terminal_window, cand_by_frame, world_by_frame,
+                metric_points_cap, intrinsics, depth_pipe, fps, ref_momentum, ref_energy, peak_speed,
+            )
+            if terminal_result:
+                stages["terminal"] = terminal_result
+
+            # Second stage, not just a terminal-window snapshot: evaluate
+            # around this object's own peak-ground-truth-speed frame too
+            # (paper Eq 11-13 gives "terminal momentum magnitude" only as
+            # an *example* metric, not the sole prescribed instant -- for
+            # an object whose real dynamics happen mid-clip, evaluating
+            # only at the end misses the actual moment of interest).
+            peak_motion_same_as_terminal = False
+            if peak_frame_gt is not None:
+                peak_window = sorted(
+                    sorted(common_frames, key=lambda f: abs(f - peak_frame_gt))[:depth_lift_window]
+                )
+                if peak_window != terminal_window:
+                    peak_result = _mechanics_stage(
+                        label, mass_kg, peak_window, cand_by_frame, world_by_frame,
+                        metric_points_cap, intrinsics, depth_pipe, fps, ref_momentum, ref_energy, peak_speed,
+                    )
+                    if peak_result:
+                        stages["peak_motion"] = peak_result
+                elif terminal_result:
+                    # Every `stages[...]` entry is always a dict (never a
+                    # bare string) so a consumer can uniformly do
+                    # stages[stage_name]["momentum_kg_m_s"] without a type
+                    # check -- when the peak and terminal windows coincide
+                    # (e.g. a near-static object, or one whose motion peaks
+                    # right at the tracked clip's end), skip the redundant
+                    # duplicate stage entirely and record that fact as a
+                    # sibling flag instead.
+                    peak_motion_same_as_terminal = True
+
+            if stages:
                 mechanics[label] = {
-                    "status": "metric_depth_lifted",
+                    "status": "metric_depth_lifted_multistage",
                     "note": (
                         "Momentum/kinetic-energy (paper Eq 11-13) via monocular-depth-"
-                        "lifted terminal velocity: the tracked pixel centroid at the "
-                        "last two tracked frames is unprojected to a 3D metric point "
-                        "using a monocular depth model + the case's known camera "
-                        "intrinsics, differenced for velocity. Inherits the same "
-                        "depth-model domain-gap bias already documented for "
-                        "environment_object_consistency's depth_absrel_pct -- real "
-                        "numbers, but expect a systematic scale bias, not yet "
-                        "calibrated."
+                        "lifted velocity (linear-fit slope across a trailing window of "
+                        "tracked frames, not a 2-point finite difference -- far more "
+                        "sensitive to per-frame depth-map noise). Reported at two "
+                        "stages: 'terminal' (last tracked frames, the paper's own "
+                        "example instant) and 'peak_motion' (frames nearest this "
+                        "object's own fastest ground-truth instant, extending beyond "
+                        "the paper's literal example since evaluating only the "
+                        "terminal instant can miss where the real dynamics happened). "
+                        "Each stage reports error_rate_pct (Eq 13 exactly, divides by "
+                        "|q_gt|) AND error_rate_pct_normalized (divides by this "
+                        "object's own peak momentum/energy across its FULL trajectory "
+                        "instead -- stays interpretable even when the evaluated "
+                        "instant's q_gt is near zero). Still inherits the depth "
+                        "model's own accuracy limits -- see DEPTH_DEFAULT_MODEL's "
+                        "docstring for the metric-vs-relative and indoor-vs-outdoor "
+                        "checkpoint caveats."
                     ),
-                    "momentum_kg_m_s": {
-                        "estimated": round(p_hat, 4), "ground_truth": round(p_gt, 4),
-                        "exact_match_pct": mom_match, "error_rate_pct": round(mom_err, 2),
+                    "reference_scale": {
+                        "peak_speed_m_s": round(peak_speed, 4),
+                        "peak_frame": int(peak_frame_gt) if peak_frame_gt is not None else None,
+                        "reference_momentum_kg_m_s": round(ref_momentum, 4),
+                        "reference_energy_j": round(ref_energy, 4),
+                        "note": (
+                            f"peak_speed_m_s never exceeds {NEAR_ZERO_SPEED_M_S} m/s "
+                            "-- this object never moves meaningfully in this rollout, so "
+                            "error_rate_pct_normalized is reported as None below (see "
+                            "each stage's error_rate_pct_normalized_note); only "
+                            "absolute_errors is interpretable for such an object."
+                            if peak_speed < NEAR_ZERO_SPEED_M_S else
+                            "A real, physically meaningful scale for this object in "
+                            "this rollout, used as the denominator for "
+                            "error_rate_pct_normalized."
+                        ),
                     },
-                    "kinetic_energy_j": {
-                        "estimated": round(e_hat, 4), "ground_truth": round(e_gt, 4),
-                        "exact_match_pct": e_match, "error_rate_pct": round(e_err, 2),
-                    },
-                    "terminal_frames_used": [int(f_prev), int(f_last)],
+                    "stages": stages,
+                    "peak_motion_same_as_terminal": peak_motion_same_as_terminal,
                     "mass_kg": mass_kg,
                 }
                 continue
@@ -674,6 +968,9 @@ def analyze_kinematics_mechanics_from_context(
             "estimated_terminal_speed_px_per_sec": round(speed_hat, 3),
             "mass_kg": mass_kg,
         }
+
+    if metric_points_cap is not None:
+        metric_points_cap.release()
 
     result["trajectory_fidelity"] = fidelity if fidelity else None
     result["mechanical_quantities"] = mechanics if mechanics else None

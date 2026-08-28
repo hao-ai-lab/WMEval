@@ -98,6 +98,20 @@ def test_metric_config_whitelist_accepts_new_module_keys():
         "kin_unity_poses_npy",
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
+        # 2026-08-27: apparent-size depth (MirrorRollingBall's reflective
+        # sphere) and the depth-lift/color-filter/multistage mechanics path
+        # (BilliardGame) -- added to case.yaml but originally missed here,
+        # so running either case through the real `run` CLI raised
+        # MetricConfigError before any module code ever executed. Caught by
+        # a post-fix sanity-check review, reproduced against the real CLI,
+        # and fixed; kept in this whitelist test so it can't silently
+        # regress the same way again.
+        "eoc_unity_object_diameters_json",
+        "kin_color_filter",
+        "kin_color_hue_tolerance_deg",
+        "kin_depth_lift",
+        "kin_depth_lift_window",
+        "kin_depth_model",
     ):
         assert key in METRIC_CONFIG_KEYS
 
@@ -115,8 +129,42 @@ def test_run_world_model_evaluation_accepts_new_module_kwargs():
     for key in (
         "eoc_text_prompt",
         "eoc_unity_object_transforms_json",
+        "eoc_unity_object_diameters_json",
         "kin_text_prompt",
         "kin_unity_object_transforms_json",
         "kin_unity_object_masses_json",
+        "kin_color_filter",
+        "kin_color_hue_tolerance_deg",
+        "kin_depth_lift",
+        "kin_depth_lift_window",
+        "kin_depth_model",
     ):
         assert key in params
+
+
+def test_metric_config_keys_cover_every_artifacts_get_call():
+    """Cross-check the whitelist against the modules' own source, rather
+    than a second hand-maintained list: every `artifacts.get("kin_*"/
+    "eoc_*", ...)` call in kinematics_mechanics.py/environment_object_
+    consistency.py must name a key that's actually in METRIC_CONFIG_KEYS,
+    or a case.yaml using it will pass code review and `validate` but fail
+    the instant someone runs it through the real CLI -- exactly what
+    happened with kin_depth_model/eoc_unity_object_diameters_json."""
+    import re
+    from pathlib import Path
+
+    from evaluation.lite.adapters.registry_adapter import METRIC_CONFIG_KEYS
+
+    root = Path(__file__).resolve().parents[1] / "evaluation" / "modules"
+    pattern = re.compile(r'artifacts\.get\(\s*["\'](kin_[a-z_]+|eoc_[a-z_]+)["\']')
+    missing: set[str] = set()
+    for path in (root / "kinematics_mechanics.py", root / "environment_object_consistency.py"):
+        text = path.read_text(encoding="utf-8")
+        for key in pattern.findall(text):
+            if key not in METRIC_CONFIG_KEYS:
+                missing.add(key)
+    assert not missing, (
+        f"artifacts.get() reads these kin_*/eoc_* keys but METRIC_CONFIG_KEYS "
+        f"doesn't whitelist them, so any case.yaml setting them will raise "
+        f"MetricConfigError through the real runner: {sorted(missing)}"
+    )

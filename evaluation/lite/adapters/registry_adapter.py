@@ -92,6 +92,7 @@ METRIC_CONFIG_KEYS = frozenset(
         "eoc_unity_object_transforms_json",
         "eoc_unity_poses_npy",
         "eoc_unity_intrinsics_npy",
+        "eoc_unity_object_diameters_json",
         # kinematics_mechanics (paper appendix B.3)
         "kin_text_prompt",
         "kin_static_anchor_labels",
@@ -106,6 +107,11 @@ METRIC_CONFIG_KEYS = frozenset(
         "kin_unity_poses_npy",
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
+        "kin_color_filter",
+        "kin_color_hue_tolerance_deg",
+        "kin_depth_lift",
+        "kin_depth_lift_window",
+        "kin_depth_model",
     }
 )
 

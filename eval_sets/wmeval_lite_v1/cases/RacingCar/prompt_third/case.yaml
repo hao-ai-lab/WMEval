@@ -30,8 +30,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
-  evaluator_fingerprint: c0556b0ff30e28a48edcf917a3d5011f
+  code_revision: d7463762009d2b5281e7c1440138bba8f4c89c69
+  evaluator_fingerprint: 8297b650f20f96a8197c7b85938a03c3
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

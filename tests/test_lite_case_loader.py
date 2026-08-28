@@ -118,6 +118,60 @@ def test_load_case_resolves_reference_paths() -> None:
     assert case.artifacts_dir == case.root / "reference" / "artifacts"
 
 
+def test_load_case_resolves_module_params_gt_artifact_paths(tmp_path: Path) -> None:
+    """2026-08-27: reference.artifacts.* paths were already resolved to
+    absolute at load time, but module_params (kin_unity_*/eoc_unity_*
+    ground-truth artifact paths) were not -- every environment_object_
+    consistency/kinematics_mechanics case in the suite authors these as
+    paths relative to the case bundle dir, so running any of them through
+    the real CLI (a different cwd than the case dir) raised a spurious
+    "file does not exist" the moment the module tried to open the
+    relative path. Reproduced against the real `run` CLI before fixing;
+    this locks in the fix."""
+    case_dir = tmp_path / "TestScene" / "variant"
+    reference = case_dir / "reference"
+    artifacts = reference / "artifacts"
+    artifacts.mkdir(parents=True)
+    (reference / "unity_groundtruth.mp4").write_text("tiny video\n", encoding="utf-8")
+    (artifacts / "object_transforms.json").write_text("{}\n", encoding="utf-8")
+    _write_checksums(case_dir, ["reference/unity_groundtruth.mp4"])
+    (case_dir / "case.yaml").write_text(
+        "schema_version: 2\n"
+        "case_id: TestScene/variant\n"
+        "scene: TestScene\n"
+        "display_name: Test Scene\n"
+        "modules: [kinematics_mechanics]\n"
+        "reference:\n"
+        "  video: reference/unity_groundtruth.mp4\n"
+        "  checksums: reference/checksums.sha256\n"
+        "protocol:\n"
+        "  candidate_normalization: none\n"
+        "  min_duration_sec: 1.0\n"
+        "  min_duration_ratio: 0.5\n"
+        "  duration_threshold_mode: max\n"
+        "evaluator_lock:\n"
+        "  release_id: test\n"
+        "  code_revision: test\n"
+        "  evaluator_fingerprint: test\n"
+        "  module_config: {}\n"
+        "  artifact_schema_versions: {}\n"
+        "  dependency_versions: {}\n"
+        "module_params:\n"
+        "  kinematics_mechanics:\n"
+        "    kin_text_prompt: ball.\n"
+        "    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json\n",
+        encoding="utf-8",
+    )
+
+    case = load_case(case_dir)
+
+    resolved = case.module_params["kinematics_mechanics"]["kin_unity_object_transforms_json"]
+    assert Path(resolved).is_absolute()
+    assert Path(resolved) == (artifacts / "object_transforms.json").resolve()
+    # Non-path keys under the same module must pass through untouched.
+    assert case.module_params["kinematics_mechanics"]["kin_text_prompt"] == "ball."
+
+
 def test_load_case_metadata_is_deeply_read_only() -> None:
     case = load_case(FIXTURE_ROOT / "beamdomino" / "canonical")
 
