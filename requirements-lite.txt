@@ -1,0 +1,19 @@
+# Suite loading / validation / dry-run needs only PyYAML.
+PyYAML>=6.0,<7
+
+# Running dimensions pulls in the module dependencies:
+# - prompt_consistency: numpy, opencv-python, pydantic, requests (+ OPENAI_API_KEY)
+# - causal_lpips / controllability / shadow_consistency / liquid / causal_step:
+#   heavyweight evaluator dependencies per the existing dimension READMEs
+#   (torch, torchvision, lpips, transformers, sam2, openpiv, ffmpeg, ...).
+# - environment_object_consistency (paper appendix B.1, see
+#   README_environment_object_consistency.md): torch, transformers, sam2
+#   (already required by shadow_consistency) plus a DINOv2 checkpoint fetched
+#   at runtime via `torch.hub.load('facebookresearch/dinov2', ...)` (no extra
+#   pip package — needs network access to github.com on first run).
+# - kinematics_mechanics (paper appendix B.3, see
+#   README_kinematics_mechanics.md): torch, transformers (GroundingDINO
+#   detection reuses the same HF zero-shot-object-detection path as
+#   shadow_consistency) plus a ByteTrack implementation — either of:
+#     cjm-byte-track   # matches tools/groundingdino_bytetrack.py
+#     bytetracker      # fallback if cjm-byte-track is unavailable

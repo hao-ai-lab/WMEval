@@ -1,0 +1,35 @@
+schema_version: 2
+case_id: MirrorRollingBall/lpips_collision
+scene: MirrorRollingBall
+display_name: MirrorBall
+prompt: 'Starting world must match this layout: low camera near a flat light gray
+  floor. Center foreground: one highly reflective chrome mirror ball (the player).
+  Surrounding it, a grid of many glossy yellow spheres stretching into the distance
+  with alleys between rows. Strong light from upper right; soft shadows toward lower
+  left. Dark horizon band and pale sky or wall above. The mirror ball sits in a central
+  aisle with clear path forward between yellow-sphere columns.
+
+
+  The player controls only the silver mirror ball: roll it on the floor using standard
+  directions. Keep physics simple and responsive.'
+perspective: third_person
+modules:
+- lpips
+reference:
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
+  evaluator_fingerprint: 8222b8b8aeb4098cd403c7a2d1c5a284
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}

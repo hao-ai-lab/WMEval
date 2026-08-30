@@ -1,0 +1,474 @@
+"""Suite orchestration: the execution layer PR #19 deferred, absorbing the
+run/aggregate skeleton of PR #16's ``run_lite_suite``.
+
+Flow per work item (dimension, case, model, seed):
+  suite.yaml → case.yaml (+bundle validation) → candidate discovery →
+  candidate validation/normalization → adapter dispatch → JSONL row →
+  aggregate summary.
+
+Heavy imports (cv2-backed validation, the metric runner, ffmpeg
+normalization) are deferred into the non-dry-run path so ``--dry-run`` only
+needs PyYAML.
+"""
+from __future__ import annotations
+
+import time
+import traceback
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable
+
+from .adapters.base import (
+    STATUS_DRY_RUN,
+    STATUS_ERROR,
+    STATUS_INVALID_CANDIDATE,
+    STATUS_MISSING_CANDIDATE,
+    CaseResult,
+    DimensionEvaluator,
+)
+from .aggregate import (
+    build_aggregate,
+    write_aggregate_json,
+    write_summary_csv,
+)
+from .case_loader import LiteCase, load_case
+from .candidate_discovery import (
+    CandidateRow,
+    discover_candidate_directory,
+    load_candidate_manifest,
+)
+from .output import (
+    AGGREGATE_CSV_FILENAME,
+    AGGREGATE_JSON_FILENAME,
+    PER_CASE_RESULTS_FILENAME,
+    append_row,
+    build_row,
+    load_done_keys,
+    read_rows,
+)
+from .suite_loader import (
+    EVALUATOR_REGISTRY,
+    EVALUATOR_VLM_CONSISTENCY,
+    DimensionSpec,
+    Suite,
+    load_suite,
+)
+
+LIQUID_MODULES = frozenset(
+    {
+        "liquid_velocity",
+        "liquid_volume_conservation",
+        "liquid_surface_orientation",
+        "slosh_spectrum",
+    }
+)
+
+# candidate_normalization protocol tokens → normalizer. Tokens mapping to
+# None are declared-but-identity (the candidate is used as-is); unknown
+# tokens are an error so silent protocol drift is impossible.
+NORMALIZATION_TOKENS: dict[str, str | None] = {
+    "none": None,
+    "beamdomino_native": None,
+    "liquid_832x464_16fps": "liquid",
+}
+
+MODEL_PARAMS_FILENAME = "model.yaml"
+
+
+class SuiteRunError(ValueError):
+    pass
+
+
+@dataclass(frozen=True)
+class WorkItem:
+    dimension: DimensionSpec
+    case: LiteCase
+    candidate: CandidateRow
+
+
+def _load_model_params(model_root: Path) -> Mapping[str, Any]:
+    """Optional per-model params (e.g. shadow_hud_preset) from model.yaml."""
+    params_path = model_root / MODEL_PARAMS_FILENAME
+    if not params_path.is_file():
+        return {}
+    import yaml
+
+    raw = yaml.safe_load(params_path.read_text(encoding="utf-8"))
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict) or any(not isinstance(key, str) for key in raw):
+        raise SuiteRunError(
+            f"{params_path} must contain a mapping with string keys"
+        )
+    return raw
+
+
+def _merge_candidate_params(
+    candidate: CandidateRow, model_params: Mapping[str, Any]
+) -> CandidateRow:
+    if not model_params:
+        return candidate
+    merged = dict(model_params)
+    merged.update(dict(candidate.params))
+    return CandidateRow(
+        model=candidate.model,
+        case_id=candidate.case_id,
+        seed=candidate.seed,
+        candidate_video=candidate.candidate_video,
+        params=merged,
+    )
+
+
+def _load_cases(
+    suite: Suite, case_ids: Sequence[str]
+) -> dict[str, LiteCase]:
+    cases: dict[str, LiteCase] = {}
+    allowed = suite.all_case_ids()
+    for case_id in case_ids:
+        case = load_case(suite.cases_root / case_id, allowed_cases=allowed)
+        if case.case_id != case_id:
+            raise SuiteRunError(
+                f"case directory {case_id} declares mismatched case_id "
+                f"{case.case_id!r}"
+            )
+        cases[case_id] = case
+    return cases
+
+
+def _discover_candidates(
+    *,
+    model_root: str | Path | None,
+    candidate_manifest: str | Path | None,
+    allowed_cases: frozenset[str],
+) -> tuple[list[CandidateRow], Mapping[str, Any]]:
+    if (model_root is None) == (candidate_manifest is None):
+        raise SuiteRunError(
+            "exactly one of model_root or candidate_manifest is required"
+        )
+    if model_root is not None:
+        root = Path(model_root)
+        rows = discover_candidate_directory(root, allowed_cases=allowed_cases)
+        return rows, _load_model_params(root)
+    rows = load_candidate_manifest(candidate_manifest, allowed_cases=allowed_cases)
+    return rows, {}
+
+
+def _default_normalized_path(
+    output_root: Path, candidate: CandidateRow
+) -> Path:
+    return (
+        output_root
+        / "normalized"
+        / candidate.model
+        / candidate.case_id
+        / f"{candidate.seed}.mp4"
+    )
+
+
+def _normalize_candidate(
+    *,
+    case: LiteCase,
+    candidate: CandidateRow,
+    output_root: Path,
+) -> Path:
+    token = str(case.protocol["candidate_normalization"])
+    if token not in NORMALIZATION_TOKENS:
+        raise SuiteRunError(
+            f"{case.case_id}: unknown candidate_normalization token {token!r}"
+        )
+    kind = NORMALIZATION_TOKENS[token]
+    if kind is None:
+        return candidate.candidate_video
+
+    from .normalization import normalize_liquid_video
+
+    destination = _default_normalized_path(output_root, candidate)
+    if not destination.is_file():
+        normalize_liquid_video(candidate.candidate_video, destination)
+    return destination
+
+
+def _install_liquid_artifacts_if_needed(
+    *,
+    dimension: DimensionSpec,
+    case: LiteCase,
+    installed: set[str],
+) -> None:
+    if not LIQUID_MODULES.intersection(dimension.modules):
+        return
+    if case.case_id in installed:
+        return
+    if not (case.artifacts_dir / "liquid_mask.npz").is_file():
+        return
+
+    from .reference_artifacts import install_liquid_reference_artifacts
+
+    cache_root = str(dimension.metric_config.get("liquid_cache_root", "runs/liquid_cache"))
+    install_liquid_reference_artifacts(case, Path(cache_root))
+    installed.add(case.case_id)
+
+
+def _resolve_adapter(
+    dimension: DimensionSpec,
+    adapters: Mapping[str, DimensionEvaluator],
+) -> DimensionEvaluator:
+    adapter = adapters.get(dimension.evaluator)
+    if adapter is None:
+        raise SuiteRunError(
+            f"no adapter registered for evaluator {dimension.evaluator!r}"
+        )
+    return adapter
+
+
+def _default_adapters(
+    runner: Callable[..., Mapping[str, Any]] | None,
+) -> dict[str, DimensionEvaluator]:
+    from .adapters.registry_adapter import RegistryAdapter
+    from .adapters.vlm_consistency_adapter import VlmConsistencyAdapter
+
+    return {
+        EVALUATOR_REGISTRY: RegistryAdapter(runner=runner),
+        EVALUATOR_VLM_CONSISTENCY: VlmConsistencyAdapter(),
+    }
+
+
+def run_suite(
+    *,
+    suite_root: str | Path,
+    output_dir: str | Path,
+    model_root: str | Path | None = None,
+    candidate_manifest: str | Path | None = None,
+    dimensions: Sequence[str] | None = None,
+    device: str | None = None,
+    dry_run: bool = False,
+    resume: bool = False,
+    verify_checksums: bool = True,
+    run_id: str = "run",
+    runner: Callable[..., Mapping[str, Any]] | None = None,
+    adapters: Mapping[str, DimensionEvaluator] | None = None,
+    log: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
+    """Run the requested dimensions over discovered candidates.
+
+    Returns the aggregate summary (also written to ``output_dir`` together
+    with the per-case JSONL, except in dry runs which write nothing).
+    """
+    emit = log or (lambda message: print(message, flush=True))
+    suite = load_suite(suite_root)
+
+    requested = tuple(dimensions) if dimensions else tuple(suite.dimensions)
+    unknown = sorted(set(requested) - set(suite.dimensions))
+    if unknown:
+        raise SuiteRunError(f"unknown dimension(s): {unknown}")
+    requested_dimensions = [suite.dimensions[dim_id] for dim_id in requested]
+
+    case_ids = sorted(
+        {case_id for dimension in requested_dimensions for case_id in dimension.cases}
+    )
+    cases = _load_cases(suite, case_ids)
+
+    if not dry_run:
+        from .validation import validate_case_bundle
+
+        for case_id in case_ids:
+            validate_case_bundle(cases[case_id], verify_checksums=verify_checksums)
+
+    candidate_rows, model_params = _discover_candidates(
+        model_root=model_root,
+        candidate_manifest=candidate_manifest,
+        allowed_cases=frozenset(case_ids),
+    )
+    candidate_rows = [
+        _merge_candidate_params(row, model_params) for row in candidate_rows
+    ]
+
+    work_items = [
+        WorkItem(dimension=dimension, case=cases[row.case_id], candidate=row)
+        for dimension in requested_dimensions
+        for row in candidate_rows
+        if row.case_id in dimension.cases
+    ]
+    work_items.sort(
+        key=lambda item: (
+            item.dimension.dimension_id,
+            item.candidate.case_id,
+            item.candidate.model,
+            item.candidate.seed,
+        )
+    )
+
+    output_root = Path(output_dir).expanduser().resolve()
+    results_path = output_root / PER_CASE_RESULTS_FILENAME
+
+    done_keys = set()
+    if resume and not dry_run:
+        done_keys = load_done_keys(results_path)
+
+    resolved_adapters: Mapping[str, DimensionEvaluator] = (
+        dict(adapters) if adapters is not None else _default_adapters(runner)
+    )
+    installed_liquid_cases: set[str] = set()
+    dry_run_items: list[dict[str, Any]] = []
+
+    emit(
+        f"[wmeval-lite] {len(work_items)} work item(s) across "
+        f"{len(requested)} dimension(s), {len(candidate_rows)} candidate row(s)"
+    )
+
+    for item in work_items:
+        dimension = item.dimension
+        case = item.case
+        candidate = item.candidate
+        key = (
+            dimension.dimension_id,
+            candidate.case_id,
+            candidate.model,
+            candidate.seed,
+        )
+        if key in done_keys:
+            emit(f"[wmeval-lite] skip (resume): {'/'.join(key)}")
+            continue
+
+        reference_video = (
+            str(case.reference_video)
+            if dimension.requires_reference and case.reference_video is not None
+            else None
+        )
+        row_common = {
+            "suite_name": suite.suite_name,
+            "suite_version": suite.version,
+            "run_id": run_id,
+            "dimension": dimension.dimension_id,
+            "case_id": case.case_id,
+            "scene": case.scene,
+            "model": candidate.model,
+            "seed": candidate.seed,
+            "reference_video": reference_video,
+            "evaluator_lock": case.evaluator_lock,
+        }
+
+        if dry_run:
+            candidate_exists = candidate.candidate_video.is_file()
+            dry_run_items.append(
+                {
+                    "dimension": dimension.dimension_id,
+                    "case_id": case.case_id,
+                    "model": candidate.model,
+                    "seed": candidate.seed,
+                    "status": STATUS_DRY_RUN,
+                    "candidate_video": str(candidate.candidate_video),
+                    "candidate_exists": candidate_exists,
+                    "reference_video": reference_video,
+                    "reference_exists": bool(
+                        reference_video and Path(reference_video).is_file()
+                    ),
+                }
+            )
+            emit(
+                f"[wmeval-lite] dry-run {dimension.dimension_id}/{case.case_id}: "
+                f"candidate={candidate.candidate_video} exists={candidate_exists} "
+                f"reference={reference_video}"
+            )
+            continue
+
+        started = time.monotonic()
+        try:
+            result = _evaluate_item(
+                suite=suite,
+                item=item,
+                output_root=output_root,
+                device=device,
+                adapters=resolved_adapters,
+                installed_liquid_cases=installed_liquid_cases,
+            )
+        except Exception as exc:  # noqa: BLE001 — one bad item must not kill the run
+            result = CaseResult(
+                status=STATUS_ERROR,
+                error=f"{type(exc).__name__}: {exc}",
+                full_report={"traceback": traceback.format_exc()},
+            )
+        timing = time.monotonic() - started
+
+        row = build_row(
+            **row_common,
+            status=result.status,
+            candidate_video=str(candidate.candidate_video),
+            metrics=result.metrics,
+            full_report=result.full_report,
+            error=result.error,
+            timing_sec=round(timing, 3),
+        )
+        append_row(results_path, row)
+        emit(
+            f"[wmeval-lite] {dimension.dimension_id}/{case.case_id}/"
+            f"{candidate.model}/{candidate.seed}: {result.status}"
+            + (f" ({result.error})" if result.error else "")
+        )
+
+    if dry_run:
+        return {
+            "suite_name": suite.suite_name,
+            "version": suite.version,
+            "dry_run": True,
+            "num_work_items": len(work_items),
+            "work_items": dry_run_items,
+        }
+
+    all_rows = read_rows(results_path)
+    aggregate = build_aggregate(suite, all_rows)
+    write_aggregate_json(output_root / AGGREGATE_JSON_FILENAME, aggregate)
+    write_summary_csv(output_root / AGGREGATE_CSV_FILENAME, suite, aggregate)
+    emit(f"[wmeval-lite] wrote {results_path}")
+    return aggregate
+
+
+def _evaluate_item(
+    *,
+    suite: Suite,
+    item: WorkItem,
+    output_root: Path,
+    device: str | None,
+    adapters: Mapping[str, DimensionEvaluator],
+    installed_liquid_cases: set[str],
+) -> CaseResult:
+    dimension = item.dimension
+    case = item.case
+    candidate = item.candidate
+
+    if not candidate.candidate_video.is_file():
+        return CaseResult(
+            status=STATUS_MISSING_CANDIDATE,
+            error=f"candidate video not found: {candidate.candidate_video}",
+        )
+
+    from .validation import CandidateValidationError, validate_candidate_video
+
+    protocol = case.protocol
+    try:
+        validate_candidate_video(
+            candidate.candidate_video,
+            case.reference_video if dimension.requires_reference else None,
+            min_duration_sec=float(protocol["min_duration_sec"]),
+            min_duration_ratio=float(protocol["min_duration_ratio"]),
+        )
+    except CandidateValidationError as exc:
+        return CaseResult(status=STATUS_INVALID_CANDIDATE, error=str(exc))
+
+    candidate_video = _normalize_candidate(
+        case=case, candidate=candidate, output_root=output_root
+    )
+
+    _install_liquid_artifacts_if_needed(
+        dimension=dimension, case=case, installed=installed_liquid_cases
+    )
+
+    adapter = _resolve_adapter(dimension, adapters)
+    return adapter.evaluate(
+        suite=suite,
+        dimension=dimension,
+        case=case,
+        candidate=candidate,
+        candidate_video=candidate_video,
+        device=device,
+    )

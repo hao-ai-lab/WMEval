@@ -14,9 +14,12 @@ not invalidate SAM2 caches.
 from __future__ import annotations
 
 import hashlib
+import os
 import pickle
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, Callable
 
 import numpy as np
 
@@ -159,6 +162,43 @@ def _config_hash(config: dict) -> str:
     return hashlib.sha256(repr(items).encode("utf-8")).hexdigest()[:16]
 
 
+def atomic_write(path: Path, writer: Callable[[Any], None]) -> None:
+    """Atomically materialize ``path`` by writing through a temp file.
+
+    ``writer`` receives the open binary handle and performs the serialization
+    (pickle, ``np.savez_compressed``, etc.). The temp file is flushed, fsynced,
+    and renamed into place; on any failure it is removed so a partial write can
+    never replace or leave a stray sibling next to an existing artifact. Shared
+    by the liquid caches here and the Lite portable artifacts.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="wb",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temp_path = Path(handle.name)
+            writer(handle)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp_path, path)
+    except Exception:
+        if temp_path is not None:
+            try:
+                temp_path.unlink()
+            except FileNotFoundError:
+                pass
+        raise
+
+
+def _atomic_pickle_dump(path: Path, payload: object) -> None:
+    atomic_write(path, lambda handle: pickle.dump(payload, handle))
+
+
 def _read_video_frames_uint8(path: str, max_frames: int | None = None) -> np.ndarray:
     """Decode the entire video into a (T, H, W, 3) uint8 RGB array."""
     import cv2
@@ -241,6 +281,46 @@ def _grounding_dino_box_xyxy(
     return boxes[best].detach().cpu().numpy().astype(np.float32)
 
 
+def liquid_mask_cache_path(
+    *,
+    video_path: str | Path,
+    sam2_model: str,
+    prompt: str,
+    fps: float,
+    max_pairs: int | None,
+    cache_dir: str | Path,
+) -> Path:
+    cfg = _config_hash({
+        "sam2_model": sam2_model,
+        "prompt": prompt,
+        "fps": fps,
+        "max_pairs": max_pairs,
+        "gdino_model": _GDINO_MODEL_ID,
+        "gdino_box_threshold": _GDINO_BOX_THRESHOLD,
+        "gdino_text_threshold": _GDINO_TEXT_THRESHOLD,
+    })
+    return _cache_path(Path(cache_dir), video_path, "sam2_mask", cfg)
+
+
+def store_liquid_mask_cache(
+    *,
+    video_path: str | Path,
+    result: LiquidMaskResult,
+    max_pairs: int | None,
+    cache_dir: str | Path,
+) -> Path:
+    cache_file = liquid_mask_cache_path(
+        video_path=video_path,
+        sam2_model=result.sam2_model,
+        prompt=result.prompt,
+        fps=result.fps,
+        max_pairs=max_pairs,
+        cache_dir=cache_dir,
+    )
+    _atomic_pickle_dump(cache_file, result)
+    return cache_file
+
+
 def get_liquid_mask_video(
     *,
     video_path: str,
@@ -257,18 +337,15 @@ def get_liquid_mask_video(
     box. Caches the binary mask volume under cache_dir keyed on (video content
     hash, sam2 settings, grounding-dino settings).
     """
-    cache_dir = Path(cache_dir)
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    cfg = _config_hash({
-        "sam2_model": sam2_model,
-        "prompt": prompt,
-        "fps": fps,
-        "max_pairs": max_pairs,
-        "gdino_model": _GDINO_MODEL_ID,
-        "gdino_box_threshold": _GDINO_BOX_THRESHOLD,
-        "gdino_text_threshold": _GDINO_TEXT_THRESHOLD,
-    })
-    cache_file = _cache_path(cache_dir, video_path, "sam2_mask", cfg)
+    cache_file = liquid_mask_cache_path(
+        video_path=video_path,
+        sam2_model=sam2_model,
+        prompt=prompt,
+        fps=fps,
+        max_pairs=max_pairs,
+        cache_dir=cache_dir,
+    )
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
     if cache_file.exists():
         with open(cache_file, "rb") as f:
             return pickle.load(f)
@@ -312,8 +389,9 @@ def get_liquid_mask_video(
     result = LiquidMaskResult(
         masks=np.stack(masks).astype(bool), fps=float(fps), sam2_model=sam2_model, prompt=text_input
     )
-    with open(cache_file, "wb") as f:
-        pickle.dump(result, f)
+    # Preserve the legacy raw-prompt cache key when an empty prompt falls back
+    # to the default text input stored in the result.
+    _atomic_pickle_dump(cache_file, result)
     return result
 
 
@@ -400,8 +478,7 @@ def get_piv_field(
         valids.append(valid)
 
     field = PIVField(u=np.stack(us), v=np.stack(vs), valid=np.stack(valids))
-    with open(cache_file, "wb") as f:
-        pickle.dump(field, f)
+    _atomic_pickle_dump(cache_file, field)
     return field
 
 
@@ -474,6 +551,62 @@ def get_bottle_centroid_trace(
     return BottleTrace(centroid_xy=centroids, bbox_xyxy=bboxes, valid=valid)
 
 
+def raft_flow_cache_path(
+    *,
+    video_path: str | Path,
+    mask: LiquidMaskResult,
+    window_size: int,
+    overlap: int,
+    fps: float,
+    max_frames: int | None,
+    cache_dir: str | Path,
+    min_mask_frac: float = 0.5,
+) -> Path:
+    mask_bytes_hash = hashlib.sha256(
+        np.ascontiguousarray(mask.masks).tobytes()
+    ).hexdigest()[:16]
+    cfg = _config_hash(
+        {
+            "estimator": "raft_pooled_v1",
+            "window_size": window_size,
+            "overlap": overlap,
+            "fps": fps,
+            "max_frames": max_frames,
+            "sam2_model": mask.sam2_model,
+            "prompt": mask.prompt,
+            "mask_hash": mask_bytes_hash,
+            "min_mask_frac": float(min_mask_frac),
+        }
+    )
+    return _cache_path(Path(cache_dir), video_path, "raft_pooled", cfg)
+
+
+def store_raft_flow_cache(
+    *,
+    video_path: str | Path,
+    mask: LiquidMaskResult,
+    result: PIVField,
+    window_size: int,
+    overlap: int,
+    fps: float,
+    max_frames: int | None,
+    cache_dir: str | Path,
+    min_mask_frac: float = 0.5,
+) -> Path:
+    cache_file = raft_flow_cache_path(
+        video_path=video_path,
+        mask=mask,
+        window_size=window_size,
+        overlap=overlap,
+        fps=fps,
+        max_frames=max_frames,
+        cache_dir=cache_dir,
+        min_mask_frac=min_mask_frac,
+    )
+    _atomic_pickle_dump(cache_file, result)
+    return cache_file
+
+
 def get_raft_flow_field(
     *,
     video_path: str,
@@ -502,23 +635,17 @@ def get_raft_flow_field(
     """
     import cv2
 
-    cache_dir = Path(cache_dir)
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    mask_bytes_hash = hashlib.sha256(np.ascontiguousarray(mask.masks).tobytes()).hexdigest()[:16]
-    cfg = _config_hash(
-        {
-            "estimator": "raft_pooled_v1",
-            "window_size": window_size,
-            "overlap": overlap,
-            "fps": fps,
-            "max_frames": max_frames,
-            "sam2_model": mask.sam2_model,
-            "prompt": mask.prompt,
-            "mask_hash": mask_bytes_hash,
-            "min_mask_frac": float(min_mask_frac),
-        }
+    cache_file = raft_flow_cache_path(
+        video_path=video_path,
+        mask=mask,
+        window_size=window_size,
+        overlap=overlap,
+        fps=fps,
+        max_frames=max_frames,
+        cache_dir=cache_dir,
+        min_mask_frac=min_mask_frac,
     )
-    cache_file = _cache_path(cache_dir, video_path, "raft_pooled", cfg)
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
     if cache_file.exists():
         with open(cache_file, "rb") as f:
             return pickle.load(f)
@@ -588,8 +715,17 @@ def get_raft_flow_field(
         valids[t] = cell_valid
 
     field = PIVField(u=us, v=vs, valid=valids)
-    with open(cache_file, "wb") as f:
-        pickle.dump(field, f)
+    store_raft_flow_cache(
+        video_path=video_path,
+        mask=mask,
+        result=field,
+        window_size=window_size,
+        overlap=overlap,
+        fps=fps,
+        max_frames=max_frames,
+        cache_dir=cache_dir,
+        min_mask_frac=min_mask_frac,
+    )
     return field
 
 

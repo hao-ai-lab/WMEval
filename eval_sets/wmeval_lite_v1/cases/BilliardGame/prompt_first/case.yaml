@@ -1,0 +1,47 @@
+schema_version: 2
+case_id: BilliardGame/prompt_first
+scene: BilliardGame
+display_name: BilliardGame prompt first
+prompt: A fixed overhead view of a carom-billiard table with three balls (a white
+  cue ball, a yellow ball, and a red ball) on a dark gray felt surface bordered by
+  light rails with diamond sight markers. The white cue ball is struck and rolls across
+  the table, colliding with the yellow ball and sending it rolling toward the far
+  side of the table. The camera is a fixed top-down view centered on the table, with
+  no camera motion.
+perspective: top_down
+rubric_scene_name: BilliardGame_first
+modules:
+- environment_object_consistency
+- kinematics_mechanics
+reference:
+  first_frame: reference/ref.png
+  video: reference/unity_groundtruth.mp4
+  checksums: reference/checksums.sha256
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: d7463762009d2b5281e7c1440138bba8f4c89c69
+  evaluator_fingerprint: a431ac7b80ca63f299f646f35e4b239c
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}
+module_params:
+  environment_object_consistency:
+    eoc_text_prompt: yellow ball. red ball.
+    eoc_character_prompt: no_character_configured_for_this_case_xyz.
+    eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    eoc_unity_poses_npy: reference/artifacts/poses.npy
+    eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+  kinematics_mechanics:
+    kin_text_prompt: yellow ball. red ball.
+    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/poses.npy
+    kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    kin_unity_object_masses_json: reference/artifacts/object_masses.json
+    kin_track_thresh: 0.3
+    kin_color_filter: true
+    kin_depth_lift: true

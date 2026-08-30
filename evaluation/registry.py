@@ -78,6 +78,45 @@ def _run_shadow(context: EvaluationContext, device: Optional[str] = None) -> Dic
         }
     return analyze_shadow_from_context(context=context, device=device)
 
+
+def _run_shadow_consistency(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
+    try:
+        from .modules.shadow_consistency import analyze_shadow_consistency_from_context
+    except Exception as exc:
+        return {
+            "module": "shadow_consistency",
+            "error": f"failed to import shadow_consistency module: {exc}",
+        }
+    return analyze_shadow_consistency_from_context(context=context, device=device)
+
+def _run_environment_object_consistency(
+    context: EvaluationContext, device: Optional[str] = None
+) -> Dict[str, Any]:
+    try:
+        from .modules.environment_object_consistency import (
+            analyze_environment_object_consistency_from_context,
+        )
+    except Exception as exc:
+        return {
+            "module": "environment_object_consistency",
+            "error": f"failed to import environment_object_consistency module: {exc}",
+        }
+    return analyze_environment_object_consistency_from_context(context=context, device=device)
+
+
+def _run_kinematics_mechanics(
+    context: EvaluationContext, device: Optional[str] = None
+) -> Dict[str, Any]:
+    try:
+        from .modules.kinematics_mechanics import analyze_kinematics_mechanics_from_context
+    except Exception as exc:
+        return {
+            "module": "kinematics_mechanics",
+            "error": f"failed to import kinematics_mechanics module: {exc}",
+        }
+    return analyze_kinematics_mechanics_from_context(context=context, device=device)
+
+
 def _run_clip4clip(context: EvaluationContext, device: Optional[str] = None) -> Dict[str, Any]:
     try:
         from .modules.clip4clip import run_clip4clip
@@ -156,6 +195,8 @@ MODULE_REGISTRY: Dict[str, EvaluationModule] = {
     "causal_step": _run_causal_step,
     "clip4clip": _run_clip4clip,
     "control_motion": _run_control_motion,
+    "environment_object_consistency": _run_environment_object_consistency,
+    "kinematics_mechanics": _run_kinematics_mechanics,
     "liquid_surface_orientation": _run_liquid_surface_orientation,
     "liquid_velocity": _run_liquid_velocity,
     "liquid_volume_conservation": _run_liquid_volume_conservation,
@@ -163,6 +204,7 @@ MODULE_REGISTRY: Dict[str, EvaluationModule] = {
     "lighting": _run_lighting,
     "motion": _run_motion,
     "shadow": _run_shadow,
+    "shadow_consistency": _run_shadow_consistency,
     "slosh_spectrum": _run_slosh_spectrum,
 }
 

@@ -1,0 +1,54 @@
+{
+  "scene_name": "RacingCar_first",
+  "prompt_text": "A very wide, straight highway under a clear blue sky, with dark roadside barriers, green grass, and long symmetrical rows of tall trees on both sides. The road begins abruptly at a starting point, with no ground behind it—only open sky, as if the road is suspended in space. Bright daytime lighting, clean and minimal environment. First person view.",
+  "rubric_items": [
+    {
+      "rubric_id": "env_01",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the road remain a very wide, straight highway throughout the video?"
+    },
+    {
+      "rubric_id": "env_02",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the sky stay clear blue throughout the video?"
+    },
+    {
+      "rubric_id": "env_03",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Do dark roadside barriers remain visible along the sides of the highway throughout the video?"
+    },
+    {
+      "rubric_id": "env_04",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Do green grass and long symmetrical rows of tall trees remain on both sides of the highway throughout the video?"
+    },
+    {
+      "rubric_id": "env_05",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the scene maintain bright daytime lighting and a clean, minimal environment, while showing the road beginning abruptly with open sky behind it instead of ground?"
+    },
+    {
+      "rubric_id": "obj_01",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "When the roadside barriers are visible and judgeable, do they appear dark in color as specified in the prompt?"
+    },
+    {
+      "rubric_id": "obj_02",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "When the trees are visible and judgeable, do they appear tall as specified in the prompt?"
+    }
+  ],
+  "metadata": {
+    "generator_provider": "openai",
+    "generator_model": "gpt-5.4",
+    "generated_at": "2026-06-22T07:24:10.967470+00:00",
+    "num_candidates_generated": 7
+  }
+}

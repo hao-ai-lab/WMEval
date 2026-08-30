@@ -1,0 +1,53 @@
+schema_version: 2
+case_id: BallRoller/ctrl
+scene: BallRoller
+display_name: BallRoller
+prompt: 'Starting world must match the supplied BallRoller sketch frame: a compact
+  square arena with a flat blue-gray floor, low white walls, and a fixed side-table
+  camera looking diagonally across the arena. The player is a smooth white ball staged
+  close to a tight rack of billiard-style balls so an immediate collision is plausible.
+  Keep the yellow ramp, the magenta dome, and the cyan cube visible as simple readable
+  obstacles. Preserve the clean uncluttered look and the fixed third-person framing
+  from the sketch.
+
+
+  The player controls only the white ball. Movement should feel like a responsive
+  rolling sphere with noticeable inertia, suitable for collecting pickups and weaving
+  around simple obstacles.'
+perspective: third_person
+modules:
+- control_motion
+- environment_object_consistency
+- kinematics_mechanics
+module_params:
+  environment_object_consistency:
+    eoc_text_prompt: ramp. dome. cube.
+    eoc_character_prompt: white ball. player ball.
+    eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    eoc_unity_poses_npy: reference/artifacts/poses_recovered.npy
+    eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+  kinematics_mechanics:
+    kin_text_prompt: dome. cube.
+    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/poses_recovered.npy
+    kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    kin_unity_object_masses_json: reference/artifacts/object_masses.json
+    kin_track_thresh: 0.3
+reference:
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
+  evaluator_fingerprint: f5d8f3e18651fb70efed31f83e28b8a2
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}
