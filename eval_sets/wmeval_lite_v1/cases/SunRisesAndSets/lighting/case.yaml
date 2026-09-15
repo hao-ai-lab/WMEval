@@ -1,0 +1,43 @@
+schema_version: 2
+case_id: SunRisesAndSets/lighting
+scene: SunRisesAndSets
+display_name: SunRisesAndSets lighting
+prompt: 'First-person viewpoint at standing adult eye height, approximately 1.6 metres
+  above the floor. No body, hands, or held items are visible in frame. The viewer
+  walks slowly and steadily counter-clockwise around a wooden round dining table at
+  a constant 2-metre radius from the table centre, completing one full loop over the
+  duration of the clip while continuously keeping the table centred in the field of
+  view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky,
+  no looking down at the feet. Scene: on the table is a red toaster, a small dark
+  mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in
+  the centre. Wooden ladder-back bar stools are arranged around the table. The floor
+  is wooden planks. Lighting: a single bright morning sun shines from a fixed direction,
+  low above the eastern horizon, casting long crisp directional shadows of the table,
+  stools, lamp, and tabletop objects across the wooden floor. The sun does not move
+  and the colour temperature does not change for the entire video.'
+perspective: first_person
+modules:
+- shadow_consistency
+reference:
+  first_frame: reference/ref.png
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    per_model_actions: reference/artifacts/actions_per_model.json
+    analytic_orbit_log: reference/artifacts/analytic_orbit_log.json
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
+  evaluator_fingerprint: 8dd42d75c0f346ac10c59f8ef9226e83
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}
+module_params:
+  shadow_consistency:
+    shadow_text_prompt: table. chair. lamp.
+    shadow_anchor_label: table

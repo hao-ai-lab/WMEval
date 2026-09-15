@@ -2,6 +2,91 @@
 # (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
 #
 # ==========================================================================
+# 2026-09-15: SunRisesAndSets/lighting LANDED -- lighting_shading now runs on
+# its paper-target scene instead of borrowing MirrorRollingBall/prompt_third
+# and RacingCar/prompt_third. Those two borrows are removed from this
+# dimension (and from its legacy_case_aliases); the cases themselves stay
+# live under prompt_scene_consistency / environment_object_consistency /
+# kinematics_mechanics exactly as before.
+#
+# PROTOCOL DECISION (closes the PENDING.md question "static vs moving sun"):
+# the case is the paper's regime -- first-person, FIXED sun, walking orbit
+# (the viewer circles the round dining table counter-clockwise, one loop,
+# table kept centred). That is what the paper's lighting table and
+# appendix were computed on: every world-model rollout was generated with
+# the sun pinned (see the prompt), because MOSD/SDJ assume one fixed light.
+# The Unity scene's animated day-night cycle is where the scene NAME comes
+# from, not the evaluation regime. A moving-sun variant (static camera,
+# sun sweeping, scored against the expected azimuth sweep) would be its own
+# case with its own scoring rule and has no rollouts yet -- parked in
+# PENDING.md, deliberately not folded into this case.
+#
+# Bundle provenance (copied verbatim from the paper's generation runs on
+# Modal volume `WMEval-lighting-repro`, workspace hao-ai-lab):
+#   reference/ref.png                       1280x1280 seed frame every model
+#                                           was conditioned on
+#                                           (inputs/init_frame_scaled.png)
+#   case.yaml prompt                        inputs/prompts/sunrise_fp_prompt.txt
+#   reference/artifacts/actions.txt         canonical action script in the
+#                                           suite's keyboard-op format
+#                                           (first-person, hold-left orbit)
+#   reference/artifacts/actions_per_model.json
+#                                           how each of the 6 evaluated models
+#                                           realised that orbit (exact CLI/API
+#                                           args, seeds 42,1,2,3,4)
+#   reference/artifacts/analytic_orbit_log.json
+#                                           scene-matched analytic fixed-sun
+#                                           orbit (exact ray-plane shadows,
+#                                           120 frames). Under the same
+#                                           per-frame azimuth statistics a
+#                                           physically perfect single sun
+#                                           scores MOSD 11.15 deg / SDJ 1.49
+#                                           deg/frame -- the geometry floor to
+#                                           read model numbers against. It is
+#                                           analytic, not a Unity render, so
+#                                           there is no reference.video.
+# No Unity reference rollout is bundled: the dimension is reference-free and
+# no Unity capture of THIS regime exists (the only Unity SunRisesAndSets
+# capture on hand is fixed-camera + rotating-sun, i.e. the other protocol).
+#
+# module_params: shadow_text_prompt "table. chair. lamp." / anchor "table",
+# as in the paper pipeline. shadow_hud_preset stays a CANDIDATE param
+# (model.yaml or manifest params): lingbot->lingbot, mg2->mg2, mg3->mg3,
+# genie/hy/waypoint15->none, matching the paper runs.
+#
+# perspective: first_person. Lighting is the paper's one first-person physics
+# dimension, so the old "third-person only" comment on the block below was
+# wrong and is gone.
+#
+# Candidate rollouts are never part of a bundle; the paper's 6 models x 5
+# seeds = 30 lighting videos (Project Genie, LingBot-World, Matrix-Game-2.0,
+# Matrix-Game-3.0, HY-WorldPlay, Waypoint-1.5) live at
+# rollouts/lighting/<model>_seed<N>.mp4 on the same volume.
+# tools/run_wmeval_lite_modal.py runs this dimension over them on Modal.
+#
+# REPRODUCTION (2026-09-15, run_id lite-lighting-full-20260915, L40S, one
+# container per rollout; per-row outputs at
+# WMEval-lighting-repro:eval/lite_runs/lite-lighting-full-20260915/):
+# all 30 rollouts completed through `run_wmeval_lite.py run --dimensions
+# lighting_shading`, and every one of the 180 per-run metric values is
+# IDENTICAL to the paper pipeline's eval/metrics/<run>__metrics.json on the
+# volume (max |diff| = 0.00 on all six metrics) -- the shadow_consistency
+# module is a faithful port of the paper's step2/step4 scripts. Per-model
+# mean +/- std over 5 seeds (SRR / SDR / MOSD / SDJ / SAS / SSD):
+#   project_genie   96.48+/-7.86  97.37+/-2.87  65.78+/-8.51   2.42+/-2.05  13.95+/-4.84   6.78+/-1.03
+#   lingbot_world  100.00+/-0.00 100.00+/-0.00  60.06+/-14.20  7.61+/-11.19 17.97+/-10.23  6.66+/-1.44
+#   matrix_game_2   22.92+/-16.23 100.00+/-0.00 65.26+/-9.58   4.12+/-3.78  14.22+/-2.42   7.37+/-1.18
+#   matrix_game_3   14.41+/-7.06  91.50+/-9.34  59.07+/-13.81 23.18+/-19.09 62.43+/-30.57 11.43+/-1.90
+#   hy_worldplay    73.92+/-2.44  99.78+/-0.50  77.29+/-5.61   6.60+/-1.94  10.30+/-1.17   5.75+/-0.63
+#   waypoint15     100.00+/-0.00 100.00+/-0.00  98.29+/-2.49   2.34+/-0.75  12.29+/-2.45   4.55+/-0.57
+# These match the paper's lighting table except Matrix-Game-2.0 SRR, where
+# the paper table prints 68.76 but the underlying per-seed data (and the
+# paper's own text, "~23%") give 22.92 +/- 16.23 -- a table typo on the
+# paper side, flagged to the authors. Wall time per rollout on L40S: 37 s
+# (HY, 125 frames) to ~4.3 min (Genie, 802 frames).
+# ==========================================================================
+#
+# ==========================================================================
 # 2026-08-27: depth-model fix, multi-frame velocity smoothing, RacingCar
 # poses/offset ablation, depth-lifting code cleanup (see PENDING.md for the
 # full per-case writeup; this is the short version).
@@ -243,7 +328,7 @@
 #   MirrorRollingBall -> lpips, prompt_scene_consistency
 #   WanderingGarden   -> scene_character_consistency                     (data pending),
 #                        environment_object_consistency (live, scoped, see below)
-#   SunRisesAndSets   -> lighting_shading                                (data pending)
+#   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting, 2026-09-15)
 #   LiquidContainer   -> fluid_mechanics                                 (data pending, PR #19 artifacts)
 #   BeamDomino        -> physical_causality (cases/BeamDomino/causal is earmarked
 #                        for it: the rollout is the full causal chain; needs qa_dataset)
@@ -497,7 +582,7 @@ dimensions:
       - obj_score
   lighting_shading:
     display_name: Lighting & Shading
-    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD). TEMPORARY cases: target mapping moves this dimension to ChessBoard/third + SunRisesAndSets/third once their data lands.'
+    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD) under the paper''s first-person, fixed-sun, walking-orbit regime. Live on its paper-target scene SunRisesAndSets/lighting since 2026-09-15 (see the dated banner above for provenance and the analytic geometry floor); ChessBoard/lighting is still pending a team decision (PENDING.md).'
     evaluator: registry
     requires_reference: false
     modules:
@@ -505,11 +590,10 @@ dimensions:
     metric_config:
       eval_fps: 24.0
       max_pairs: 0
-    # third-person only; TEMPORARILY borrowing prompt_scene_consistency's videos
-    # (variant names the owning dimension; the borrow shows in the matrix)
+    # first-person (the paper's lighting regime). Per-candidate
+    # shadow_hud_preset comes from model.yaml / manifest params, not the case.
     cases:
-    - MirrorRollingBall/prompt_third
-    - RacingCar/prompt_third
+    - SunRisesAndSets/lighting
     aggregate:
       headline: shadow_direction_jitter_deg_per_frame
       direction: lower
@@ -598,8 +682,6 @@ legacy_case_aliases:
     MirrorRollingBall/third: MirrorRollingBall/prompt_third
     RacingCar/first: RacingCar/prompt_first
     RacingCar/third: RacingCar/prompt_third
-  lighting_shading:
-    mirror_rolling_ball/third: MirrorRollingBall/prompt_third
-    racing_car/third: RacingCar/prompt_third
-    MirrorRollingBall/third: MirrorRollingBall/prompt_third
-    RacingCar/third: RacingCar/prompt_third
+  # lighting_shading: no legacy ids. Its pre-2026-09-15 entries pointed at the
+  # MirrorRollingBall/RacingCar prompt_third borrows, which are no longer
+  # lighting cases (see the 2026-09-15 banner).
