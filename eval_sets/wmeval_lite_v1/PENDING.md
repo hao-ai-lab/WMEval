@@ -52,23 +52,6 @@ banners for the history of everything already resolved.
   sweep-aware scoring rule first. Only author it if the team wants a second
   lighting protocol.
 
-- **`BeamDomino/causal`** → `physical_causality`
-  Reference video + actions are already bundled. Missing only
-  `reference/artifacts/qa_dataset.json` (CausalStep stepwise QA). Then wire
-  `physical_causality` into `suite.yaml` (registry, modules `[causal_step]`,
-  headline from the csr/delta family). `causal_glancing` and
-  `causal_direct_strike` variants each need their own video + actions + QA.
-
-- **`LiquidContainer`** (`fluid_rest`, `fluid_step_hold`, `fluid_impulse_decay`,
-  `fluid_chirp_strafe`) → `fluid_mechanics`
-  Needs `reference/reference.mp4` + `liquid_mask.npz`/`bottle_mask.npz`/
-  `raft_pooled_flow.npz`. The `.npz` artifacts **must** be produced via
-  `evaluation/lite/reference_artifacts.write_*` (PR #19's API) or the
-  checksum lock rejects them — coordinate with @abhilashreddys before
-  authoring. case.yaml needs `protocol.candidate_normalization:
-  liquid_832x464_16fps`; `suite.yaml` gains the `fluid_mechanics` dimension
-  (4 liquid modules).
-
 ## Known limitations on live dimensions
 
 - **Only `lighting_shading` has been run on real world-model candidates.**

@@ -1,0 +1,110 @@
+{
+  "videos": [
+    {
+      "video_id": "BeamDomino_causal",
+      "segments": [
+        {
+          "index": 1,
+          "start_time": 2.2599992752075195,
+          "end_time": 2.6799991130828857
+        },
+        {
+          "index": 2,
+          "start_time": 2.6799991130828857,
+          "end_time": 3.3799986839294434
+        },
+        {
+          "index": 3,
+          "start_time": 3.3799986839294434,
+          "end_time": 4.559998512268066
+        },
+        {
+          "index": 4,
+          "start_time": 4.559998512268066,
+          "end_time": 5.579998016357422
+        }
+      ],
+      "descriptive_qas": [
+        {
+          "segment_index": 1,
+          "question": "What is the blue ball on the floor doing during this segment, and how does it move relative to the white platform with the yellow ball on top?",
+          "choices": [
+            "A) rolling steadily along the floor toward the central white platform that has another ball resting on top of it",
+            "B) sitting nearly still on the floor beside the platform while the yellow ball remains the only moving ball",
+            "C) rolling steadily away from the central white platform and out toward the right-side dominoes",
+            "D) bouncing up off the floor and striking the underside of the central white platform with the yellow ball on top"
+          ],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 2,
+          "question": "What happens as the blue floor ball reaches the right side of the white platform during this segment?",
+          "choices": [
+            "A) the floor ball collides with the platform's outer edge and rebounds without touching any leg",
+            "B) the floor ball passes under the platform without contacting the platform at all",
+            "C) the floor ball collides with one of the platform's vertical supporting legs (not the top surface)",
+            "D) the floor ball rolls onto the platform's top surface and comes to rest beside the yellow ball"
+          ],
+          "correct_answer": "C"
+        },
+        {
+          "segment_index": 3,
+          "question": "What is the white platform under the yellow ball doing during this segment?",
+          "choices": [
+            "A) tipping over toward one side as it falls, while the ball that was resting on top rolls off the tilting surface",
+            "B) sliding straight across the floor without tipping, while the ball that was resting on top rides along with it",
+            "C) remaining mostly level and stationary, while the ball that was resting on top stays balanced in place",
+            "D) springing back upright after a slight wobble, while the ball that was resting on top bounces but does not roll off"
+          ],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 4,
+          "question": "Near the fallen platform, what are the nearby black dominoes doing during this segment, and what pattern do they follow?",
+          "choices": [
+            "A) the nearest dominoes stay upright while the fallen platform slides past them, leaving the row unchanged",
+            "B) the closest domino is knocked over and falls into its neighbor, which then tips the next one, propagating a chain reaction along the row",
+            "C) several dominoes are struck at once by the platform and collapse together simultaneously rather than one after another",
+            "D) the closest domino is knocked backward away from the row, so the motion stops instead of spreading to the others"
+          ],
+          "correct_answer": "B"
+        }
+      ],
+      "causal_qas": [
+        {
+          "segment_index": 2,
+          "question": "Why does the white platform start to tip after the blue ball rolls in from the right side underneath it?",
+          "choices": [
+            "A) the floor ball transferred momentum into one of the platform's supporting legs, removing support from that side and destabilizing the platform above it",
+            "B) one of the dominoes far across the scene fell first and somehow disturbed the platform from a distance",
+            "C) the platform is scripted to fall on a fixed timer regardless of whether anything actually hits it",
+            "D) the yellow ball rolled across the top surface first, pushing the platform sideways and making the support legs slide apart"
+          ],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 3,
+          "question": "Why does the white platform tip down on the blue-ball/right side instead of the yellow-ball/left side?",
+          "choices": [
+            "A) the supporting leg on this side was knocked out earlier, so the platform pivots over the legs that are still standing and falls toward the now-unsupported side under gravity",
+            "B) the blue ball becomes heavier than the yellow ball at that moment, so its extra weight pulls the platform down on the right side",
+            "C) the left supporting leg collapses first, so the platform rotates over the right legs and drops toward the yellow-ball side under gravity",
+            "D) a nearby domino strikes the top of the platform from the left, so the board is pushed over to the right even though both legs are still supporting it"
+          ],
+          "correct_answer": "A"
+        },
+        {
+          "segment_index": 4,
+          "question": "Why are the black dominoes at the bottom of the scene falling one after another during this segment?",
+          "choices": [
+            "A) the falling platform \u2014 and/or the ball that rolled off the top of it \u2014 struck the first domino, whose fall then knocked over its neighbor, propagating the impulse along the row",
+            "B) one of the far dominoes toppled backward on its own first, and the chain reaction then spread in the opposite direction toward the start of the row",
+            "C) the platform slid underneath the entire domino line and lifted their bases, causing the whole row to lose balance and fall without neighbor-to-neighbor contact",
+            "D) the blue ball rolled directly through the middle of the domino rows, hitting several dominoes at once and making them collapse together"
+          ],
+          "correct_answer": "A"
+        }
+      ]
+    }
+  ]
+}

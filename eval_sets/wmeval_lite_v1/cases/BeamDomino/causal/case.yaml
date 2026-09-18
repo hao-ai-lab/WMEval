@@ -7,37 +7,39 @@ prompt: 'Starting world must match the BeamDomino Unity scene from a third-perso
   three-pillar structure with a triangular roof directly ahead, a gold ball resting
   on top of the roof, and a radial ring of dominoes arranged around the structure
   beyond it. Keep the layout clean and readable so the full physics chain is visible
-  in one shot: blue ball rolls into a front-right pillar, the roof tips, the gold
-  ball drops from the roof, and the domino ring begins to cascade. Preserve the authored
-  camera feeling of the Unity scene rather than switching to first-person or a cinematic
-  orbit.
+  in one shot. Preserve the authored camera feeling of the Unity scene rather than
+  switching to first-person or a cinematic orbit: the camera follows from behind and
+  above the blue ball throughout.
 
 
-  The player controls the blue floor ball. Motion should read as a short purposeful
-  setup for the chain reaction: a brief pause, one clean forward roll into the nearest
-  front-right pillar, then no extra steering while the structure collapses and the
-  domino cascade plays out. The camera should continue to follow from behind and above
-  the ball without cutting away from the collapse.'
+  The player controls the blue floor ball. After a brief pause it rolls straight forward
+  into the nearest front-right pillar, then takes no further steering. Expected chain:
+  the ball rolls, strikes a supporting pillar, the roof tips and the gold ball drops,
+  and the domino ring cascades.'
 perspective: third_person
 modules:
 - causal_step
 - control_motion
 - lpips
+module_params:
+  causal_step:
+    causal_step_video_id: BeamDomino_causal
 reference:
-  video: reference/reference.mp4
-  checksums: reference/checksums.sha256
   artifacts:
+    qa_dataset: reference/artifacts/qa_dataset.json
     actions_file: reference/artifacts/actions.txt
     synthetic_action_dir: reference/artifacts
+  checksums: reference/checksums.sha256
+  video: reference/reference.mp4
 protocol:
-  candidate_normalization: none
-  min_duration_sec: 1.0
-  min_duration_ratio: 0.5
+  candidate_normalization: beamdomino_native
   duration_threshold_mode: max
+  min_duration_ratio: 0.5
+  min_duration_sec: 1.0
 evaluator_lock:
-  release_id: wmeval-lite-v1
-  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
-  evaluator_fingerprint: 5d5231d862d2b8df98a8b7e13ee9271b
-  module_config: {}
   artifact_schema_versions: {}
+  code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
   dependency_versions: {}
+  evaluator_fingerprint: 053b764740e753f29d8ffbbecf9f90f2
+  module_config: {}
+  release_id: wmeval-lite-v1

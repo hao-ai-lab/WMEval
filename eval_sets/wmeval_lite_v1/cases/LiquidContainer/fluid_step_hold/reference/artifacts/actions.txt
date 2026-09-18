@@ -1,0 +1,16 @@
+# LiquidContainer / step_hold -- commanded 6-DoF action trajectory.
+# 2 s rest -> 8 s sustained right-strafe (+1) -> rest tail; a single sustained tilt-and-decay slosh.
+#
+# Provenance: recorded live during the Unity capture that produced this
+# case's reference video, by bottle_controller_genie_profiles.py --profile step_hold
+# (WorldModelBenchScenePrivate/GameScenes/LiquidContainer). Source CSV:
+#   Recordings/actions_genie_step_hold_20260502_165311.csv  (202 decision steps over ~20 s)
+# The action surface is restricted to forward/right/up; pitch/yaw/roll are
+# forced to zero on every decision step. action.npy is the full (202, 3)
+# per-decision array in that column order.
+#
+# start_s   end_s   forward  right   up   phase
+   0.000    1.904      0.0    0.0   0.0   idle_lead
+   2.004    9.978      0.0    1.0   0.0   right_hold
+  10.079   17.888      0.0    0.0   0.0   decay_after_step
+  18.011   19.995      0.0    0.0   0.0   idle_tail
