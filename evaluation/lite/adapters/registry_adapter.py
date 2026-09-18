@@ -61,6 +61,8 @@ METRIC_CONFIG_KEYS = frozenset(
         "causal_step_causal_fail_advance",
         "causal_step_answers_cache_dir",
         "causal_step_video_id",
+        "causal_step_vlm_num_frames",
+        "causal_step_wm_full_video",
         "causal_match_mode",
         "causalstep_root",
         # liquid family

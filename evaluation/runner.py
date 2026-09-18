@@ -274,6 +274,8 @@ def run_world_model_evaluation(
     causal_step_answers_cache_dir: Optional[str] = None,
     causal_step_vlm_model: str = "gpt-5.4-mini",
     causal_step_vlm_prompt_version: str = "v1",
+    causal_step_vlm_num_frames: int = 4,
+    causal_step_wm_full_video: bool = False,
     causal_step_causal_fail_advance: bool = True,
     causal_step_judge: str = "openai",
     causalstep_root: Optional[str] = None,
@@ -605,6 +607,8 @@ def run_world_model_evaluation(
             context.artifacts[_k] = _v
     context.artifacts["causal_step_vlm_model"] = causal_step_vlm_model
     context.artifacts["causal_step_vlm_prompt_version"] = causal_step_vlm_prompt_version
+    context.artifacts["causal_step_vlm_num_frames"] = int(causal_step_vlm_num_frames)
+    context.artifacts["causal_step_wm_full_video"] = bool(causal_step_wm_full_video)
     context.artifacts["causal_step_causal_fail_advance"] = bool(
         causal_step_causal_fail_advance
     )
