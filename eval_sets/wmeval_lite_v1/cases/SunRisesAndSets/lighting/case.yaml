@@ -24,7 +24,6 @@ reference:
   artifacts:
     actions_file: reference/artifacts/actions.txt
     per_model_actions: reference/artifacts/actions_per_model.json
-    analytic_orbit_log: reference/artifacts/analytic_orbit_log.json
 protocol:
   candidate_normalization: none
   min_duration_sec: 1.0
@@ -33,7 +32,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  evaluator_fingerprint: 8dd42d75c0f346ac10c59f8ef9226e83
+  evaluator_fingerprint: d9d434ff67820c960b6f584f6be650fd
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

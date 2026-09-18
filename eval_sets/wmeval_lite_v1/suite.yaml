@@ -34,19 +34,21 @@
 #                                           how each of the 6 evaluated models
 #                                           realised that orbit (exact CLI/API
 #                                           args, seeds 42,1,2,3,4)
-#   reference/artifacts/analytic_orbit_log.json
-#                                           scene-matched analytic fixed-sun
-#                                           orbit (exact ray-plane shadows,
-#                                           120 frames). Under the same
-#                                           per-frame azimuth statistics a
-#                                           physically perfect single sun
-#                                           scores MOSD 11.15 deg / SDJ 1.49
-#                                           deg/frame -- the geometry floor to
-#                                           read model numbers against. It is
-#                                           analytic, not a Unity render, so
-#                                           there is no reference.video.
-# No Unity reference rollout is bundled: the dimension is reference-free and
-# no Unity capture of THIS regime exists (the only Unity SunRisesAndSets
+# The GEOMETRY FLOOR is not bundled as data: tools/analytic_lighting_floor.py
+# regenerates it on demand (numpy only, no Unity, no GPU, seconds). Parallel
+# world-space shadow rays converge under perspective, so even a physically
+# perfect fixed sun does not score 0 on MOSD/SDJ -- at this case's documented
+# sun (elevation 25 deg, azimuth 120 deg) it scores MOSD 11.15 deg / SDJ 1.49
+# deg/frame, which is the baseline to read model numbers against. Sweeping
+# elevations 15/25/35 x azimuths 0..300 gives MOSD 8.58-11.51 / SDJ 1.34-2.06,
+# matching the range the paper quotes from its own 21-setting sweep (MOSD
+# 8.6-11.2, SDJ 1.4-2.0; the paper's exact grid was never recorded, hence the
+# slightly wider extremes here). The tool's --dump-log reproduces, byte for
+# byte, the 466 KB analytic_orbit_log.json this bundle shipped before
+# 2026-09-18 -- it was inert data no evaluator read, so the generator replaced
+# it.
+# No Unity reference rollout is bundled either: the dimension is reference-free
+# and no Unity capture of THIS regime exists (the only Unity SunRisesAndSets
 # capture on hand is fixed-camera + rotating-sun, i.e. the other protocol).
 #
 # module_params: shadow_text_prompt "table. chair. lamp." / anchor "table",

@@ -66,7 +66,7 @@ Currently wired dimensions:
 | `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/lpips_collision |
 | `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | BallRoller/ctrl |
 | `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, prompt_first/prompt_third |
-| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics; the bundle ships the analytic fixed-sun orbit log as the geometry floor) | SunRisesAndSets/lighting (ChessBoard still pending) |
+| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics; `tools/analytic_lighting_floor.py` regenerates the geometry floor to read the numbers against) | SunRisesAndSets/lighting (ChessBoard still pending) |
 | `environment_object_consistency` | registry (`environment_object_consistency`) | reference video + Unity object transforms | BallRoller/ctrl (object-only: static ramp/dome; character half not attempted, see PENDING.md) |
 
 ### Case × dimension matrix (current)
