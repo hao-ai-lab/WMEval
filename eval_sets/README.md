@@ -31,9 +31,9 @@ A **case is one atomic setup** (one prompt + one reference rollout + one
 action protocol) owned by the dimension its variant names. When another
 dimension evaluates the same video, suite.yaml lists the case under both
 dimensions (**borrowing** — the variant keeps the owner's name and the
-borrow is visible in the case × dimension matrix). Example: until the
-ChessBoard/SunRisesAndSets data lands, `lighting_shading` temporarily borrows
-`MirrorRollingBall/prompt_third` and `RacingCar/prompt_third`.
+borrow is visible in the case × dimension matrix). Example:
+`RacingCar/prompt_third` is owned by `prompt_scene_consistency` and borrowed
+by `environment_object_consistency` and `kinematics_mechanics`.
 
 **Generation conditions are uniform across all cases**: every case bundles a
 `prompt` (case.yaml), a first frame (`reference/ref.png` or frame 0 of
@@ -52,8 +52,8 @@ scene × dimension mapping:
 | MirrorRollingBall | lpips, prompt_scene_consistency | ✅ live |
 | BallRoller | action_controllability, kinematics_mechanics, environment_object_consistency | ctrl + environment_object_consistency (object-only) live; kinematics blocked (data-provenance conflict, see PENDING.md) |
 | RacingCar | prompt_scene_consistency, kinematics_mechanics | prompt live; kinematics pending |
-| ChessBoard | prompt_scene_consistency, lighting_shading | data pending |
-| SunRisesAndSets | lighting_shading | data pending |
+| ChessBoard | prompt_scene_consistency, lighting_shading | prompt data pending; lighting pending a team decision (see PENDING.md); `ChessBoard/walk_third` live under environment_object_consistency |
+| SunRisesAndSets | lighting_shading | ✅ live (`SunRisesAndSets/lighting`, first-person fixed-sun walking orbit — the paper regime) |
 | WanderingGarden | scene_character_consistency | data pending |
 | LiquidContainer | fluid_mechanics | data pending (PR #19 artifacts) |
 | BeamDomino | physical_causality | data pending (qa_dataset); `cases/BeamDomino/causal` earmarked |
@@ -66,21 +66,23 @@ Currently wired dimensions:
 | `lpips` | registry (`lpips`, causal VLM collision) | reference video | MirrorRollingBall/lpips_collision |
 | `action_controllability` | registry (`control_motion`) | reference video + `action.npy` | BallRoller/ctrl |
 | `prompt_scene_consistency` | vlm_consistency judge | none (prompt + first frame only) | MirrorRollingBall + RacingCar, prompt_first/prompt_third |
-| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics) | **temporary borrow**: MirrorRollingBall/prompt_third, RacingCar/prompt_third — moves to ChessBoard/SunRisesAndSets when their data lands |
+| `lighting_shading` | registry (`shadow_consistency`) | none (candidate-internal physics; `tools/analytic_lighting_floor.py` regenerates the geometry floor to read the numbers against) | SunRisesAndSets/lighting (ChessBoard still pending) |
 | `environment_object_consistency` | registry (`environment_object_consistency`) | reference video + Unity object transforms | BallRoller/ctrl (object-only: static ramp/dome; character half not attempted, see PENDING.md) |
 
 ### Case × dimension matrix (current)
 
-| case | lpips | action_controllability | prompt_scene_consistency | lighting_shading | environment_object_consistency |
-| --- | :-: | :-: | :-: | :-: | :-: |
-| BallRoller/ctrl | | ✓ | | | ✓ |
-| MirrorRollingBall/lpips_collision | ✓ | | | | |
-| MirrorRollingBall/prompt_first | | | ✓ | | |
-| MirrorRollingBall/prompt_third | | | ✓ | ✓* | |
-| RacingCar/prompt_first | | | ✓ | | |
-| RacingCar/prompt_third | | | ✓ | ✓* | |
-
-(* = temporary borrow by lighting_shading)
+| case | lpips | action_controllability | prompt_scene_consistency | lighting_shading | environment_object_consistency | kinematics_mechanics |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: |
+| BallRoller/ctrl | | ✓ | | | ✓ | ✓ |
+| BilliardGame/prompt_first | | | | | ✓ | ✓ |
+| ChessBoard/walk_third | | | | | ✓ | |
+| MirrorRollingBall/lpips_collision | ✓ | | | | | |
+| MirrorRollingBall/prompt_first | | | ✓ | | | |
+| MirrorRollingBall/prompt_third | | | ✓ | | ✓ | |
+| RacingCar/prompt_first | | | ✓ | | | |
+| RacingCar/prompt_third | | | ✓ | | ✓ | ✓ |
+| SunRisesAndSets/lighting | | | | ✓ | | |
+| WanderingGarden/scene_first | | | | | ✓ | |
 
 (`suite.yaml` is the single source of truth; `list-cases` prints this matrix
 from it. `cases/BeamDomino/causal` is bundled but currently unreferenced —
@@ -125,6 +127,10 @@ python tools/run_wmeval_lite.py run \
   --suite eval_sets/wmeval_lite_v1 \
   --model-root runs/genie3 \
   --output-dir reports/wmeval_lite/genie3
+
+# On Modal GPUs, one container per candidate (defaults to the paper's
+# lighting rollouts on the WMEval-lighting-repro volume; see the docstring)
+modal run tools/run_wmeval_lite_modal.py --dimensions lighting_shading
 
 # Subset of dimensions, resumable
 python tools/run_wmeval_lite.py run \
