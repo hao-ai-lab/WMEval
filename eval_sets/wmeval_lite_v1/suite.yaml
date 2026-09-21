@@ -321,7 +321,7 @@
 # ==========================================================================
 #
 # Target scene x dimension mapping (paper, 2026-07-08):
-#   ChessBoard        -> prompt_scene_consistency, lighting_shading      (data pending),
+#   ChessBoard        -> prompt_scene_consistency (live), lighting_shading (data pending),
 #                        environment_object_consistency (live, scoped, see below)
 #   BallRoller        -> kinematics_mechanics (live, scoped), action_controllability,
 #                        environment_object_consistency (live, scoped)
@@ -566,16 +566,20 @@ dimensions:
     vlm:
       provider: openai
       model: gpt-5.4
-      prompt_version: v1
+      # v0 = the formal rubric set (2026-05-06) used for the human study and
+      # results_v0; the rubric files are copied byte-for-byte, so each case's
+      # rubric_scene_name keeps that set's scene names (RollingBall_first, ...).
+      prompt_version: v0
       alpha: 0.6
       # case-relative: rubrics live inside each case's checksummed bundle
       rubric_dir: reference/artifacts/rubrics
-    # Target adds ChessBoard first/third once its data lands.
     cases:
     - MirrorRollingBall/prompt_first
     - MirrorRollingBall/prompt_third
     - RacingCar/prompt_first
     - RacingCar/prompt_third
+    - ChessBoard/prompt_first
+    - ChessBoard/prompt_third
     aggregate:
       headline: overall_score
       direction: higher

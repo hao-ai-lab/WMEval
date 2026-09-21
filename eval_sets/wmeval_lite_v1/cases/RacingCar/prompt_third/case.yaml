@@ -3,15 +3,14 @@ case_id: RacingCar/prompt_third
 scene: RacingCar
 display_name: RacingCar third
 prompt: "A very wide, straight highway under a clear blue sky, with dark roadside\
-  \ barriers, green grass, and long symmetrical rows of tall trees on both sides.\
-  \ The road begins abruptly at a starting point, with no ground behind it\u2014only\
-  \ open sky, as if the road is suspended in space. A yellow sports car with two black\
-  \ racing stripes is parking exactly at the start of the road, centered in the frame,\
-  \ viewed from behind. The car faces forward into the long empty highway. Bright\
-  \ daytime lighting, clean and minimal environment. The character is the yellow sports\
-  \ car"
+  \ barriers, green grass, and long rows of tall trees on both sides. The road begins\
+  \ abruptly at a starting point, with no ground behind it\u2014only open sky, as\
+  \ if the road is suspended in space. A yellow sports car with two black racing stripes\
+  \ is parking exactly at the start of the road, centered in the frame, viewed from\
+  \ behind. The car faces forward into the long empty highway. Bright daytime lighting,\
+  \ clean and minimal environment. The character is the yellow sports car"
 perspective: third_person
-rubric_scene_name: RacingCar_third
+rubric_scene_name: RacingCar
 modules:
 - shadow_consistency
 - environment_object_consistency
@@ -30,8 +29,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: d7463762009d2b5281e7c1440138bba8f4c89c69
-  evaluator_fingerprint: 8297b650f20f96a8197c7b85938a03c3
+  code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
+  evaluator_fingerprint: 8d828b7311b3aeeffc58cacdfec3a304
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}
