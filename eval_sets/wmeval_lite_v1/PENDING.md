@@ -71,12 +71,38 @@ banners for the history of everything already resolved.
 
 ## Known limitations on live dimensions
 
-- **Only `lighting_shading` has been run on real world-model candidates.**
-  `SunRisesAndSets/lighting` was evaluated on the paper's 6 models x 5 seeds
-  (2026-09-15) and reproduces the paper's per-run numbers exactly (see the
-  suite.yaml banner). Every number quoted for the other live dimensions is
-  still reference-vs-reference self-consistency — it validates the pipeline,
-  not an actual model's output.
+- **Real-candidate coverage.** `lighting_shading` was run on the paper's
+  6 models x 5 seeds (2026-09-15, reproduces the paper exactly), and
+  Waypoint-1.5 was run through every non-VLM dimension on 2026-09-22
+  (`action_controllability`, `environment_object_consistency`,
+  `kinematics_mechanics`, `lighting_shading`; 55 rows, no errors; numbers in
+  the suite.yaml banner). `prompt_scene_consistency` and `lpips` have still
+  never been run on a real candidate — they need `OPENAI_API_KEY`. Every
+  other number quoted for those two is reference-vs-reference
+  self-consistency.
+- **Candidate normalisation is undefined for the non-liquid cases.**
+  `kinematics_mechanics` and `environment_object_consistency` read every
+  frame and compare candidate frame *f* with Unity frame *f* in the
+  reference pixel frame, but `candidate_normalization: none` does no
+  resampling, so a candidate at another fps/resolution (Waypoint: 60 fps
+  1280x720) is silently misaligned. `tools/generate_waypoint15_candidates_modal.py`
+  works around it by writing a copy resampled to the reference's fps,
+  resolution and duration; the suite should either add a normalisation
+  token for these cases or resample inside the adapter.
+- **`kinematics_mechanics` drops untracked labels silently.** The headline
+  `fde_px_mean`/`dtw_px_mean` average over whichever labels ByteTrack kept:
+  BilliardGame/prompt_first seeds 2/4 report 0.5 px because only the static
+  "red ball" survived, while the seeds that also tracked the rolling
+  "yellow ball" report ~365 px for it. An untracked label should count as a
+  failure (or the row should carry an explicit `labels_tracked`), not
+  vanish from the mean.
+- **Three cases under-specify the generation condition.**
+  `BilliardGame/prompt_first` and `WanderingGarden/scene_first` ship no
+  `reference/artifacts/actions.txt`, and `ChessBoard/walk_third`'s is a
+  comment-only frame table. Any candidate model has to guess; the Waypoint
+  generator hard-codes the bundles' own notes (idle for 2.5 s / 360-degree
+  yaw over 10 s / the walk-diagonal-sprint-turn table). Author real action
+  scripts and re-lock the three bundles.
 - **`kinematics_mechanics`'s mechanical quantities** (momentum/kinetic-energy
   exact-match) inherit the monocular depth model's domain-gap bias and are
   only meaningfully accurate for objects with real, non-trivial motion.

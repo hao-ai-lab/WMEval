@@ -2,6 +2,57 @@
 # (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
 #
 # ==========================================================================
+# 2026-09-22: FIRST REAL CANDIDATE MODEL THROUGH THE NON-VLM DIMENSIONS.
+# Waypoint-1.5 (Overworld/Waypoint-1.5-1B: first-person, keyboard/mouse only,
+# no text channel) was generated for every live case WITHOUT Unity, straight
+# from the bundles -- tools/generate_waypoint15_candidates_modal.py: seed =
+# ref.png (else frame 0 of the reference video), actions.txt -> CtrlInput
+# steps, seeds 42/1/2/3/4, one H100 container per case -- and scored with
+# tools/run_wmeval_lite_modal.py --model-root /cand/waypoint15 (run_id
+# wp15-nongpt-full; per-row outputs on volume WMEval-lite-candidates under
+# eval/lite_runs/wp15-nongpt-full/). All 55 rows completed, no errors.
+# Per-case means over 5 seeds:
+#   action_controllability BallRoller/ctrl: epe_dynamic_mean_compensated
+#     754.9 px, bad_pixel_rate 1px/3px 100%/100% -- WASD moves the ego camera,
+#     not the ball (the action-target ambiguity the paper describes for models
+#     without an object channel).
+#   environment_object_consistency (object_permanence / depth_absrel /
+#     character_consistency, %): BallRoller 50.9/63.2/10.9; BilliardGame
+#     62.5/6.4/14.7; ChessBoard 100/68.8/25.3; MirrorRollingBall/prompt_third
+#     95.9/15.4/-; RacingCar/prompt_third 96.6/13.6/93.9; WanderingGarden
+#     92.4/14.7/-. pairwise_distance_mae is null on every single-anchor case
+#     (it needs >= 2 tracked labels; only BallRoller has them: 71.9%).
+#   kinematics_mechanics fde_px_mean: BallRoller 228.1; BilliardGame 109.8;
+#     RacingCar/prompt_third 191.5 (read with the caveat below).
+#   lighting_shading: identical to the paper's Waypoint row (SRR 100, SDR
+#     100, MOSD 98.29, SDJ 2.34, SAS 12.29, SSD 4.55).
+#   prompt_scene_consistency and lpips (causal VLM) NOT run: both need
+#     OPENAI_API_KEY; their candidates are generated and waiting.
+#
+# What the run exposed (tracked in PENDING.md):
+#   - Candidates must match the reference's fps, resolution and duration for
+#     kinematics_mechanics / environment_object_consistency: both read every
+#     frame and compare candidate frame f with Unity frame f in the reference
+#     pixel frame, and the `candidate_normalization: none` protocol does no
+#     resampling. The generator therefore writes a normalised copy
+#     (waypoint15/) next to the native 60 fps 1280x720 output
+#     (waypoint15_native/).
+#   - kinematics_mechanics averages FDE/DTW over the labels it managed to
+#     track and silently drops the rest: BilliardGame seeds 2/4 report
+#     fde_px_mean 0.5 px because only the static "red ball" was tracked,
+#     while seeds 1/3/42 (both balls tracked) put the yellow ball at ~365 px;
+#     BallRoller seed 42 likewise lost "dome". Read the headline as "mean over
+#     tracked labels" and check per_object in full_report.
+#   - BilliardGame/prompt_first and WanderingGarden/scene_first ship no
+#     actions.txt, and ChessBoard/walk_third's is comment-only, so the
+#     generation condition is under-specified for any candidate model. The
+#     generator encodes the bundles' own notes (idle / 360-degree yaw / the
+#     frame table) as explicit control programs; the bundles should ship them.
+#   - L40S wall time per candidate: controllability ~12 s, kinematics
+#     20-68 s, object consistency 60-220 s, lighting ~110 s.
+# ==========================================================================
+#
+# ==========================================================================
 # 2026-09-15: SunRisesAndSets/lighting LANDED -- lighting_shading now runs on
 # its paper-target scene instead of borrowing MirrorRollingBall/prompt_third
 # and RacingCar/prompt_third. Those two borrows are removed from this
