@@ -6,6 +6,10 @@ PyYAML>=6.0,<7
 # - causal_lpips / controllability / shadow_consistency / liquid / causal_step:
 #   heavyweight evaluator dependencies per the existing dimension READMEs
 #   (torch, torchvision, lpips, transformers, sam2, openpiv, ffmpeg, ...).
+#   causal_lpips's causal_vlm_collision sampling mode additionally needs the
+#   `openai` pip package itself (not just OPENAI_API_KEY) --
+#   evaluation/modules/lpips_causal_vlm.py imports it directly, unlike
+#   prompt_consistency's provider below which only uses `requests`.
 # - environment_object_consistency (paper appendix B.1, see
 #   README_environment_object_consistency.md): torch, transformers, sam2
 #   (already required by shadow_consistency) plus a DINOv2 checkpoint fetched

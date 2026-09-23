@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -86,6 +87,7 @@ image = (
         "huggingface_hub[hf_transfer]",
         "hf_transfer",
         "lpips",
+        "openai",
         "git+https://github.com/facebookresearch/sam2.git",
     )
     .env(
@@ -113,6 +115,8 @@ image = (
             "**/.pytest_cache",
             "**/.pytest_cache/**",
             "**/.DS_Store",
+            ".env",
+            ".env.example",
             "WorldModelBenchScenePrivate",
             "WorldModelBenchScenePrivate/**",
             "reports",
@@ -130,6 +134,25 @@ image = (
         f"import transformers; print(\"repo import ok\")'"
     )
 )
+
+
+def _load_dotenv_local(repo_root: Path) -> None:
+    """Load KEY=VALUE lines from <repo>/.env into THIS (caller-side) process
+    only -- never baked into the image (see the ``.env``/``.env.example``
+    entries in the image's ``add_local_dir`` ignore list above). Mirrors
+    ``tools/run_wmeval_lite.py``'s own ``_load_dotenv``."""
+    env_path = repo_root / ".env"
+    if not env_path.is_file():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        text = line.strip()
+        if not text or text.startswith("#") or "=" not in text:
+            continue
+        key, _, value = text.partition("=")
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 
 def default_lighting_rows() -> list[dict]:
@@ -251,6 +274,12 @@ def main(
     --limit      keep only the first N rows (smoke tests)
     --out-prefix volume-relative output prefix (default eval/lite_runs/<run_id>)
     --local-out  local merge dir (default reports/wmeval_lite_modal/<run_id>)
+
+    OPENAI_API_KEY (needed for lpips's causal_vlm_collision judge) is read
+    from the environment or this repo's local .env and forwarded to Modal as
+    an ephemeral Secret -- never baked into the image (see the
+    ``.env``/``.env.example`` entries in the image's ``add_local_dir`` ignore
+    list above).
     """
     run_id = run_id or _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     out_prefix = out_prefix or f"eval/lite_runs/{run_id}"
@@ -270,10 +299,23 @@ def main(
         print("no rows selected")
         return
 
+    _load_dotenv_local(REPO_ROOT)
+    target_fn = run_row
+    openai_key = os.environ.get("OPENAI_API_KEY", "")
+    if openai_key:
+        secret = modal.Secret.from_dict({"OPENAI_API_KEY": openai_key})
+        target_fn = run_row.with_options(secrets=[secret])
+    else:
+        print(
+            "warning: OPENAI_API_KEY not set (checked env + .env) -- "
+            "lpips's causal-VLM-judge path will fail remotely for any row "
+            "that needs it."
+        )
+
     print(f"run_id={run_id} rows={len(rows)} dimensions={dimensions} out_prefix={out_prefix}")
     all_rows: list[dict] = []
     failures: list[str] = []
-    for result in run_row.map(
+    for result in target_fn.map(
         rows, kwargs={"dimensions": dimensions, "out_prefix": out_prefix, "run_id": run_id}
     ):
         status = ", ".join(sorted({str(r.get("status")) for r in result["rows"]})) or "no rows"
