@@ -51,9 +51,11 @@ def is_severely_truncated(
     return candidate_duration < threshold
 
 
-def _probe_video(path: str | Path, role: str) -> VideoMetadata:
+def _probe_video(
+    path: str | Path, role: str, *, fps_override: float | None = None
+) -> VideoMetadata:
     try:
-        metadata = video_io.get_video_metadata(str(path))
+        metadata = video_io.get_video_metadata(str(path), fps_override=fps_override)
     except Exception as exc:
         raise CandidateValidationError(
             f"cannot probe {role} video {path}: {exc}"
@@ -108,14 +110,20 @@ def validate_candidate_video(
     *,
     min_duration_sec: float = DEFAULT_MIN_DURATION_SEC,
     min_duration_ratio: float = DEFAULT_MIN_DURATION_RATIO,
+    candidate_fps_override: float | None = None,
 ) -> CandidateVideoMetadata:
     """Validate a candidate video, optionally against a reference video.
 
     ``reference_video=None`` (reference-free dimensions) still checks that the
     candidate decodes and meets the absolute ``min_duration_sec`` floor; the
     reference-relative ratio check is skipped.
+
+    ``candidate_fps_override``, when given, is used in place of the
+    candidate's own container-reported fps for both this duration check and
+    (via the same value passed to the runner) all downstream frame-time
+    alignment -- see ``evaluation.video_io.get_video_metadata``.
     """
-    candidate = _probe_video(candidate_video, "candidate")
+    candidate = _probe_video(candidate_video, "candidate", fps_override=candidate_fps_override)
 
     if reference_video is None:
         _verify_decodable(candidate_video, "candidate", candidate)
