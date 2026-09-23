@@ -59,7 +59,16 @@ def build_vlm_keyframe_indices(frame_count: int, max_frames: int) -> List[int]:
     return sorted({int(round(float(x))) for x in xs})
 
 
-def get_video_metadata(video_path: str) -> VideoMetadata:
+def get_video_metadata(video_path: str, fps_override: float | None = None) -> VideoMetadata:
+    """Probe a video's metadata.
+
+    ``fps_override``, when given, replaces the container's own reported fps
+    for both ``fps`` and the derived ``duration_sec`` -- for candidates whose
+    frames represent real action time at a rate the container tag doesn't
+    reflect (e.g. one frame per fixed-length action step, encoded into an mp4
+    at an unrelated playback fps). Frame count and dimensions are unaffected;
+    this only corrects the frame-to-wall-clock-time mapping.
+    """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError(f"Failed to open video: {video_path}")
@@ -69,6 +78,11 @@ def get_video_metadata(video_path: str) -> VideoMetadata:
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
     cap.release()
+
+    if fps_override is not None:
+        if fps_override <= 0:
+            raise ValueError(f"fps_override must be positive, got {fps_override!r}")
+        fps = float(fps_override)
 
     duration_sec = None
     if fps > 0 and frame_count > 0:
@@ -171,8 +185,9 @@ def load_frames_by_indices(video_path: str, frame_indices: Sequence[int]) -> Lis
 def sample_video_frames(
     video_path: str,
     timestamps_sec: Sequence[float],
+    fps_override: float | None = None,
 ) -> SampledVideoFrames:
-    metadata = get_video_metadata(video_path)
+    metadata = get_video_metadata(video_path, fps_override=fps_override)
     frame_indices = [timestamp_to_frame_index(t, metadata) for t in timestamps_sec]
     frames = load_frames_by_indices(video_path, frame_indices)
 
@@ -227,6 +242,7 @@ def build_evaluation_context(
     alignment_mode: str = "shared_duration",
     text_prompt: str = "",
     sample_mode: str = SAMPLE_MODE_TIMESTAMP,
+    candidate_fps_override: float | None = None,
 ) -> EvaluationContext:
     if alignment_mode != "shared_duration":
         raise ValueError(
@@ -240,7 +256,7 @@ def build_evaluation_context(
         )
 
     reference_metadata = get_video_metadata(reference_video)
-    candidate_metadata = get_video_metadata(candidate_video)
+    candidate_metadata = get_video_metadata(candidate_video, fps_override=candidate_fps_override)
 
     if reference_metadata.frame_count <= 0:
         raise RuntimeError(f"Reference video has no frames: {reference_video}")
@@ -258,7 +274,9 @@ def build_evaluation_context(
             max_pairs=max_pairs,
         )
         reference_sample = sample_video_frames(reference_video, timestamps_sec)
-        candidate_sample = sample_video_frames(candidate_video, timestamps_sec)
+        candidate_sample = sample_video_frames(
+            candidate_video, timestamps_sec, fps_override=candidate_fps_override
+        )
     else:
         ref_indices, ref_ts = build_frame_step_indices(
             reference_metadata, eval_fps, max_pairs

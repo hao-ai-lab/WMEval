@@ -28,6 +28,7 @@ METRIC_CONFIG_KEYS = frozenset(
         # generic sampling
         "eval_fps",
         "max_pairs",
+        "candidate_fps_override",
         # lpips / causal-VLM collision sampling
         "lpips_sampling",
         "lpips_causal_event_source",

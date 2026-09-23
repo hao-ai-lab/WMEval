@@ -445,12 +445,16 @@ def _evaluate_item(
     from .validation import CandidateValidationError, validate_candidate_video
 
     protocol = case.protocol
+    candidate_fps_override = candidate.params.get("candidate_fps_override")
     try:
         validate_candidate_video(
             candidate.candidate_video,
             case.reference_video if dimension.requires_reference else None,
             min_duration_sec=float(protocol["min_duration_sec"]),
             min_duration_ratio=float(protocol["min_duration_ratio"]),
+            candidate_fps_override=(
+                float(candidate_fps_override) if candidate_fps_override is not None else None
+            ),
         )
     except CandidateValidationError as exc:
         return CaseResult(status=STATUS_INVALID_CANDIDATE, error=str(exc))
