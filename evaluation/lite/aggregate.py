@@ -76,6 +76,16 @@ def _extract_control_motion(result: Mapping[str, Any]) -> dict[str, Any]:
         "epe_dynamic_mean_compensated": _numeric(
             _get(result, "camera_compensated", "epe_dynamic_summary", "mean")
         ),
+        # Paper-comparable RAFT decomposition (Table 3: "Raw Relative EPE
+        # Dynamic Mean" / "Raw Cosine Similarity Dynamic Mean") -- computed by
+        # control_motion.py all along but never previously extracted past
+        # full_report, so it never reached metrics/aggregate/CSV output.
+        "relative_epe_dynamic_mean_raw": _numeric(
+            _get(result, "raw", "relative_epe_dynamic_summary", "mean")
+        ),
+        "cosine_similarity_dynamic_mean_raw": _numeric(
+            _get(result, "raw", "cosine_similarity_dynamic_summary", "mean")
+        ),
     }
     bad_pixel = _get(section, "bad_pixel_rates") if section else None
     if isinstance(bad_pixel, Mapping):
