@@ -527,6 +527,11 @@ dimensions:
       lpips_causal_event_source: reference
       eval_fps: 4.0
       max_pairs: 32
+      # fine judge + side relabel model, and coarse-window model: gpt-5.4-mini
+      # for the coarse pass, gpt-5.4 for the fine judge and side relabel --
+      # not the gpt-4o runner default.
+      lpips_vlm_model: gpt-5.4
+      lpips_vlm_coarse_model: gpt-5.4-mini
     cases:
     - MirrorRollingBall/lpips_collision
     aggregate:
@@ -558,6 +563,14 @@ dimensions:
       - epe_mean_raw
       - bad_pixel_rate_1px_mean
       - bad_pixel_rate_3px_mean
+      # Relative (scale-normalized) EPE and directional cosine similarity on
+      # dynamic-region flow -- control_motion.py always computed these but
+      # aggregate.py never extracted them past full_report until now. Left as
+      # extra_means rather than promoted to headline: cosine similarity's
+      # natural direction is "higher", opposite this dimension's "lower", so
+      # changing the headline is a bigger call than this fix's scope.
+      - relative_epe_dynamic_mean_raw
+      - cosine_similarity_dynamic_mean_raw
   prompt_scene_consistency:
     display_name: Prompt-Scene Consistency
     description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only).
