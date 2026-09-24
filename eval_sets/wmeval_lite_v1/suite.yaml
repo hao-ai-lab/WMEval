@@ -524,7 +524,10 @@ dimensions:
     - lpips
     metric_config:
       lpips_sampling: causal_vlm_collision
-      lpips_causal_event_source: reference
+      # reference-only event detection undershot causal LPIPS on some
+      # candidates; switched to both (the runner's own default) after
+      # verifying it closes the gap with no regression elsewhere.
+      lpips_causal_event_source: both
       eval_fps: 4.0
       max_pairs: 32
       # fine judge + side relabel model, and coarse-window model: gpt-5.4-mini
