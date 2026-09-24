@@ -4,7 +4,7 @@
 The repo is baked into the image; candidate videos live on a Modal Volume.
 Each (dimension-set, candidate row) becomes one ``run_row`` call that runs the
 ordinary ``tools/run_wmeval_lite.py run`` CLI with a one-line manifest, writes
-its ``per_case_results.jsonl`` under ``<volume>/<out_prefix>/<model>__<seed>/``,
+its ``per_case_results.jsonl`` under ``<volume>/<out_prefix>/<model>__<case_id>__<seed>/``,
 and returns the rows. The local entrypoint fans out with ``.map`` and merges
 everything into one local ``per_case_results.jsonl`` + aggregate summary
 (the same two-level aggregation the CLI uses).
@@ -194,7 +194,7 @@ def run_row(row: dict, dimensions: str, out_prefix: str, run_id: str) -> dict:
     import os
     import subprocess
 
-    tag = f"{row['model']}__{row['seed']}"
+    tag = f"{row['model']}__{row['case_id'].replace('/', '-')}__{row['seed']}"
     out_dir = f"{CONTAINER_VOL}/{out_prefix}/{tag}"
     os.makedirs(out_dir, exist_ok=True)
     manifest = f"/tmp/{tag}.jsonl"
@@ -340,4 +340,4 @@ def main(
     _merge_locally(all_rows, Path(local_out or REPO_ROOT / "reports" / "wmeval_lite_modal" / run_id))
     if failures:
         print(f"FAILED rows: {failures}")
-    print(f"per-row outputs on volume {VOLUME_NAME}: {out_prefix}/<model>__<seed>/")
+    print(f"per-row outputs on volume {VOLUME_NAME}: {out_prefix}/<model>__<case_id>__<seed>/")
