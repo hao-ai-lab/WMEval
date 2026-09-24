@@ -133,6 +133,18 @@ image = (
         f"cd {REMOTE_REPO} && python -c 'import evaluation.runner; import sam2; "
         f"import transformers; print(\"repo import ok\")'"
     )
+    # Pre-download LPIPS's VGG16 backbone weights into the image at build
+    # time (~528MB), baked into this layer permanently. Without this,
+    # evaluation/modules/lpips_causal_vlm.py's own
+    # ~/.cache/torch/hub/checkpoints/vgg16-397923af.pth existence check finds
+    # nothing in a fresh container (this image has no torch-hub cache volume,
+    # only the separate HF_HUB_CACHE one) and silently skips both causal and
+    # temporal LPIPS scoring -- every row still reports status=completed with
+    # every lpips_* metric null, no error, so the gap is easy to miss.
+    .run_commands(
+        "python -c 'import lpips; lpips.LPIPS(net=\"vgg\"); "
+        "print(\"vgg16 weights cached\")'"
+    )
 )
 
 
