@@ -529,6 +529,7 @@ dimensions:
       max_pairs: 32
     cases:
     - MirrorRollingBall/lpips_collision
+    - BeamDomino/causal
     aggregate:
       headline: lpips_mean
       direction: lower
@@ -551,6 +552,7 @@ dimensions:
       max_pairs: 32
     cases:
     - BallRoller/ctrl
+    - BeamDomino/causal
     aggregate:
       headline: epe_dynamic_mean_compensated
       direction: lower
