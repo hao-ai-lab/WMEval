@@ -1,0 +1,31 @@
+schema_version: 2
+case_id: ChessBoard/prompt_third
+scene: ChessBoard
+display_name: ChessBoard third
+prompt: A surreal, clean, high-contrast chess environment. The ground is a giant black-and-white
+  chessboard under a flat gray sky. Oversized glossy black and white chess pieces
+  surround the board. A large reflective chrome sphere stands near the center as a
+  key landmark. A gray humanoid mannequin is standing in the chessboard scene and
+  is the player character. Bright overhead lighting. The character is the gray humanoid
+  mannequin.
+perspective: third_person
+rubric_scene_name: ChessBoard
+modules: []
+reference:
+  first_frame: reference/ref.png
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
+  evaluator_fingerprint: aeffef6c2e899283171173487d99fc42
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}

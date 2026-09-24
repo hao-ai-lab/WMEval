@@ -1,36 +1,30 @@
 {
-  "scene_name": "MirrorRollingBall_first",
+  "scene_name": "RollingBall_first",
   "prompt_text": "A flat, light-colored ground populated with many large, glossy yellow spheres arranged in a regular grid-like pattern, appearing roughly evenly spaced across the surface. The scene is enclosed by low gray boundary walls. Bright daylight produces clear cast shadows. The environment is clean and simple. The character is a ball. First person view.",
   "rubric_items": [
     {
       "rubric_id": "env_01",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Does the ground stay flat and light-colored throughout the video?"
+      "rubric_text": "Does the ground remain flat and light-colored across all sampled frames?"
     },
     {
       "rubric_id": "env_02",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Do the surrounding yellow spheres maintain a regular, roughly evenly spaced grid-like arrangement over time?"
+      "rubric_text": "Do low gray boundary walls consistently enclose the scene across the video?"
     },
     {
       "rubric_id": "env_03",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Do low gray boundary walls consistently enclose the scene throughout the video?"
+      "rubric_text": "Does the lighting remain bright daylight with clear cast shadows in all sampled frames?"
     },
     {
       "rubric_id": "env_04",
       "agent": "environment",
       "weight": 1.0,
-      "rubric_text": "Does the scene maintain bright daylight lighting with clear cast shadows over time?"
-    },
-    {
-      "rubric_id": "env_05",
-      "agent": "environment",
-      "weight": 1.0,
-      "rubric_text": "Does the environment remain clean and simple throughout the video?"
+      "rubric_text": "Does the scene preserve a clean, simple environment across all sampled frames?"
     },
     {
       "rubric_id": "obj_01",
@@ -42,25 +36,25 @@
       "rubric_id": "obj_02",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "When the large spheres are visible and judgeable, do they appear glossy as specified in the prompt?"
+      "rubric_text": "When the large spheres are visible and judgeable, do they have a glossy surface appearance as specified in the prompt?"
     },
     {
       "rubric_id": "obj_03",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "When the large spheres are visible and judgeable, do they appear large as specified in the prompt?"
+      "rubric_text": "When the spheres are visible and judgeable, do they appear large as specified in the prompt?"
     },
     {
       "rubric_id": "obj_04",
       "agent": "object",
       "weight": 1.0,
-      "rubric_text": "When the player character or its embodiment is inferable from the first-person view, is the character consistent with being a ball?"
+      "rubric_text": "Is the character represented as a ball, consistent with the prompt?"
     }
   ],
   "metadata": {
     "generator_provider": "openai",
     "generator_model": "gpt-5.4",
-    "generated_at": "2026-06-22T07:23:56.024450+00:00",
-    "num_candidates_generated": 9
+    "generated_at": "2026-05-06T10:08:14.743609+00:00",
+    "num_candidates_generated": 8
   }
 }
