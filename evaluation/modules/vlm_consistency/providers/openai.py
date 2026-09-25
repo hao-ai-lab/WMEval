@@ -12,6 +12,18 @@ RESPONSES_URL = "https://api.openai.com/v1/responses"
 DEFAULT_MODEL = "gpt-4.1"
 
 
+def _log_usage(provider: str, model: str, usage: Any, *, api: str = "") -> None:
+    """Token accounting hook (evaluation/vlm_usage.py); never fatal."""
+    try:
+        from evaluation.vlm_usage import log_usage
+    except ImportError:  # module run outside the repo
+        return
+    try:
+        log_usage(provider, model, usage, api=api)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _extract_output_text(resp: Dict[str, Any]) -> str:
     ot = resp.get("output_text")
     if isinstance(ot, str) and ot.strip():
@@ -93,6 +105,7 @@ def call_vlm(
             if r.status_code != 200:
                 _raise_with_body(r)
             resp = r.json()
+            _log_usage("openai", model, resp.get("usage"), api="responses")
             text = _extract_output_text(resp)
             return json.loads(text)
         except Exception as e:
@@ -157,6 +170,7 @@ def call_llm(
             if r.status_code != 200:
                 _raise_with_body(r)
             resp = r.json()
+            _log_usage("openai", model, resp.get("usage"), api="responses")
             text = _extract_output_text(resp)
             return json.loads(text)
         except Exception as e:

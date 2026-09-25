@@ -111,8 +111,9 @@ CASE_OVERRIDES: dict[str, list[dict]] = {
 
 # Not generated here: reference-free lighting, imported from the paper run.
 IMPORT_ONLY = {"SunRisesAndSets/lighting"}
-# Not wired into any suite dimension on main yet.
-SKIP_CASES = {"BeamDomino/causal"}
+# Cases to leave out (none: BeamDomino/causal is wired into lpips and
+# action_controllability since #31).
+SKIP_CASES: set[str] = set()
 
 app = modal.App("wmeval-waypoint15-candidates")
 

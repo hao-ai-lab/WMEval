@@ -417,6 +417,16 @@ def extract_json_object(text: str) -> Dict[str, Any]:
     return obj
 
 
+def _log_vlm_usage(model: str, resp: Any) -> None:
+    """Token accounting hook (evaluation/vlm_usage.py); never fatal."""
+    try:
+        from ..vlm_usage import log_usage
+
+        log_usage("openai", str(model), getattr(resp, "usage", None), api="chat.completions")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def repair_json_object_with_model(
     *,
     client: Any,
@@ -447,6 +457,7 @@ def repair_json_object_with_model(
 
     client = client.with_options(timeout=timeout_sec, max_retries=1)
     resp = client.chat.completions.create(**create_kwargs)
+    _log_vlm_usage(model, resp)
     repaired_text = (resp.choices[0].message.content or "").strip()
     return extract_json_object(repaired_text)
 
@@ -1512,6 +1523,7 @@ def call_openai_vision_judge(
     def _run_chat(user_prompt_text: str, *, call_timeout_sec: float) -> str:
         run_client = client.with_options(timeout=call_timeout_sec, max_retries=2)
         resp = run_client.chat.completions.create(**_build_create_kwargs(user_prompt_text))
+        _log_vlm_usage(model, resp)
         return (resp.choices[0].message.content or "").strip()
 
     text = _run_chat(user_text, call_timeout_sec=timeout_sec)
