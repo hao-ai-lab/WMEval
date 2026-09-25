@@ -66,3 +66,13 @@ banners for the history of everything already resolved.
 - **`MirrorRollingBall`'s depth accuracy** relies on an apparent-size
   (photogrammetric) workaround, not a monocular depth model — no monocular
   depth model has been found that handles its reflective sphere correctly.
+
+- **`physical_causality`'s CSR needs the repeated passes to mean anything.**
+  CSR is all-or-nothing per video (`max_chain_length >= num_segments`,
+  `causalstep/metrics.py`) and each lite case bundles ONE video, so a single
+  judge pass can only ever report 0 or 100 — and the judge is not reproducible
+  at `temperature=0` (two runs of the identical config disagree on 4 of the 19
+  bundled QA items). `causal_step_judge_repeats: 5` is therefore load-bearing,
+  not a tuning knob: it restores the paper's cell semantics, where CSR over five
+  passes is successes/5. Lowering it silently turns `csr_delta` back into a coin
+  flip. `amcl_delta` is carried in `extra_means` as the ungated companion.
