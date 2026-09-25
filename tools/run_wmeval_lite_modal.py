@@ -40,7 +40,10 @@ judge) is read from the environment or this repo's local ``.env`` and
 forwarded to Modal as an ephemeral Secret -- never baked into the image. Every
 VLM call's token usage is appended to ``<row output dir>/vlm_usage.jsonl``
 (see ``evaluation/vlm_usage.py``) and summed into the run's ``vlm_usage``
-totals so spend can be checked per row.
+totals so spend can be checked per row. ``--max-parallel N`` keeps only N
+rows in flight (the judge's tokens-per-minute limit is per organisation) and
+``--resume-from <per_case_results.jsonl>`` re-runs only the rows that did not
+complete in an earlier run, carrying the completed ones into the new merge.
 """
 from __future__ import annotations
 
@@ -379,6 +382,8 @@ def main(
     out_prefix: str = "",
     run_id: str = "",
     local_out: str = "",
+    max_parallel: int = 0,
+    resume_from: str = "",
 ):
     """Fan the rows out over Modal, then merge results locally.
 
@@ -389,6 +394,12 @@ def main(
     --limit      keep only the first N rows (smoke tests)
     --out-prefix volume-relative output prefix (default eval/lite_runs/<run_id>)
     --local-out  local merge dir (default reports/wmeval_lite_modal/<run_id>)
+    --max-parallel  run at most N rows at a time (VLM dimensions: keeps the
+                 per-minute token rate under the OpenAI limit; 0 = all at once)
+    --resume-from   a previous run's merged per_case_results.jsonl: rows that
+                 completed there for every requested dimension are skipped and
+                 carried into this run's merge, so only errored/missing rows
+                 are re-evaluated
     """
     run_id = run_id or _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     out_prefix = out_prefix or f"eval/lite_runs/{run_id}"
@@ -408,6 +419,45 @@ def main(
         rows = [row for row in rows if only in _row_tag(row)]
     if limit > 0:
         rows = rows[:limit]
+    carried: list[dict] = []
+    if resume_from:
+        previous = [
+            json.loads(line)
+            for line in Path(resume_from).read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        requested = [d.strip() for d in dimensions.split(",") if d.strip()]
+        if str(REPO_ROOT) not in sys.path:
+            sys.path.insert(0, str(REPO_ROOT))
+        from evaluation.lite.suite_loader import load_suite
+
+        suite = load_suite(REPO_ROOT / SUITE_REL)
+        completed = {
+            (r["dimension"], r["case_id"], r["model"], r["seed"])
+            for r in previous
+            if r.get("status") == "completed"
+        }
+        remaining = []
+        for row in rows:
+            needed = [
+                dim for dim in requested
+                if row["case_id"] in suite.dimensions[dim].cases
+            ]
+            done = [dim for dim in needed if (dim, row["case_id"], row["model"], row["seed"]) in completed]
+            if needed and len(done) == len(needed):
+                carried.extend(
+                    r for r in previous
+                    if r.get("status") == "completed"
+                    and r["dimension"] in needed
+                    and (r["case_id"], r["model"], r["seed"]) == (row["case_id"], row["model"], row["seed"])
+                )
+            else:
+                remaining.append(row)
+        print(f"resume: {len(rows) - len(remaining)} row(s) already complete in {resume_from}, {len(remaining)} to run")
+        rows = remaining
+        if not rows:
+            _merge_locally(carried, Path(local_out or REPO_ROOT / "reports" / "wmeval_lite_modal" / run_id), [])
+            return
     if not rows:
         print("no rows selected")
         return
@@ -428,12 +478,19 @@ def main(
     print(f"run_id={run_id} rows={len(rows)} dimensions={dimensions} out_prefix={out_prefix}")
     for row in rows:
         print(f"  {_row_tag(row)}  {row['candidate_video']}  params={row.get('params', {})}")
-    all_rows: list[dict] = []
+    all_rows: list[dict] = list(carried)
     all_usage: list[dict] = []
     failures: list[str] = []
-    for result in target_fn.map(
-        rows, kwargs={"dimensions": dimensions, "out_prefix": out_prefix, "run_id": run_id}
-    ):
+    chunk = max_parallel if max_parallel > 0 else len(rows)
+    results = (
+        result
+        for start in range(0, len(rows), chunk)
+        for result in target_fn.map(
+            rows[start:start + chunk],
+            kwargs={"dimensions": dimensions, "out_prefix": out_prefix, "run_id": run_id},
+        )
+    )
+    for result in results:
         status = ", ".join(sorted({str(r.get("status")) for r in result["rows"]})) or "no rows"
         usage = result.get("vlm_usage") or []
         used = _sum_usage(usage)
