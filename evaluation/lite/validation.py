@@ -55,7 +55,12 @@ def _probe_video(
     path: str | Path, role: str, *, fps_override: float | None = None
 ) -> VideoMetadata:
     try:
-        metadata = video_io.get_video_metadata(str(path), fps_override=fps_override)
+        # Only pass the override when set: keeps the historical call shape
+        # (and every test double that mimics it) for the common case.
+        if fps_override is None:
+            metadata = video_io.get_video_metadata(str(path))
+        else:
+            metadata = video_io.get_video_metadata(str(path), fps_override=fps_override)
     except Exception as exc:
         raise CandidateValidationError(
             f"cannot probe {role} video {path}: {exc}"
