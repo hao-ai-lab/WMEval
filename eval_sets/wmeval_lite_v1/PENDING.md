@@ -67,13 +67,25 @@ banners for the history of everything already resolved.
 
 - **Real-candidate coverage.** `lighting_shading` was run on the paper's
   6 models x 5 seeds (2026-09-15, reproduces the paper exactly), and
-  Waypoint-1.5 was run through every non-VLM dimension on 2026-09-22
-  (`action_controllability`, `environment_object_consistency`,
-  `kinematics_mechanics`, `lighting_shading`; 55 rows, no errors; numbers in
-  the suite.yaml banner). `prompt_scene_consistency` and `lpips` have still
-  never been run on a real candidate — they need `OPENAI_API_KEY`. Every
-  other number quoted for those two is reference-vs-reference
-  self-consistency.
+  Waypoint-1.5 has been run through every live dimension: the non-VLM ones
+  on 2026-09-22 (55 rows, no errors) and `prompt_scene_consistency` +
+  `lpips` on 2026-09-24 (30 + 10 rows, all completed, ~3M gpt-5.4 input
+  tokens in total). Numbers are in the suite.yaml banners. Waypoint is a
+  first-person, keyboard/mouse-only model, so third-person and object-control
+  cases measure its action-target ambiguity rather than a strong result.
+- **`lpips` mixes causal and temporal numbers without a row-level flag.**
+  When the judge matches no contact events (every BeamDomino/causal row for
+  Waypoint: 0 candidate contacts), the row still completes with
+  `lpips_primary_source: temporal_only` inside `full_report` and a headline
+  `lpips_mean` that is the temporal baseline, so the aggregate averages
+  causal and temporal LPIPS as if they were one metric. Surface the source
+  (or count unmatched rows as a separate status) in `extract_metrics`.
+- **The reference-side causal judge is re-run per candidate and is not
+  deterministic.** With `lpips_causal_event_source: both` each row re-judges
+  the reference video (~55k input tokens); on the identical BeamDomino
+  reference it reported 0, 1, 3, 0 and 0 contacts across five rows. Cache the
+  reference judgement per case (and per judge model/prompt version) so every
+  candidate is scored against the same reference events.
 - **Candidate normalisation is undefined for the non-liquid cases.**
   `kinematics_mechanics` and `environment_object_consistency` read every
   frame and compare candidate frame *f* with Unity frame *f* in the

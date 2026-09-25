@@ -2,6 +2,52 @@
 # (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
 #
 # ==========================================================================
+# 2026-09-24: Waypoint-1.5 THROUGH THE TWO VLM DIMENSIONS TOO -- every live
+# dimension has now scored a real candidate model. Same candidate tree
+# (WMEval-lite-candidates:waypoint15/, now 13 cases x 5 seeds after main added
+# ChessBoard/prompt_* and wired BeamDomino/causal), same runner
+# (tools/run_wmeval_lite_modal.py --model-root, OPENAI_API_KEY forwarded as a
+# Modal Secret). Per-case means over 5 seeds:
+#   prompt_scene_consistency (overall / env / obj): ChessBoard/first
+#     0.933/0.907/0.973; ChessBoard/third 0.891/0.827/0.987;
+#     MirrorRollingBall/first 0.750/0.650/0.900; MirrorRollingBall/third
+#     0.763/0.720/0.827; RacingCar/first 0.667/0.667/- (the v0 RacingCar_first
+#     rubric has no object items, so obj_score is null and overall == env);
+#     RacingCar/third 0.808/0.680/1.000. 30/30 rows completed.
+#   lpips (causal_vlm_collision, event_source both): MirrorRollingBall/
+#     lpips_collision lpips_mean 0.437 (causal; the judge finds exactly one
+#     candidate contact per seed and 1-4 reference contacts, matched fraction
+#     0.25-1.0). BeamDomino/causal 0.411 -- but every BeamDomino row is
+#     lpips_primary_source=temporal_only with causal_lpips_skipped_reason=
+#     no_matched_events: the judge saw 0 candidate contacts (Waypoint walks
+#     the camera, the ball never strikes) and, on the SAME reference video,
+#     0/1/3/0/0 reference contacts across the five rows. That BeamDomino
+#     number is the temporal-baseline LPIPS, not causal LPIPS, and the
+#     reference-side judge is non-deterministic across runs.
+#   action_controllability BeamDomino/causal: epe_dynamic_mean_compensated
+#     712.6 px, bad-pixel 100% (same ego-motion failure as BallRoller).
+#   OpenAI spend for both dimensions incl. smoke runs and one rate-limited
+#   retry: 124 gpt-5.4 calls, 3.01M input / 190k output tokens (109k of them
+#   reasoning), i.e. roughly $6-10 depending on the gpt-5.4 rate card. Per
+#   video: prompt judge ~22.5k input per agent call (1-2 calls), causal LPIPS
+#   ~120-200k input per row (2 fine-judge calls of ~53k + 1-7 side-relabel
+#   calls of ~14k). No gpt-5.4-mini call was ever made despite
+#   lpips_vlm_coarse_model: the flow-proposal path skips the coarse grid.
+#
+# What this run exposed (tracked in PENDING.md):
+#   - 30 judge containers at once hit the org's 500k TPM limit and the
+#     provider's 3 quick retries gave up (8/30 rows errored). The provider
+#     now backs off on 429/5xx (Retry-After or the "try again in Xs" hint,
+#     exponential up to 60 s, 6 attempts) and the runner has --max-parallel
+#     and --resume-from, which re-ran exactly the 8 rows.
+#   - lpips reports a headline for rows where causal matching failed
+#     (BeamDomino: temporal_only) with no status flag at the row level; the
+#     aggregate silently mixes causal and temporal numbers. The reference
+#     judge should be cached per case (it costs ~55k tokens per row for the
+#     same video and does not even agree with itself).
+# ==========================================================================
+#
+# ==========================================================================
 # 2026-09-22: FIRST REAL CANDIDATE MODEL THROUGH THE NON-VLM DIMENSIONS.
 # Waypoint-1.5 (Overworld/Waypoint-1.5-1B: first-person, keyboard/mouse only,
 # no text channel) was generated for every live case WITHOUT Unity, straight
