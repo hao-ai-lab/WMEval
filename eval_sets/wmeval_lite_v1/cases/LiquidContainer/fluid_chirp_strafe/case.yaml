@@ -31,6 +31,7 @@ modules:
 - liquid_volume_conservation
 - liquid_surface_orientation
 - slosh_spectrum
+- lpips
 reference:
   video: reference/reference.mp4
   checksums: reference/checksums.sha256

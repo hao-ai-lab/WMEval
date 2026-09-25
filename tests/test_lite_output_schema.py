@@ -4,6 +4,8 @@ import csv
 from pathlib import Path
 from types import MappingProxyType
 
+import pytest
+
 from evaluation.lite.aggregate import (
     AGGREGATION_LABEL,
     build_aggregate,
@@ -310,3 +312,138 @@ def test_extract_metrics_ignores_unknown_modules_and_missing_results() -> None:
     dimension = _dimension("toy", modules=("lpips", "mystery_module"))
     metrics = extract_metrics(dimension, {"lpips": {"lpips_mean": 0.3}})
     assert metrics == {"lpips_mean": 0.3, "lpips_median": None}
+
+
+def test_write_summary_csv_surfaces_extra_means_as_additional_columns(tmp_path: Path) -> None:
+    """`extra_means` names the metrics worth reading next to the headline.
+
+    Before this it was validated by the suite loader and then consumed by
+    nothing, so a curated list had no effect anywhere. Columns are additive:
+    the full `means` block still reports every metric the modules emit, so
+    naming one here surfaces it without hiding the others.
+    """
+    dimension = DimensionSpec(
+        dimension_id="toy_metric",
+        display_name="toy_metric",
+        description="",
+        evaluator="registry",
+        requires_reference=True,
+        cases=("scene_a/main",),
+        modules=("lpips",),
+        aggregate=AggregateSpec(
+            headline="lpips_mean", direction="lower", extra_means=("lpips_median",)
+        ),
+    )
+    suite = _suite_with({"toy_metric": dimension})
+    rows = [
+        _row(model="genie3", case_id="scene_a/main",
+             metrics={"lpips_mean": 0.2, "lpips_median": 0.25}),
+        _row(model="genie3", case_id="scene_b/main",
+             metrics={"lpips_mean": 0.4, "lpips_median": 0.35}),
+    ]
+    aggregate = build_aggregate(suite, rows)
+
+    csv_path = tmp_path / "aggregate_summary.csv"
+    write_summary_csv(csv_path, suite, aggregate)
+
+    with csv_path.open(newline="") as handle:
+        header, row = list(csv.reader(handle))
+
+    assert "toy_metric:lpips_mean" in header
+    assert "toy_metric:lpips_median" in header
+    value = row[header.index("toy_metric:lpips_median")]
+    assert float(value) == pytest.approx(0.30)
+
+
+def test_slosh_extractor_reports_the_meniscus_spectrum_not_the_centroid() -> None:
+    """B.4 traces the MENISCUS topmost-pixel y-coordinate; Table 11 calls L1 the
+    "meniscus power-spectrum L1 distance".
+
+    slosh_spectrum computes both variants and puts the centroid one at the top
+    level for CSV backwards-compatibility, so reading the top level silently
+    reported the wrong trace. The centroid figure is kept under its own key
+    rather than dropped.
+    """
+    from evaluation.lite.aggregate import _extract_slosh_spectrum
+
+    result = {
+        "spectral_l1": 0.11,
+        "dominant_frequency_hz": {"unity": 1.0, "wm": 1.1, "ratio": 1.1, "delta_hz": 0.1},
+        "trace_source": "centroid",
+        "centroid": {
+            "spectral_l1": 0.11,
+            "dominant_frequency_hz": {"unity": 1.0, "wm": 1.1, "ratio": 1.1, "delta_hz": 0.1},
+        },
+        "meniscus": {
+            "spectral_l1": 0.77,
+            "dominant_frequency_hz": {"unity": 2.0, "wm": 2.4, "ratio": 1.2, "delta_hz": 0.4},
+        },
+    }
+
+    metrics = _extract_slosh_spectrum(result)
+
+    assert metrics["spectral_l1"] == 0.77
+    assert metrics["dominant_frequency_hz_unity"] == 2.0
+    assert metrics["dominant_frequency_delta_hz"] == 0.4
+    assert metrics["spectral_l1_centroid"] == 0.11
+
+
+def test_slosh_extractor_falls_back_to_top_level_when_no_meniscus_block() -> None:
+    """Older result payloads have no per-trace blocks; they must still extract."""
+    from evaluation.lite.aggregate import _extract_slosh_spectrum
+
+    metrics = _extract_slosh_spectrum(
+        {
+            "spectral_l1": 0.11,
+            "dominant_frequency_hz": {"unity": 1.0, "wm": 1.1, "ratio": 1.1, "delta_hz": 0.1},
+        }
+    )
+
+    assert metrics["spectral_l1"] == 0.11
+    assert metrics["dominant_frequency_hz_unity"] == 1.0
+
+
+def test_slosh_extractor_surfaces_the_bulk_compensated_diagnostic():
+    """The pre-fix (bottle-compensated) figure stays reachable under its own
+    key so the change in reported numbers is auditable, not silent."""
+    from evaluation.lite.aggregate import _extract_slosh_spectrum
+
+    metrics = _extract_slosh_spectrum(
+        {
+            "meniscus": {"spectral_l1": 1.4729},
+            "centroid": {"spectral_l1": 1.6306},
+            "bulk_compensated": {"spectral_l1": 1.1630},
+        }
+    )
+    assert metrics["spectral_l1"] == pytest.approx(1.4729)
+    assert metrics["spectral_l1_centroid"] == pytest.approx(1.6306)
+    assert metrics["spectral_l1_bulk_compensated"] == pytest.approx(1.1630)
+
+
+def test_surface_orientation_extractor_emits_an_absolute_delta():
+    """Table 5/11 report |dtheta_rms|, not the signed delta. Pooling signed
+    deltas across profiles cancels; the absolute column is the paper's."""
+    from evaluation.lite.aggregate import _extract_liquid_surface_orientation
+
+    metrics = _extract_liquid_surface_orientation(
+        {"surface_tilt_residual_deg": {"unity": 9.0, "wm": 4.0, "delta": -5.0}}
+    )
+    assert metrics["surface_tilt_residual_deg_delta"] == pytest.approx(-5.0)
+    assert metrics["surface_tilt_residual_deg_abs_delta"] == pytest.approx(5.0)
+
+
+def test_volume_conservation_extractor_emits_abs_drift_but_signed_std():
+    """Table 11's columns are `dsigma_A` (signed) and `|dAdot|` (absolute) --
+    the asymmetry is the paper's, so only drift gets an absolute companion."""
+    from evaluation.lite.aggregate import _extract_liquid_volume_conservation
+
+    metrics = _extract_liquid_volume_conservation(
+        {
+            "mask_area_std_normalized": {"unity": 0.1, "wm": 0.3, "delta": 0.2},
+            "mask_area_drift_per_sec": {"unity": 0.004, "wm": 0.001, "delta": -0.003},
+        }
+    )
+    assert metrics["mask_area_drift_per_sec_delta"] == pytest.approx(-0.003)
+    assert metrics["mask_area_drift_per_sec_abs_delta"] == pytest.approx(0.003)
+    assert metrics["mask_area_std_normalized_delta"] == pytest.approx(0.2)
+    assert "mask_area_std_normalized_abs_delta" not in metrics

@@ -46,3 +46,47 @@ def test_velocity_metrics_constant_offset():
     out = compute_velocity_metrics_from_fields(unity=f_u, wm=f_w)
     assert abs(out["epe"]["mean"] - 1.0) < 1e-5
     assert out["cosine_similarity"] < 1.0
+
+
+def test_cosine_similarity_weights_every_frame_equally():
+    """Eq. 14 is a nested expectation E_t E_{p in V_t}, not a flat mean.
+
+    Frame 0 has 4 valid cells all perfectly aligned (cos = 1); frame 1 has a
+    single valid cell that is anti-aligned (cos = -1). Averaging over frames
+    gives (1 + -1)/2 = 0. Flattening over all five valid cells instead gives
+    (4*1 + -1)/5 = +0.6, which over-weights whichever frame happens to expose
+    more liquid — exactly what varies most under chirp_strafe.
+    """
+    from evaluation.modules.liquid_velocity import compute_velocity_metrics_from_fields
+
+    u_unity = np.array([[[1.0, 1.0], [1.0, 1.0]], [[1.0, 0.0], [0.0, 0.0]]])
+    v_unity = np.zeros_like(u_unity)
+    u_wm = np.array([[[1.0, 1.0], [1.0, 1.0]], [[-1.0, 0.0], [0.0, 0.0]]])
+    v_wm = np.zeros_like(u_wm)
+    valid = np.array(
+        [[[True, True], [True, True]], [[True, False], [False, False]]]
+    )
+
+    out = compute_velocity_metrics_from_fields(
+        unity=_make_field(u_unity, v_unity, valid),
+        wm=_make_field(u_wm, v_wm, valid),
+    )
+
+    assert abs(out["cosine_similarity"]) < 1e-6
+
+
+def test_cosine_similarity_skips_frames_with_no_valid_cells():
+    """A frame where the liquid mask is empty contributes no term at all,
+    rather than dragging the per-frame mean toward zero."""
+    from evaluation.modules.liquid_velocity import compute_velocity_metrics_from_fields
+
+    u = np.array([[[1.0, 1.0]], [[1.0, 1.0]]])
+    v = np.zeros_like(u)
+    valid = np.array([[[True, True]], [[False, False]]])
+
+    out = compute_velocity_metrics_from_fields(
+        unity=_make_field(u, v, valid),
+        wm=_make_field(u, v, valid),
+    )
+
+    assert out["cosine_similarity"] > 0.999

@@ -137,3 +137,64 @@ def test_runner_requires_fps(tmp_path: Path):
             answers_out_dir=tmp_path / "answers",
             causal_fail_advance=True,
         )
+
+
+class _RepeatVaryingJudge:
+    """Answers correctly on `correct_repeats`, wrongly on every other pass.
+
+    Stands in for the real judge's run-to-run disagreement at temperature 0.
+    """
+
+    def __init__(self, correct_repeats: set[int]) -> None:
+        self._correct = correct_repeats
+        self.calls: list[JudgeRequest] = []
+
+    def answer(self, request: JudgeRequest) -> str:
+        self.calls.append(request)
+        return "A" if request.repeat_index in self._correct else "B"
+
+
+def test_repeats_produce_fractional_csr(tmp_path: Path):
+    """CSR over N repeats is successes/N, matching the paper's cell semantics.
+
+    A single pass can only ever report csr 0 or 100 because CSR is
+    all-or-nothing per video. The published per-shape figures (e.g. Unity
+    CSR 60 on glancing) are means over five passes of the same video, so the
+    runner has to hand N results to compute_all_metrics, not one.
+    """
+    qa_path = tmp_path / "qa.json"
+    qa_path.write_text(json.dumps(_two_segment_dataset()))
+
+    judge = _RepeatVaryingJudge(correct_repeats={0, 1, 2})
+    metrics = run_causal_step_for_video(
+        qa_dataset_path=qa_path,
+        video_id="vid1",
+        video_path="fake.mp4",
+        judge=judge,
+        answers_out_dir=tmp_path / "answers",
+        causal_fail_advance=True,
+        fps=30.0,
+        repeats=5,
+    )
+
+    assert metrics["csr"] == pytest.approx(60.0)
+    assert {r.repeat_index for r in judge.calls} == {0, 1, 2, 3, 4}
+
+
+def test_single_repeat_is_the_default_and_matches_previous_behaviour(tmp_path: Path):
+    qa_path = tmp_path / "qa.json"
+    qa_path.write_text(json.dumps(_two_segment_dataset()))
+
+    judge = _RepeatVaryingJudge(correct_repeats={0})
+    metrics = run_causal_step_for_video(
+        qa_dataset_path=qa_path,
+        video_id="vid1",
+        video_path="fake.mp4",
+        judge=judge,
+        answers_out_dir=tmp_path / "answers",
+        causal_fail_advance=True,
+        fps=30.0,
+    )
+
+    assert metrics["csr"] == pytest.approx(100.0)
+    assert {r.repeat_index for r in judge.calls} == {0}

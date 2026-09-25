@@ -544,6 +544,10 @@ dimensions:
     cases:
     - MirrorRollingBall/lpips_collision
     - BeamDomino/causal
+    - LiquidContainer/fluid_rest
+    - LiquidContainer/fluid_step_hold
+    - LiquidContainer/fluid_impulse_decay
+    - LiquidContainer/fluid_chirp_strafe
     aggregate:
       headline: lpips_mean
       direction: lower
@@ -704,31 +708,80 @@ dimensions:
       default: App. D.2 treats judge frame sampling as a benchmark
       hyper-parameter and measures the Unity reference itself at CSR 53% (K=4)
       vs 87% (K=8) on tight segments. Do not lower it without re-reading that
-      section. Relatedly, `csr_unity` is carried in extra_means because the
-      reference side is NOT saturated -- Unity CSR is 60.0 on `glancing`, where
-      the GLANCE sub-event is hard for the judge to resolve from sampled frames
-      even on simulator-rendered video, so part of any delta on that shape is
-      reference-side difficulty rather than world-model error.
+      section. `causal_step_vlm_model: gpt-5.4` is pinned for PROVENANCE, not
+      because it measurably beats the cheaper model: the published Table 7
+      numbers were produced with full `gpt-5.4`, so that is what this dimension
+      pins. On the 19 bundled QA items the two models cannot in fact be
+      separated at n=1 -- `gpt-5.4-mini` disagrees with a published `gpt-5.4`
+      pass on 3/19 items, while a second `gpt-5.4` pass under the identical
+      config disagrees with it on 4/19. Judge noise exceeds the model effect.
+      Pick a different judge model if you have reason to, but re-baseline rather
+      than assuming a one-run comparison shows anything.
+      `csr_unity` is carried in extra_means because the reference side is NOT
+      saturated -- the GLANCE sub-event in particular is hard for the judge to
+      resolve from sampled frames even on simulator-rendered video, so part of
+      any delta on that shape is reference-side difficulty rather than
+      world-model error.
+      REPEATED JUDGE PASSES. CSR is all-or-nothing per video
+      (`max_chain_length >= num_segments`, causalstep/metrics.py), so ONE judge
+      pass over a case -- which bundles one video -- can only ever report csr 0
+      or 100, and the judge is not reproducible at temperature 0 (two runs of
+      this exact config differ on 4 of 19 items; `glancing` has been observed at
+      both 0 and 100). `causal_step_judge_repeats: 5` is what makes the reported
+      numbers match the paper's cell semantics: CSR over five passes is
+      successes/5, which is how the published per-shape reference figures land
+      at clean 100, far 100, glancing 60 (= 3/5). Lower it and csr becomes a
+      coin flip again; amcl/ws/dua/icra degrade gracefully either way.
+      THE REFERENCE SIDE IS A FIXTURE, NOT A RUN. When a case ships
+      `reference/artifacts/judge_answers.json`, the reference side replays those
+      recorded passes instead of calling the judge -- zero API cost, and
+      csr_unity stops moving between runs. The recording carries the settings
+      that produced it, and its pass count sets the default repeat count. Record
+      or re-record with:
+        python tools/record_causal_reference_answers.py <case_dir> --passes 5
+      A case with no recording still runs; it just pays the live judge on both
+      sides. This mirrors what the liquid dimension already does with its SAM2
+      and RAFT `.npz` artifacts.
+      `causal_step_wm_full_video` now defaults to TRUE, which is App. C.5's
+      published protocol: the candidate is scored over its whole clip while the
+      reference stays segment-windowed, because world-model rollouts are not
+      frame-aligned to the Unity log. The paper is explicit that this asymmetry
+      slightly favours the candidate and makes Table 7's deltas upper bounds.
+      The one case where it is wrong is an identical pair -- asking the two
+      sides different questions about the same file reported csr_delta = 100.0
+      on a self-pair -- so causal_step detects byte-identical candidate and
+      reference and forces segment windowing, reporting `wm_full_video_reason`
+      when it does. Set it to false explicitly for a candidate you know IS
+      frame-aligned to Unity.
     evaluator: registry
     requires_reference: true
     modules:
     - causal_step
     metric_config:
       causal_step_judge: openai
-      causal_step_vlm_model: gpt-5.4-mini
+      causal_step_vlm_model: gpt-5.4
       causal_step_vlm_num_frames: 8
+      causal_step_judge_repeats: 5
       causal_step_answers_cache_dir: runs/causal_step_cache
     cases:
     - BeamDomino/causal
     - BeamDomino/causal_glancing
     - BeamDomino/causal_direct_strike
     aggregate:
+      # csr_delta matches Table 7's leading column. It is only meaningful
+      # because `causal_step_judge_repeats: 5` makes CSR a mean over five
+      # passes: CSR is all-or-nothing per video, so at one pass it can report
+      # only 0 or 100. amcl_delta is carried below as the ungated companion.
       headline: csr_delta
       direction: lower
+      # mcl_delta is deliberately NOT listed: B.6 defines MCL as the longest
+      # subchain across VIDEOS, but with one video graded over N passes the
+      # max runs over judge passes instead, biased above the single-trajectory
+      # value. Every other metric here averages over passes and stays
+      # coherent. mcl_{unity,wm,delta} remain in each case's full report.
       extra_means:
       - csr_unity
       - amcl_delta
-      - mcl_delta
       - ws_delta
       - rf_delta
       - dua_delta
@@ -774,11 +827,12 @@ dimensions:
       liquid_piv_overlap: 16
       liquid_flow_min_mask_frac: 0.5
       liquid_flow_estimator: raft
+      # Scopes to the velocity field, the one place C.4 specifies it ("the
+      # bottle bulk velocity ... is subtracted from every flow vector"). The
+      # slosh trace is mean-centered only, per B.4.
       liquid_camera_compensation: true
       liquid_camera_regime: c2_static_side
       liquid_max_pairs: 0
-      eval_fps: 4.0
-      max_pairs: 32
     cases:
     - LiquidContainer/fluid_rest
     - LiquidContainer/fluid_step_hold
@@ -787,11 +841,17 @@ dimensions:
     aggregate:
       headline: velocity_cosine_similarity
       direction: higher
+      # Tables 5/11 print `dsigma_A` signed but `|dAdot|` and `|dtheta_rms|`
+      # absolute, and pooling signed deltas across the four action profiles
+      # cancels. The *_abs_delta columns are the paper's; the signed ones are
+      # kept alongside because they carry the direction the absolute discards.
       extra_means:
       - mask_area_std_normalized_delta
+      - mask_area_drift_per_sec_abs_delta
+      - surface_tilt_residual_deg_abs_delta
+      - spectral_l1
       - mask_area_drift_per_sec_delta
       - surface_tilt_residual_deg_delta
-      - spectral_l1
       - surface_tilt_residual_deg_unity
 legacy_case_aliases:
   lpips:

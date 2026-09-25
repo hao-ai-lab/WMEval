@@ -21,6 +21,7 @@ result dict so downstream analysis can distinguish the two regimes.
 """
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 from pathlib import Path
@@ -30,6 +31,7 @@ from ..context import EvaluationContext
 from ._causal_step_delta import DELTA_CONVENTION_STRING, compute_delta
 from ._causal_step_io import ensure_causalstep_importable
 from ._causal_step_judge import Judge, JudgeRequest
+from ._causal_step_recorded_judge import RecordedJudge, load_recorded_answers
 from ._causal_step_runner import run_causal_step_for_video
 
 logger = logging.getLogger(__name__)
@@ -52,10 +54,9 @@ def _read_window_uint8(
     """Decode and return ``num_samples`` evenly-spaced frames from
     ``[start_frame, end_frame)`` without buffering the whole video.
 
-    Earlier this function loaded the entire clip into RAM as one ``uint8``
-    ndarray; for a 30s 1080p video that's ~5.6 GB and is called once per QA.
-    Here we seek to ``start_frame`` and read sequentially up to the last
-    sampled index, keeping only the picks. Out-of-range windows are clamped
+    We seek to ``start_frame`` and read sequentially up to the last sampled
+    index, keeping only the picks, rather than buffering the clip (this is
+    called once per QA). Out-of-range windows are clamped
     so a slightly-too-long Unity reference still yields valid frames; a
     window entirely past the last available frame raises (silently sampling
     from the video tail would feed the judge frames from the wrong segment).
@@ -153,6 +154,32 @@ def _build_judge(context: EvaluationContext) -> Judge:
     raise ValueError(f"unknown causal_step_judge kind: {judge_kind!r}")
 
 
+def _same_video_content(reference: str, candidate: str) -> bool:
+    """True when both paths hold the same bytes.
+
+    Path equality is not enough: a self-pair run discovers the candidate from a
+    candidates root, so it is usually a copy of the reference at a different
+    path. Sizes are compared first so differing files cost one stat call.
+    """
+    try:
+        ref, cand = Path(reference), Path(candidate)
+        if ref.resolve() == cand.resolve():
+            return True
+        if ref.stat().st_size != cand.stat().st_size:
+            return False
+        return _file_digest(ref) == _file_digest(cand)
+    except OSError:
+        return False
+
+
+def _file_digest(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
 def _judge_kind(context: EvaluationContext) -> str:
     return str(context.artifacts.get("causal_step_judge", "openai")).strip().lower()
 
@@ -184,20 +211,54 @@ def analyze_causal_step_from_context(
     video_id = str(arts["causal_step_video_id"])
     out_root = Path(arts["causal_step_answers_cache_dir"])
     causal_fail_advance = bool(arts.get("causal_step_causal_fail_advance", True))
-    wm_full_video = bool(arts.get("causal_step_wm_full_video", False))
+    # App. C.5's published protocol: the candidate is scored over its whole clip
+    # while the reference stays segment-windowed, because world-model rollouts
+    # are not frame-aligned to the Unity log. Default to that.
+    wm_full_video = bool(arts.get("causal_step_wm_full_video", True))
+    wm_full_video_reason = None
+    if wm_full_video and _same_video_content(
+        context.reference_video, context.candidate_video
+    ):
+        # Asking the two sides different questions is only defensible when
+        # they are different videos: on an identical pair every delta must be
+        # 0 by construction.
+        wm_full_video = False
+        wm_full_video_reason = (
+            "candidate is byte-identical to the reference; segment windowing "
+            "forced so the pair measures as the identity it is"
+        )
+        logger.info("causal_step: %s", wm_full_video_reason)
     causalstep_root = arts.get("causalstep_root")
     ensure_causalstep_importable(str(causalstep_root) if causalstep_root else None)
 
     judge = _build_judge(context)
 
+    # The reference side is a fixture, not a computation: same video, same QA,
+    # pinned judge settings. When the case bundle ships a recording we replay
+    # it instead of re-judging, so the reference numbers are reproducible.
+    recorded = None
+    recorded_path = arts.get("causal_step_reference_answers")
+    if recorded_path:
+        recorded = load_recorded_answers(recorded_path)
+
+    repeats = arts.get("causal_step_judge_repeats")
+    if repeats is None:
+        # A recording's pass count is a property of the fixture, so it sets the
+        # default rather than being silently truncated to a single pass.
+        repeats = recorded.num_passes if recorded is not None else 1
+    repeats = int(repeats)
+
+    unity_judge = RecordedJudge(recorded) if recorded is not None else judge
+
     unity = run_causal_step_for_video(
         qa_dataset_path=qa_path,
         video_id=video_id,
         video_path=context.reference_video,
-        judge=judge,
+        judge=unity_judge,
         answers_out_dir=out_root / "unity",
         causal_fail_advance=causal_fail_advance,
         fps=float(context.reference.metadata.fps),
+        repeats=repeats,
     )
     wm = run_causal_step_for_video(
         qa_dataset_path=qa_path,
@@ -208,6 +269,7 @@ def analyze_causal_step_from_context(
         causal_fail_advance=causal_fail_advance,
         fps=float(context.candidate.metadata.fps),
         force_full_video=wm_full_video,
+        repeats=repeats,
     )
 
     delta = compute_delta(unity=unity, wm=wm)
@@ -225,7 +287,13 @@ def analyze_causal_step_from_context(
         "judge_kind": _judge_kind(context),
         "causal_fail_advance": causal_fail_advance,
         "wm_full_video": wm_full_video,
+        "judge_repeats": repeats,
     }
+    if wm_full_video_reason is not None:
+        result["wm_full_video_reason"] = wm_full_video_reason
+    if recorded is not None:
+        result["reference_answers_passes"] = recorded.num_passes
+        result["reference_answers_judge"] = dict(recorded.judge_settings)
     if parse_failures is not None:
         result["judge_parse_failures"] = parse_failures
     return result

@@ -25,6 +25,7 @@ module_params:
 reference:
   artifacts:
     qa_dataset: reference/artifacts/qa_dataset.json
+    judge_answers: reference/artifacts/judge_answers.json
     actions_file: reference/artifacts/actions.txt
     synthetic_action_dir: reference/artifacts
   checksums: reference/checksums.sha256
@@ -38,6 +39,6 @@ evaluator_lock:
   artifact_schema_versions: {}
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
   dependency_versions: {}
-  evaluator_fingerprint: 6ae5e7f7a2f01e7a3cfc12cc430978a4
+  evaluator_fingerprint: dded4fbe4f1891cdb4ea37bcfd77cd54
   module_config: {}
   release_id: wmeval-lite-v1
