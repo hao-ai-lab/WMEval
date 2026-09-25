@@ -132,6 +132,15 @@ python tools/run_wmeval_lite.py run \
 # lighting rollouts on the WMEval-lighting-repro volume; see the docstring)
 modal run tools/run_wmeval_lite_modal.py --dimensions lighting_shading
 
+# ... or over a model tree on the WMEval-lite-candidates volume
+modal run tools/run_wmeval_lite_modal.py::main --model-root /cand/waypoint15 \
+  --dimensions action_controllability,environment_object_consistency,kinematics_mechanics,lighting_shading
+
+# Generate a model's candidates WITHOUT Unity, straight from the bundles
+# (Waypoint-1.5: ref.png / reference frame 0 as the seed, actions.txt as the
+# control program, output resampled to each reference's fps and resolution)
+modal run tools/generate_waypoint15_candidates_modal.py::main
+
 # Subset of dimensions, resumable
 python tools/run_wmeval_lite.py run \
   --suite eval_sets/wmeval_lite_v1 \
