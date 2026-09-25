@@ -1,8 +1,11 @@
 # WMEval/evaluation/modules/slosh_spectrum.py
 """Slosh-frequency spectrum metric for sealed-bottle sloshing.
 
-We trace the vertical centroid of the per-frame liquid mask, take the
-real FFT, drop the DC bin, and report:
+Paper B.4 traces the meniscus topmost-pixel y-coordinate, mean-centers it, and
+takes a real FFT; that is the reported trace (the `meniscus` block). The
+vertical-centroid variant is computed alongside, at the top level, and is less
+sensitive: it averages over the whole liquid mass and attenuates the slosh
+signal. For either trace we drop the DC bin and report:
 
   - The dominant frequency (Hz) for Unity and WM, and their ratio.
   - The L1 distance between unit-area normalized power spectra
@@ -152,30 +155,46 @@ def compute_slosh_spectrum_from_masks(
     if fps <= 0:
         raise ValueError("compute_slosh_spectrum_from_masks: fps must be positive")
 
+    unity_men = _meniscus_y_trace(unity_masks)
+    wm_men = _meniscus_y_trace(wm_masks)
+
+    # B.4/C.4 define this trace as mean-centered only. Bulk compensation is
+    # specified for the velocity field alone, and subtracting the bottle
+    # centroid here would fold the bottle track's own spectrum, plus SAM 2
+    # boundary jitter, into the liquid signal.
     centroid = _spectrum_block(
         unity_trace=_centroid_y_trace(unity_masks),
         wm_trace=_centroid_y_trace(wm_masks),
         fps=fps,
-        unity_bottle_y=unity_bottle_y,
-        wm_bottle_y=wm_bottle_y,
+        unity_bottle_y=None,
+        wm_bottle_y=None,
     )
     meniscus = _spectrum_block(
-        unity_trace=_meniscus_y_trace(unity_masks),
-        wm_trace=_meniscus_y_trace(wm_masks),
+        unity_trace=unity_men,
+        wm_trace=wm_men,
         fps=fps,
-        unity_bottle_y=unity_bottle_y,
-        wm_bottle_y=wm_bottle_y,
+        unity_bottle_y=None,
+        wm_bottle_y=None,
     )
 
-    # Top-level keys (dominant_frequency_hz / spectral_l1) point at the
-    # CENTROID variant for backwards compatibility with the existing
-    # leaderboard CSV columns; meniscus is reported under its own block.
-    return {
+    # Top-level keys carry the centroid variant; B.4's meniscus trace is
+    # reported under its own block and is what the aggregate layer reads.
+    out = {
         **centroid,
         "trace_source": "centroid",
         "centroid": centroid,
         "meniscus": meniscus,
     }
+    if unity_bottle_y is not None or wm_bottle_y is not None:
+        # Non-paper variant, retained as a diagnostic.
+        out["bulk_compensated"] = _spectrum_block(
+            unity_trace=unity_men,
+            wm_trace=wm_men,
+            fps=fps,
+            unity_bottle_y=unity_bottle_y,
+            wm_bottle_y=wm_bottle_y,
+        )
+    return out
 
 
 def analyze_slosh_spectrum_from_context(

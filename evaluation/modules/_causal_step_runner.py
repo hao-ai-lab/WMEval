@@ -33,6 +33,7 @@ def run_causal_step_for_video(
     fps: float,
     causalstep_root: Path | None = None,
     force_full_video: bool = False,
+    repeats: int = 1,
 ) -> Dict[str, Any]:
     """Judge every QA for `video_id`, run CausalStep, return per-video metrics dict.
 
@@ -46,9 +47,19 @@ def run_causal_step_for_video(
     temporally aligned with the Unity reference (e.g. Project Genie's manually-driven
     rollouts), where Unity-derived segment windows would slice the wrong frames.
 
+    ``repeats`` is how many independent judge passes to run over the same video.
+    CSR is all-or-nothing per video, so a single pass can only ever report 0 or
+    100; the published per-shape figures (e.g. Unity CSR 60 on `glancing`) are
+    means over five passes. Every pass is handed to ``compute_all_metrics`` as a
+    separate result, which is what turns CSR into successes/repeats and AMCL into
+    a mean. Each pass carries its own ``repeat_index`` so caching judges treat it
+    as a distinct request.
+
     Returns keys: csr, amcl, mcl, rf, ws, dua, icra (lowercase, matching
     causalstep.metrics.compute_all_metrics output and `compute_delta` input).
     """
+    if repeats < 1:
+        raise ValueError(f"repeats must be >= 1, got {repeats}")
     ensure_causalstep_importable(str(causalstep_root) if causalstep_root else None)
 
     from causalstep.schema import load_dataset
@@ -80,58 +91,73 @@ def run_causal_step_for_video(
             cap.release()
         full_end_sec = full_end_frame / fps if fps else float(full_end_frame)
 
-    # Build answers map by invoking the judge for every QA.
-    answers_map: dict[tuple[str, int, str], str] = {}
-    for seg in video.segments:
-        if force_full_video:
-            start_sec, end_sec = full_start_sec, full_end_sec
-            start_frame, end_frame = full_start_frame, full_end_frame
-        else:
-            start_sec = float(seg.start_time) if seg.start_time is not None else 0.0
-            end_sec = float(seg.end_time) if seg.end_time is not None else 0.0
-            start_frame, end_frame = _frame_window(start_sec, end_sec, fps)
+    def _judge_all_qas(repeat_index: int) -> dict[tuple[str, int, str], str]:
+        """One full judge pass over every QA in this video."""
+        answers_map: dict[tuple[str, int, str], str] = {}
+        for seg in video.segments:
+            if force_full_video:
+                start_sec, end_sec = full_start_sec, full_end_sec
+                start_frame, end_frame = full_start_frame, full_end_frame
+            else:
+                start_sec = float(seg.start_time) if seg.start_time is not None else 0.0
+                end_sec = float(seg.end_time) if seg.end_time is not None else 0.0
+                start_frame, end_frame = _frame_window(start_sec, end_sec, fps)
 
-        desc_qa = video.descriptive_qas.get(seg.index)
-        if desc_qa is not None:
-            letter = judge.answer(
-                JudgeRequest(
-                    video_path=video_path,
-                    segment_index=seg.index,
-                    qa_type="descriptive",
-                    question=desc_qa.question,
-                    choices=desc_qa.choices,
-                    start_sec=start_sec,
-                    end_sec=end_sec,
-                    segment_frames_start=start_frame,
-                    segment_frames_end=end_frame,
+            desc_qa = video.descriptive_qas.get(seg.index)
+            if desc_qa is not None:
+                letter = judge.answer(
+                    JudgeRequest(
+                        video_path=video_path,
+                        segment_index=seg.index,
+                        qa_type="descriptive",
+                        question=desc_qa.question,
+                        choices=desc_qa.choices,
+                        start_sec=start_sec,
+                        end_sec=end_sec,
+                        segment_frames_start=start_frame,
+                        segment_frames_end=end_frame,
+                        repeat_index=repeat_index,
+                    )
                 )
-            )
-            answers_map[(video_id, seg.index, "descriptive")] = letter
-        causal_qa = video.causal_qas.get(seg.index)
-        if causal_qa is not None:
-            letter = judge.answer(
-                JudgeRequest(
-                    video_path=video_path,
-                    segment_index=seg.index,
-                    qa_type="causal",
-                    question=causal_qa.question,
-                    choices=causal_qa.choices,
-                    start_sec=start_sec,
-                    end_sec=end_sec,
-                    segment_frames_start=start_frame,
-                    segment_frames_end=end_frame,
+                answers_map[(video_id, seg.index, "descriptive")] = letter
+            causal_qa = video.causal_qas.get(seg.index)
+            if causal_qa is not None:
+                letter = judge.answer(
+                    JudgeRequest(
+                        video_path=video_path,
+                        segment_index=seg.index,
+                        qa_type="causal",
+                        question=causal_qa.question,
+                        choices=causal_qa.choices,
+                        start_sec=start_sec,
+                        end_sec=end_sec,
+                        segment_frames_start=start_frame,
+                        segment_frames_end=end_frame,
+                        repeat_index=repeat_index,
+                    )
                 )
-            )
-            answers_map[(video_id, seg.index, "causal")] = letter
+                answers_map[(video_id, seg.index, "causal")] = letter
+
+        return answers_map
 
     answers_out_dir = Path(answers_out_dir)
     answers_out_dir.mkdir(parents=True, exist_ok=True)
-    answers_path = answers_out_dir / f"{video_id}_answers.json"
-    write_answers(str(answers_path), answers_map, video_id=video_id)
 
-    model = PrecomputedModel(answers=answers_map, video_id=video_id)
-    chain_result = evaluate_chain(video, model, causal_fail_advance=causal_fail_advance)
-    isolated_desc = evaluate_descriptive_isolated(video, model)
-    isolated_causal = evaluate_causal_isolated(video, model)
-    agg = compute_all_metrics([chain_result], [isolated_desc], [isolated_causal])
+    chain_results = []
+    isolated_descs = []
+    isolated_causals = []
+    for repeat_index in range(repeats):
+        answers_map = _judge_all_qas(repeat_index)
+        suffix = "" if repeat_index == 0 else f".r{repeat_index}"
+        answers_path = answers_out_dir / f"{video_id}_answers{suffix}.json"
+        write_answers(str(answers_path), answers_map, video_id=video_id)
+
+        model = PrecomputedModel(answers=answers_map, video_id=video_id)
+        chain_results.append(
+            evaluate_chain(video, model, causal_fail_advance=causal_fail_advance)
+        )
+        isolated_descs.append(evaluate_descriptive_isolated(video, model))
+        isolated_causals.append(evaluate_causal_isolated(video, model))
+
+    agg = compute_all_metrics(chain_results, isolated_descs, isolated_causals)
     return dict(agg.to_dict()["metrics"])

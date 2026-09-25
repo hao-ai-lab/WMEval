@@ -126,6 +126,13 @@ def _extract_liquid_velocity(result: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+# Tables 5/11 print `dsigma_A` signed but `|dAdot|` and `|dtheta_rms|`
+# absolute. The signed value is what the module computes and stays canonical;
+# the absolute companion reproduces the paper's columns, which matters under
+# pooling because a mean of signed deltas cancels across action profiles.
+_ABS_DELTA_METRICS = ("mask_area_drift_per_sec", "surface_tilt_residual_deg")
+
+
 def _extract_liquid_volume_conservation(result: Mapping[str, Any]) -> dict[str, Any]:
     metrics: dict[str, Any] = {}
     for key in ("mask_area_std_normalized", "mask_area_drift_per_sec"):
@@ -133,6 +140,8 @@ def _extract_liquid_volume_conservation(result: Mapping[str, Any]) -> dict[str, 
             value = _numeric(_get(result, key, family))
             if value is not None:
                 metrics[f"{key}_{family}"] = value
+                if family == "delta" and key in _ABS_DELTA_METRICS:
+                    metrics[f"{key}_abs_delta"] = abs(value)
     return metrics
 
 
@@ -142,25 +151,47 @@ def _extract_liquid_surface_orientation(result: Mapping[str, Any]) -> dict[str, 
         value = _numeric(_get(result, "surface_tilt_residual_deg", family))
         if value is not None:
             metrics[f"surface_tilt_residual_deg_{family}"] = value
+            if family == "delta":
+                metrics["surface_tilt_residual_deg_abs_delta"] = abs(value)
     return metrics
 
 
 def _extract_slosh_spectrum(result: Mapping[str, Any]) -> dict[str, Any]:
-    return {
+    # B.4 traces the meniscus topmost-pixel y-coordinate and Table 11 names L1
+    # the "meniscus power-spectrum L1 distance", so the `meniscus` block is the
+    # trace to report; `slosh_spectrum` keeps the less sensitive centroid
+    # variant at the top level. Fall back to the top level for payloads that
+    # predate the split, and keep the centroid figure under its own key.
+    paper_trace = result.get("meniscus")
+    source: Mapping[str, Any] = (
+        paper_trace if isinstance(paper_trace, Mapping) else result
+    )
+    metrics = {
         "dominant_frequency_hz_unity": _numeric(
-            _get(result, "dominant_frequency_hz", "unity")
+            _get(source, "dominant_frequency_hz", "unity")
         ),
         "dominant_frequency_hz_wm": _numeric(
-            _get(result, "dominant_frequency_hz", "wm")
+            _get(source, "dominant_frequency_hz", "wm")
         ),
         "dominant_frequency_ratio": _numeric(
-            _get(result, "dominant_frequency_hz", "ratio")
+            _get(source, "dominant_frequency_hz", "ratio")
         ),
         "dominant_frequency_delta_hz": _numeric(
-            _get(result, "dominant_frequency_hz", "delta_hz")
+            _get(source, "dominant_frequency_hz", "delta_hz")
         ),
-        "spectral_l1": _numeric(result.get("spectral_l1")),
+        "spectral_l1": _numeric(source.get("spectral_l1")),
     }
+    centroid = result.get("centroid")
+    if isinstance(centroid, Mapping):
+        metrics["spectral_l1_centroid"] = _numeric(centroid.get("spectral_l1"))
+    # Non-paper variant (B.4 mean-centers the trace and nothing else), kept as
+    # a diagnostic.
+    compensated = result.get("bulk_compensated")
+    if isinstance(compensated, Mapping):
+        metrics["spectral_l1_bulk_compensated"] = _numeric(
+            compensated.get("spectral_l1")
+        )
+    return metrics
 
 
 def _extract_shadow_consistency(result: Mapping[str, Any]) -> dict[str, Any]:
@@ -365,6 +396,15 @@ def write_aggregate_json(path: str | Path, aggregate: Mapping[str, Any]) -> None
     )
 
 
+def _extra_mean_names(dimension, headline_name: str) -> tuple[str, ...]:
+    """`extra_means` minus the headline, which already has its own columns."""
+    if dimension.aggregate is None:
+        return ()
+    return tuple(
+        name for name in dimension.aggregate.extra_means if name != headline_name
+    )
+
+
 def write_summary_csv(
     path: str | Path, suite: Suite, aggregate: Mapping[str, Any]
 ) -> None:
@@ -378,6 +418,11 @@ def write_summary_csv(
         )
         fieldnames.append(f"{dimension_id}:{headline_name}")
         fieldnames.append(f"{dimension_id}:{headline_name}_std")
+        # `extra_means` names the metrics worth reading beside the headline.
+        # Additive: the JSON `means` block still carries every metric the
+        # modules emit, so listing one here surfaces it without hiding others.
+        for extra in _extra_mean_names(dimension, headline_name):
+            fieldnames.append(f"{dimension_id}:{extra}")
 
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -392,4 +437,13 @@ def write_summary_csv(
                 headline = summary.get("headline") or {}
                 row.append(headline.get("value"))
                 row.append(headline.get("std_across_cases"))
+                dimension = suite.dimensions[dimension_id]
+                headline_name = (
+                    dimension.aggregate.headline
+                    if dimension.aggregate is not None
+                    else "n/a"
+                )
+                means = summary.get("means") or {}
+                for extra in _extra_mean_names(dimension, headline_name):
+                    row.append(means.get(extra))
             writer.writerow(row)

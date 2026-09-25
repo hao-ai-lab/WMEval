@@ -29,6 +29,11 @@ class JudgeRequest:
     end_sec: float
     segment_frames_start: int | None = None
     segment_frames_end: int | None = None
+    # Which repeated judge pass this request belongs to. Answers are sampled,
+    # so the benchmark averages several passes over the same video (see
+    # `run_causal_step_for_video`'s `repeats`). Caching judges must treat
+    # different repeats as different requests.
+    repeat_index: int = 0
     # For causal QAs we may also want the previous segment window; kept optional:
     prev_segment_index: int | None = None
     prev_start_sec: float | None = None

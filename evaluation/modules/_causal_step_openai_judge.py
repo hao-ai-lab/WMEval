@@ -7,7 +7,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 import numpy as np
 from PIL import Image
@@ -103,6 +103,12 @@ def _cache_key(
     Including `num_frame_samples`, `temperature`, and `prompt_version` is the
     point: bumping any of these must invalidate cached entries, otherwise reruns
     silently keep returning answers from the old configuration.
+
+    `temperature` here is the configured field, which for the gpt-5 family is
+    not what gets sent — `answer` omits it entirely (see
+    `OpenAIJudge.effective_temperature`). The key deliberately keeps the
+    configured value: it still partitions the cache correctly, and nothing
+    user-facing reads it.
     """
     h = hashlib.sha256()
     h.update(model.encode())
@@ -113,6 +119,9 @@ def _cache_key(
     h.update(prompt.encode())
     h.update(b"\0")
     h.update(f"n={num_frame_samples}|t={temperature:.6f}|pv={prompt_version}".encode())
+    # Mixed in only when non-zero, so single-pass keys are unchanged.
+    if req.repeat_index:
+        h.update(f"|r={req.repeat_index}".encode())
     return h.hexdigest()[:32]
 
 
@@ -131,6 +140,37 @@ class OpenAIJudge:
     def __post_init__(self) -> None:
         self.cache_dir = Path(self.cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def effective_temperature(self) -> Optional[float]:
+        """The temperature actually applied, or None when none is sent.
+
+        `answer` omits `temperature` entirely for the gpt-5 family and the
+        o-series because they reject a non-default value, so those calls run at
+        the API default rather than at `self.temperature`. Anything that
+        records "the settings that produced these answers" must report this,
+        not the configured field — otherwise a recording claims temperature 0
+        for sampled decoding, and run-to-run disagreement looks like an
+        anomaly instead of the expected behaviour it is.
+        """
+        if _is_newer_openai_model(self.model):
+            return None
+        return float(self.temperature)
+
+    def describe_settings(self) -> dict[str, Any]:
+        """The judge settings as applied, for embedding in a recording."""
+        settings: dict[str, Any] = {
+            "model": self.model,
+            "num_frame_samples": int(self.num_frame_samples),
+            "prompt_version": self.prompt_version,
+            "temperature": self.effective_temperature,
+        }
+        if settings["temperature"] is None:
+            settings["temperature_note"] = (
+                "omitted from the request; this model rejects a non-default "
+                "temperature, so answers were sampled at the API default"
+            )
+        return settings
 
     def answer(self, request: JudgeRequest) -> str:
         prompt = build_prompt(request)
@@ -192,7 +232,7 @@ class OpenAIJudge:
                 exc,
                 raw,
             )
-            # Don't cache an unparseable response — a retransient model glitch
+            # Don't cache an unparseable response — a transient model glitch
             # would otherwise lock the dataset to a permanently empty answer.
             return ""
 

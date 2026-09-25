@@ -1,0 +1,62 @@
+schema_version: 2
+case_id: LiquidContainer/fluid_rest
+scene: LiquidContainer
+display_name: LiquidContainer
+prompt: 'A photorealistic outdoor daytime scene. The viewpoint is roughly at waist
+  height, with a slight low-angle pitch, framing a single object at the center. The
+  ground is a large flat checkerboard tile floor extending to the horizon, alternating
+  light-grey and dark-grey squares; each tile is stamped with a small colored cross
+  marker for visual texture and parallax. The background is a coastal Mediterranean
+  vista: turquoise ocean horizon on the left, low coastal vegetation in the middle
+  distance, and a row of white apartment buildings on the right. The sky is bright,
+  partly cloudy, with blue skies and bright cumulus clouds. Lighting is soft, natural
+  daylight from above and slightly to the right, casting a hard contact shadow on
+  the floor directly under any object placed at the center of frame. Standard Earth
+  gravity, downward. No people, no other props, no UI overlays, no text, no watermarks.
+
+
+  A clear glass long-neck beer bottle with a glossy red cap, standing upright at the
+  center of the frame. The bottle is 50% full of an opaque, dark liquid (cola-colored).
+  The empty upper half is made of transparent glass, with subtle specular reflections
+  of the sky. The bottle is rigid and behaves as a physical object: it rotates in
+  response to control inputs but does not deform.
+
+
+  The bottle is not commanded to move at all for the entire clip: no strafe, no jump,
+  no rotation. Any bottle or liquid motion in a generation is hallucinated.'
+perspective: third_person
+modules:
+- liquid_velocity
+- liquid_volume_conservation
+- liquid_surface_orientation
+- slosh_spectrum
+- lpips
+reference:
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: liquid_832x464_16fps
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
+  evaluator_fingerprint: f508c1ca85c459baa28365ee221e0de8
+  module_config:
+    liquid:
+      normalization_fps: 16.0
+      sam2_model: facebook/sam2.1-hiera-small
+      liquid_prompt: the liquid inside the bottle
+      bottle_prompt: the glass bottle
+      max_pairs: 512
+      liquid_max_pairs: 0
+      raft:
+        window_size: 32
+        overlap: 16
+        min_mask_frac: 0.5
+  artifact_schema_versions: {}
+  dependency_versions: {}

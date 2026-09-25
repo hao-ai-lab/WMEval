@@ -267,3 +267,117 @@ def test_openai_judge_does_not_cache_unparseable_response(tmp_path: Path):
     out2 = judge.answer(req)
     assert out2 == "A"
     assert fake_client.chat.completions.create.call_count == 2
+
+
+def test_cache_key_unchanged_for_default_repeat_index():
+    """The existing on-disk answer cache holds real, paid-for judge responses.
+
+    Adding repeat support must not invalidate it, so the key for a request at
+    the default repeat index is pinned here. If this constant changes, every
+    cached answer under runs/causal_step_cache silently becomes a miss.
+    """
+    from evaluation.modules._causal_step_openai_judge import _cache_key
+
+    req = JudgeRequest(
+        video_path="x.mp4",
+        segment_index=1,
+        qa_type="causal",
+        question="q",
+        choices=["A) yes", "B) no"],
+        start_sec=0.0,
+        end_sec=1.0,
+        segment_frames_start=0,
+        segment_frames_end=30,
+    )
+    key = _cache_key(
+        req,
+        model="gpt-4o",
+        prompt=build_prompt(req),
+        num_frame_samples=8,
+        temperature=0.0,
+        prompt_version="v1",
+    )
+    assert key == "caadffd5fdea8aa6152c7093b05a7cd8"
+
+
+def test_openai_judge_repeat_index_misses_cache(tmp_path: Path):
+    """Each repeat must be an independent judge draw.
+
+    The paper's per-shape reference figures (e.g. Unity CSR 60 on glancing)
+    are means over five passes of the same video. If repeats shared a cache
+    key every pass would replay one answer and the mean would be degenerate.
+    """
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))]
+    )
+    cache_dir = tmp_path / "cache"
+
+    def _req(repeat_index: int) -> JudgeRequest:
+        return JudgeRequest(
+            video_path="x.mp4",
+            segment_index=1,
+            qa_type="causal",
+            question="q",
+            choices=["A) yes", "B) no"],
+            start_sec=0.0,
+            end_sec=1.0,
+            segment_frames_start=0,
+            segment_frames_end=30,
+            repeat_index=repeat_index,
+        )
+
+    judge = OpenAIJudge(
+        client=fake_client,
+        model="gpt-4o",
+        cache_dir=cache_dir,
+        frames_provider=_windowed_frames_provider(60),
+        num_frame_samples=8,
+    )
+    judge.answer(_req(0))
+    assert fake_client.chat.completions.create.call_count == 1
+    judge.answer(_req(1))
+    assert fake_client.chat.completions.create.call_count == 2
+    # Re-asking the same repeat is still a cache hit.
+    judge.answer(_req(1))
+    assert fake_client.chat.completions.create.call_count == 2
+
+
+def _judge(tmp_path, model):
+    return OpenAIJudge(
+        client=MagicMock(),
+        model=model,
+        cache_dir=tmp_path / "cache",
+        frames_provider=lambda *a, **k: np.zeros((1, 4, 4, 3), dtype=np.uint8),
+        num_frame_samples=8,
+    )
+
+
+def test_effective_temperature_is_none_when_the_request_omits_it(tmp_path):
+    """gpt-5 / o-series reject a non-default `temperature`, so `answer` never
+    sends one. Reporting the configured 0.0 would claim a setting that was not
+    applied -- the calls actually run at the API default."""
+    judge = _judge(tmp_path, "gpt-5.4")
+    assert judge.effective_temperature is None
+
+
+def test_effective_temperature_is_the_configured_value_when_it_is_sent(tmp_path):
+    judge = _judge(tmp_path, "gpt-4o")
+    assert judge.effective_temperature == pytest.approx(0.0)
+
+
+def test_describe_settings_reports_what_was_actually_applied(tmp_path):
+    judge = _judge(tmp_path, "gpt-5.4")
+    settings = judge.describe_settings()
+    assert settings["model"] == "gpt-5.4"
+    assert settings["num_frame_samples"] == 8
+    assert settings["prompt_version"] == "v1"
+    assert settings["temperature"] is None
+    # A bare null is ambiguous between "unset" and "default"; say which.
+    assert "api default" in settings["temperature_note"].lower()
+
+
+def test_describe_settings_keeps_the_temperature_for_older_models(tmp_path):
+    settings = _judge(tmp_path, "gpt-4o").describe_settings()
+    assert settings["temperature"] == pytest.approx(0.0)
+    assert "temperature_note" not in settings

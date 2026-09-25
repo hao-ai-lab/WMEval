@@ -1,18 +1,14 @@
-# BeamDomino chain-reaction clip:
-# Design goals:
-# 1. Read the setup first: blue floor ball, roof ball, table, and inner domino arcs.
-# 2. Make one clear, glancing hit on the front-right pillar instead of blasting straight through.
-# 3. Bleed speed and recenter immediately after impact so the ball stays in the table/domino region.
-# 4. Finish with a small follow-up nudge while the collapse plays out nearby.
-
-{"op":"wait","ms":450}
-{"op":"down","key":"KeyW","ms":0}
-{"op":"hold","key":"KeyD","ms":120}
-{"op":"wait","ms":430}
-{"op":"up","key":"KeyW","ms":0}
-{"op":"hold","key":"KeyA","ms":220}
-{"op":"hold","key":"KeyS","ms":170}
-{"op":"wait","ms":140}
-{"op":"hold","key":"KeyD","ms":110}
-{"op":"hold","key":"KeyW","ms":180}
-{"op":"wait","ms":5600}
+# BeamDomino / causal -- commanded ball-force action trajectory.
+# Straight forward into the nearest pillar; the full four-stage chain.
+#
+# Provenance: reproduced from the deterministic policy TRAJECTORIES['clean'] in
+# WorldModelBenchScenePrivate/GameScenes/BeamDomino/controller.py, which drove the
+# Unity ML-Agents capture that produced this case's reference video. The policy is a
+# pure function of simulation time, sampled at DECISIONS_PER_SECOND = 10 Hz over
+# the clip's 12.1 s. action.npy is the (122, 2) array of
+# (z_force, x_force) in [-1, 1]: z is forward (W/S), x is lateral (D/A).
+#
+# start_s   end_s   z_force  x_force
+   0.000    1.900      0.00     0.00
+   2.000    6.900      1.00     0.00
+   7.000   12.100      0.00     0.00

@@ -81,3 +81,55 @@ def test_too_short_sequence_returns_nan():
     masks = _oscillating_mask_sequence(T=3, freq_hz=2.0, fps=30.0)
     out = compute_slosh_spectrum_from_masks(unity_masks=masks, wm_masks=masks, fps=30.0)
     assert np.isnan(out["dominant_frequency_hz"]["unity"])
+
+
+def _drifting_bottle_masks(T: int, fps: float, H: int = 80, W: int = 32) -> tuple[np.ndarray, np.ndarray]:
+    """A liquid trace with one clean slosh mode, plus a bottle-y trace that
+    carries a *different* frequency — the bulk-motion signal the paper does
+    not subtract from the slosh trace."""
+    t = np.arange(T) / fps
+    liquid = np.stack([_mask_with_centroid_y(H, W, H / 2.0 + 10.0 * np.sin(2 * np.pi * 2.0 * ti)) for ti in t])
+    bottle_y = 3.0 * np.sin(2 * np.pi * 5.0 * t)
+    return liquid, bottle_y
+
+
+def test_slosh_trace_is_mean_centered_only_not_bulk_compensated():
+    """B.4/C.4 mean-center the meniscus trace; bulk compensation is specified
+    only for the velocity field. Passing a bottle trace must not move the
+    canonical spectral_l1."""
+    from evaluation.modules.slosh_spectrum import compute_slosh_spectrum_from_masks
+
+    fps, T = 30.0, 240
+    unity, bottle_u = _drifting_bottle_masks(T, fps)
+    wm, bottle_w = _drifting_bottle_masks(T, fps)
+    wm = _oscillating_mask_sequence(T, 3.0, fps)
+
+    plain = compute_slosh_spectrum_from_masks(unity_masks=unity, wm_masks=wm, fps=fps)
+    with_bottle = compute_slosh_spectrum_from_masks(
+        unity_masks=unity, wm_masks=wm, fps=fps,
+        unity_bottle_y=bottle_u, wm_bottle_y=bottle_w,
+    )
+    assert with_bottle["spectral_l1"] == pytest.approx(plain["spectral_l1"], abs=1e-12)
+    assert with_bottle["meniscus"]["spectral_l1"] == pytest.approx(
+        plain["meniscus"]["spectral_l1"], abs=1e-12
+    )
+
+
+def test_bulk_compensated_spectrum_is_kept_as_a_diagnostic():
+    """The compensated figure is not the paper's metric, but it is what the
+    suite reported before this fix, so it stays available under its own key."""
+    from evaluation.modules.slosh_spectrum import compute_slosh_spectrum_from_masks
+
+    fps, T = 30.0, 240
+    unity, bottle_u = _drifting_bottle_masks(T, fps)
+    wm = _oscillating_mask_sequence(T, 3.0, fps)
+    _, bottle_w = _drifting_bottle_masks(T, fps)
+
+    out = compute_slosh_spectrum_from_masks(
+        unity_masks=unity, wm_masks=wm, fps=fps,
+        unity_bottle_y=bottle_u, wm_bottle_y=bottle_w,
+    )
+    assert "bulk_compensated" in out
+    assert out["bulk_compensated"]["spectral_l1"] != pytest.approx(
+        out["spectral_l1"], abs=1e-9
+    )

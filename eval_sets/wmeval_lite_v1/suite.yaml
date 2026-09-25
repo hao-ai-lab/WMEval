@@ -417,6 +417,16 @@
 # writeup in PENDING.md.
 # ==========================================================================
 #
+# ==========================================================================
+# 2026-09-18: physical_causality and fluid_mechanics wired. The suite now
+# covers 8 of the paper's 8 dimensions. Both were pure data-authoring work --
+# PR #19's API (LIQUID_MODULES, the normalization tokens,
+# install_liquid_reference_artifacts, ARTIFACT_QA_DATASET, every module in
+# MODULE_REGISTRY and every extractor in lite/aggregate.py) was already
+# merged. Two small code fixes were needed anyway; see the bottom of this
+# banner.
+# ==========================================================================
+#
 # Target scene x dimension mapping (paper, 2026-07-08):
 #   ChessBoard        -> prompt_scene_consistency (live), lighting_shading (data pending),
 #                        environment_object_consistency (live, scoped, see below)
@@ -428,9 +438,8 @@
 #   WanderingGarden   -> scene_character_consistency                     (data pending),
 #                        environment_object_consistency (live, scoped, see below)
 #   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting, 2026-09-15)
-#   LiquidContainer   -> fluid_mechanics                                 (data pending, PR #19 artifacts)
-#   BeamDomino        -> physical_causality (cases/BeamDomino/causal is earmarked
-#                        for it: the rollout is the full causal chain; needs qa_dataset)
+#   LiquidContainer   -> fluid_mechanics (LIVE, all 4 action profiles, 2026-09)
+#   BeamDomino        -> physical_causality (LIVE, all 3 trajectory shapes, 2026-09)
 #   BilliardGame      -> per paper Table 10 + Sec 4.2 results narrative, its REAL
 #                        primary dimension is kinematics_mechanics (paper explicitly
 #                        compares Billiard Game vs Racing Car there), not
@@ -603,11 +612,8 @@
 #                              "player" ball check above, still fully blocked:
 #                              WanderingGarden (the paper-mapped scene) has zero
 #                              case data.
-#   physical_causality         BeamDomino/causal (earmarked) + qa_dataset; more strike
-#                              variants (causal_glancing, ...) as data lands — PR #19.
-#   fluid_mechanics            LiquidContainer/fluid_rest, fluid_step_hold,
-#                              fluid_impulse_decay, fluid_chirp_strafe — pending PR #19
-#                              .npz reference artifacts.
+#   (physical_causality and fluid_mechanics moved out of this list on
+#   2026-09-18 — both are now live; see the dated banner at the top.)
 suite_name: WMEval Lite
 version: v1
 description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
@@ -635,6 +641,10 @@ dimensions:
     cases:
     - MirrorRollingBall/lpips_collision
     - BeamDomino/causal
+    - LiquidContainer/fluid_rest
+    - LiquidContainer/fluid_step_hold
+    - LiquidContainer/fluid_impulse_decay
+    - LiquidContainer/fluid_chirp_strafe
     aggregate:
       headline: lpips_mean
       direction: lower
@@ -781,6 +791,169 @@ dimensions:
       direction: lower
       extra_means:
       - dtw_px_mean
+  physical_causality:
+    display_name: Physical Causality
+    description: >-
+      Paper B.6 / App. C.5, CausalStep stepwise QA on BeamDomino's
+      ROLLING -> IMPACT -> TOPPLE -> CASCADE chain. A shared VLM judge grades
+      the same QA twice -- once on the Unity reference, once on the candidate --
+      and every metric is reported as a {unity, wm, delta} triple, so a question
+      the judge fails on the reference is visibly uninformative about the world
+      model. Sign convention (evaluation/modules/_causal_step_delta.py):
+      positive delta always means the world model is worse than Unity.
+      All three trajectory shapes the paper reports are wired, each graded with
+      its own shape-specific QA chain (canonical / glancing / direct_strike), so
+      a physically valid non-canonical outcome is not penalised by questions that
+      assume the canonical chain.
+      `causal_step_vlm_num_frames: 8` is deliberate and load-bearing, not a
+      default: App. D.2 treats judge frame sampling as a benchmark
+      hyper-parameter and measures the Unity reference itself at CSR 53% (K=4)
+      vs 87% (K=8) on tight segments. Do not lower it without re-reading that
+      section. `causal_step_vlm_model: gpt-5.4` is pinned for PROVENANCE, not
+      because it measurably beats the cheaper model: the published Table 7
+      numbers were produced with full `gpt-5.4`, so that is what this dimension
+      pins. On the 19 bundled QA items the two models cannot in fact be
+      separated at n=1 -- `gpt-5.4-mini` disagrees with a published `gpt-5.4`
+      pass on 3/19 items, while a second `gpt-5.4` pass under the identical
+      config disagrees with it on 4/19. Judge noise exceeds the model effect.
+      Pick a different judge model if you have reason to, but re-baseline rather
+      than assuming a one-run comparison shows anything.
+      `csr_unity` is carried in extra_means because the reference side is NOT
+      saturated -- the GLANCE sub-event in particular is hard for the judge to
+      resolve from sampled frames even on simulator-rendered video, so part of
+      any delta on that shape is reference-side difficulty rather than
+      world-model error.
+      REPEATED JUDGE PASSES. CSR is all-or-nothing per video
+      (`max_chain_length >= num_segments`, causalstep/metrics.py), so ONE judge
+      pass over a case -- which bundles one video -- can only ever report csr 0
+      or 100, and the judge is not reproducible at temperature 0 (two runs of
+      this exact config differ on 4 of 19 items; `glancing` has been observed at
+      both 0 and 100). `causal_step_judge_repeats: 5` is what makes the reported
+      numbers match the paper's cell semantics: CSR over five passes is
+      successes/5, which is how the published per-shape reference figures land
+      at clean 100, far 100, glancing 60 (= 3/5). Lower it and csr becomes a
+      coin flip again; amcl/ws/dua/icra degrade gracefully either way.
+      THE REFERENCE SIDE IS A FIXTURE, NOT A RUN. When a case ships
+      `reference/artifacts/judge_answers.json`, the reference side replays those
+      recorded passes instead of calling the judge -- zero API cost, and
+      csr_unity stops moving between runs. The recording carries the settings
+      that produced it, and its pass count sets the default repeat count. Record
+      or re-record with:
+        python tools/record_causal_reference_answers.py <case_dir> --passes 5
+      A case with no recording still runs; it just pays the live judge on both
+      sides. This mirrors what the liquid dimension already does with its SAM2
+      and RAFT `.npz` artifacts.
+      `causal_step_wm_full_video` now defaults to TRUE, which is App. C.5's
+      published protocol: the candidate is scored over its whole clip while the
+      reference stays segment-windowed, because world-model rollouts are not
+      frame-aligned to the Unity log. The paper is explicit that this asymmetry
+      slightly favours the candidate and makes Table 7's deltas upper bounds.
+      The one case where it is wrong is an identical pair -- asking the two
+      sides different questions about the same file reported csr_delta = 100.0
+      on a self-pair -- so causal_step detects byte-identical candidate and
+      reference and forces segment windowing, reporting `wm_full_video_reason`
+      when it does. Set it to false explicitly for a candidate you know IS
+      frame-aligned to Unity.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - causal_step
+    metric_config:
+      causal_step_judge: openai
+      causal_step_vlm_model: gpt-5.4
+      causal_step_vlm_num_frames: 8
+      causal_step_judge_repeats: 5
+      causal_step_answers_cache_dir: runs/causal_step_cache
+    cases:
+    - BeamDomino/causal
+    - BeamDomino/causal_glancing
+    - BeamDomino/causal_direct_strike
+    aggregate:
+      # csr_delta matches Table 7's leading column. It is only meaningful
+      # because `causal_step_judge_repeats: 5` makes CSR a mean over five
+      # passes: CSR is all-or-nothing per video, so at one pass it can report
+      # only 0 or 100. amcl_delta is carried below as the ungated companion.
+      headline: csr_delta
+      direction: lower
+      # mcl_delta is deliberately NOT listed: B.6 defines MCL as the longest
+      # subchain across VIDEOS, but with one video graded over N passes the
+      # max runs over judge passes instead, biased above the single-trajectory
+      # value. Every other metric here averages over passes and stays
+      # coherent. mcl_{unity,wm,delta} remain in each case's full report.
+      extra_means:
+      - csr_unity
+      - amcl_delta
+      - ws_delta
+      - rf_delta
+      - dua_delta
+      - icra_delta
+  fluid_mechanics:
+    display_name: Fluid Mechanics
+    description: >-
+      Paper B.4, sealed-bottle sloshing on LiquidContainer under the fixed
+      side-camera regime (c2_static_side) so bottle motion is bottle-induced
+      rather than camera-induced. Four modules read a shared SAM2 mask pair
+      (liquid + bottle) and a pooled RAFT flow field; all four reference-side
+      artifacts ship inside each case bundle as portable .npz, so a run only
+      ever executes SAM2/RAFT on the candidate, never on the reference.
+      The four action profiles stress different regimes: `rest` is the
+      zero-action control for hallucinated motion, `step_hold` a sustained
+      tilt-and-decay, `impulse_decay` two isolated ring-downs, `chirp_strafe`
+      a 0.3->3.0 Hz sweep through the liquid's resonant modes.
+      HEADLINE CAVEAT: App. D.1 states outright that LiquidContainer "cannot be
+      summarised by any single scalar" -- the five axes measure approximately
+      orthogonal failure modes and the per-profile leaderboard re-orders sharply
+      versus the pooled one. `velocity_cosine_similarity` is the headline only
+      because it is Table 5's leading column; read extra_means alongside it, and
+      prefer the per-case breakdown over this scalar. Note also that RAFT
+      magnitudes inside an opaque, textureless liquid are estimator-noise
+      dominated (App. D.1), which is why cosine rather than EPE/divergence/curl
+      is surfaced at all. The dominant-frequency channel is deliberately NOT
+      promoted here: B.4 demotes it to a per-pair diagnostic because the
+      meniscus FFT peak is not uniquely defined under multi-mode sloshing on
+      chirp_strafe; `spectral_l1` is the surviving spectral statistic.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - liquid_velocity
+    - liquid_volume_conservation
+    - liquid_surface_orientation
+    - slosh_spectrum
+    metric_config:
+      liquid_cache_root: runs/liquid_cache
+      liquid_sam2_model: facebook/sam2.1-hiera-small
+      liquid_sam2_prompt: the liquid inside the bottle
+      liquid_bottle_prompt: the glass bottle
+      liquid_piv_window_size: 32
+      liquid_piv_overlap: 16
+      liquid_flow_min_mask_frac: 0.5
+      liquid_flow_estimator: raft
+      # Scopes to the velocity field, the one place C.4 specifies it ("the
+      # bottle bulk velocity ... is subtracted from every flow vector"). The
+      # slosh trace is mean-centered only, per B.4.
+      liquid_camera_compensation: true
+      liquid_camera_regime: c2_static_side
+      liquid_max_pairs: 0
+    cases:
+    - LiquidContainer/fluid_rest
+    - LiquidContainer/fluid_step_hold
+    - LiquidContainer/fluid_impulse_decay
+    - LiquidContainer/fluid_chirp_strafe
+    aggregate:
+      headline: velocity_cosine_similarity
+      direction: higher
+      # Tables 5/11 print `dsigma_A` signed but `|dAdot|` and `|dtheta_rms|`
+      # absolute, and pooling signed deltas across the four action profiles
+      # cancels. The *_abs_delta columns are the paper's; the signed ones are
+      # kept alongside because they carry the direction the absolute discards.
+      extra_means:
+      - mask_area_std_normalized_delta
+      - mask_area_drift_per_sec_abs_delta
+      - surface_tilt_residual_deg_abs_delta
+      - spectral_l1
+      - mask_area_drift_per_sec_delta
+      - surface_tilt_residual_deg_delta
+      - surface_tilt_residual_deg_unity
 legacy_case_aliases:
   lpips:
     mirror_ball_third_person: MirrorRollingBall/lpips_collision

@@ -61,6 +61,9 @@ METRIC_CONFIG_KEYS = frozenset(
         "causal_step_causal_fail_advance",
         "causal_step_answers_cache_dir",
         "causal_step_video_id",
+        "causal_step_vlm_num_frames",
+        "causal_step_wm_full_video",
+        "causal_step_judge_repeats",
         "causal_match_mode",
         "causalstep_root",
         # liquid family
@@ -121,6 +124,10 @@ METRIC_CONFIG_KEYS = frozenset(
 ARTIFACT_SYNTHETIC_ACTION_DIR = "synthetic_action_dir"
 ARTIFACT_ACTIONS_FILE = "actions_file"
 ARTIFACT_QA_DATASET = "qa_dataset"
+# Optional: pre-recorded reference-side judge answers, several independent
+# passes per video. Present => the reference side replays them instead of
+# paying the live judge (see _causal_step_recorded_judge).
+ARTIFACT_REFERENCE_ANSWERS = "judge_answers"
 
 
 class MetricConfigError(ValueError):
@@ -207,6 +214,9 @@ def build_runner_kwargs(
                 f"reference.artifacts.{ARTIFACT_QA_DATASET} entry in case.yaml"
             )
         kwargs["causal_step_qa_dataset"] = str(qa_dataset)
+        recorded = case.reference_artifacts.get(ARTIFACT_REFERENCE_ANSWERS)
+        if recorded is not None:
+            kwargs["causal_step_reference_answers"] = str(recorded)
 
     kwargs.update(merged_config)
     return kwargs

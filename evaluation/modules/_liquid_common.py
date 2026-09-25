@@ -630,8 +630,11 @@ def get_raft_flow_field(
     cosine / divergence run unchanged) we pool the dense flow into the
     same (Hp, Wp) grid OpenPIV would have produced for the given
     window/overlap settings, masking each cell to liquid pixels only.
-    A cell is `valid` when ≥10% of its window-area is liquid in BOTH the
-    pre and post frames.
+    A cell is `valid` when `min_mask_frac` of its window-area is liquid in
+    BOTH the pre and post frames (default 0.5, matching C.4's "at least 50% of
+    its window lies inside the liquid mask"). Requiring it in both frames is
+    stricter than C.4's singular "the liquid mask", deliberately: a cell that
+    is liquid in only one of the pair has no well-defined liquid displacement.
     """
     import cv2
 
@@ -683,9 +686,9 @@ def get_raft_flow_field(
     valids = np.zeros((T - 1, Hp, Wp), dtype=bool)
 
     ks = (int(window_size), int(window_size))
-    # Default 0.5 (formerly 0.1) — lower fractions let boundary cells leak in,
-    # and on partially-transparent renders those cells pick up apparent
-    # background motion through the glass instead of liquid motion.
+    # C.4 requires 50%. Lower fractions let boundary cells leak in, and on
+    # partially-transparent renders those pick up apparent background motion
+    # through the glass instead of liquid motion.
     frac = max(0.0, min(1.0, float(min_mask_frac)))
     min_pixels = max(4.0, frac * float(window_size) ** 2)
 

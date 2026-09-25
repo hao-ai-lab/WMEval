@@ -33,10 +33,25 @@ def _cosine_similarity(u_a, v_a, u_b, v_b, joint_valid) -> float:
     na = np.sqrt(u_a64 * u_a64 + v_a64 * v_a64) + eps
     nb = np.sqrt(u_b64 * u_b64 + v_b64 * v_b64) + eps
     cos = dot / (na * nb)
-    cos = cos[joint_valid & np.isfinite(cos)]
-    if cos.size == 0:
+
+    # Eq. 14 is a nested expectation, E_t E_{p in V_t}: average over the
+    # joint-valid cells within a frame, then over frames. A flat mean over
+    # every (t, p) cell would instead weight each frame by how many valid
+    # cells it happens to expose. Frames with no valid cells contribute no
+    # term.
+    usable = np.asarray(joint_valid) & np.isfinite(cos)
+    if cos.ndim < 2 or not usable.any():
+        flat = cos[usable]
+        return float(np.mean(flat)) if flat.size else float("nan")
+
+    per_frame_axes = tuple(range(1, cos.ndim))
+    counts = usable.sum(axis=per_frame_axes)
+    sums = np.where(usable, cos, 0.0).sum(axis=per_frame_axes)
+    frames_with_data = counts > 0
+    if not frames_with_data.any():
         return float("nan")
-    return float(np.mean(cos))
+    per_frame = sums[frames_with_data] / counts[frames_with_data]
+    return float(np.mean(per_frame))
 
 
 def _temporal_consistency(field: _lc.PIVField) -> float:
