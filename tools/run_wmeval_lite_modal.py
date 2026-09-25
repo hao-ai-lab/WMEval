@@ -5,10 +5,10 @@ The repo is baked into the image; candidate videos live on Modal Volumes.
 Each (dimension-set, candidate row) becomes one ``run_row`` call that runs the
 ordinary ``tools/run_wmeval_lite.py run`` CLI with a one-line manifest, writes
 its ``per_case_results.jsonl`` under
-``WMEval-lite-candidates:<out_prefix>/<model>__<case>__<seed>/``, and returns
-the rows. The local entrypoint fans out with ``.map`` and merges everything
-into one local ``per_case_results.jsonl`` + aggregate summary (the same
-two-level aggregation the CLI uses).
+``WMEval-lite-candidates:<out_prefix>/<model>__<case_id>__<seed>/``, and
+returns the rows. The local entrypoint fans out with ``.map`` and merges
+everything into one local ``per_case_results.jsonl`` + aggregate summary (the
+same two-level aggregation the CLI uses).
 
 Candidate sources (pick one):
 
@@ -34,11 +34,19 @@ Examples::
     # smoke test: one row
     modal run tools/run_wmeval_lite_modal.py --model-root /cand/waypoint15 \
         --dimensions environment_object_consistency --only WanderingGarden --limit 1
+
+OPENAI_API_KEY (prompt_scene_consistency's judge and lpips's causal-VLM
+judge) is read from the environment or this repo's local ``.env`` and
+forwarded to Modal as an ephemeral Secret -- never baked into the image. Every
+VLM call's token usage is appended to ``<row output dir>/vlm_usage.jsonl``
+(see ``evaluation/vlm_usage.py``) and summed into the run's ``vlm_usage``
+totals so spend can be checked per row.
 """
 from __future__ import annotations
 
 import datetime as _dt
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -54,6 +62,7 @@ CONTAINER_CAND = "/cand"
 CONTAINER_HF_CACHE = "/cache/hf"
 SUITE_REL = "eval_sets/wmeval_lite_v1"
 LIGHTING_CASE_ID = "SunRisesAndSets/lighting"
+USAGE_LOG_FILENAME = "vlm_usage.jsonl"
 
 # (manifest model name, volume file stem, seeds, hud preset). Presets match
 # the paper's eval runs: only LingBot / Matrix-Game overlays are masked.
@@ -103,6 +112,7 @@ image = (
         "huggingface_hub[hf_transfer]",
         "hf_transfer",
         "lpips",
+        "openai",
         "cjm-byte-track",  # kinematics_mechanics tracker
         "pydantic",  # vlm_consistency schemas
         "requests",
@@ -113,8 +123,6 @@ image = (
             "HF_HUB_CACHE": CONTAINER_HF_CACHE,
             "HF_HOME": CONTAINER_HF_CACHE,
             "HF_HUB_ENABLE_HF_TRANSFER": "1",
-            # torch.hub (DINOv2 for object consistency, vgg16 for LPIPS) cache
-            "TORCH_HOME": f"{CONTAINER_HF_CACHE}/torch",
             "PYTHONUNBUFFERED": "1",
         }
     )
@@ -135,6 +143,8 @@ image = (
             "**/.pytest_cache",
             "**/.pytest_cache/**",
             "**/.DS_Store",
+            ".env",
+            ".env.example",
             "WorldModelBenchScenePrivate",
             "WorldModelBenchScenePrivate/**",
             "reports",
@@ -151,7 +161,46 @@ image = (
         f"cd {REMOTE_REPO} && python -c 'import evaluation.runner; import sam2; "
         f"import transformers; import cjm_byte_track; print(\"repo import ok\")'"
     )
+    # Pre-download LPIPS's VGG16 backbone weights into the image at build
+    # time (~528MB), baked into this layer permanently. Without this,
+    # evaluation/modules/lpips_causal_vlm.py's own
+    # ~/.cache/torch/hub/checkpoints/vgg16-397923af.pth existence check finds
+    # nothing in a fresh container (this image has no torch-hub cache volume,
+    # only the separate HF_HUB_CACHE one) and silently skips both causal and
+    # temporal LPIPS scoring -- every row still reports status=completed with
+    # every lpips_* metric null, no error, so the gap is easy to miss.
+    # (TORCH_HOME is deliberately left at its default for the same reason:
+    # that existence check is on the literal ~/.cache/torch path.)
+    .run_commands(
+        "python -c 'import lpips; lpips.LPIPS(net=\"vgg\"); "
+        "print(\"vgg16 weights cached\")'"
+    )
+    # Same for environment_object_consistency's DINOv2 backbone (torch.hub,
+    # ~90MB): bake it in instead of re-downloading it in every container.
+    .run_commands(
+        "python -c 'import torch; torch.hub.load(\"facebookresearch/dinov2\", "
+        "\"dinov2_vits14\"); print(\"dinov2 cached\")'"
+    )
 )
+
+
+def _load_dotenv_local(repo_root: Path) -> None:
+    """Load KEY=VALUE lines from <repo>/.env into THIS (caller-side) process
+    only -- never baked into the image (see the ``.env``/``.env.example``
+    entries in the image's ``add_local_dir`` ignore list above). Mirrors
+    ``tools/run_wmeval_lite.py``'s own ``_load_dotenv``."""
+    env_path = repo_root / ".env"
+    if not env_path.is_file():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        text = line.strip()
+        if not text or text.startswith("#") or "=" not in text:
+            continue
+        key, _, value = text.partition("=")
+        key = key.strip()
+        value = value.strip().strip("'\"")
+        if key and key not in os.environ:
+            os.environ[key] = value
 
 
 def default_lighting_rows() -> list[dict]:
@@ -171,7 +220,21 @@ def default_lighting_rows() -> list[dict]:
 
 
 def _row_tag(row: dict) -> str:
-    return f"{row['model']}__{row['case_id'].replace('/', '_')}__{row['seed']}"
+    return f"{row['model']}__{row['case_id'].replace('/', '-')}__{row['seed']}"
+
+
+def _sum_usage(records: list[dict]) -> dict:
+    """Total prompt/completion/reasoning tokens per model over usage records."""
+    totals: dict[str, dict[str, int]] = {}
+    for rec in records:
+        model = str(rec.get("model", "?"))
+        bucket = totals.setdefault(
+            model, {"calls": 0, "input_tokens": 0, "output_tokens": 0, "reasoning_tokens": 0}
+        )
+        bucket["calls"] += 1
+        for key in ("input_tokens", "output_tokens", "reasoning_tokens"):
+            bucket[key] += int(rec.get(key) or 0)
+    return totals
 
 
 @app.function(image=image, timeout=600, volumes=VOLUMES)
@@ -210,7 +273,6 @@ def list_candidate_rows(model_root: str, dimensions: str) -> list[dict]:
 @app.function(image=image, gpu="L40S", timeout=3 * 3600, volumes=VOLUMES)
 def run_row(row: dict, dimensions: str, out_prefix: str, run_id: str) -> dict:
     """Evaluate one candidate row through the ordinary Lite CLI."""
-    import os
     import subprocess
 
     tag = _row_tag(row)
@@ -219,6 +281,7 @@ def run_row(row: dict, dimensions: str, out_prefix: str, run_id: str) -> dict:
     manifest = f"/tmp/{tag}.jsonl"
     with open(manifest, "w", encoding="utf-8") as handle:
         handle.write(json.dumps(row) + "\n")
+    usage_log = Path(out_dir) / USAGE_LOG_FILENAME
 
     cmd = [
         "python",
@@ -238,7 +301,8 @@ def run_row(row: dict, dimensions: str, out_prefix: str, run_id: str) -> dict:
         run_id,
     ]
     print(f"[{tag}] {' '.join(cmd)}", flush=True)
-    proc = subprocess.run(cmd, cwd=REMOTE_REPO, capture_output=True, text=True)
+    env = {**os.environ, "WMEVAL_VLM_USAGE_LOG": str(usage_log)}
+    proc = subprocess.run(cmd, cwd=REMOTE_REPO, capture_output=True, text=True, env=env)
     tail = "\n".join((proc.stdout + "\n" + proc.stderr).splitlines()[-40:])
     print(f"[{tag}] exit={proc.returncode}\n{tail}", flush=True)
 
@@ -248,6 +312,11 @@ def run_row(row: dict, dimensions: str, out_prefix: str, run_id: str) -> dict:
         for line in results_path.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 rows.append(json.loads(line))
+    usage: list[dict] = []
+    if usage_log.is_file():
+        for line in usage_log.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                usage.append(json.loads(line))
     candidates_vol.commit()
     hf_cache_vol.commit()
     return {
@@ -256,10 +325,11 @@ def run_row(row: dict, dimensions: str, out_prefix: str, run_id: str) -> dict:
         "rows": rows,
         "log_tail": tail,
         "out_dir": out_dir,
+        "vlm_usage": usage,
     }
 
 
-def _merge_locally(all_rows: list[dict], local_out: Path) -> None:
+def _merge_locally(all_rows: list[dict], local_out: Path, usage: list[dict]) -> None:
     """Write the merged JSONL + aggregate (same code path as the CLI)."""
     if str(REPO_ROOT) not in sys.path:
         sys.path.insert(0, str(REPO_ROOT))
@@ -286,6 +356,17 @@ def _merge_locally(all_rows: list[dict], local_out: Path) -> None:
     write_summary_csv(local_out / AGGREGATE_CSV_FILENAME, suite, aggregate)
     print(f"merged {len(all_rows)} row(s) -> {results_path}")
     print(json.dumps(aggregate, indent=2, ensure_ascii=False))
+    if usage:
+        with (local_out / USAGE_LOG_FILENAME).open("w", encoding="utf-8") as handle:
+            for rec in usage:
+                handle.write(json.dumps(rec) + "\n")
+        totals = _sum_usage(usage)
+        (local_out / "vlm_usage_totals.json").write_text(
+            json.dumps(totals, indent=2), encoding="utf-8"
+        )
+        print("VLM token usage per model:")
+        for model, bucket in sorted(totals.items()):
+            print(f"  {model}: {bucket}")
 
 
 @app.local_entrypoint()
@@ -304,7 +385,7 @@ def main(
     --model-root container path of a model tree on the candidates volume
     --manifest   local JSONL with container-side candidate paths
     --dimensions comma-separated dimension ids (default lighting_shading)
-    --only       substring filter on "<model>__<case>__<seed>"
+    --only       substring filter on "<model>__<case_id>__<seed>"
     --limit      keep only the first N rows (smoke tests)
     --out-prefix volume-relative output prefix (default eval/lite_runs/<run_id>)
     --local-out  local merge dir (default reports/wmeval_lite_modal/<run_id>)
@@ -331,22 +412,47 @@ def main(
         print("no rows selected")
         return
 
+    _load_dotenv_local(REPO_ROOT)
+    target_fn = run_row
+    openai_key = os.environ.get("OPENAI_API_KEY", "")
+    if openai_key:
+        secret = modal.Secret.from_dict({"OPENAI_API_KEY": openai_key})
+        target_fn = run_row.with_options(secrets=[secret])
+    else:
+        print(
+            "warning: OPENAI_API_KEY not set (checked env + .env) -- "
+            "prompt_scene_consistency rows will be skipped and lpips's "
+            "causal-VLM-judge path will fail remotely for any row that needs it."
+        )
+
     print(f"run_id={run_id} rows={len(rows)} dimensions={dimensions} out_prefix={out_prefix}")
     for row in rows:
         print(f"  {_row_tag(row)}  {row['candidate_video']}  params={row.get('params', {})}")
     all_rows: list[dict] = []
+    all_usage: list[dict] = []
     failures: list[str] = []
-    for result in run_row.map(
+    for result in target_fn.map(
         rows, kwargs={"dimensions": dimensions, "out_prefix": out_prefix, "run_id": run_id}
     ):
         status = ", ".join(sorted({str(r.get("status")) for r in result["rows"]})) or "no rows"
-        print(f"[{result['tag']}] exit={result['returncode']} status={status}")
+        usage = result.get("vlm_usage") or []
+        used = _sum_usage(usage)
+        used_str = " ".join(
+            f"{m}:{b['calls']}calls/{b['input_tokens']}in/{b['output_tokens']}out" for m, b in used.items()
+        )
+        print(f"[{result['tag']}] exit={result['returncode']} status={status} {used_str}")
         if result["returncode"] != 0 or not result["rows"]:
             failures.append(result["tag"])
             print(result["log_tail"])
         all_rows.extend(result["rows"])
+        for rec in usage:
+            all_usage.append({"tag": result["tag"], **rec})
 
-    _merge_locally(all_rows, Path(local_out or REPO_ROOT / "reports" / "wmeval_lite_modal" / run_id))
+    _merge_locally(
+        all_rows,
+        Path(local_out or REPO_ROOT / "reports" / "wmeval_lite_modal" / run_id),
+        all_usage,
+    )
     if failures:
         print(f"FAILED rows: {failures}")
-    print(f"per-row outputs on volume {CANDIDATES_VOLUME}: {out_prefix}/<model>__<case>__<seed>/")
+    print(f"per-row outputs on volume {CANDIDATES_VOLUME}: {out_prefix}/<model>__<case_id>__<seed>/")

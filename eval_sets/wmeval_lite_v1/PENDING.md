@@ -17,12 +17,6 @@ banners for the history of everything already resolved.
 
 ## Not yet implemented
 
-- **`ChessBoard/prompt_first`, `ChessBoard/prompt_third`** → `prompt_scene_consistency`
-  Needs: `reference/ref.png`, `reference/unity_groundtruth.mp4`,
-  `reference/artifacts/actions.txt` + `action.npy`/`intrinsics.npy`/`poses.npy`/`meta.json`,
-  case.yaml `prompt:`/`rubric_scene_name:`. After bundling, run
-  `generate-rubrics` (needs `OPENAI_API_KEY`) and commit the result.
-
 - **`ChessBoard/lighting`** → `lighting_shading`
   Team decision first: `ChessBoard/walk_third` (a real capture of the
   ChessBoardwithSphere scene, live under `environment_object_consistency`)

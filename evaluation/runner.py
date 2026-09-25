@@ -192,6 +192,7 @@ def run_world_model_evaluation(
     modules: Iterable[str] = ("lpips",),
     eval_fps: float = 4.0,
     max_pairs: int = 32,
+    candidate_fps_override: Optional[float] = None,
     lpips_sampling: str = "temporal",
     lpips_temporal_fractions: Optional[Sequence[float]] = None,
     lpips_temporal_labels: Optional[Sequence[str]] = None,
@@ -430,6 +431,7 @@ def run_world_model_evaluation(
         eval_fps=eval_fps,
         max_pairs=max_pairs,
         text_prompt=text_prompt,
+        candidate_fps_override=candidate_fps_override,
     )
     _merge_lpips_artifacts(
         context,

@@ -1,0 +1,72 @@
+{
+  "scene_name": "RollingBall",
+  "prompt_text": "A flat, light-colored ground populated with many large, glossy yellow spheres arranged in a regular grid-like pattern, appearing roughly evenly spaced across the surface. A single highly reflective chrome sphere stands near the center as a distinct central landmark. The scene is enclosed by low gray boundary walls. Bright daylight produces clear cast shadows. The environment is clean and simple. The character is the chrome sphere.",
+  "rubric_items": [
+    {
+      "rubric_id": "env_01",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the ground remain flat and light-colored across all sampled frames?"
+    },
+    {
+      "rubric_id": "env_02",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Do low gray boundary walls remain present around the scene whenever the enclosure is visible across the video?"
+    },
+    {
+      "rubric_id": "env_03",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the lighting stay consistent with bright daylight and clear cast shadows across all sampled frames?"
+    },
+    {
+      "rubric_id": "env_04",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "Does the environment remain clean and visually simple throughout the video, without unexpected clutter or complex background elements appearing?"
+    },
+    {
+      "rubric_id": "env_05",
+      "agent": "environment",
+      "weight": 1.0,
+      "rubric_text": "When the ground population is visible, do the yellow spheres maintain a regular, roughly even grid-like spacing across the surface over time?"
+    },
+    {
+      "rubric_id": "obj_01",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "When the central character sphere is visible and judgeable, does it appear chrome and highly reflective as specified?"
+    },
+    {
+      "rubric_id": "obj_02",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "When the other large spheres are visible and judgeable, are they yellow as specified?"
+    },
+    {
+      "rubric_id": "obj_03",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "When the other large spheres are visible and judgeable, do they look glossy as specified?"
+    },
+    {
+      "rubric_id": "obj_04",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "When the repeated objects are visible and judgeable, are they spherical in shape as specified?"
+    },
+    {
+      "rubric_id": "obj_05",
+      "agent": "object",
+      "weight": 1.0,
+      "rubric_text": "When the repeated yellow spheres are visible and judgeable, do they appear large as specified in the prompt?"
+    }
+  ],
+  "metadata": {
+    "generator_provider": "openai",
+    "generator_model": "gpt-5.4",
+    "generated_at": "2026-05-06T10:42:36.800353+00:00",
+    "num_candidates_generated": 10
+  }
+}

@@ -21,6 +21,8 @@ prompt: 'Starting world must match the BeamDomino Unity scene from a third-perso
 perspective: third_person
 modules:
 - causal_step
+- control_motion
+- lpips
 reference:
   video: reference/reference.mp4
   checksums: reference/checksums.sha256

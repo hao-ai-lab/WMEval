@@ -8,7 +8,7 @@ prompt: A flat, light-colored ground populated with many large, glossy yellow sp
   clear cast shadows. The environment is clean and simple. The character is a ball.
   First person view.
 perspective: first_person
-rubric_scene_name: MirrorRollingBall_first
+rubric_scene_name: RollingBall_first
 modules: []
 reference:
   first_frame: reference/ref.png
@@ -23,8 +23,8 @@ protocol:
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
-  evaluator_fingerprint: 7eee6d923cc800fc5a825e764bd71534
+  code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
+  evaluator_fingerprint: a6298915f01d6a8e812141b7507bda1f
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}
