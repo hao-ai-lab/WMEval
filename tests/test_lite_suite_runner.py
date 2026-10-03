@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 from evaluation.lite.output import PER_CASE_RESULTS_FILENAME, read_rows
 from evaluation.lite.suite import SuiteRunError, run_suite
@@ -373,6 +374,47 @@ def test_run_suite_resume_skips_done_items(
     assert len(runner.calls) == 1  # second pass resumed
     rows = read_rows(tmp_path / "out" / PER_CASE_RESULTS_FILENAME)
     assert len(rows) == 1
+
+
+def test_run_suite_resume_replaces_stale_fingerprint_row(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    suite_root = _registry_only_suite(tmp_path)
+    model_root = tmp_path / "genie3"
+    write_candidates(model_root, ["scene_a/main"])
+    mock_video_probing(monkeypatch)
+    runner = RecordingRunner()
+    output_dir = tmp_path / "out"
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+
+    case_yaml = suite_root / "cases" / "scene_a" / "main" / "case.yaml"
+    raw = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    raw["evaluator_lock"]["evaluator_fingerprint"] = "replacement-fingerprint"
+    case_yaml.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+
+    assert len(runner.calls) == 2
+    rows = read_rows(output_dir / PER_CASE_RESULTS_FILENAME)
+    assert len(rows) == 1
+    assert rows[0]["evaluator_lock"]["evaluator_fingerprint"] == (
+        "replacement-fingerprint"
+    )
 
 
 def test_run_suite_dry_run_writes_nothing(tmp_path: Path) -> None:

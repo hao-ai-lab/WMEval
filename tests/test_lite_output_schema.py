@@ -311,7 +311,42 @@ def test_extract_metrics_liquid_modules() -> None:
 def test_extract_metrics_ignores_unknown_modules_and_missing_results() -> None:
     dimension = _dimension("toy", modules=("lpips", "mystery_module"))
     metrics = extract_metrics(dimension, {"lpips": {"lpips_mean": 0.3}})
-    assert metrics == {"lpips_mean": 0.3, "lpips_median": None}
+    assert metrics == {
+        "lpips_mean": 0.3,
+        "lpips_median": None,
+        "lpips_causal_mean": None,
+        "lpips_temporal_fallback_mean": None,
+        "lpips_primary_source": None,
+        "lpips_num_matched_events": None,
+        "lpips_num_reference_events": None,
+        "lpips_num_candidate_events": None,
+        "lpips_matched_reference_event_fraction": None,
+        "lpips_causal_skipped_reason": None,
+    }
+
+
+def test_extract_metrics_surfaces_lpips_source_and_event_coverage() -> None:
+    dimension = _dimension("lpips", modules=("lpips",))
+    metrics = extract_metrics(
+        dimension,
+        {
+            "lpips": {
+                "lpips_mean": 0.4,
+                "lpips_median": 0.3,
+                "lpips_primary_source": "temporal_only",
+                "num_matched_events": 0,
+                "num_reference_events": 2,
+                "num_candidate_events": 0,
+                "matched_reference_event_fraction": 0.0,
+                "causal_lpips_skipped_reason": "no matched events",
+            }
+        },
+    )
+    assert metrics["lpips_primary_source"] == "temporal_only"
+    assert metrics["lpips_mean"] is None
+    assert metrics["lpips_temporal_fallback_mean"] == 0.4
+    assert metrics["lpips_num_matched_events"] == 0
+    assert metrics["lpips_matched_reference_event_fraction"] == 0.0
 
 
 def test_write_summary_csv_surfaces_extra_means_as_additional_columns(tmp_path: Path) -> None:

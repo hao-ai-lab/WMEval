@@ -157,6 +157,10 @@ venv/
 venv_test/
 .venv_test/
 WMEval/.venv_test/
+.uv-cache/
+.local/
+runs/
+.venv-unity/
 ENV/
 env.bak/
 venv.bak/

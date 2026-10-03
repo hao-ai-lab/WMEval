@@ -1,0 +1,53 @@
+schema_version: 1
+unity_editor: /Applications/Unity/Hub/Editor/6000.3.7f1/Unity.app/Contents/MacOS/Unity
+unity_repo: ../WorldModelBenchScenePrivate
+claim_scope: reconstructed_protocol
+cases:
+  table4/RacingCar/first:
+    project: GameScenes/RacingCar
+    scene: Assets/ARCADE - FREE Racing Car/Scenes/Day.unity
+    product: RacingCar
+    capture_kind: racing
+    runtime_args: [-wmeval-capture, -wmeval-view, first]
+  table4/RacingCar/third:
+    project: GameScenes/RacingCar
+    scene: Assets/ARCADE - FREE Racing Car/Scenes/Day.unity
+    product: RacingCar
+    capture_kind: racing
+    runtime_args: [-wmeval-capture, -wmeval-view, third]
+  table4/BilliardGame/first:
+    project: GameScenes/BilliardTemplate
+    scene: Assets/Vagho/Billiard/Scenes/CaromBilliard.unity
+    product: BilliardGame
+    capture_kind: billiard
+    runtime_args: [-wmeval-view, first, -wmeval-camera-mode, static, -wmeval-control-mode, ball_wasd, -wmeval-frames, '300', -wmeval-fps, '30']
+  table4/BilliardGame/third:
+    project: GameScenes/BilliardTemplate
+    scene: Assets/Vagho/Billiard/Scenes/CaromBilliard.unity
+    product: BilliardGame
+    capture_kind: billiard
+    runtime_args: [-wmeval-view, third, -wmeval-camera-mode, static, -wmeval-control-mode, ball_wasd, -wmeval-frames, '300', -wmeval-fps, '30']
+  table7/BilliardGame/perturb_in:
+    project: GameScenes/BilliardTemplate
+    scene: Assets/Vagho/Billiard/Scenes/CaromBilliard.unity
+    product: BilliardGame
+    capture_kind: billiard
+    runtime_args: [-wmeval-view, third, -wmeval-camera-mode, perturbation, -wmeval-start-yaw-deg, '0', -wmeval-target-yaw-deg, '-45', -wmeval-frames, '150', -wmeval-fps, '15', -wmeval-no-shot]
+  table7/BilliardGame/perturb_out:
+    project: GameScenes/BilliardTemplate
+    scene: Assets/Vagho/Billiard/Scenes/CaromBilliard.unity
+    product: BilliardGame
+    capture_kind: billiard
+    runtime_args: [-wmeval-view, third, -wmeval-camera-mode, perturbation, -wmeval-start-yaw-deg, '180', -wmeval-target-yaw-deg, '45', -wmeval-frames, '150', -wmeval-fps, '15', -wmeval-no-shot]
+  table7/BilliardGame/360_in:
+    project: GameScenes/BilliardTemplate
+    scene: Assets/Vagho/Billiard/Scenes/CaromBilliard.unity
+    product: BilliardGame
+    capture_kind: billiard
+    runtime_args: [-wmeval-view, third, -wmeval-camera-mode, full_turn, -wmeval-start-yaw-deg, '0', -wmeval-target-yaw-deg, '-360', -wmeval-frames, '150', -wmeval-fps, '15', -wmeval-no-shot]
+  table7/BilliardGame/360_out:
+    project: GameScenes/BilliardTemplate
+    scene: Assets/Vagho/Billiard/Scenes/CaromBilliard.unity
+    product: BilliardGame
+    capture_kind: billiard
+    runtime_args: [-wmeval-view, third, -wmeval-camera-mode, full_turn, -wmeval-start-yaw-deg, '180', -wmeval-target-yaw-deg, '360', -wmeval-frames, '150', -wmeval-fps, '15', -wmeval-no-shot]

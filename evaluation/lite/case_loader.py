@@ -139,10 +139,12 @@ class LiteCase:
     perspective: str | None = None
     rubric_scene_name: str | None = None
     first_frame: Path | None = None
-    module_params: Mapping[str, Any] = field(default=_EMPTY_MAPPING)
+    module_params: Mapping[str, Any] = field(default_factory=lambda: _EMPTY_MAPPING)
     # Named auxiliary reference assets (e.g. synthetic_action_dir, actions_file,
     # qa_dataset), resolved to absolute paths under the case root.
-    reference_artifacts: Mapping[str, Path] = field(default=_EMPTY_MAPPING)
+    reference_artifacts: Mapping[str, Path] = field(
+        default_factory=lambda: _EMPTY_MAPPING
+    )
 
     @property
     def artifacts_dir(self) -> Path:

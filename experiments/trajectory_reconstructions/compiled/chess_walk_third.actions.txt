@@ -1,0 +1,18 @@
+# wmeval_lite.chess_board.walk_third.capture_v1 -- generated action trajectory.
+# Provenance: chess_walk_third.yaml (semantic SHA-256: 5d20171373c66ae4b32b6a16cbf77121c3f17ed621a6176cdad2a51a13c11703)
+# Alignment: exact; 90 steps; channels: move_x, move_y, jump, sprint
+# start_s end_s move_x move_y jump sprint
+0.0 0.8333333333333334 0.0 1.0 0 0
+0.8333333333333334 1.0 0.8 0.6 0 0
+1.0 1.0333333333333334 0.8 0.6 1 0
+1.0333333333333334 1.5 0.8 0.6 0 0
+1.5 2.3333333333333335 0.0 1.0 0 1
+2.3333333333333335 3.0 -0.5 1.0 0 0
+
+# Project Genie browser actions:
+{"keys": ["KeyW"], "ms": 833, "op": "hold"}
+{"keys": ["KeyD", "KeyW"], "ms": 167, "op": "hold"}
+{"keys": ["KeyD", "KeyW", "Space"], "ms": 33, "op": "hold"}
+{"keys": ["KeyD", "KeyW"], "ms": 467, "op": "hold"}
+{"keys": ["KeyW", "Shift"], "ms": 833, "op": "hold"}
+{"keys": ["KeyA", "KeyW"], "ms": 667, "op": "hold"}

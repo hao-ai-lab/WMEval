@@ -28,7 +28,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
-  evaluator_fingerprint: b09a9b79885d071c26f50379617a4b9b
+  evaluator_fingerprint: 9cad712b8e955759da329648321f2062
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}
@@ -38,6 +38,9 @@ module_params:
     shadow_anchor_label: sphere
   environment_object_consistency:
     eoc_text_prompt: yellow sphere.
+    eoc_fixed_anchor_labels:
+    - yellow sphere left foreground
+    - yellow sphere right foreground
     eoc_character_prompt: no_character_configured_for_this_case_xyz.
     eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
     eoc_unity_poses_npy: reference/artifacts/poses.npy

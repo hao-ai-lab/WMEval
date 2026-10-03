@@ -131,6 +131,54 @@ def detect_segments(
     if not frames:
         raise SegmentDetectionError("empty frames list")
 
+    # Pre-v2 capture logs used a compact schema (``t``,
+    # ``stack_hit_flag``, ``fallen_count``, ``cascade_count``) instead of
+    # per-body states and collision records. Keep those committed fixtures
+    # and historical captures reproducible rather than trying to interpret
+    # them as the richer GroundTruthRecorder schema below.
+    if "time" not in frames[0] and "t" in frames[0]:
+        i_hit = _find_first_frame(
+            frames, lambda f: bool(f.get("stack_hit_flag", 0))
+        )
+        if i_hit < 0:
+            raise SegmentDetectionError("no ball impact found (stack_hit_flag never set)")
+        i_first_fall = _find_first_frame(
+            frames, lambda f: int(f.get("fallen_count", 0)) >= 1
+        )
+        if i_first_fall < 0:
+            raise SegmentDetectionError("no fallen domino found (fallen_count stayed zero)")
+
+        plateau_idx = len(frames) - 1
+        for i in range(i_first_fall, len(frames)):
+            value = float(frames[i].get("cascade_count", 0.0))
+            if all(
+                float(later.get("cascade_count", 0.0)) == value
+                for later in frames[i:]
+            ):
+                plateau_idx = i
+                break
+
+        t_start = float(frames[0]["t"])
+        t_hit = float(frames[i_hit]["t"])
+        t_first_fall = float(frames[i_first_fall]["t"])
+        t_plateau = float(frames[plateau_idx]["t"])
+        t_end = float(frames[-1]["t"])
+        return {
+            "trajectory_id": log.get("trajectory_id", "unknown"),
+            "source": "unity_gt",
+            "trajectory_shape": "canonical",
+            "events": [
+                {"index": 1, "name": "rolling", "start_sec": t_start,
+                 "end_sec": t_hit, "trigger": "start"},
+                {"index": 2, "name": "impact", "start_sec": t_hit,
+                 "end_sec": t_first_fall, "trigger": "stack_hit_flag"},
+                {"index": 3, "name": "topple", "start_sec": t_first_fall,
+                 "end_sec": t_plateau, "trigger": "first_fallen_flag"},
+                {"index": 4, "name": "cascade", "start_sec": t_plateau,
+                 "end_sec": t_end, "trigger": "cascade_plateau"},
+            ],
+        }
+
     # ── ball impact ───────────────────────────────────────────────────────
     # Skip the startup window before searching for ball impact. Unity reports
     # initial RoofBall<->Roof / FloorBall<->Ground "settling" contacts at t≈0.02

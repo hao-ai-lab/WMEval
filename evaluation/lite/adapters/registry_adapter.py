@@ -29,6 +29,9 @@ METRIC_CONFIG_KEYS = frozenset(
         "eval_fps",
         "max_pairs",
         "candidate_fps_override",
+        # Candidate-specific semantic prompt for reconstructed camera/control
+        # regimes that intentionally reuse a Lite reference case.
+        "text_prompt",
         # lpips / causal-VLM collision sampling
         "lpips_sampling",
         "lpips_causal_event_source",
@@ -91,6 +94,7 @@ METRIC_CONFIG_KEYS = frozenset(
         "eoc_tau_mask",
         "eoc_tau_id",
         "eoc_max_objects",
+        "eoc_fixed_anchor_labels",
         "eoc_depth_model",
         "eoc_gd_model",
         "eoc_unity_object_transforms_json",
@@ -111,11 +115,16 @@ METRIC_CONFIG_KEYS = frozenset(
         "kin_unity_poses_npy",
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
+        "kin_plane_calibration_json",
         "kin_color_filter",
         "kin_color_hue_tolerance_deg",
+        "kin_track_point",
         "kin_depth_lift",
         "kin_depth_lift_window",
         "kin_depth_model",
+        "kin_mechanics_estimator",
+        "kin_event_alignment_tolerance_frames",
+        "kin_event_min_neighbor_ratio",
     }
 )
 

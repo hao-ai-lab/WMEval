@@ -1211,6 +1211,18 @@
           -0.05
         ]
       ]
+    },
+    "yellow sphere left foreground": {
+      "frames": [0],
+      "positions_world": [[-2.0, 0.5, -0.05]],
+      "static": true,
+      "unity_object": "YellowBall (30)"
+    },
+    "yellow sphere right foreground": {
+      "frames": [0],
+      "positions_world": [[2.0, 0.5, -0.05]],
+      "static": true,
+      "unity_object": "YellowBall (32)"
     }
   }
 }

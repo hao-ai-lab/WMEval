@@ -1,0 +1,126 @@
+schema_version: 1
+model: Project Genie
+aggregation:
+  generation_count: 5
+  center: arithmetic_mean
+  spread: sample_standard_deviation
+  ddof: 1
+sources:
+  table4:
+    path: ../../../_arxiv__WorldModel_Eval/table/main-physical_laws.tex
+    sha256: 2cd5a396c0502eba4c30950518a5c1e4387104ab726dd4e177249a56b14b54cf
+  table7:
+    path: ../../../_arxiv__WorldModel_Eval/table/main-consistency.tex
+    sha256: 55492d5de44b89a29503df04845b9cd33ec14d79f86abc391864d3f96345f524
+  implementation:
+    path: ../../../_arxiv__WorldModel_Eval/text/7_appendix_implementations.tex
+    sha256: d2a109ed9aeaa108fff137a57bf8936b1a75d72fc5e33cf116e1018f3b7f731e
+metrics:
+  dtw: {label: DTW, direction: lower, unit: scalar}
+  fde: {label: FDE, direction: lower, unit: scalar}
+  exact_match_pct: {label: Exact Match, direction: higher, unit: percent}
+  error_rate_pct: {label: Error Rate, direction: lower, unit: percent}
+  depth_absrel_pct: {label: Depth AbsRel, direction: lower, unit: percent}
+  dist_mae_pct: {label: Distance MAE, direction: lower, unit: percent}
+  object_permanence_pct: {label: Object Permanence, direction: higher, unit: percent}
+  character_consistency_pct: {label: Character Consistency, direction: higher, unit: percent}
+tables:
+  4:
+    source: table4
+    cases:
+      table4/RacingCar/first:
+        dtw: [0.42, 0.06]
+        fde: [0.58, 0.07]
+        exact_match_pct: [32.0, 13.6]
+        error_rate_pct: [24.5, 5.8]
+      table4/RacingCar/third:
+        dtw: [0.18, 0.03]
+        fde: [0.27, 0.04]
+        exact_match_pct: [54.0, 15.2]
+        error_rate_pct: [15.7, 4.1]
+      table4/BilliardGame/first:
+        dtw: [0.55, 0.08]
+        fde: [0.72, 0.09]
+        exact_match_pct: [18.0, 10.8]
+        error_rate_pct: [31.8, 6.7]
+      table4/BilliardGame/third:
+        dtw: [0.24, 0.04]
+        fde: [0.33, 0.05]
+        exact_match_pct: [39.0, 14.7]
+        error_rate_pct: [19.6, 4.9]
+  7:
+    source: table7
+    cases:
+      table7/WanderingGarden/perturb_in:
+        depth_absrel_pct: [52, 10]
+        dist_mae_pct: [63, 10]
+        object_permanence_pct: [80, 12]
+        character_consistency_pct: null
+      table7/WanderingGarden/perturb_out:
+        depth_absrel_pct: [72, 12]
+        dist_mae_pct: [82, 18]
+        object_permanence_pct: [60, 3]
+        character_consistency_pct: null
+      table7/WanderingGarden/360_in:
+        depth_absrel_pct: [36, 9]
+        dist_mae_pct: [44, 7]
+        object_permanence_pct: [60, 8]
+        character_consistency_pct: null
+      table7/WanderingGarden/360_out:
+        depth_absrel_pct: [51, 8]
+        dist_mae_pct: [67, 11]
+        object_permanence_pct: [20, 2]
+        character_consistency_pct: null
+      table7/BilliardGame/perturb_in:
+        depth_absrel_pct: [37, 9]
+        dist_mae_pct: [23, 5]
+        object_permanence_pct: null
+        character_consistency_pct: [70, 5]
+      table7/BilliardGame/perturb_out:
+        depth_absrel_pct: [55, 11]
+        dist_mae_pct: [59, 16]
+        object_permanence_pct: null
+        character_consistency_pct: [70, 5]
+      table7/BilliardGame/360_in:
+        depth_absrel_pct: [41, 7]
+        dist_mae_pct: [35, 6]
+        object_permanence_pct: null
+        character_consistency_pct: [81, 5]
+      table7/BilliardGame/360_out:
+        depth_absrel_pct: [68, 15]
+        dist_mae_pct: [60, 11]
+        object_permanence_pct: null
+        character_consistency_pct: [81, 5]
+      table7/MirrorRollingBall/perturb_in:
+        depth_absrel_pct: null
+        dist_mae_pct: [21, 5]
+        object_permanence_pct: null
+        character_consistency_pct: [52, 4]
+      table7/MirrorRollingBall/perturb_out:
+        depth_absrel_pct: null
+        dist_mae_pct: [40, 12]
+        object_permanence_pct: null
+        character_consistency_pct: [52, 4]
+      table7/MirrorRollingBall/360_in:
+        depth_absrel_pct: null
+        dist_mae_pct: [11, 3]
+        object_permanence_pct: null
+        character_consistency_pct: [65, 9]
+      table7/MirrorRollingBall/360_out:
+        depth_absrel_pct: null
+        dist_mae_pct: [32, 7]
+        object_permanence_pct: null
+        character_consistency_pct: [65, 9]
+paper_conflicts:
+  - id: billiard_view
+    table_claim: Table 4 has Billiard Game First Person and Third Person columns.
+    appendix_claim: The implementation specifies BilliardGame under a fixed overhead view.
+    status: unresolved
+  - id: consistency_distance_scope
+    table_claim: Table 7 reports Distance MAE for Billiard Game and MirrorRollingBall.
+    appendix_claim: The implementation says environment-object consistency is avoided for both dynamic scenes.
+    status: unresolved
+  - id: character_orientation_merge
+    table_claim: Character Consistency cells span both In and Out columns for each perturbation regime.
+    interpretation: The same published statistic is attached to both orientation cases, with shared-cell provenance retained.
+    status: explicit_interpretation

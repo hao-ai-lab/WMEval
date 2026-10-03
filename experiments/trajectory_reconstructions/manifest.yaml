@@ -1,0 +1,8 @@
+schema_version: 1
+cases:
+  - case_id: ChessBoard/walk_third
+    trajectory: trajectories/chess_walk_third.yaml
+    provenance: exact_reference_capture_schedule
+  - case_id: SunRisesAndSets/lighting
+    trajectory: trajectories/sun_rises_and_sets_lighting.yaml
+    provenance: exact_locked_browser_schedule_with_semantic_native_channel

@@ -1,0 +1,22 @@
+{
+  "action_npy": "racing_car_drive.action.npy",
+  "action_npy_sha256": "62497898bad2ece4a9092e71fd4228daac8683a8b2aeaddb35763a1f58e64f57",
+  "action_npz": "racing_car_drive.action.npz",
+  "action_npz_sha256": "dc30f4a4d5751341705cfa1f8ea8c57dbbf86039955b0a5d43b49390fcf87324",
+  "actions_txt": "racing_car_drive.actions.txt",
+  "actions_txt_sha256": "ea45a92610a6a55dd145ba10f41d8782d8bd5503f9bfd020d1f7036af557fd32",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "steer",
+    "throttle",
+    "brake"
+  ],
+  "project_genie_actions": "racing_car_drive.actions.jsonl",
+  "project_genie_actions_sha256": "91949fc746937502df40a6121495a91f2b22aba143f47dd50571ae8101ba8aee",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "34df3d31dfef5c0613d5536159b9f20d63bbbd0ad0c1a93408b491e960b79448",
+  "source": "../trajectories/racing_car_drive.yaml",
+  "step_count": 300,
+  "trajectory_id": "table4.racing_car.drive_v1"
+}

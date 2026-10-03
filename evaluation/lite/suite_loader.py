@@ -80,8 +80,10 @@ class DimensionSpec:
     requires_reference: bool
     cases: tuple[str, ...]
     modules: tuple[str, ...] = ()
-    metric_config: Mapping[str, Any] = field(default=_EMPTY_MAPPING)
-    vlm: Mapping[str, Any] = field(default=_EMPTY_MAPPING)
+    metric_config: Mapping[str, Any] = field(
+        default_factory=lambda: _EMPTY_MAPPING
+    )
+    vlm: Mapping[str, Any] = field(default_factory=lambda: _EMPTY_MAPPING)
     aggregate: AggregateSpec | None = None
 
 

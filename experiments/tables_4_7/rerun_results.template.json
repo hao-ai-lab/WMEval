@@ -1,0 +1,381 @@
+{
+  "model": "Project Genie",
+  "repeat_ids": [
+    "run0",
+    "run1",
+    "run2",
+    "run3",
+    "run4"
+  ],
+  "results": {
+    "table4/BilliardGame/first": {
+      "dtw": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "error_rate_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "exact_match_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "fde": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table4/BilliardGame/third": {
+      "dtw": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "error_rate_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "exact_match_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "fde": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table4/RacingCar/first": {
+      "dtw": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "error_rate_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "exact_match_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "fde": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table4/RacingCar/third": {
+      "dtw": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "error_rate_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "exact_match_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "fde": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/BilliardGame/360_in": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/BilliardGame/360_out": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/BilliardGame/perturb_in": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/BilliardGame/perturb_out": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/MirrorRollingBall/360_in": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/MirrorRollingBall/360_out": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/MirrorRollingBall/perturb_in": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/MirrorRollingBall/perturb_out": {
+      "character_consistency_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/WanderingGarden/360_in": {
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "object_permanence_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/WanderingGarden/360_out": {
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "object_permanence_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/WanderingGarden/perturb_in": {
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "object_permanence_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    },
+    "table7/WanderingGarden/perturb_out": {
+      "depth_absrel_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "dist_mae_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      },
+      "object_permanence_pct": {
+        "run0": null,
+        "run1": null,
+        "run2": null,
+        "run3": null,
+        "run4": null
+      }
+    }
+  },
+  "schema_version": 1
+}

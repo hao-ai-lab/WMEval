@@ -44,8 +44,9 @@ from .output import (
     PER_CASE_RESULTS_FILENAME,
     append_row,
     build_row,
-    load_done_keys,
     read_rows,
+    row_key,
+    write_rows,
 )
 from .suite_loader import (
     EVALUATOR_REGISTRY,
@@ -303,7 +304,32 @@ def run_suite(
 
     done_keys = set()
     if resume and not dry_run:
-        done_keys = load_done_keys(results_path)
+        existing_rows = read_rows(results_path)
+        current_rows: list[dict[str, Any]] = []
+        stale_count = 0
+        for row in existing_rows:
+            case = cases.get(str(row.get("case_id") or ""))
+            if case is None:
+                current_rows.append(row)
+                continue
+            recorded_lock = row.get("evaluator_lock") or {}
+            recorded_fingerprint = (
+                recorded_lock.get("evaluator_fingerprint")
+                if isinstance(recorded_lock, Mapping)
+                else None
+            )
+            current_fingerprint = case.evaluator_lock.get("evaluator_fingerprint")
+            if recorded_fingerprint == current_fingerprint:
+                current_rows.append(row)
+            else:
+                stale_count += 1
+        if stale_count:
+            write_rows(results_path, current_rows)
+            emit(
+                f"[wmeval-lite] removed {stale_count} stale result row(s) "
+                "whose evaluator fingerprint changed"
+            )
+        done_keys = {row_key(row) for row in current_rows}
 
     resolved_adapters: Mapping[str, DimensionEvaluator] = (
         dict(adapters) if adapters is not None else _default_adapters(runner)

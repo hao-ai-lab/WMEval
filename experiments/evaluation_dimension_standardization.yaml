@@ -1,0 +1,270 @@
+schema_version: 2
+source_of_truth: eval_sets/wmeval_lite_v1/suite.yaml
+
+# This file records readiness claims that cannot be inferred from file presence
+# alone. Dynamic counts (case coverage, trajectory assets, normalization, and
+# evaluator-lock completeness) are computed by tools/audit_production_readiness.py.
+readiness_levels:
+  ready: The dimension is self-contained, deterministic enough for comparison, and has a frozen execution contract.
+  partial: The dimension runs, but one or more comparability or portability gaps remain.
+  blocked: Required inputs or evaluator behavior are missing.
+priority_levels:
+  P0: Must be fixed before release or the affected metric/case must be excluded from release claims.
+  P1: Post-release rigor work that improves comparability, provenance, or scientific confidence.
+  P2: Optimization, ergonomics, cost reduction, storage hygiene, or optional scope expansion.
+
+common_contract:
+  case_manifest: case.yaml
+  evaluator_lock_required: true
+  content_checksums_required: true
+  candidate_manifest_format: jsonl
+  result_format: per_case_results.jsonl
+  missing_metrics_policy: explicit_never_zero_filled
+  table_repeat_policy: five_independent_generations_ddof_1
+  provenance_claims:
+    - exact
+    - reconstructed
+    - nominal
+    - unresolved
+
+cross_cutting_gaps:
+  - id: dependency_lock_content
+    priority: P0
+    severity: high
+    status: open
+    gap: Case evaluator locks contain evaluator fingerprints, but dependency_versions and artifact_schema_versions are empty in every live case.
+    remediation: Populate machine-verifiable dependency and artifact-schema versions, then refresh evaluator fingerprints.
+  - id: install_contract
+    priority: P2
+    severity: high
+    status: open
+    gap: The tested macOS environment is pinned in requirements-macos.lock, while there is no pyproject.toml/uv.lock project contract and CUDA dependencies are embedded separately in a Modal script.
+    remediation: Define supported CPU/macOS and CUDA extras in project metadata, produce uv locks for each platform, and add an offline checkpoint preflight.
+  - id: candidate_normalization
+    priority: P0
+    severity: high
+    status: open
+    gap: Most non-liquid cases use candidate_normalization none even when metrics compare candidate frame f with reference frame f.
+    remediation: Standardize fps, duration, resolution, crop, and time-base normalization in the runner and record the transform in every result row.
+  - id: action_schema
+    priority: P0
+    severity: high
+    status: open
+    gap: Native action.npy arrays, JSON browser operations, structured prose, and supplemental reconstructions coexist without one versioned action schema or explicit channel semantics.
+    remediation: Introduce a versioned trajectory manifest with time base, channel names, units, target entity, view, and backend adapter status; migrate supplemental controls into locked bundles.
+  - id: external_model_artifacts
+    priority: P0
+    severity: high
+    status: open
+    gap: Several evaluators resolve model aliases or download checkpoints at runtime, and VLM-backed dimensions depend on a mutable hosted API.
+    remediation: Pin checkpoint revisions and hashes, cache immutable artifacts, record provider/model snapshots, and retain deterministic fixtures for reference-side judgments.
+  - id: result_status_schema
+    priority: P0
+    severity: medium
+    status: open
+    gap: Metric availability, primary source, tracked-label coverage, and diagnostic-only status are not represented uniformly across dimensions.
+    remediation: Add a shared result-envelope schema with status, reason, source, units, coverage, evaluator fingerprint, and candidate-normalization provenance per metric.
+  - id: repeat_semantics
+    priority: P1
+    severity: medium
+    status: open
+    gap: Five independent model generations, repeated VLM judge passes, and cached reference judgments are different sampling units but are not described by one aggregation schema.
+    remediation: Record generation_seed, generation_repeat, judge_repeat, aggregation_axis, ddof, and effective sample size separately.
+  - id: ci_release_gate
+    priority: P1
+    severity: medium
+    status: open
+    gap: Bundle validation and tests are local commands; no checked-in CI/release gate verifies the suite, readiness manifest, lightweight tests, and artifact hashes together.
+    remediation: Add a lightweight CI job plus an opt-in GPU/API integration workflow and publish the readiness JSON with releases.
+  - id: artifact_retention
+    priority: P2
+    severity: low
+    status: open
+    gap: Local runs dominate repository disk usage, but there is no documented retention/archive policy separating canonical evidence from resumable caches and disposable diagnostics.
+    remediation: Define canonical run manifests and checksums, then provide a dry-run cleanup command for derived caches and superseded reports.
+
+dimensions:
+  lpips:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      evaluator_config: true
+      aggregation: true
+      reference_events: partial
+      action_trajectory: partial
+      candidate_normalization: partial
+    gaps:
+      - priority: P0
+        severity: high
+        gap: Reference-side causal event judgment is not a single cached fixture for every case and may vary across candidate rows.
+        remediation: Cache reference events per case, judge model, prompt version, and frame-sampling contract.
+      - priority: P0
+        severity: high
+        status: closed
+        gap: The aggregate can mix causal LPIPS with temporal-only fallback values without promoting lpips_primary_source to the result row.
+        remediation: Resolved by surfacing source/event coverage on every row and emitting causal and temporal-fallback metrics separately; temporal fallbacks no longer enter lpips_mean.
+      - priority: P1
+        severity: medium
+        gap: BeamDomino and liquid action descriptions are numeric/structured but not native browser operations.
+        remediation: Add explicit target-aware browser adapters or declare those model backends unsupported in the case contract.
+
+  action_controllability:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      evaluator_config: true
+      aggregation: true
+      action_trajectory: partial
+      target_entity: false
+      units: partial
+    gaps:
+      - priority: P0
+        severity: high
+        gap: The control target is ambiguous for keyboard-only models, so ego-camera motion can be scored against an intended object action.
+        remediation: Bind every action channel to a target entity and report unsupported target channels instead of a numeric failure score.
+      - priority: P1
+        severity: high
+        gap: Synthetic-flow calibration depends on an external PTLFlow checkout resolved outside this repository.
+        remediation: Vendor or package the required synthetic-flow interface and checksum its calibration artifact.
+      - priority: P1
+        severity: medium
+        gap: The pixel-EPE headline is resolution dependent despite relative EPE being available.
+        remediation: Freeze resolution normalization or promote a scale-normalized metric with an explicit direction.
+
+  prompt_scene_consistency:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      rubrics: true
+      aggregation: true
+      prompt_provenance: partial
+      judge_reproducibility: partial
+    gaps:
+      - priority: P1
+        severity: high
+        gap: Exact unpublished generation prompts are unavailable for paper-parity reruns.
+        remediation: Mark prompts as reconstructed in every run receipt and retain exact prompt hashes for all new runs.
+      - priority: P1
+        severity: medium
+        gap: Hosted VLM output depends on a mutable provider/model alias even with a pinned rubric version.
+        remediation: Record API/model snapshot metadata and maintain a frozen regression fixture with expected tolerance bands.
+
+  lighting_shading:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      evaluator_config: true
+      aggregation: true
+      action_trajectory: partial
+      lighting_regime: true
+    gaps:
+      - priority: P1
+        severity: high
+        gap: The orbit has an exact browser schedule but only a semantic reconstructed numeric trajectory, so Unity replay is not exact.
+        remediation: Capture and lock the original Unity controller trace with camera poses and timestamps.
+      - priority: P2
+        severity: medium
+        gap: The fixed-sun paper protocol and optional moving-sun interpretation require different metrics, but only the fixed-sun protocol is implemented.
+        remediation: Keep the protocols separate and add sweep-aware scoring only as a new case.
+      - priority: P2
+        severity: low
+        gap: ChessBoard lighting coverage is optional and not bundled.
+        remediation: Decide whether cross-scene lighting is in release scope before adding a locked case.
+
+  environment_object_consistency:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      evaluator_config: true
+      aggregation: true
+      action_trajectory: partial
+      orientation_anchors: partial
+      candidate_normalization: false
+    gaps:
+      - priority: P0
+        severity: high
+        gap: BilliardGame, ChessBoard walk, and WanderingGarden rely on supplemental trajectories rather than native locked controls.
+        remediation: Move verified controls into each case bundle and refresh checksums/evaluator locks.
+      - priority: P0
+        severity: high
+        gap: Candidate fps, resolution, duration, and frame alignment are not normalized by the suite contract.
+        remediation: Add suite-level video normalization and record the applied transform.
+      - priority: P0
+        severity: high
+        gap: Pairwise-distance MAE needs at least two stable, visible anchors, but anchor visibility/coverage is not a uniform validity gate.
+        remediation: Require per-anchor visibility, assignment confidence, and minimum paired-frame coverage before reporting the metric.
+      - priority: P1
+        severity: medium
+        gap: Reflective MirrorRollingBall depth uses a photogrammetric workaround and other cases depend on scene-specific monocular-depth model choices.
+        remediation: Record depth source per metric and maintain per-scene self-match calibration bounds.
+
+  kinematics_mechanics:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      evaluator_config: true
+      aggregation: partial
+      action_trajectory: partial
+      metric_units: partial
+      missing_label_policy: false
+    gaps:
+      - priority: P0
+        severity: critical
+        status: closed
+        gap: First-person RacingCar ego translation cannot be recovered by the current object tracker.
+        remediation: Resolved for this release by excluding the cell from active Table 4 evaluation while retaining its generation artifacts as provenance.
+      - priority: P1
+        severity: high
+        gap: Paper-native metric units are available only for calibrated planar captures; legacy cases retain pixel/depth diagnostics.
+        remediation: Add per-scene world-coordinate calibration with held-out reprojection validation and explicit unit labels.
+      - priority: P0
+        severity: high
+        status: closed
+        gap: Untracked labels can disappear from FDE/DTW means and make incomplete rows look better.
+        remediation: Resolved by reporting required/tracked/scored/missing label counts and nulling FDE/DTW aggregates whenever a required label is unscored.
+      - priority: P1
+        severity: medium
+        gap: Relative momentum/energy error is unstable near zero ground-truth motion, and exact-match rounding is highly threshold sensitive.
+        remediation: Keep error rate as the headline, add an absolute-error floor policy, and treat significant-digit exact match as diagnostic.
+
+  physical_causality:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      evaluator_config: true
+      reference_judgments: true
+      aggregation: true
+      action_trajectory: partial
+      candidate_judge_reproducibility: partial
+    gaps:
+      - priority: P1
+        severity: high
+        gap: Candidate-side VLM judgments remain stochastic and depend on a hosted model alias; temperature zero is not deterministic.
+        remediation: Record all judge passes, model snapshot metadata, and uncertainty; re-baseline whenever the judge changes.
+      - priority: P1
+        severity: medium
+        gap: BeamDomino trajectories are numeric with structured text but have no target-aware Project Genie browser program.
+        remediation: Implement the object-strike control adapter or explicitly mark browser generation unsupported.
+
+  fluid_mechanics:
+    readiness: partial
+    standardized:
+      case_bundle_contract: true
+      evaluator_config: true
+      reference_artifacts: true
+      candidate_normalization: true
+      action_trajectory: partial
+      aggregation: partial
+    gaps:
+      - priority: P1
+        severity: high
+        gap: Numeric Unity action profiles lack browser-executable, target-aware controls for hosted world models.
+        remediation: Define a bottle/camera action adapter with units and reject models that cannot express it.
+      - priority: P0
+        severity: medium
+        gap: Candidate-side SAM2/RAFT checkpoints are external runtime artifacts whose revisions/hashes are not captured in case locks.
+        remediation: Pin and checksum checkpoint revisions and include them in result provenance.
+      - priority: P2
+        severity: low
+        gap: The dimension has no scientifically valid single-scalar summary, so a headline can obscure per-axis reversals.
+        remediation: Treat the per-profile multi-axis panel as canonical and label the scalar headline as navigation only.

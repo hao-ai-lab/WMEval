@@ -1,0 +1,31 @@
+schema_version: 1
+scenes:
+  WanderingGarden: >-
+    A first-person view from a fixed standing position on the small bridge in a
+    traditional Japanese garden courtyard, initially facing the main cherry
+    tree. Two stone garden lanterns and foreground and background rockery
+    ornaments serve as persistent spatial anchors. Warm architectural and
+    garden lighting illuminates the foliage and surrounding wooden buildings.
+    No main character is persistently visible.
+  BilliardGame: >-
+    A carom-billiard table contains a white cue ball, a yellow ball, and a red
+    ball on dark gray felt bordered by light rails with diamond sight markers.
+    The white cue ball is the persistent target object.
+  MirrorRollingBall: >-
+    A third-person view of a reflective chrome sphere among many glossy yellow
+    spheres on a light-colored ground enclosed by low gray walls in bright
+    daylight. The chrome sphere is the persistent target character.
+orientations:
+  inward: >-
+    The initial Unity conditioning view is inward-facing toward the scene's
+    designated target objects and anchors.
+  outward: >-
+    The initial Unity conditioning view is outward-facing away from the scene's
+    designated target objects and anchors.
+motions:
+  perturb: >-
+    From that orientation, the camera performs the controlled 45-degree camera
+    perturbation used by the paper and then holds its terminal pose.
+  "360": >-
+    From that orientation, the camera performs the controlled full 360-degree
+    camera rotation used by the paper.

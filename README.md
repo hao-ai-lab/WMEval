@@ -38,6 +38,18 @@ Each case bundle (`eval_sets/wmeval_lite_v1/cases/<Scene>/<variant>/`) pairs a
 reference rollout with Unity-derived ground truth and is checksum-locked via
 `tools/build_lite_case.py`.
 
+## Local development setup (macOS arm64)
+
+```bash
+UV_CACHE_DIR=../.uv-cache uv venv --python 3.11 .venv
+UV_CACHE_DIR=../.uv-cache uv pip install \
+  --python .venv/bin/python -r requirements-macos.lock
+source .venv/bin/activate
+```
+
+`requirements-macos.lock` is the tested M4 Pro environment. CUDA/Modal jobs
+use the independent pins in `tools/run_wmeval_lite_modal.py`.
+
 ## Usage
 
 ```bash
@@ -58,3 +70,23 @@ Candidate videos are laid out as `<model_root>/<scene>/<variant>/<seed>.mp4`.
 Not every dimension is live for every scene yet — see
 `eval_sets/wmeval_lite_v1/suite.yaml` for current wiring and
 `eval_sets/wmeval_lite_v1/PENDING.md` for what's still in progress.
+
+The Table 4/Table 7 reproduction assets, trajectory-readiness audit, Unity
+conditioning workflow, and authenticated Project Genie browser controller are
+documented in [experiments/tables_4_7/README.md](experiments/tables_4_7/README.md).
+Run `uv run python tools/audit_table_reproduction.py` for the machine-readable
+end-to-end status, including current evaluator-fingerprint coverage.
+The frozen table evaluator contract is in
+[evaluator_protocol.yaml](experiments/tables_4_7/evaluator_protocol.yaml), and
+the cross-dimension standardization/gap inventory is in
+[evaluation_dimension_standardization.yaml](experiments/evaluation_dimension_standardization.yaml).
+
+For a release-oriented comparison across every evaluation dimension, run
+`uv run python tools/audit_production_readiness.py`. The generated
+[production-readiness report](PRODUCTION_READINESS.md) distinguishes bundle
+validity, native trajectory coverage, backend executability, evaluator
+provenance, and exact-paper-parity limitations.
+
+For the portable 14-cell / 70-generation Table 4 and Table 7 CUDA rerun, use
+the [GPU handoff runbook](experiments/tables_4_7/GPU_HANDOFF.md). Its checked-in
+manifest verifies the minimal ignored run evidence before evaluation.

@@ -15,6 +15,111 @@ banners for the history of everything already resolved.
 
 ---
 
+## Release cleanup pending register
+
+This is the canonical release backlog as of `lanxiang/release-cleanup`.
+Checkboxes are deliberately separated into release-blocking P0 work,
+post-release rigor P1 work, and P2 optimizations. An owner label identifies
+work that belongs to another evaluation-dimension maintainer; `multi-model`
+means the policy must be tuned and validated on more than Project Genie before
+it can be frozen.
+
+### P0 — required for a general production-ready suite
+
+- [ ] **Release infrastructure — dependency and artifact locks.** Populate
+  every case's `evaluator_lock.dependency_versions` and
+  `artifact_schema_versions`, refresh evaluator fingerprints, and make stale
+  locks fail CI. The CUDA Table 4/7 environment is now pinned separately, but
+  the 19 general Lite case locks remain incomplete.
+- [ ] **Release infrastructure + dimension owners — immutable model assets.**
+  Pin revisions and checksums for GroundingDINO, SAM2, Depth Anything, DINOv2,
+  RAFT/OpenPIV, LPIPS weights, and hosted-judge model snapshots. Preflight now
+  names the Table 4/7 runtime aliases, but it cannot certify mutable remote
+  aliases or an absent local cache.
+- [ ] **Action controllability owner — action target schema (`multi-model`).**
+  Extend the versioned semantic trajectory contract with target entity,
+  coordinate frame, and unsupported-channel semantics; migrate native arrays
+  and supplemental trajectories without changing their commands. Reject an
+  object-control score when a keyboard-only backend actually moved the camera.
+- [ ] **Runner + kinematics/EOC owners — suite-level candidate normalization
+  (`multi-model`).** Add a locked transform for fps, duration, resolution,
+  crop/pad, and timebase to non-liquid case contracts and record it per result
+  row. Table 4/7 preparers already do this explicitly, but arbitrary Lite
+  candidates still use `candidate_normalization: none`.
+- [ ] **Result-schema owner — uniform metric validity envelope.** Add per-metric
+  status, reason, primary source, units, coverage, normalization provenance,
+  and evaluator fingerprint. LPIPS source/event coverage and kinematics label
+  coverage are now surfaced, but the contract is not yet uniform across all
+  dimensions.
+- [ ] **LPIPS owner — deterministic cached reference events.** Cache one
+  reference judgment per case + judge model/snapshot + prompt version + frame
+  sampling contract, then reuse it for every candidate. Causal and temporal
+  fallback rows are now separated, but reference re-judging can still vary.
+- [ ] **EOC owner — move supplemental controls into locked bundles.** Promote
+  verified BilliardGame, ChessBoard walk, and WanderingGarden controls from
+  supplemental manifests into their case bundles and refresh checksums/locks.
+  Preserve reconstructed-vs-exact provenance.
+- [ ] **EOC owner — anchor validity gate (`multi-model`).** Freeze minimum
+  per-anchor visibility, assignment confidence, paired-frame coverage, and
+  failure behavior before emitting pairwise-distance MAE. Validate on
+  reflective Mirror, indoor Billiard, and outdoor Garden candidates.
+- [ ] **Fluid mechanics owner — checkpoint provenance.** Pin and checksum the
+  SAM2/RAFT artifacts used by candidate-side fluid evaluation and emit them in
+  result provenance.
+
+Completed in this branch: RacingCar first-person is excluded from active Table
+4 scoring; the CUDA handoff is hashed and relocatable; LPIPS causal vs temporal
+fallback values are separated at row/aggregate level; and kinematics FDE/DTW
+become null when any required label is unscored instead of averaging a
+favorable subset.
+
+### P1 — post-release rigor and multi-model calibration
+
+- [ ] **Table 4/7 maintainers (`multi-model`).** Validate the reconstructed
+  RacingCar third-person, Billiard first-person, and shared Table 7 camera
+  controls on additional world models; freeze acceptable gain/timing bands and
+  action-target success criteria. Current Genie controls are nominal, not
+  universally tuned.
+- [ ] **Kinematics owner.** Add held-out reprojection checks and explicit SI vs
+  pixel/depth units for every scene; retain error rate as the Table 4 headline
+  and significant-digit exact match only as a diagnostic.
+- [ ] **EOC owner.** Record depth source per metric and maintain scene-specific
+  self-match calibration bounds, especially Mirror's photogrammetric path.
+- [ ] **LPIPS owner.** Add target-aware browser adapters for BeamDomino/liquid,
+  or mark those backend/case pairs unsupported rather than guessing controls.
+- [ ] **Action controllability owner.** Package the PTLFlow synthetic-flow
+  dependency and calibration artifact; freeze resolution normalization or
+  promote relative EPE.
+- [ ] **Prompt-consistency owner.** Mark reconstructed prompts in every receipt,
+  retain hashes, capture hosted-model snapshot metadata, and maintain frozen
+  regression fixtures with tolerance bands.
+- [ ] **Lighting owner.** Capture the original Unity controller trace for the
+  fixed-sun orbit with poses/timestamps; keep the optional moving-sun protocol
+  separate.
+- [ ] **Physical-causality owner.** Preserve every judge pass, snapshot metadata,
+  and uncertainty; implement an object-strike browser adapter or declare the
+  backend unsupported.
+- [ ] **Fluid owner.** Define a target-aware bottle/camera browser adapter and
+  reject backends that cannot express it.
+- [ ] **Release infrastructure.** Standardize generation repeats vs judge
+  repeats (`generation_seed`, `generation_repeat`, `judge_repeat`, aggregation
+  axis, `ddof`, effective sample size) and add lightweight CI plus opt-in
+  GPU/API integration gates.
+
+### P2 — optimizations and optional extensions
+
+- [ ] Replace the separate macOS/CUDA requirement files with supported uv
+  project extras and platform locks; add a fully offline checkpoint preflight.
+- [ ] Define canonical evidence retention, archival, and dry-run cleanup for
+  local `runs/` caches and superseded reports.
+- [ ] Keep the fluid multi-axis panel canonical and label any scalar headline
+  as navigation-only.
+- [ ] Decide whether ChessBoard lighting is in release scope before bundling it.
+- [ ] Implement the optional moving-sun case only with a separate sweep-aware
+  metric contract.
+
+---
+
 ## Not yet implemented
 
 - **`ChessBoard/lighting`** → `lighting_shading`
@@ -56,13 +161,6 @@ banners for the history of everything already resolved.
   tokens in total). Numbers are in the suite.yaml banners. Waypoint is a
   first-person, keyboard/mouse-only model, so third-person and object-control
   cases measure its action-target ambiguity rather than a strong result.
-- **`lpips` mixes causal and temporal numbers without a row-level flag.**
-  When the judge matches no contact events (every BeamDomino/causal row for
-  Waypoint: 0 candidate contacts), the row still completes with
-  `lpips_primary_source: temporal_only` inside `full_report` and a headline
-  `lpips_mean` that is the temporal baseline, so the aggregate averages
-  causal and temporal LPIPS as if they were one metric. Surface the source
-  (or count unmatched rows as a separate status) in `extract_metrics`.
 - **The reference-side causal judge is re-run per candidate and is not
   deterministic.** With `lpips_causal_event_source: both` each row re-judges
   the reference video (~55k input tokens); on the identical BeamDomino
@@ -78,13 +176,6 @@ banners for the history of everything already resolved.
   works around it by writing a copy resampled to the reference's fps,
   resolution and duration; the suite should either add a normalisation
   token for these cases or resample inside the adapter.
-- **`kinematics_mechanics` drops untracked labels silently.** The headline
-  `fde_px_mean`/`dtw_px_mean` average over whichever labels ByteTrack kept:
-  BilliardGame/prompt_first seeds 2/4 report 0.5 px because only the static
-  "red ball" survived, while the seeds that also tracked the rolling
-  "yellow ball" report ~365 px for it. An untracked label should count as a
-  failure (or the row should carry an explicit `labels_tracked`), not
-  vanish from the mean.
 - **Three cases under-specify the generation condition.**
   `BilliardGame/prompt_first` and `WanderingGarden/scene_first` ship no
   `reference/artifacts/actions.txt`, and `ChessBoard/walk_third`'s is a

@@ -4,7 +4,8 @@
 Given a case directory whose ``reference/`` files are already in place, this
 tool rewrites ``reference/checksums.sha256`` covering every file under
 ``reference/``, recomputes ``evaluator_lock.evaluator_fingerprint``
-(always — it is derived from checksums+protocol and must never go stale),
+(always — it is derived from the full case contract plus reference checksums
+and must never go stale),
 fills ``evaluator_lock.code_revision`` when empty (pass ``--relock`` to
 refresh it to the current git HEAD), then validates the bundle.
 

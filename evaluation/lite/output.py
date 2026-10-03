@@ -85,6 +85,23 @@ def append_row(path: str | Path, row: Mapping[str, Any]) -> None:
         handle.flush()
 
 
+def write_rows(path: str | Path, rows: list[Mapping[str, Any]]) -> None:
+    """Atomically replace a JSONL result file with ``rows``.
+
+    This is used by resume when an evaluator fingerprint changed.  Keeping a
+    stale row alongside its replacement would double-count one repeat during
+    aggregation, so stale rows must be removed before evaluation continues.
+    """
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = output_path.with_suffix(output_path.suffix + ".tmp")
+    with temporary.open("w", encoding="utf-8") as handle:
+        for row in rows:
+            handle.write(json.dumps(dict(row), ensure_ascii=False) + "\n")
+        handle.flush()
+    temporary.replace(output_path)
+
+
 def read_rows(path: str | Path) -> list[dict[str, Any]]:
     source = Path(path)
     if not source.is_file():

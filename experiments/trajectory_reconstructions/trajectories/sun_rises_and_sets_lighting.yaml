@@ -1,0 +1,38 @@
+schema_version: 1
+trajectory_id: wmeval_lite.sun_rises_and_sets.lighting_orbit_v1
+description: >-
+  Machine-readable form of the locked 10-second counter-clockwise walking
+  orbit around the table, with the table kept centered and the sun fixed.
+duration_sec: 10.0
+control_hz: 16
+channels:
+  orbit_ccw:
+    kind: continuous
+    min: -1.0
+    max: 1.0
+    unit: normalized_semantic_orbit_rate
+segments:
+  - start_sec: 0.0
+    end_sec: 10.0
+    values: {orbit_ccw: 1.0}
+paper_alignment:
+  status: reconstructed
+  matched:
+    - first_person_view
+    - fixed_sun
+    - counter_clockwise_orbit
+    - table_center_lock
+    - ten_second_duration
+  missing:
+    - Unity locomotion controller gain and per-frame translation/yaw values are not published
+  source: ../../../eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting/reference/artifacts/actions.txt
+adapters:
+  project_genie:
+    status: exact_locked_schedule
+    key_rules:
+      - {channel: orbit_ccw, threshold: 0.5, positive_key: ArrowLeft}
+  unity:
+    status: semantic_only
+    note: >-
+      The compiled numeric channel records the exact action meaning and
+      duration, but is not claimed to reproduce unpublished controller gains.

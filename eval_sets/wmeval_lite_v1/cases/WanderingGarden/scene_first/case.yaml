@@ -26,13 +26,20 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
-  evaluator_fingerprint: 88c6dd15e6b4de35b401ef5bf34c1cf6
+  evaluator_fingerprint: f71510041cc4ad98df79653037a6f649
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}
 module_params:
   environment_object_consistency:
-    eoc_text_prompt: tree.
+    eoc_text_prompt: tree. lamp post. rock.
+    eoc_fixed_anchor_labels:
+    - Main tree
+    - left lamp post
+    - right lamp post
+    - foreground rockery ornament
+    - background rockery ornament
+    eoc_max_objects: 5
     eoc_character_prompt: no_character_configured_for_this_case_xyz.
     eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
     eoc_unity_poses_npy: reference/artifacts/poses.npy

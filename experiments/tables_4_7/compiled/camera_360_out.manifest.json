@@ -1,0 +1,20 @@
+{
+  "action_npy": "camera_360_out.action.npy",
+  "action_npy_sha256": "242e5eac182551cc84ce4deb884905055a82aa62054c4b8523444fd1d35a4822",
+  "action_npz": "camera_360_out.action.npz",
+  "action_npz_sha256": "3ddcda933deb456dbdc4ba913a4482a380b6af669534a1267d3be449489d534d",
+  "actions_txt": "camera_360_out.actions.txt",
+  "actions_txt_sha256": "96bd8bc4f87eed01fac4cab5c7cea77727025f5af2fd642b412839789b4cf599",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "yaw_rate_deg_s"
+  ],
+  "project_genie_actions": "camera_360_out.actions.jsonl",
+  "project_genie_actions_sha256": "3bc11afbe77c6fe29f9e26d1e5f6a7fcdeddbf3fe06119e2e2efbaa9cf401471",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "de3cce86bcf6f0ce53780a43057eaddae92d32fcc8df443a00de5ec28eb07d97",
+  "source": "../trajectories/camera_360_out.yaml",
+  "step_count": 200,
+  "trajectory_id": "table7.camera.360_out_v1"
+}

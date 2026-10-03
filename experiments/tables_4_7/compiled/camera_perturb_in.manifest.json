@@ -1,0 +1,20 @@
+{
+  "action_npy": "camera_perturb_in.action.npy",
+  "action_npy_sha256": "55171151a4042416c87105acbfe5f1017aa9e5340a6f73320bad60f84b1da6dc",
+  "action_npz": "camera_perturb_in.action.npz",
+  "action_npz_sha256": "dbcc9bbb0473106a99b4c3907860d25cf7b5ca75d48d027053672649dff6eb4b",
+  "actions_txt": "camera_perturb_in.actions.txt",
+  "actions_txt_sha256": "ce99a7ce7ee33916f1d0e153fc8836135a1d9b7b75c5355092533d8ae709f930",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "yaw_rate_deg_s"
+  ],
+  "project_genie_actions": "camera_perturb_in.actions.jsonl",
+  "project_genie_actions_sha256": "258eb138c4162ac5e69d38670c2bbe23028d711122d3ddda18bad7721173f8d8",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "ae53bd32c4359f1a1471b5dfa584ad4c27d41171eba55541e2b52e5e3993a1cf",
+  "source": "../trajectories/camera_perturb_in.yaml",
+  "step_count": 200,
+  "trajectory_id": "table7.camera.perturb_in_v1"
+}

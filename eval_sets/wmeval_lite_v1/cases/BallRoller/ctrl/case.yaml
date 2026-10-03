@@ -41,19 +41,13 @@ reference:
     synthetic_action_dir: reference/artifacts
 protocol:
   candidate_normalization: none
-  # Lowered from 1.0/0.5: at least one known-good, fully-real generation for
-  # this case (a short-but-complete run that actually executes the action
-  # script rather than stalling or corrupting) only reaches ~0.9s of real
-  # frame-time once its candidate_fps_override is applied -- 15.6% of this
-  # case's ~5.77s reference. 0.5/0.15 admits that run while still rejecting
-  # near-empty or badly corrupted candidates.
   min_duration_sec: 0.5
   min_duration_ratio: 0.15
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
-  evaluator_fingerprint: 02c26ecf6c075f891deb495dc2ca7512
+  evaluator_fingerprint: 1bade19c9cdfbe7008810ff46f40d5c0
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

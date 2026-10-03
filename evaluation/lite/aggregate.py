@@ -54,9 +54,34 @@ def _get(mapping: Any, *path: str) -> Any:
 
 
 def _extract_lpips(result: Mapping[str, Any]) -> dict[str, Any]:
+    primary_source = result.get("lpips_primary_source")
+    mean = _numeric(result.get("lpips_mean"))
+    median = _numeric(result.get("lpips_median"))
+    causal_context = any(
+        key in result
+        for key in (
+            "num_reference_events",
+            "num_candidate_events",
+            "causal_lpips_skipped_reason",
+        )
+    )
+    is_temporal_fallback = primary_source == "temporal_only" and causal_context
     return {
-        "lpips_mean": _numeric(result.get("lpips_mean")),
-        "lpips_median": _numeric(result.get("lpips_median")),
+        # A causal row that fell back to temporal LPIPS is not averaged into
+        # the causal headline. Its value remains available under an explicit
+        # fallback metric and source field.
+        "lpips_mean": None if is_temporal_fallback else mean,
+        "lpips_median": None if is_temporal_fallback else median,
+        "lpips_causal_mean": mean if primary_source == "causal" else None,
+        "lpips_temporal_fallback_mean": mean if is_temporal_fallback else None,
+        "lpips_primary_source": primary_source,
+        "lpips_num_matched_events": _numeric(result.get("num_matched_events")),
+        "lpips_num_reference_events": _numeric(result.get("num_reference_events")),
+        "lpips_num_candidate_events": _numeric(result.get("num_candidate_events")),
+        "lpips_matched_reference_event_fraction": _numeric(
+            result.get("matched_reference_event_fraction")
+        ),
+        "lpips_causal_skipped_reason": result.get("causal_lpips_skipped_reason"),
     }
 
 
@@ -220,18 +245,58 @@ def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
     fidelity = result.get("trajectory_fidelity")
     fde_values: list[float] = []
     dtw_values: list[float] = []
+    fde_m_values: list[float] = []
+    dtw_m_values: list[float] = []
     if isinstance(fidelity, Mapping):
         for entry in fidelity.values():
             if isinstance(entry, Mapping):
                 fde = _numeric(entry.get("fde_px"))
                 dtw = _numeric(entry.get("dtw_px"))
+                fde_m = _numeric(entry.get("fde_m"))
+                dtw_m = _numeric(entry.get("dtw_m_mean"))
                 if fde is not None:
                     fde_values.append(fde)
                 if dtw is not None:
                     dtw_values.append(dtw)
+                if fde_m is not None:
+                    fde_m_values.append(fde_m)
+                if dtw_m is not None:
+                    dtw_m_values.append(dtw_m)
+    coverage = result.get("trajectory_coverage")
+    required_count = tracked_count = scored_count = missing_count = None
+    fidelity_status = None
+    if isinstance(coverage, Mapping):
+        required_count = _numeric(coverage.get("required_label_count"))
+        tracked_count = _numeric(coverage.get("tracked_required_label_count"))
+        scored_count = _numeric(coverage.get("scored_required_label_count"))
+        missing_count = _numeric(coverage.get("missing_required_label_count"))
+        fidelity_status = coverage.get("status")
+        # Never publish an average over a favorable subset of required labels.
+        # Counts and status remain available so callers can distinguish this
+        # from a detector/evaluator crash.
+        if missing_count is not None and missing_count > 0:
+            fde_values.clear()
+            dtw_values.clear()
+            fde_m_values.clear()
+            dtw_m_values.clear()
+    mechanical_summary = result.get("mechanical_summary")
+    exact_match_pct = None
+    error_rate_pct = None
+    if isinstance(mechanical_summary, Mapping):
+        exact_match_pct = _numeric(mechanical_summary.get("exact_match_pct"))
+        error_rate_pct = _numeric(mechanical_summary.get("error_rate_pct"))
     return {
         "fde_px_mean": _mean(fde_values),
         "dtw_px_mean": _mean(dtw_values),
+        "fde_m_mean": _mean(fde_m_values),
+        "dtw_m_mean": _mean(dtw_m_values),
+        "exact_match_pct": exact_match_pct,
+        "error_rate_pct": error_rate_pct,
+        "trajectory_fidelity_status": fidelity_status,
+        "required_label_count": required_count,
+        "tracked_required_label_count": tracked_count,
+        "scored_required_label_count": scored_count,
+        "missing_required_label_count": missing_count,
     }
 
 
