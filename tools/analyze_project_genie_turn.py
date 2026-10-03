@@ -33,11 +33,25 @@ def _feature(path: Path) -> np.ndarray:
     return (small / norm).ravel()
 
 
+def _sample_path(samples_path: Path, row: dict[str, Any]) -> Path:
+    """Resolve source PNGs or the portable reference-package JPEG fallback."""
+    recorded = Path(str(row["path"])).expanduser()
+    if recorded.is_file():
+        return recorded
+    index = int(row["index"])
+    portable = samples_path.parent / f"frame_{index:04d}.jpg"
+    if portable.is_file():
+        return portable
+    raise FileNotFoundError(
+        f"calibration sample is unavailable at {recorded} or {portable}"
+    )
+
+
 def analyze(samples_path: Path, *, max_lag: int | None = None) -> dict[str, Any]:
     samples = json.loads(samples_path.read_text(encoding="utf-8"))
     if not isinstance(samples, list) or len(samples) < 8:
         raise ValueError("at least eight calibration samples are required")
-    features = np.stack([_feature(Path(row["path"])) for row in samples])
+    features = np.stack([_feature(_sample_path(samples_path, row)) for row in samples])
     times = np.asarray([float(row["elapsed_sec"]) for row in samples], dtype=np.float64)
     limit = min(max_lag or len(samples) // 2, len(samples) - 2)
     lag_rows: list[dict[str, Any]] = []

@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import statistics
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,76 @@ def sha256(path: Path) -> str:
         for block in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def reference_timeline(capture: Path) -> dict[str, Any]:
+    """Read a full frame sequence or the compact package's ground-truth MP4."""
+    frame_count = len(list((capture / "frames").glob("frame_*.png")))
+    if frame_count == 300:
+        return {
+            "frame_count": frame_count,
+            "duration_sec": frame_count / 30.0,
+            "source": "png_sequence",
+        }
+    video = capture / "unity_groundtruth.mp4"
+    if not video.is_file():
+        transforms = capture / "evaluation_artifacts/object_transforms.json"
+        if transforms.is_file():
+            try:
+                document = json.loads(transforms.read_text(encoding="utf-8"))
+                frame_sets = [
+                    tuple(int(index) for index in value["frames"])
+                    for value in document["objects"].values()
+                    if isinstance(value, dict) and value.get("frames")
+                ]
+                artifact_count = max(max(indices) for indices in frame_sets) + 1
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+                artifact_count = 0
+            if artifact_count:
+                return {
+                    "frame_count": artifact_count,
+                    "duration_sec": artifact_count / 30.0,
+                    "source": "evaluation_artifact_timeline",
+                    "object_transforms": str(transforms),
+                    "object_transforms_sha256": sha256(transforms),
+                }
+        return {
+            "frame_count": frame_count,
+            "duration_sec": frame_count / 30.0,
+            "source": "incomplete_png_sequence",
+        }
+    command = [
+        "ffprobe",
+        "-v",
+        "error",
+        "-count_frames",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=nb_read_frames,nb_frames,duration",
+        "-of",
+        "json",
+        str(video),
+    ]
+    try:
+        completed = subprocess.run(command, check=True, capture_output=True, text=True)
+        stream = json.loads(completed.stdout)["streams"][0]
+        count_value = stream.get("nb_read_frames") or stream.get("nb_frames")
+        video_count = int(count_value)
+        duration = float(stream.get("duration", video_count / 30.0))
+    except (OSError, subprocess.CalledProcessError, KeyError, IndexError, TypeError, ValueError):
+        return {
+            "frame_count": frame_count,
+            "duration_sec": frame_count / 30.0,
+            "source": "ffprobe_failed_png_fallback",
+        }
+    return {
+        "frame_count": video_count,
+        "duration_sec": duration,
+        "source": "unity_groundtruth_mp4",
+        "video": str(video),
+        "video_sha256": sha256(video),
+    }
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -183,7 +254,7 @@ def build() -> dict[str, Any]:
         trajectory = (TABLE_ROOT / str(case["trajectory"])).resolve()
         trajectory_info = trajectory_cache.setdefault(trajectory, trajectory_coverage(trajectory))
         capture = ROOT / "runs/tables_4_7/unity_scene_runs/captures" / case_id.replace("/", "__")
-        frame_count = len(list((capture / "frames").glob("frame_*.png")))
+        timeline = reference_timeline(capture)
         artifacts = capture / "evaluation_artifacts"
         first_frame = capture / "frames/frame_0000.png"
         required_artifacts = [
@@ -199,12 +270,11 @@ def build() -> dict[str, Any]:
             "control_mode": case.get("control_mode"),
             "trajectory": trajectory_info,
             "unity_reference": {
-                "frame_count": frame_count,
-                "duration_sec": frame_count / 30.0,
+                **timeline,
                 "required_artifacts": {
                     name: (artifacts / name).is_file() for name in required_artifacts
                 },
-                "complete": frame_count == 300
+                "complete": timeline["frame_count"] == 300
                 and all((artifacts / name).is_file() for name in required_artifacts),
             },
             "project_genie_runs": run_coverage(

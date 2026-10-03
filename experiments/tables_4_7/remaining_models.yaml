@@ -1,0 +1,129 @@
+schema_version: 1
+scope:
+  active_cells: 14
+  generation_repeats: 5
+  active_table4_cells: 2
+  active_table7_cells: 12
+  excluded_table4_cells:
+    - table4/RacingCar/first
+    - table4/BilliardGame/third
+  note: >-
+    The supplied reference package covers the active 14-cell protocol. Restoring
+    the two excluded Table 4 cells is a separate scope change and requires their
+    missing reference assets and a protocol decision.
+
+models:
+  lingbot_world_cam:
+    display_name: LingBot-World (Base Cam)
+    upstream: https://github.com/robbyant/lingbot-world
+    revision: null
+    checkpoint: robbyant/lingbot-world-base-cam
+    checkpoint_revision: null
+    runtime_status: checkpoint_and_source_absent
+    requested_tables: [7]
+    generation_groups: 12
+    generations: 60
+    capabilities:
+      native_camera_poses: true
+      keyboard_movement: false
+      target_object_actions: false
+    table4_status: unsupported_wrong_action_target
+    table4_reason: >-
+      Base Cam consumes camera extrinsics and intrinsics. It cannot express the
+      RacingCar steering/throttle/brake or BilliardGame ball-control contract;
+      use a target-aware action model or publish these rows as unsupported.
+    table7_status: native_inputs_prepared_runtime_validation_pending
+    calibration:
+      fixed_side: prepared
+      response_side: pending_checkpoint_and_gpu_window
+      acceptance: pending
+
+  matrix_game_2:
+    display_name: Matrix-Game 2.0
+    upstream: https://github.com/SkyworkAI/Matrix-Game/tree/main/Matrix-Game-2
+    revision: null
+    checkpoint_revision: null
+    runtime_status: source_and_checkpoint_absent_gpu_headroom_below_documented_minimum
+    requested_tables: [4, 7]
+    generation_groups: 14
+    generations: 70
+    capabilities:
+      native_camera_poses: false
+      keyboard_movement: true
+      mouse_camera: true
+      target_object_actions: unverified
+    table4_status: target_action_calibration_pending
+    table7_status: deterministic_schedule_adapter_and_calibration_pending
+    calibration:
+      fixed_side: planned
+      response_side: pending_checkpoint_and_gpu_window
+      acceptance: pending
+
+  matrix_game_3:
+    display_name: Matrix-Game 3.0
+    upstream: https://github.com/SkyworkAI/Matrix-Game/tree/main/Matrix-Game-3
+    revision: null
+    checkpoint_revision: null
+    runtime_status: source_and_checkpoint_absent
+    requested_tables: [7]
+    generation_groups: 12
+    generations: 60
+    capabilities:
+      native_camera_poses: false
+      keyboard_movement: true
+      camera_actions: true
+      target_object_actions: unverified
+    table7_status: deterministic_chunk_schedule_adapter_and_calibration_pending
+    calibration:
+      fixed_side: planned
+      response_side: pending_checkpoint_and_gpu_window
+      acceptance: pending
+
+launch_totals:
+  claimable_generation_groups: 38
+  claimable_generations: 190
+  table4_primary_metric_entries_per_model: 6
+  table4_legacy_exact_match_diagnostics_per_model: 2
+  table4_literal_paper_entries_per_model: 8
+  table7_applicable_metric_entries_per_model: 32
+  note: >-
+    The total excludes LingBot Base Cam Table 4 because its action target is
+    incompatible. If a target-aware LingBot variant is explicitly substituted,
+    add 2 groups and 10 generations after calibration. The current evaluator
+    protocol reports DTW, FDE, and Error Rate; the baseline/template also
+    require legacy Exact Match, so a literal paper-shaped export has two more
+    diagnostic entries per Table 4 model.
+
+runtime_safety:
+  do_not_stop_or_reconfigure_existing_services: true
+  observed_2026_10_03:
+    gpu_count: 8
+    gpu_type: NVIDIA A100-SXM4-80GB
+    existing_vllm_tensor_parallel_workers: 8
+    free_memory_mib_gpus_0_to_6: 22116
+    free_memory_mib_gpu_7: 5770
+  launch_policy: >-
+    Recheck process ownership and free memory immediately before every launch.
+    Never kill, pause, migrate, or reconfigure the existing vLLM service.
+    Wait for an operator-approved GPU window when a backend cannot fit in the
+    unallocated memory. These values are only the final 2026-10-03 snapshot,
+    not a reservation.
+
+calibration_contract:
+  repeats_per_probe: 5
+  camera_probe_degrees: [-45, 45, -360, 360]
+  horizon_sec: 10.0
+  fit:
+    - accepted_action_to_first_motion_latency
+    - signed_yaw_gain
+    - endpoint_error
+    - hold_drift
+    - repeat_variance
+  acceptance_to_freeze:
+    target_entity_success_rate: pending_multi_model_threshold
+    yaw_endpoint_tolerance_deg: pending_multi_model_threshold
+    latency_tolerance_sec: pending_multi_model_threshold
+    repeat_variance_tolerance: pending_multi_model_threshold
+  rule: >-
+    Fit on calibration probes, validate on a held-out mixed trajectory, then
+    freeze the gain/timing band before producing any scored generation.

@@ -160,6 +160,7 @@ WMEval/.venv_test/
 .uv-cache/
 .local/
 runs/
+calibration_samples/
 .venv-unity/
 ENV/
 env.bak/
