@@ -38,7 +38,9 @@ driver compatible with CUDA 12.4, sufficient model-cache storage, and network
 access for the first checkpoint download (or a pre-populated cache).
 
 ```bash
+git fetch origin lanxiang/release-cleanup
 git switch lanxiang/release-cleanup
+git pull --ff-only origin lanxiang/release-cleanup
 scripts/bootstrap_tables_4_7_gpu.sh
 ```
 

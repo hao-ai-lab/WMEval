@@ -30,6 +30,38 @@ dist/reference-packages/wmeval-table4-table7-reference-v1.zip.sha256
 The checked-in `reference_package_manifest.json` records the archive checksum,
 all exact source hashes, and all derived calibration-frame hashes.
 
+## Complete two-machine workflow
+
+The git branch contains code and manifests. The ZIP contains ignored/private
+reference assets and must be transferred separately.
+
+On the source machine:
+
+```bash
+git switch lanxiang/release-cleanup
+git pull --ff-only origin lanxiang/release-cleanup
+
+uv run python tools/build_table_reference_package.py build
+uv run python tools/build_table_reference_package.py verify
+```
+
+On the GPU machine, obtain the branch before overlaying the reference package:
+
+```bash
+git clone https://github.com/hao-ai-lab/WMEval.git
+cd WMEval
+git fetch origin lanxiang/release-cleanup
+git switch --track origin/lanxiang/release-cleanup
+```
+
+If the branch already exists locally:
+
+```bash
+git fetch origin
+git switch lanxiang/release-cleanup
+git pull --ff-only origin lanxiang/release-cleanup
+```
+
 ## Distribution recommendation
 
 For one known GPU machine, `rsync` over SSH is simplest and resumable:
@@ -73,7 +105,32 @@ rsync -a \
   /path/to/WMEval/
 
 cd /path/to/WMEval
+scripts/bootstrap_tables_4_7_gpu.sh
 .venv-gpu/bin/python tools/preflight_tables_4_7_gpu.py --reference-only
 ```
 
 On macOS, replace `sha256sum -c` with `shasum -a 256 -c`.
+
+## New-model calibration and generation contract
+
+After reference preflight succeeds:
+
+1. Use the exact per-cell conditioning image declared in `cases.yaml`.
+2. Calibrate the backend's action timing/gain against the Unity reference
+   videos/traces and `calibration_samples/`; do not change the semantic action
+   trajectory.
+3. Record the backend mapping, timing, model/version, prompt hashes, input
+   frame hash, and output-video hash.
+4. Generate independent `run0` through `run4` for every selected active cell.
+5. Normalize each output to the reference fps, resolution, duration, crop/pad,
+   and timebase before evaluation. Preserve the original output separately.
+6. Write candidate-manifest rows with `model`, Lite `case_id`, `seed`, and
+   `candidate_video`; include case-specific analytical-reference overrides in
+   `params` when required.
+7. Run the relevant dimensions with `tools/run_wmeval_lite.py`, then compare
+   the five-run mean and sample standard deviation (`ddof=1`) against
+   `paper_baseline.yaml`.
+
+The existing Project Genie orchestration demonstrates this contract in
+`tools/run_prepared_table_evaluations.py`. A new backend should implement its
+own generation adapter but reuse the fixed references and evaluator settings.
