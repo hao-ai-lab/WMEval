@@ -13,12 +13,16 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.build_table_gpu_handoff import DEFAULT_MANIFEST, verify_manifest
+from tools.build_table_gpu_handoff import DEFAULT_MANIFEST, sha256, verify_manifest
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument(
+        "--reference-only", action="store_true",
+        help="verify an extracted reference-only package instead of generation evidence",
+    )
     parser.add_argument(
         "--allow-no-cuda", action="store_true",
         help="development-only: verify assets/imports without requiring CUDA",
@@ -27,7 +31,37 @@ def main() -> int:
     checks: dict[str, object] = {}
     errors: list[str] = []
 
-    if not args.manifest.is_file():
+    if args.reference_only:
+        reference_manifest_path = (
+            REPO_ROOT / "experiments/tables_4_7/reference_package_manifest.json"
+        )
+        if not reference_manifest_path.is_file():
+            errors.append(f"reference manifest is missing: {reference_manifest_path}")
+        else:
+            reference_manifest = json.loads(
+                reference_manifest_path.read_text(encoding="utf-8")
+            )
+            for row in reference_manifest.get("source_files", []):
+                path = REPO_ROOT / row["path"]
+                if not path.is_file():
+                    errors.append(f"missing reference file: {row['path']}")
+                    continue
+                if path.stat().st_size != row["bytes"] or sha256(path) != row["sha256"]:
+                    errors.append(f"reference hash mismatch: {row['path']}")
+            for row in reference_manifest.get("calibration_samples", []):
+                path = REPO_ROOT / row["archive_path"]
+                if not path.is_file():
+                    errors.append(f"missing calibration sample: {row['archive_path']}")
+                    continue
+                if path.stat().st_size != row["bytes"] or sha256(path) != row["sha256"]:
+                    errors.append(f"calibration hash mismatch: {row['archive_path']}")
+            checks["reference_package"] = {
+                "source_file_count": reference_manifest.get("source_file_count"),
+                "calibration_sample_count": reference_manifest.get(
+                    "calibration_sample_count"
+                ),
+            }
+    elif not args.manifest.is_file():
         errors.append(f"handoff manifest is missing: {args.manifest}")
     else:
         manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
@@ -89,7 +123,14 @@ def main() -> int:
         "checks": checks,
         "errors": errors,
         "run_command": (
-            "scripts/run_tables_4_7_gpu.sh" if not errors else None
+            "scripts/run_tables_4_7_gpu.sh"
+            if not errors and not args.reference_only
+            else None
+        ),
+        "next_step": (
+            "calibrate_backend_then_generate_five_runs_per_active_cell"
+            if not errors and args.reference_only
+            else None
         ),
     }
     print(json.dumps(payload, indent=2, sort_keys=True))

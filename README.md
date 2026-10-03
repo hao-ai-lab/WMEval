@@ -90,3 +90,7 @@ provenance, and exact-paper-parity limitations.
 For the portable 14-cell / 70-generation Table 4 and Table 7 CUDA rerun, use
 the [GPU handoff runbook](experiments/tables_4_7/GPU_HANDOFF.md). Its checked-in
 manifest verifies the minimal ignored run evidence before evaluation.
+For a new model, the
+[reference-only package](experiments/tables_4_7/REFERENCE_PACKAGE.md) contains
+the Unity traces, exact conditioning frames, action contracts, and dense visual
+calibration samples without any existing generations.

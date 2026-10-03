@@ -6,6 +6,10 @@ BilliardGame third-person are intentionally excluded. The claim scope remains
 `runnable_diagnostic_not_exact_paper_parity` because the paper did not publish
 the original action timelines or spatial transform.
 
+For calibrating and generating a different model without transferring the
+existing Genie videos, use the compact
+[reference-only package](REFERENCE_PACKAGE.md).
+
 The required generated videos and Unity analytical captures live under the
 gitignored `runs/` tree. A git checkout alone is therefore insufficient. The
 checked-in `gpu_handoff_manifest.json` lists the minimal hashed evidence set:
