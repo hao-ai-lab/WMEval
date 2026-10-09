@@ -6,9 +6,9 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 
 ## Snapshot
 
-- 19 validated case bundles across 8 dimensions.
-- 15 cases have native machine-readable trajectories; 4 rely on supplemental reconstructions.
-- Project Genie backend readiness: `{"native_executable_ready": 9, "not_machine_executable": 7, "supplemental_executable_ready": 3}`.
+- 33 validated case bundles across 8 dimensions.
+- 29 cases have native machine-readable trajectories; 4 rely on supplemental reconstructions.
+- Project Genie backend readiness: `{"native_executable_ready": 23, "not_machine_executable": 7, "supplemental_executable_ready": 3}`.
 - Open gaps by severity: `{"critical": 0, "high": 16, "low": 3, "medium": 11}`.
 - Open gaps by release priority: `{"P0": 11, "P1": 14, "P2": 5}`.
 
@@ -20,8 +20,8 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 | `action_controllability` | partial | 2 | 2 / 0 | 1/2 | `beamdomino_native`, `none` | 1 / 2 / 0 |
 | `prompt_scene_consistency` | partial | 6 | 6 / 0 | 6/6 | `none` | 0 / 2 / 0 |
 | `lighting_shading` | partial | 1 | 0 / 1 | 1/1 | `none` | 0 / 1 / 2 |
-| `environment_object_consistency` | partial | 6 | 3 / 3 | 6/6 | `none` | 3 / 1 / 0 |
-| `kinematics_mechanics` | partial | 3 | 2 / 1 | 3/3 | `none` | 0 / 2 / 0 |
+| `environment_object_consistency` | partial | 16 | 14 / 2 | 16/16 | `match_reference`, `none` | 3 / 1 / 0 |
+| `kinematics_mechanics` | partial | 3 | 3 / 0 | 3/3 | `match_reference`, `none` | 0 / 2 / 0 |
 | `physical_causality` | partial | 3 | 3 / 0 | 0/3 | `beamdomino_native` | 0 / 2 / 0 |
 | `fluid_mechanics` | partial | 4 | 4 / 0 | 0/4 | `liquid_832x464_16fps` | 1 / 1 / 1 |
 

@@ -55,6 +55,17 @@ never fed a substitute action.
 | Matrix-Game 3.0 | 177 frames @ 17 fps, 6 keys + mouse | regime/direction gains 10.511--11.434 | out of scope |
 | LingBot Base Cam | 161 poses @ 16 fps | nominal poses, no response correction | unsupported (camera input only) |
 
+## Evaluating through the Lite suite
+
+The 14 active cells are WMEval Lite cases (`<Scene>/scene_<variant>` for Table 7,
+`<Scene>/kinematics_<view>` for Table 4), built by `tools/build_table_lite_cases.py`
+with each cell's conditioning frame, compiled trajectory and Unity ground truth
+(full-turn and captured cells are identical to the per-run orchestration's ground
+truth; perturbation cells use the commanded timing). New models are scored with
+`tools/run_wmeval_lite.py` and compared via `tools/export_lite_table_results.py` →
+`tools/compare_table_results.py compare`; the per-run orchestration below remains
+the provenance of the published rows.
+
 ## Scope and definition of done
 
 The repository contains 16 paper-shaped cells, but the active execution scope

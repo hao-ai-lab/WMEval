@@ -11,18 +11,20 @@ must be declared, never hidden.
 
 **Where each dimension stands** (verified 2026-10-09):
 
-- **Actions.** Object consistency and kinematics already run from standardized
-  action trajectories: the 14 Table 4/7 cells (`experiments/tables_4_7/`), where a
-  camera trajectory is just an action trajectory whose target is `camera`. Their gap
-  is packaging (ground truth in a private ZIP + `runs/`, model lists hard-coded in
-  two orchestration scripts). Causality (ball strike), fluid (bottle motion) and
-  lighting (per-model orbit file) still lack a standardized, target-aware action.
+- **Actions.** Every dimension now runs through the Lite suite. The 14 Table 4/7
+  cells are Lite cases (`<Scene>/scene_<variant>` for Table 7,
+  `<Scene>/kinematics_<view>` for Table 4) carrying their conditioning frame,
+  compiled action trajectory and Unity ground truth (`tools/build_table_lite_cases.py`);
+  a camera trajectory is just an action trajectory whose target is `camera`.
+  Causality (ball strike), fluid (bottle motion) and lighting (per-model orbit
+  file) still lack a standardized, target-aware action.
 - **Frozen references.** LPIPS re-judges Unity contact events per candidate;
   prompt consistency does not store the Unity reference scores and judges with a
   mutable hosted model. Causality's reference answers are already frozen.
-- **Normalization.** The Lite runner resamples only the 4 LiquidContainer cases;
-  the other 15 (including `beamdomino_native`, which is an identity token) use the
-  candidate as-is. The Table 4/7 path resamples to 150 frames @ 15 fps itself.
+- **Normalization.** The 14 Table 4/7 cases use `match_reference` (resample to the
+  reference fps / resolution / frame count) and the 4 LiquidContainer cases their
+  locked liquid token; the other 15 cases (including `beamdomino_native`, an
+  identity token) still use the candidate as-is.
 
 ---
 
@@ -65,72 +67,50 @@ must be declared, never hidden.
 
 ---
 
-## Evaluating a new model — the two paths
+## Evaluating a new model — one path for every dimension
 
-Every dimension uses one of two paths. Both start from fixed conditions (image +
-prompt + action trajectory), produce **five independent generations per case**, and
-end in `tools/run_wmeval_lite.py`.
-
-### Path A — Lite cases (controllability, fluid, causality, lighting, prompt, LPIPS)
+Every dimension, including the Table 4/7 reproduction, is evaluated the same way:
+fixed conditions (image + prompt + action trajectory) → **five independent
+generations per case** → `tools/run_wmeval_lite.py`.
 
 ```bash
 # 1. Conditions for each case listed under the dimension in suite.yaml:
-#      image   = cases/<Scene>/<variant>/reference/ref.png  (else frame 0 of reference/reference.mp4)
+#      image   = cases/<Scene>/<variant>/reference/ref.png  (else frame 0 of the reference video)
 #      prompt  = cases/<Scene>/<variant>/case.yaml : prompt
-#      actions = cases/<Scene>/<variant>/reference/artifacts/actions.txt (+ action.npy)
+#      actions = cases/<Scene>/<variant>/reference/artifacts/
+#                  trajectory.yaml + action.npz      (Table 4/7 cases: canonical semantic trajectory)
+#                  actions.jsonl                     (Project Genie browser program, where supported)
+#                  actions.txt / action.npy          (other cases)
+#    Compile the actions onto your model's native controls. Register the backend in
+#    experiments/tables_4_7/action_backends.yaml (native frames/fps, supported targets
+#    + reasons, calibration); see tools/prepare_matrix_game_inputs.py and
+#    tools/prepare_lingbot_table7_inputs.py. Never alter the trajectory itself.
 # 2. Generate seeds 42 1 2 3 4 → runs/<model>/<Scene>/<variant>/<seed>.mp4
-#    Match the reference fps / resolution / duration yourself unless the case's
-#    candidate_normalization token resamples it (today: LiquidContainer only).
+#    (cases with candidate_normalization: match_reference or liquid are resampled by
+#     the runner; for the others, match the reference fps/resolution/duration yourself)
 # 3. Evaluate (resumable; OPENAI_API_KEY for judge-based dimensions):
 python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \
   --model-root runs/<model> --dimensions <dimension> \
   --output-dir reports/wmeval_lite/<model> --resume
 # 4. Read reports/wmeval_lite/<model>/aggregate_summary.{json,csv}
+# 5. Table 4/7 only — compare with the paper baseline:
+python tools/export_lite_table_results.py --model "<name>" \
+  --results reports/wmeval_lite/<model>/per_case_results.jsonl \
+  --output reports/wmeval_lite/<model>/table_results.json
+python tools/compare_table_results.py compare --allow-incomplete \
+  --results reports/wmeval_lite/<model>/table_results.json
 ```
 
-Worked generator: `tools/generate_waypoint15_candidates_modal.py` (Waypoint-1.5).
+Backends whose accepted action timing differs from the commanded trajectory (e.g. a
+browser model recording when a key press took effect) may pass per-run ground-truth
+overrides (`eoc_unity_poses_npy`, …) in their candidate-manifest `params`; the baked
+case is the nominal protocol. Worked generator: `tools/generate_waypoint15_candidates_modal.py`.
 
-### Path B — Table 4/7 cells (object consistency, kinematics)
-
-```bash
-# 0. Install + verify the reference package (experiments/tables_4_7/REFERENCE_PACKAGE.md)
-python tools/build_table_reference_package.py verify
-# 1. Conditions per active cell in experiments/tables_4_7/cases.yaml:
-#      image   = first_frame
-#      actions = trajectory  (experiments/tables_4_7/trajectories/*.yaml,
-#                compiled to experiments/tables_4_7/compiled/*.action.npz)
-# 2. Register your backend in experiments/tables_4_7/action_backends.yaml
-#    (native frames/fps, supported targets + reasons, calibration) and compile the
-#    trajectory onto it — see tools/prepare_matrix_game_inputs.py and
-#    tools/prepare_lingbot_table7_inputs.py. Calibrate camera gain/latency on
-#    calibration_samples/; never alter the trajectory.
-# 3. Generate run0..run4 per cell → runs/<model>/<table>/<Scene>/<variant>/runN/
-#    with a receipt.json (status, repeat_id, first_frame_sha256, actions_sha256, output hash).
-# 4. Standardize (150 frames @ 15 fps) and attach the cell's Unity ground truth as
-#    per-run params on a Lite evaluator template, e.g. a Garden full turn:
-python tools/prepare_project_genie_case_eval.py --model <model> \
-  --run-root runs/<model>/table7/WanderingGarden/360_in \
-  --lite-case-id WanderingGarden/scene_first \
-  --camera-trajectory-mode full_turn --reference-start-frame 0 --reference-target-yaw-deg -360 \
-  --output-dir runs/<model>/table7/WanderingGarden/360_in/evaluation_prepared
-#    (BilliardGame cells and Table 4 need extra Unity overrides: today only
-#     tools/run_prepared_table_evaluations.py [Genie] and
-#     tools/run_open_model_table_evaluations.py [MODELS list] provide them.)
-# 5. Evaluate the prepared manifest:
-python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \
-  --candidate-manifest runs/<model>/table7/WanderingGarden/360_in/evaluation_prepared/candidate_manifest.jsonl \
-  --dimensions environment_object_consistency --output-dir reports/tables_4_7/<model>/WanderingGarden__360_in
-# 6. Build tables and compare with the paper baseline:
-python tools/build_table7_rerun_results.py      # Table 7
-python tools/build_table4_calibrated_results.py # Table 4
-python tools/compare_table_results.py --baseline experiments/tables_4_7/paper_baseline.yaml
-```
-
-Template mapping (Table cell → Lite evaluator case): WanderingGarden →
-`WanderingGarden/scene_first`; BilliardGame → `BilliardGame/prompt_first`;
-MirrorRollingBall → `MirrorRollingBall/prompt_third`; RacingCar →
-`RacingCar/prompt_third`. Running those Lite cases *without* Path B uses their
-legacy bundled actions and references, which are not the standardized protocol.
+The earlier orchestration that produced the published Table 4/7 rows
+(`tools/run_prepared_table_evaluations.py`, `tools/run_open_model_table_evaluations.py`,
+`tools/prepare_project_genie_case_eval.py`) remains for provenance; new models use the
+Lite cases. Their baked ground truth is identical to that orchestration's for the
+full-turn and captured cells.
 
 ### Model roster
 
@@ -149,54 +129,54 @@ legacy bundled actions and references, which are not the standardized protocol.
 
 ## 1. Environment object & character consistency — `environment_object_consistency`
 
-**Owner:** _TBD_ · **Paper:** Table 7 · **Protocol:** Path B, 12 cells —
-WanderingGarden / BilliardGame / MirrorRollingBall × perturb_in, perturb_out,
-360_in, 360_out (camera trajectories `camera_*.yaml`, target `camera`)
+**Owner:** _TBD_ · **Paper:** Table 7 · **Lite cases (16):** the 12 Table 7 cells
+`{WanderingGarden, BilliardGame, MirrorRollingBall}/scene_{perturb_in, perturb_out, 360_in, 360_out}`
+(camera trajectories `camera_*.yaml`, target `camera`) + BallRoller/ctrl,
+RacingCar/prompt_third, ChessBoard/walk_third, WanderingGarden/scene_first (indoor)
 
-**Run it for a new model:** Path B with `--dimensions environment_object_consistency`.
-Key files: `experiments/tables_4_7/cases.yaml`, `trajectories/camera_*.yaml`,
-`action_backends.yaml`, `evaluator_protocol.yaml`, `evaluator_assets.lock.json`,
-`evaluation/modules/environment_object_consistency.py`.
+**Run it for a new model:** the single path with `--dimensions environment_object_consistency`,
+then `tools/export_lite_table_results.py` + `tools/compare_table_results.py` for Table 7.
+Key files: `cases/<Scene>/scene_*/` (`ref.png`, `reference.mp4`,
+`artifacts/{trajectory.yaml, action.npz, actions.jsonl, poses.npy, intrinsics.npy, object_transforms.json, table_cell.json}`),
+`experiments/tables_4_7/action_backends.yaml`, `evaluation/modules/environment_object_consistency.py`,
+`tools/build_table_lite_cases.py` (rebuilds the 12 cells from their Unity sources).
 
-| Cell group | Actions | Unity reference | Normalization |
+| Cases | Actions | Unity reference | Normalization |
 | --- | --- | --- | --- |
-| WanderingGarden × 4 | ✅ camera trajectories | ⚠️ GardenBridge capture in `runs/unity/` (ignored); outward anchor reconstructed | ✅ Path B (150 f @ 15 fps) |
-| BilliardGame × 4 | ✅ | ⚠️ Unity captures in `runs/tables_4_7/` (ignored) | ✅ Path B |
-| MirrorRollingBall × 4 | ✅ | ⚠️ Lite poses + derived outward frame; photogrammetric depth | ✅ Path B |
-| Lite-only: BallRoller/ctrl, ChessBoard/walk_third | ✅ / ❌ comment-only | ✅ bundled | ❌ none |
+| WanderingGarden scene_* × 4 | ✅ camera trajectories | ✅ GardenBridge orbit re-indexed on the commanded yaw (outward anchor reconstructed) | ✅ `match_reference` |
+| BilliardGame scene_* × 4 | ✅ | ✅ dedicated Unity captures | ✅ `match_reference` |
+| MirrorRollingBall scene_* × 4 | ✅ | ✅ Lite orbit re-indexed (photogrammetric depth caveat) | ✅ `match_reference` |
+| BallRoller/ctrl, RacingCar/prompt_third | ✅ | ✅ bundled | ❌ none |
+| ChessBoard/walk_third, WanderingGarden/scene_first | ❌ comment-only / no action file | ✅ bundled | ❌ none |
 
 | Model | In paper | Status |
 | --- | --- | --- |
-| Project Genie | ✅ (reconstructed row) | ✅ 5-run, 12 cells |
+| Project Genie | ✅ (reconstructed row) | ✅ 5-run results exist (produced by the earlier orchestration; full-turn and captured cells have identical baked ground truth) |
 | LingBot-World (Cam) | ✅ | ✅ 5-run; adaptive 30-run expansion 100/360 |
-| Matrix-Game 3.0 | ✅ | ✅ 5-run |
-| Matrix-Game 2.0 | ✅ | ✅ 5-run |
-| Waypoint-1.5 | — | ⚠️ scored only on the legacy Lite cases (not the Table 7 protocol) |
+| Matrix-Game 3.0 / 2.0 | ✅ | ✅ 5-run |
+| Waypoint-1.5 | — | ⚠️ scored only on the legacy cases; regenerate on `scene_*` |
 
-- [ ] **Package the 12 cells as self-contained HF cases.** Do: bake each cell's
-  conditioning image, compiled trajectory, Unity poses/intrinsics/object transforms and
-  standardized reference frames into a case bundle, so Path B needs nothing from `runs/`
-  or the private ZIP. Check: `python tools/build_table_reference_package.py verify`.
-  Done when: Path B runs from a clean clone + HF download.
-- [ ] **Make Path B model-agnostic.** Do: move the BilliardGame Unity overrides out of
-  `run_prepared_table_evaluations.py` / `run_open_model_table_evaluations.py` into case
-  data, and drop the hard-coded `MODELS` list. Done when: `prepare_project_genie_case_eval.py
-  --model <any>` prepares all 12 cells.
+- [ ] **Re-score one existing model through the Lite cases** (e.g. Matrix-Game 3.0, whose
+  schedules follow the commanded timing) and confirm the Table 7 means match the published
+  five-run values. Check: `tools/export_lite_table_results.py` → `tools/compare_table_results.py compare`.
+- [ ] **Distribution clearance** for the baked Unity renders and arrays (they now live in
+  the case bundles); release them with the HF package.
 - [ ] **Report realized camera motion** beside every score (LingBot realized −17.7/+41.4°
   for ±45° and +54.9/+277.9° for full turns). Done when: realized yaw is a column in the
   exported tables.
 - [ ] **Anchor validity gate:** require ≥2 visible, confidently assigned anchors and a
   minimum paired-frame coverage for pairwise-distance MAE; otherwise `unmeasurable`.
-- [ ] **Resolve the Lite-only cases:** give ChessBoard/walk_third an executable
-  `actions.json` (or drop it) and lock normalization for BallRoller/ctrl.
+- [ ] **Legacy cases:** give ChessBoard/walk_third and WanderingGarden/scene_first
+  executable actions (or drop them) and switch BallRoller/ctrl and RacingCar/prompt_third
+  to `match_reference`.
 - [ ] **Publish per-scene self-match bounds** and the Mirror photogrammetric caveat.
 
 ## 2. Action controllability — `action_controllability`
 
-**Owner:** _TBD_ · **Paper:** controllability table · **Protocol:** Path A —
+**Owner:** _TBD_ · **Paper:** controllability table · **Lite cases:**
 BallRoller/ctrl, BeamDomino/causal
 
-**Run it for a new model:** Path A with `--dimensions action_controllability`. Key
+**Run it for a new model:** the single path with `--dimensions action_controllability`. Key
 files: `cases/BallRoller/ctrl/`, `cases/BeamDomino/causal/` (`actions.txt`,
 `action.npy`, `reference.mp4`), `evaluation/modules/control_motion.py`,
 `tools/evaluate_world_model_controllability.py`.
@@ -222,24 +202,24 @@ files: `cases/BallRoller/ctrl/`, `cases/BeamDomino/causal/` (`actions.txt`,
 
 ## 3. Kinematics & mechanics — `kinematics_mechanics`
 
-**Owner:** _TBD_ · **Paper:** Table 4 · **Protocol:** Path B, 2 active cells —
-`table4/RacingCar/third` (`racing_car_drive.yaml`, steer/throttle/brake, target
-`ego_vehicle`) and `table4/BilliardGame/first` (`billiard_first_person_ball_control.yaml`,
-forward/lateral, target `cue_ball`)
+**Owner:** _TBD_ · **Paper:** Table 4 · **Lite cases (3):** RacingCar/kinematics_third
+(`racing_car_drive.yaml`, steer/throttle/brake, target `ego_vehicle`),
+BilliardGame/kinematics_first (`billiard_first_person_ball_control.yaml`, forward/lateral,
+target `cue_ball`), BallRoller/ctrl
 
-**Run it for a new model:** Path B with `--dimensions kinematics_mechanics`; Table 4
-preparation needs the Unity overrides in `tools/run_open_model_table_evaluations.py`
-(add the model to `MODELS`) until they move into case data. Key files:
-`experiments/tables_4_7/cases.yaml`, `trajectories/racing_car_drive.yaml`,
-`trajectories/billiard_first_person_ball_control.yaml`, `action_backends.yaml`,
-`evaluation/modules/kinematics_mechanics.py`, `tools/build_table4_calibrated_results.py`.
+**Run it for a new model:** the single path with `--dimensions kinematics_mechanics`,
+then `tools/export_lite_table_results.py` + `tools/compare_table_results.py` for Table 4.
+Key files: `cases/RacingCar/kinematics_third/`, `cases/BilliardGame/kinematics_first/`
+(`artifacts/{trajectory.yaml, action.npz, actions.jsonl, poses.npy, intrinsics.npy,
+object_transforms.json, object_masses.json, plane_calibration.json}`),
+`evaluation/modules/kinematics_mechanics.py`.
 
-| Cell | Actions | Unity reference | Normalization |
+| Case | Actions | Unity reference | Normalization |
 | --- | --- | --- | --- |
-| RacingCar third | ✅ drive trajectory | ⚠️ capture + `gt.json` in `runs/` (ignored) | ✅ Path B |
-| BilliardGame first | ✅ ball-control trajectory | ⚠️ capture in `runs/` (ignored) | ✅ Path B |
+| RacingCar/kinematics_third | ✅ drive trajectory | ✅ Unity capture, masses, plane calibration | ✅ `match_reference` |
+| BilliardGame/kinematics_first | ✅ ball-control trajectory | ✅ Unity capture, masses, plane calibration | ✅ `match_reference` |
+| BallRoller/ctrl | ✅ keys + `action.npy` | ✅ bundled | ❌ none |
 | Excluded: RacingCar first, BilliardGame third | — | — | — |
-| Lite-only: BallRoller/ctrl | ✅ keys | ✅ bundled | ❌ none |
 
 | Model | In paper | Status |
 | --- | --- | --- |
@@ -247,26 +227,22 @@ preparation needs the Unity overrides in `tools/run_open_model_table_evaluations
 | Matrix-Game 2.0 | ✅ | ⚠️ 5-run generated; car/ball target control not validated (thresholded WASD) |
 | LingBot-World (Cam) | — | — unsupported (camera input only) |
 | Matrix-Game 3.0 | — | — out of scope (Table 7 only) |
-| Waypoint-1.5 | — | ⚠️ scored only on legacy Lite cases |
+| Waypoint-1.5 | — | ⚠️ scored only on legacy cases; regenerate on `kinematics_*` |
 
-- [ ] **Package both cells as self-contained HF cases** (as in §1) and move the Racing /
-  Billiard Unity overrides into case data. Done when: Path B runs for a new model with no
-  edits to orchestration code.
+- [ ] **Re-score one existing model through the Lite cases** and confirm the Table 4
+  means match the published values.
 - [ ] **Validate target control per backend:** reject outputs where the camera or an
   avatar moved instead of the car/ball; record a target-success rate per run (Matrix-Game
   2.0 first).
-- [ ] **Retire the legacy Lite kinematics rows** (`RacingCar/prompt_third` is a camera
-  rotation around a parked car; `BilliardGame/prompt_first` has no action) or point them
-  at the Table 4 trajectories.
 - [ ] **Units and floors:** held-out reprojection checks, exact-match as diagnostic,
   absolute-error floor for near-zero motion.
 
 ## 4. Fluid mechanics — `fluid_mechanics`
 
-**Owner:** _TBD_ · **Paper:** LiquidContainer table · **Protocol:** Path A — 4 profiles
+**Owner:** _TBD_ · **Paper:** LiquidContainer table · **Lite cases:** 4 profiles
 (rest, step_hold, impulse_decay, chirp_strafe)
 
-**Run it for a new model:** Path A with `--dimensions fluid_mechanics` (the runner
+**Run it for a new model:** the single path with `--dimensions fluid_mechanics` (the runner
 resamples to 832×464 @ 16 fps). Key files: `cases/LiquidContainer/*/reference/artifacts/`
 (`action.npy` forward/right/up, `liquid_mask.npz`, `bottle_mask.npz`,
 `raft_pooled_flow.npz`), `evaluation/modules/liquid_*.py`, `slosh_spectrum.py`,
@@ -288,10 +264,10 @@ resamples to 832×464 @ 16 fps). Key files: `cases/LiquidContainer/*/reference/a
 
 ## 5. Physical causality — `physical_causality`
 
-**Owner:** _TBD_ · **Paper:** BeamDomino causality table · **Protocol:** Path A —
+**Owner:** _TBD_ · **Paper:** BeamDomino causality table · **Lite cases:**
 BeamDomino causal / causal_glancing / causal_direct_strike
 
-**Run it for a new model:** Path A with `--dimensions physical_causality`
+**Run it for a new model:** the single path with `--dimensions physical_causality`
 (`OPENAI_API_KEY`; 5 judge passes per candidate). Key files:
 `cases/BeamDomino/*/reference/artifacts/` (`action.npy`, `qa_dataset.json`,
 `judge_answers.json`), `evaluation/modules/causal_step*.py`,
@@ -314,10 +290,10 @@ BeamDomino causal / causal_glancing / causal_direct_strike
 
 ## 6. Lighting & shading — `lighting_shading`
 
-**Owner:** _TBD_ · **Paper:** SunRisesAndSets table · **Protocol:** Path A —
+**Owner:** _TBD_ · **Paper:** SunRisesAndSets table · **Lite cases:**
 SunRisesAndSets/lighting (first person, fixed sun, walking orbit; reference-free)
 
-**Run it for a new model:** Path A with `--dimensions lighting_shading`. Key files:
+**Run it for a new model:** the single path with `--dimensions lighting_shading`. Key files:
 `cases/SunRisesAndSets/lighting/reference/` (`ref.png`, `actions.txt`,
 `actions_per_model.json`), `evaluation/modules/shadow_consistency.py`,
 `tools/analytic_lighting_floor.py`.
@@ -338,10 +314,10 @@ SunRisesAndSets/lighting (first person, fixed sun, walking orbit; reference-free
 
 ## 7. Prompt-scene consistency — `prompt_scene_consistency`
 
-**Owner:** _TBD_ · **Paper:** prompt-consistency table · **Protocol:** Path A —
+**Owner:** _TBD_ · **Paper:** prompt-consistency table · **Lite cases:**
 ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
-**Run it for a new model:** Path A with `--dimensions prompt_scene_consistency`
+**Run it for a new model:** the single path with `--dimensions prompt_scene_consistency`
 (`OPENAI_API_KEY`). Key files: `cases/*/prompt_*/case.yaml` (prompt),
 `reference/ref.png`, `reference/artifacts/rubrics/`,
 `tools/evaluate_world_model_vlm_consistency.py`.
@@ -365,10 +341,10 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
 ## 8. Perceptual similarity — `lpips`
 
-**Owner:** _TBD_ · **Paper:** causal-LPIPS table · **Protocol:** Path A —
+**Owner:** _TBD_ · **Paper:** causal-LPIPS table · **Lite cases:**
 MirrorRollingBall/lpips_collision, BeamDomino/causal, LiquidContainer × 4
 
-**Run it for a new model:** Path A with `--dimensions lpips` (`OPENAI_API_KEY` for
+**Run it for a new model:** the single path with `--dimensions lpips` (`OPENAI_API_KEY` for
 event detection). Key files: `cases/MirrorRollingBall/lpips_collision/`,
 `evaluation/modules/lpips*.py`, `tools/evaluate_world_model_lpips.py`.
 
@@ -393,7 +369,7 @@ event detection). Key files: `cases/MirrorRollingBall/lpips_collision/`,
 
 ## Release owner — cross-cutting items
 
-- [ ] **Scope and rights (P0-01).** Freeze the case roster (Lite cases + the 14 Table 4/7
+- [ ] **Scope and rights (P0-01).** Freeze the case roster (33 Lite case bundles, including the 14 Table 4/7
   cells) and repeat policy; clear redistribution of Unity renders, quantities and
   annotations; add LICENSE files, attribution, citation, dataset card; confirm HY-WorldPlay.
 - [ ] **HF package (P0-02).** Export → download → verify into a clean directory with
@@ -401,7 +377,7 @@ event detection). Key files: `cases/MirrorRollingBall/lpips_collision/`,
   a private repo or a Modal volume.
 - [ ] **Adapter template (P0-05).** A model-neutral adapter (capability check +
   generation) driven by `action_backends.yaml`, a no-cost fixture backend, an expected-job
-  export (case × repeat × seed) and receipts accepted by both paths.
+  export (case × repeat × seed) and receipts accepted by the Lite runner.
 - [ ] **Environment (P0-06).** Extend `experiments/tables_4_7/evaluator_assets.lock.json`
   (GroundingDINO, Depth Anything, SAM 2.1, DINOv2 pinned) to RAFT, LPIPS/VGG, PTLFlow,
   OpenPIV and indoor depth; fill the 19 empty case locks; add a preflight.
@@ -409,13 +385,13 @@ event detection). Key files: `cases/MirrorRollingBall/lpips_collision/`,
   `invalid_candidate`, `not_applicable`, `unmeasurable`, `error`); a coverage gate; one
   repeat policy (LingBot's adaptive 5→30 vs. five runs elsewhere).
 - [ ] **Acceptance (P0-10).** Hermetic tests (no reads from `runs/` or the sibling paper
-  checkout), CI, and a clean-machine run of both paths from the HF download with one new
+  checkout), CI, and a clean-machine run of the Lite path from the HF download with one new
   model.
 
 ## Release order
 
 1. Scope and rights; freeze schemas (`actions.json`, reference manifest, result status).
-2. Package the Table 4/7 cells (§1, §3); standardize the remaining actions (§2, §4–§6).
+2. Re-score one model through the Table 4/7 Lite cases (§1, §3); standardize the remaining actions (§2, §4–§6).
 3. Freeze reference judgments (§7, §8); lock normalization everywhere.
 4. Adapter template, environment lock, coverage gate.
 5. Clean-machine acceptance from the HF package; ship when every item above is closed.

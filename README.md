@@ -10,7 +10,7 @@
 WMEval evaluates interactive world models against Unity-based physical simulations. Instead of judging generations on perceptual quality alone, it executes the **same action trajectory** in a Unity scene and in the world model, then compares the two rollouts using simulator-derived ground truth — camera poses, object states, masses, momentum and energy, causal event traces — as the reference. It consists of:
 
 1. **9 Unity scenes** (`BallRoller` · `BeamDomino` · `BilliardGame` · `ChessBoard` · `LiquidContainer` · `MirrorRollingBall` · `RacingCar` · `SunRisesAndSets` · `WanderingGarden`), each paired with deliberately designed action trajectories.
-2. **A Unity-free evaluation suite** (WMEval Lite): checksummed case bundles carrying the conditioning frame, prompt, action script, reference rollout and the Unity quantities each metric needs, plus one CLI that validates candidates, dispatches every dimension's evaluator and aggregates over seeds and cases.
+2. **A Unity-free evaluation suite** (WMEval Lite): checksummed case bundles carrying the conditioning frame, prompt, action trajectory, reference rollout and the Unity quantities each metric needs, plus one CLI that validates candidates, dispatches every dimension's evaluator and aggregates over seeds and cases. The paper's Table 4 and Table 7 cells are Lite cases too, so every dimension is evaluated through the same path.
 3. **Standardized action trajectories** that compile one semantic trajectory onto each backend's native interface (Unity, Project Genie, Matrix-Game 2.0/3.0, LingBot-World), with explicit action targets, calibration and unsupported-control reporting.
 
 <p align="center">
@@ -73,11 +73,21 @@ Instead of a directory tree you can pass a strict JSONL manifest with `--candida
 {"model":"my_model","case_id":"RacingCar/prompt_first","seed":"42","candidate_video":"/data/other.mp4","params":{"shadow_hud_preset":"genie"}}
 ```
 
+To compare the Table 4/7 cells with the paper baseline, export the rows and run the comparison:
+
+```
+python tools/export_lite_table_results.py --model "<name>" \
+  --results reports/wmeval_lite/<model>/per_case_results.jsonl \
+  --output reports/wmeval_lite/<model>/table_results.json
+python tools/compare_table_results.py compare --allow-incomplete \
+  --results reports/wmeval_lite/<model>/table_results.json
+```
+
 On Modal GPUs, `modal run tools/run_wmeval_lite_modal.py::main --model-root /cand/<model>` runs one container per candidate; `tools/generate_waypoint15_candidates_modal.py` is a worked example of generating a model's candidates straight from the bundles without Unity.
 
 ## WMEval Lite Suite
 
-`eval_sets/wmeval_lite_v1/` is one suite with one CLI. `suite.yaml` declares the dimensions and is the single source of truth for case wiring; each case ships as a checksummed bundle under `cases/<Scene>/<variant>/`. The current release roster is **19 cases across 9 scenes, 8 dimensions and 31 case–dimension assignments**.
+`eval_sets/wmeval_lite_v1/` is one suite with one CLI. `suite.yaml` declares the dimensions and is the single source of truth for case wiring; each case ships as a checksummed bundle under `cases/<Scene>/<variant>/`. The current release roster is **32 cases across 9 scenes, 8 dimensions and 41 case–dimension assignments**, including the 14 Table 4/7 cells (`<Scene>/scene_<variant>` for Table 7, `<Scene>/kinematics_<view>` for Table 4).
 
 | Dimension | Question | Headline metrics |
 | --- | --- | --- |
@@ -116,10 +126,10 @@ Author or refresh a case with `python tools/build_lite_case.py <case_dir>` (writ
 
 ## Action Trajectories
 
-Every case has an action script, but formats still differ by track:
+Every case ships its action script inside its bundle:
 
-- **Lite bundles** carry `actions.txt` (browser key programs or structured text) and, for most cases, a numeric `action.npy`; `python tools/audit_trajectory_readiness.py` reports which cases are native, supplemental or underspecified.
-- **Table 4/7** uses canonical semantic trajectories (`experiments/tables_4_7/trajectories/*.yaml`, `schema_version: 1`) with typed channels, units, time segments and control rate, compiled by `python tools/prepare_table_trajectories.py` into `action.npy` / `action.npz` / Project Genie key programs with hashed manifests (`evaluation/trajectories.py`).
+- **Table 4/7 cases** (`*/scene_*`, `*/kinematics_*`) carry the canonical semantic trajectory (`reference/artifacts/trajectory.yaml`, `schema_version: 1`: typed channels, units, time segments, control rate) and its compiled forms (`action.npz` / `action.npy`, the Project Genie browser program `actions.jsonl`, and a readable `actions.txt`). `python tools/build_table_lite_cases.py` rebuilds these bundles from the hash-locked trajectories in `experiments/tables_4_7/trajectories/` and the Unity captures.
+- **Other cases** carry `actions.txt` (browser key programs or structured text) and, for most, a numeric `action.npy`; `python tools/audit_trajectory_readiness.py` reports which cases are native, supplemental or underspecified.
 - **Backends** are declared once in `experiments/tables_4_7/action_backends.yaml` (read via `evaluation/action_backends.py`): what entity each trajectory actuates (`camera`, `ego_vehicle`, `cue_ball`, `table_objects`), each backend's native timeline, which targets it can express, why it cannot express the others, and the frozen response-side camera calibration. Input preparation refuses unsupported target/backend pairs instead of substituting another control.
 
 | Backend | Native input | Camera trajectories | Vehicle / ball trajectories |
@@ -2450,7 +2460,11 @@ closer to the reference at the sampled anchors.
 | `BeamDomino/causal` | ✓ | ✓ |  |  |  |  | ✓ |  |
 | `BeamDomino/causal_direct_strike` |  |  |  |  |  |  | ✓ |  |
 | `BeamDomino/causal_glancing` |  |  |  |  |  |  | ✓ |  |
-| `BilliardGame/prompt_first` |  |  |  |  | ✓ | ✓ |  |  |
+| `BilliardGame/kinematics_first` |  |  |  |  |  | ✓ |  |  |
+| `BilliardGame/scene_360_in` |  |  |  |  | ✓ |  |  |  |
+| `BilliardGame/scene_360_out` |  |  |  |  | ✓ |  |  |  |
+| `BilliardGame/scene_perturb_in` |  |  |  |  | ✓ |  |  |  |
+| `BilliardGame/scene_perturb_out` |  |  |  |  | ✓ |  |  |  |
 | `ChessBoard/prompt_first` |  |  | ✓ |  |  |  |  |  |
 | `ChessBoard/prompt_third` |  |  | ✓ |  |  |  |  |  |
 | `ChessBoard/walk_third` |  |  |  |  | ✓ |  |  |  |
@@ -2460,11 +2474,20 @@ closer to the reference at the sampled anchors.
 | `LiquidContainer/fluid_step_hold` | ✓ |  |  |  |  |  |  | ✓ |
 | `MirrorRollingBall/lpips_collision` | ✓ |  |  |  |  |  |  |  |
 | `MirrorRollingBall/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `MirrorRollingBall/prompt_third` |  |  | ✓ |  | ✓ |  |  |  |
+| `MirrorRollingBall/prompt_third` |  |  | ✓ |  |  |  |  |  |
+| `MirrorRollingBall/scene_360_in` |  |  |  |  | ✓ |  |  |  |
+| `MirrorRollingBall/scene_360_out` |  |  |  |  | ✓ |  |  |  |
+| `MirrorRollingBall/scene_perturb_in` |  |  |  |  | ✓ |  |  |  |
+| `MirrorRollingBall/scene_perturb_out` |  |  |  |  | ✓ |  |  |  |
+| `RacingCar/kinematics_third` |  |  |  |  |  | ✓ |  |  |
 | `RacingCar/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `RacingCar/prompt_third` |  |  | ✓ |  | ✓ | ✓ |  |  |
+| `RacingCar/prompt_third` |  |  | ✓ |  | ✓ |  |  |  |
 | `SunRisesAndSets/lighting` |  |  |  | ✓ |  |  |  |  |
+| `WanderingGarden/scene_360_in` |  |  |  |  | ✓ |  |  |  |
+| `WanderingGarden/scene_360_out` |  |  |  |  | ✓ |  |  |  |
 | `WanderingGarden/scene_first` |  |  |  |  | ✓ |  |  |  |
+| `WanderingGarden/scene_perturb_in` |  |  |  |  | ✓ |  |  |  |
+| `WanderingGarden/scene_perturb_out` |  |  |  |  | ✓ |  |  |  |
 
 A case is one atomic setup (one prompt + one reference rollout + one action protocol) owned by the dimension its variant names; other dimensions may **borrow** the same rollout (e.g. `RacingCar/prompt_third` is owned by `prompt_scene_consistency` and borrowed by `environment_object_consistency` and `kinematics_mechanics`). Variant names follow `<dimension-tag>[_<perspective>][_<setting>]`, e.g. `MirrorRollingBall/lpips_collision`, `LiquidContainer/fluid_rest`. `python tools/run_wmeval_lite.py list-cases` prints this matrix from `suite.yaml`.
 
