@@ -97,6 +97,15 @@ def main() -> int:
         raise SystemExit("--gpu-index must be in [0, 7]")
     if args.world_size == 8 and args.gpu_index != 0:
         raise SystemExit("8-GPU mode must start at --gpu-index 0")
+    # Validate the label before touching the queue or any batch directory.
+    if args.batch_label is not None:
+        if not args.batch_label or any(
+            character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
+            for character in args.batch_label
+        ):
+            raise SystemExit(
+                "--batch-label must contain only ASCII letters, digits, '_' or '-'"
+            )
     items = [json.loads(line) for line in QUEUE.read_text(encoding="utf-8").splitlines() if line]
     if args.job_key:
         if args.batch_label is None:
@@ -168,13 +177,6 @@ def main() -> int:
         return 0
 
     if args.batch_label is not None:
-        if not args.batch_label or any(
-            character not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
-            for character in args.batch_label
-        ):
-            raise SystemExit(
-                "--batch-label must contain only ASCII letters, digits, '_' or '-'"
-            )
         shard_label = args.batch_label
     else:
         shard_label = (
