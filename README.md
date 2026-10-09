@@ -23,13 +23,12 @@ WMEval evaluates interactive world models against Unity-based physical simulatio
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [WMEval Lite Suite](#wmeval-lite-suite)
-  - [Case × Dimension Matrix](#case--dimension-matrix)
   - [Case Bundles](#case-bundles)
   - [Outputs](#outputs)
 - [Action Trajectories](#action-trajectories)
 - [Evaluation Dimensions](#evaluation-dimensions)
+  - [Case × Dimension Matrix](#case--dimension-matrix)
 - [Additional Evaluators](#additional-evaluators)
-- [Table 4/7 Reproduction and Open Models](#table-47-reproduction-and-open-models)
 - [Release Status](#release-status)
 - [Citation](#citation)
 
@@ -91,32 +90,6 @@ On Modal GPUs, `modal run tools/run_wmeval_lite_modal.py::main --model-root /can
 | [Lighting & Shading](#lighting--shading) | Do cast shadows stay geometrically and temporally coherent with one light source as the camera moves? | Scene Retention ↑, Shadow Detection ↑, Multi-Object Sun Disagreement ↓, Shadow Direction Jitter ↓, Shadow Area Stability ↓, Shadow Shape Drift ↓ |
 | [Prompt-Scene Consistency](#prompt-scene-consistency) | Does the rollout match its scene description, for both environment and foreground objects? | Environment ↑, Object ↑, Overall ↑ rubric scores (ρ = 0.90 with human ratings) |
 | [Perceptual Similarity (LPIPS)](#perceptual-similarity-lpips) | How perceptually close is the rollout to the reference around matched contact events? | Causal LPIPS ↓ (offsets −2…+2 around chronologically matched events), temporal LPIPS ↓ as a separate fallback |
-
-### Case × Dimension Matrix
-
-| Case | `lpips` | `action_controllability` | `prompt_scene_consistency` | `lighting_shading` | `environment_object_consistency` | `kinematics_mechanics` | `physical_causality` | `fluid_mechanics` |
-| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| `BallRoller/ctrl` |  | ✓ |  |  | ✓ | ✓ |  |  |
-| `BeamDomino/causal` | ✓ | ✓ |  |  |  |  | ✓ |  |
-| `BeamDomino/causal_direct_strike` |  |  |  |  |  |  | ✓ |  |
-| `BeamDomino/causal_glancing` |  |  |  |  |  |  | ✓ |  |
-| `BilliardGame/prompt_first` |  |  |  |  | ✓ | ✓ |  |  |
-| `ChessBoard/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `ChessBoard/prompt_third` |  |  | ✓ |  |  |  |  |  |
-| `ChessBoard/walk_third` |  |  |  |  | ✓ |  |  |  |
-| `LiquidContainer/fluid_chirp_strafe` | ✓ |  |  |  |  |  |  | ✓ |
-| `LiquidContainer/fluid_impulse_decay` | ✓ |  |  |  |  |  |  | ✓ |
-| `LiquidContainer/fluid_rest` | ✓ |  |  |  |  |  |  | ✓ |
-| `LiquidContainer/fluid_step_hold` | ✓ |  |  |  |  |  |  | ✓ |
-| `MirrorRollingBall/lpips_collision` | ✓ |  |  |  |  |  |  |  |
-| `MirrorRollingBall/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `MirrorRollingBall/prompt_third` |  |  | ✓ |  | ✓ |  |  |  |
-| `RacingCar/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `RacingCar/prompt_third` |  |  | ✓ |  | ✓ | ✓ |  |  |
-| `SunRisesAndSets/lighting` |  |  |  | ✓ |  |  |  |  |
-| `WanderingGarden/scene_first` |  |  |  |  | ✓ |  |  |  |
-
-A case is one atomic setup (one prompt + one reference rollout + one action protocol) owned by the dimension its variant names; other dimensions may **borrow** the same rollout (e.g. `RacingCar/prompt_third` is owned by `prompt_scene_consistency` and borrowed by `environment_object_consistency` and `kinematics_mechanics`). Variant names follow `<dimension-tag>[_<perspective>][_<setting>]`, e.g. `MirrorRollingBall/lpips_collision`, `LiquidContainer/fluid_rest`. `python tools/run_wmeval_lite.py list-cases` prints this matrix from `suite.yaml`.
 
 ### Case Bundles
 
@@ -2470,6 +2443,32 @@ closer to the reference at the sampled anchors.
 </details>
 
 
+### Case × Dimension Matrix
+
+| Case | `lpips` | `action_controllability` | `prompt_scene_consistency` | `lighting_shading` | `environment_object_consistency` | `kinematics_mechanics` | `physical_causality` | `fluid_mechanics` |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| `BallRoller/ctrl` |  | ✓ |  |  | ✓ | ✓ |  |  |
+| `BeamDomino/causal` | ✓ | ✓ |  |  |  |  | ✓ |  |
+| `BeamDomino/causal_direct_strike` |  |  |  |  |  |  | ✓ |  |
+| `BeamDomino/causal_glancing` |  |  |  |  |  |  | ✓ |  |
+| `BilliardGame/prompt_first` |  |  |  |  | ✓ | ✓ |  |  |
+| `ChessBoard/prompt_first` |  |  | ✓ |  |  |  |  |  |
+| `ChessBoard/prompt_third` |  |  | ✓ |  |  |  |  |  |
+| `ChessBoard/walk_third` |  |  |  |  | ✓ |  |  |  |
+| `LiquidContainer/fluid_chirp_strafe` | ✓ |  |  |  |  |  |  | ✓ |
+| `LiquidContainer/fluid_impulse_decay` | ✓ |  |  |  |  |  |  | ✓ |
+| `LiquidContainer/fluid_rest` | ✓ |  |  |  |  |  |  | ✓ |
+| `LiquidContainer/fluid_step_hold` | ✓ |  |  |  |  |  |  | ✓ |
+| `MirrorRollingBall/lpips_collision` | ✓ |  |  |  |  |  |  |  |
+| `MirrorRollingBall/prompt_first` |  |  | ✓ |  |  |  |  |  |
+| `MirrorRollingBall/prompt_third` |  |  | ✓ |  | ✓ |  |  |  |
+| `RacingCar/prompt_first` |  |  | ✓ |  |  |  |  |  |
+| `RacingCar/prompt_third` |  |  | ✓ |  | ✓ | ✓ |  |  |
+| `SunRisesAndSets/lighting` |  |  |  | ✓ |  |  |  |  |
+| `WanderingGarden/scene_first` |  |  |  |  | ✓ |  |  |  |
+
+A case is one atomic setup (one prompt + one reference rollout + one action protocol) owned by the dimension its variant names; other dimensions may **borrow** the same rollout (e.g. `RacingCar/prompt_third` is owned by `prompt_scene_consistency` and borrowed by `environment_object_consistency` and `kinematics_mechanics`). Variant names follow `<dimension-tag>[_<perspective>][_<setting>]`, e.g. `MirrorRollingBall/lpips_collision`, `LiquidContainer/fluid_rest`. `python tools/run_wmeval_lite.py list-cases` prints this matrix from `suite.yaml`.
+
 ## Additional Evaluators
 
 ### CLIP4Clip video–text similarity
@@ -2733,15 +2732,6 @@ bash scripts/groundingdino_sam.sh
 
 </details>
 
-
-## Table 4/7 Reproduction and Open Models
-
-The paper's Table 4 (kinematics & mechanics) and Table 7 (object & character consistency) reruns live under `experiments/tables_4_7/`:
-
-- [experiments/tables_4_7/README.md](experiments/tables_4_7/README.md) — reproduction assets, trajectory-readiness audit, Unity conditioning workflow and the Project Genie browser controller; `python tools/audit_table_reproduction.py` prints the end-to-end status.
-- [evaluator_protocol.yaml](experiments/tables_4_7/evaluator_protocol.yaml) — the frozen table evaluator contract; [evaluator_assets.lock.json](experiments/tables_4_7/evaluator_assets.lock.json) pins the CV checkpoints it uses.
-- [GPU_HANDOFF.md](experiments/tables_4_7/GPU_HANDOFF.md) and [REFERENCE_PACKAGE.md](experiments/tables_4_7/REFERENCE_PACKAGE.md) — the portable CUDA rerun and the reference-only package for a new model.
-- [TABLE4_TABLE7_REMAINING_MODELS_TODO.md](TABLE4_TABLE7_REMAINING_MODELS_TODO.md) and [remaining_models.yaml](experiments/tables_4_7/remaining_models.yaml) — open-model scope, pinned revisions, calibration and production status for Matrix-Game 2.0/3.0 and LingBot-World. Runners: `tools/run_matrix_game2.py`, `tools/run_matrix_game3.py`, `tools/run_lingbot_table7.py` / `tools/run_lingbot_table7_batch.py`; evaluation and export: `tools/run_open_model_table_evaluations.py`, `tools/finalize_open_model_tables.py`, `tools/export_open_model_tables_latex.py`.
 
 ## Release Status
 
