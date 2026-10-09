@@ -8,12 +8,17 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from evaluation import action_backends  # noqa: E402
 SOURCE = Path("/workspace/model_sources/Matrix-Game/Matrix-Game-2")
 CHECKPOINT = Path("/workspace/model_checkpoints/Matrix-Game-2.0")
 PYTHON = Path("/workspace/model_envs/matrix-game-2/bin/python")
@@ -139,7 +144,7 @@ def scored_specs(case: str | None, repeat: str | None) -> list[dict[str, Any]]:
             "repeat": run,
             "schedule": ROOT / item["schedule"],
             "image": ROOT / item["conditioning_image"],
-            "latent_frames": 33,
+            "latent_frames": int(action_backends.backend("matrix_game_2")["latent_frames"]),
             "seed": 44000 + int(run.removeprefix("run")),
             "output": (ROOT / item["candidate_video"]).parent,
         })

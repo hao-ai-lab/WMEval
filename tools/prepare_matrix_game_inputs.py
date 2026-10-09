@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -12,44 +13,21 @@ import numpy as np
 import yaml
 
 
+
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from evaluation import action_backends  # noqa: E402
+from evaluation.trajectories import integrate_rate_channel, sample_held_values  # noqa: E402
+
 TABLE_ROOT = ROOT / "experiments/tables_4_7"
 DEFAULT_OUTPUT = ROOT / "runs/tables_4_7/model_inputs"
 REPEATS = tuple(f"run{index}" for index in range(5))
-MODEL_SPECS = {
-    # Two independent short-probe seeds at +/-0.3 mouse units produced visual
-    # gains near 10.1 degrees per mouse unit per frame. Production-shaped
-    # Garden validation reached -332.715 and +353.859 degrees from nominal
-    # +/-360-degree schedules. A one-step direction-specific correction made
-    # the negative response worse (-309.723 degrees), demonstrating saturation
-    # rather than a transferable scalar bias. Keep the repeat-validated pooled
-    # gain for every regime and treat residual response error as model behavior.
-    "matrix_game_2": {"frames": 129, "fps": 12.0, "latent_frames": 33, "visual_degrees_per_mouse_unit": 10.1},
-    "matrix_game_3": {
-        "frames": 177,
-        "fps": 17.0,
-        "iterations": 4,
-        # Response-side gains from clean Garden validation videos.  Short
-        # perturbations are linear, while full turns accumulate a small,
-        # direction-dependent bias and therefore use their own measured gains.
-        "visual_degrees_per_mouse_unit": {
-            "perturb_negative": 11.175,
-            "perturb_positive": 11.234,
-            "full_turn_negative": 10.511,
-            "full_turn_positive": 11.434,
-        },
-    },
-}
-
-
-def camera_visual_gain(model: str, case_id: str, integrated_yaw_deg: float) -> tuple[float, str]:
-    configured = MODEL_SPECS[model]["visual_degrees_per_mouse_unit"]
-    if isinstance(configured, dict):
-        regime = "perturb" if "/perturb_" in case_id else "full_turn"
-        direction = "negative" if integrated_yaw_deg < 0 else "positive"
-        key = f"{regime}_{direction}"
-        return float(configured[key]), key
-    return float(configured), "pooled_bidirectional"
+# Native timelines, supported action targets and the frozen response-side
+# camera gains (with their measurement provenance) live in
+# experiments/tables_4_7/action_backends.yaml.
+MODEL_SPECS = {name: action_backends.backend(name) for name in ("matrix_game_2", "matrix_game_3")}
 
 
 def sha256(path: Path) -> str:
@@ -86,79 +64,60 @@ def prompt_for(case: dict[str, Any], manifest: dict[str, Any]) -> str:
     )
 
 
-def integrate_channel(trajectory: dict[str, Any], channel: str, fps: float, frames: int) -> np.ndarray:
-    """Integrate a piecewise-constant rate over each model-frame interval."""
-    increments = np.zeros(frames, dtype=np.float32)
-    for frame in range(frames):
-        start = frame / fps
-        end = (frame + 1) / fps
-        for segment in trajectory["segments"]:
-            overlap = max(0.0, min(end, float(segment["end_sec"])) - max(start, float(segment["start_sec"])))
-            increments[frame] += overlap * float(segment["values"].get(channel, 0.0))
-    return increments
-
-
-def resample_values(trajectory_path: Path, fps: float, frames: int) -> tuple[np.ndarray, list[str]]:
-    compiled = TABLE_ROOT / "compiled" / f"{trajectory_path.stem}.action.npz"
-    data = np.load(compiled, allow_pickle=False)
-    timestamps = np.asarray(data["timestamps_sec"], dtype=np.float64)
-    values = np.asarray(data["values"], dtype=np.float32)
-    indices = np.searchsorted(timestamps, np.arange(frames) / fps, side="right") - 1
-    indices = np.clip(indices, 0, len(timestamps) - 1)
-    sampled = values[indices]
-    sampled[np.arange(frames) / fps >= 10.0] = 0.0
-    return sampled, [str(value) for value in data["channel_names"].tolist()]
-
-
 def schedule_for(model: str, case: dict[str, Any]) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
     spec = MODEL_SPECS[model]
     frames = int(spec["frames"])
     fps = float(spec["fps"])
-    keyboard_width = 4 if model == "matrix_game_2" else 6
-    keyboard = np.zeros((frames, keyboard_width), dtype=np.float32)
+    keyboard = np.zeros((frames, int(spec["keyboard_width"])), dtype=np.float32)
     mouse = np.zeros((frames, 2), dtype=np.float32)
     trajectory_path = TABLE_ROOT / str(case["trajectory"])
     trajectory = load_yaml(trajectory_path)
+    target = action_backends.require_support(model, trajectory)
     mapping: dict[str, Any]
 
-    if int(case["table"]) == 7:
-        yaw_deg = integrate_channel(trajectory, "yaw_rate_deg_s", fps, frames)
-        # Upstream Matrix-Game 3 uses 15 geometric degrees per mouse unit. The
-        # values below are response-side visual gains measured from disposable
-        # garden probes; Matrix-Game 2 has no published geometric gain.
+    if target == "camera":
+        yaw_deg = integrate_rate_channel(trajectory, "yaw_rate_deg_s", fps, frames)
         integrated_yaw = float(yaw_deg.sum())
-        visual_gain, calibration_key = camera_visual_gain(model, str(case["case_id"]), integrated_yaw)
+        visual_gain, calibration_key = action_backends.camera_gain(model, str(case["case_id"]), integrated_yaw)
         mouse[:, 1] = yaw_deg / visual_gain
         mapping = {
             "kind": "camera_yaw",
             "visual_degrees_per_mouse_unit_per_frame": visual_gain,
             "response_calibration_key": calibration_key,
-            "upstream_geometric_degrees_per_mouse_unit_per_frame": 15.0 if model == "matrix_game_3" else None,
+            "upstream_geometric_degrees_per_mouse_unit_per_frame": spec.get("upstream_geometric_deg_per_mouse_unit"),
             "status": "response_calibrated_repeat_validated",
             "integrated_yaw_deg": integrated_yaw,
         }
+        return keyboard, mouse, mapping
+
+    values, names = sample_held_values(
+        TABLE_ROOT / "compiled" / f"{trajectory_path.stem}.action.npz",
+        fps,
+        frames,
+        end_sec=float(trajectory["duration_sec"]),
+    )
+    by_name = {name: values[:, index] for index, name in enumerate(names)}
+    # Keyboard-only backends cannot express control magnitude: thresholded
+    # WASD is a hypothesis about the controlled entity, not a validated mapping.
+    if target == "ego_vehicle":
+        steer = by_name["steer"]
+        throttle = by_name["throttle"]
+        brake = by_name["brake"]
+        keyboard[:, 0] = throttle > 0.05
+        keyboard[:, 1] = (throttle < -0.05) | (brake > 0.5)
+        keyboard[:, 2] = steer < -0.05
+        keyboard[:, 3] = steer > 0.05
+        mapping = {"kind": "generic_wasd_to_car_hypothesis", "status": "target_entity_validation_required"}
+    elif target == "cue_ball":
+        forward = by_name["forward"]
+        lateral = by_name["lateral"]
+        keyboard[:, 0] = forward > 0.05
+        keyboard[:, 1] = forward < -0.05
+        keyboard[:, 2] = lateral < -0.05
+        keyboard[:, 3] = lateral > 0.05
+        mapping = {"kind": "generic_wasd_to_ball_hypothesis", "status": "target_entity_validation_required"}
     else:
-        values, names = resample_values(trajectory_path, fps, frames)
-        by_name = {name: values[:, index] for index, name in enumerate(names)}
-        if case["scene"] == "RacingCar":
-            steer = by_name["steer"]
-            throttle = by_name["throttle"]
-            brake = by_name["brake"]
-            keyboard[:, 0] = throttle > 0.05
-            keyboard[:, 1] = (throttle < -0.05) | (brake > 0.5)
-            keyboard[:, 2] = steer < -0.05
-            keyboard[:, 3] = steer > 0.05
-            mapping = {"kind": "generic_wasd_to_car_hypothesis", "status": "target_entity_validation_required"}
-        elif case["scene"] == "BilliardGame":
-            forward = by_name["forward"]
-            lateral = by_name["lateral"]
-            keyboard[:, 0] = forward > 0.05
-            keyboard[:, 1] = forward < -0.05
-            keyboard[:, 2] = lateral < -0.05
-            keyboard[:, 3] = lateral > 0.05
-            mapping = {"kind": "generic_wasd_to_ball_hypothesis", "status": "target_entity_validation_required"}
-        else:
-            raise ValueError(f"unsupported Table 4 scene: {case['scene']}")
+        raise action_backends.UnsupportedAction(f"{model} has no keyboard mapping for {target} actions")
     return keyboard, mouse, mapping
 
 
@@ -168,7 +127,10 @@ def prepare_model(model: str, manifest: dict[str, Any], output_root: Path) -> di
     for case in manifest["cases"]:
         if case.get("execution_scope") == "excluded_by_user":
             continue
-        if model == "matrix_game_3" and int(case["table"]) != 7:
+        # Cells whose action target this backend cannot express are out of scope
+        # (reported as unsupported), never compiled into a substitute action.
+        trajectory_doc = load_yaml(TABLE_ROOT / str(case["trajectory"]))
+        if action_backends.support_status(model, action_backends.action_target(trajectory_doc)) is None:
             continue
         keyboard, mouse, mapping = schedule_for(model, case)
         case_id = str(case["case_id"])
@@ -238,7 +200,7 @@ def prepare_calibration(output_root: Path) -> dict[str, Any]:
         path = root / f"{name}.npz"
         np.savez(path, keyboard=keyboard, mouse=mouse)
         rows.append({"probe": name, "amplitude": amplitude, "schedule": str(path.relative_to(ROOT)), "sha256": sha256(path)})
-    manifest = {"schema_version": 1, "status": "prepared", "frames": frames, "fps": 12.0, "latent_frames": 6, "repeats": list(REPEATS), "probes": rows}
+    manifest = {"schema_version": 1, "status": "prepared", "frames": frames, "fps": float(MODEL_SPECS["matrix_game_2"]["fps"]), "latent_frames": 6, "repeats": list(REPEATS), "probes": rows}
     path = root / "manifest.json"
     path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest

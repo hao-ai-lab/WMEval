@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -17,10 +18,18 @@ import numpy as np
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from evaluation import action_backends  # noqa: E402
+from evaluation.trajectories import integrated_total, load_trajectory  # noqa: E402
+
 DEFAULT_OUTPUT = REPO_ROOT / "runs/tables_4_7/model_inputs/lingbot_world_cam"
-FRAME_COUNT = 161
-FPS = 16.0
+BACKEND = action_backends.backend("lingbot_world_cam")
+FRAME_COUNT = int(BACKEND["frames"])
+FPS = float(BACKEND["fps"])
 REPEATS = tuple(f"run{i}" for i in range(5))
+TRAJECTORY_ROOT = REPO_ROOT / "experiments/tables_4_7/trajectories"
 
 
 @dataclass(frozen=True)
@@ -34,6 +43,13 @@ class Plan:
     target_yaw_deg: float | None = None
 
 
+def _commanded_yaw_deg(variant: str) -> float:
+    """Total yaw of the canonical camera trajectory, checked against this backend."""
+    trajectory = load_trajectory(TRAJECTORY_ROOT / f"camera_{variant}.yaml")
+    action_backends.require_support("lingbot_world_cam", trajectory)
+    return integrated_total(trajectory, "yaw_rate_deg_s")
+
+
 def _plans() -> tuple[Plan, ...]:
     plans: list[Plan] = []
     garden_root = "runs/unity/garden_bridge_gt/evaluation_artifacts"
@@ -41,11 +57,11 @@ def _plans() -> tuple[Plan, ...]:
         "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/"
         "prompt_third/reference/artifacts"
     )
-    camera_cases = (
-        ("perturb_in", 0, -45.0),
-        ("perturb_out", 75, 45.0),
-        ("360_in", 0, -360.0),
-        ("360_out", 75, 360.0),
+    # Reference-side anchoring (start frame on the periodic Unity orbit) is
+    # per-case; the commanded yaw comes from the canonical semantic trajectory.
+    camera_cases = tuple(
+        (variant, start, _commanded_yaw_deg(variant))
+        for variant, start in (("perturb_in", 0), ("perturb_out", 75), ("360_in", 0), ("360_out", 75))
     )
     for trajectory, start, yaw in camera_cases:
         orientation = "inward" if trajectory.endswith("in") else "outward"

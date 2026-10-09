@@ -7,12 +7,17 @@ import hashlib
 import json
 import os
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from evaluation import action_backends  # noqa: E402
 DEFAULT_QUEUE = ROOT / "runs/tables_4_7/model_inputs/lingbot_world_cam/generation_queue.jsonl"
 DEFAULT_SOURCE = Path("/workspace/model_sources/lingbot-world")
 DEFAULT_CHECKPOINT = Path("/workspace/model_checkpoints/lingbot-world-base-cam")
@@ -55,7 +60,7 @@ def build_command(
         "--dit_fsdp",
         "--t5_fsdp",
         "--ulysses_size", "8",
-        "--frame_num", "161",
+        "--frame_num", str(action_backends.backend("lingbot_world_cam")["frames"]),
         "--base_seed", str(42000 + repeat_number),
         "--prompt", str(item["environment_prompt"]),
         "--save_file", str(output),

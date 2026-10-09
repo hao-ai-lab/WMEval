@@ -317,3 +317,52 @@ def load_actions_jsonl(path: str | Path) -> list[dict[str, Any]]:
             raise TrajectoryError(f"{path}:{lineno}: invalid browser action")
         actions.append(action)
     return actions
+
+
+# ── Backend-neutral sampling ────────────────────────────────────────────────
+# Model adapters run on their own native timelines (e.g. 129 frames at 12 fps,
+# 161 poses at 16 fps).  These helpers are the only sanctioned ways to move a
+# semantic trajectory onto such a timeline, so every backend shares one
+# integration/hold convention.
+
+
+def integrate_rate_channel(
+    trajectory: Mapping[str, Any], channel: str, fps: float, frames: int
+) -> np.ndarray:
+    """Integrate a piecewise-constant rate channel over each native frame interval.
+
+    Frame ``k`` covers ``[k / fps, (k + 1) / fps)``; the result is the channel's
+    integral over that interval (e.g. degrees of yaw for ``yaw_rate_deg_s``).
+    """
+    increments = np.zeros(frames, dtype=np.float32)
+    for frame in range(frames):
+        start = frame / fps
+        end = (frame + 1) / fps
+        for segment in trajectory["segments"]:
+            overlap = max(0.0, min(end, float(segment["end_sec"])) - max(start, float(segment["start_sec"])))
+            increments[frame] += overlap * float(segment["values"].get(channel, 0.0))
+    return increments
+
+
+def integrated_total(trajectory: Mapping[str, Any], channel: str) -> float:
+    """Exact integral of a piecewise-constant rate channel over the whole trajectory."""
+    return float(
+        sum(
+            (float(segment["end_sec"]) - float(segment["start_sec"])) * float(segment["values"].get(channel, 0.0))
+            for segment in trajectory["segments"]
+        )
+    )
+
+
+def sample_held_values(
+    compiled_npz: str | Path, fps: float, frames: int, *, end_sec: float
+) -> tuple[np.ndarray, list[str]]:
+    """Zero-order-hold the compiled control values at ``k / fps``; zero after ``end_sec``."""
+    data = np.load(Path(compiled_npz), allow_pickle=False)
+    timestamps = np.asarray(data["timestamps_sec"], dtype=np.float64)
+    values = np.asarray(data["values"], dtype=np.float32)
+    indices = np.searchsorted(timestamps, np.arange(frames) / fps, side="right") - 1
+    indices = np.clip(indices, 0, len(timestamps) - 1)
+    sampled = values[indices]
+    sampled[np.arange(frames) / fps >= end_sec] = 0.0
+    return sampled, [str(value) for value in data["channel_names"].tolist()]
