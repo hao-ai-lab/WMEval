@@ -668,6 +668,7 @@ dimensions:
     cases:
     - BallRoller/ctrl
     - BeamDomino/causal
+    - MirrorRollingBall/lpips_collision
     aggregate:
       headline: epe_dynamic_mean_compensated
       direction: lower

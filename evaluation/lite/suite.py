@@ -24,9 +24,11 @@ from .adapters.base import (
     STATUS_ERROR,
     STATUS_INVALID_CANDIDATE,
     STATUS_MISSING_CANDIDATE,
+    STATUS_UNSUPPORTED,
     CaseResult,
     DimensionEvaluator,
 )
+from .action_support import unsupported_reason
 from .aggregate import (
     build_aggregate,
     write_aggregate_json,
@@ -485,6 +487,10 @@ def _evaluate_item(
     dimension = item.dimension
     case = item.case
     candidate = item.candidate
+
+    reason = unsupported_reason(case.artifacts_dir, candidate.model)
+    if reason is not None:
+        return CaseResult(status=STATUS_UNSUPPORTED, error=reason)
 
     if not candidate.candidate_video.is_file():
         return CaseResult(

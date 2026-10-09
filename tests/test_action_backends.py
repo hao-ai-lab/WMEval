@@ -55,6 +55,29 @@ def test_camera_only_backend_rejects_vehicle_control_with_recorded_reason() -> N
     assert action_backends.support_status("matrix_game_2", "ego_vehicle") == "target_entity_validation_required"
 
 
+@pytest.mark.parametrize(
+    "stem,trajectory_id",
+    [
+        ("ball_roller_collision_path", "controllability.ball_roller.collision_path_v1"),
+        ("mirror_rolling_ball_axis_cycle", "controllability.mirror_rolling_ball.axis_cycle_v1"),
+    ],
+)
+def test_ball_control_trajectories_actuate_the_ball(stem: str, trajectory_id: str) -> None:
+    trajectory = load_trajectory(TABLE_ROOT / f"trajectories/{stem}.yaml")
+    assert trajectory["trajectory_id"] == trajectory_id
+    assert action_backends.action_target(trajectory) == "ball"
+
+
+def test_object_free_backends_are_unsupported_for_ball_control_with_a_reason() -> None:
+    trajectory = load_trajectory(TABLE_ROOT / "trajectories/ball_roller_collision_path.yaml")
+    with pytest.raises(action_backends.UnsupportedAction, match="no object channel"):
+        action_backends.require_support("waypoint15", trajectory)
+    with pytest.raises(action_backends.UnsupportedAction, match="cannot move the ball"):
+        action_backends.require_support("lingbot_world_cam", trajectory)
+    for name in ("unity", "project_genie", "lingbot_world_act"):
+        assert action_backends.require_support(name, trajectory) == "ball"
+
+
 def test_project_genie_unsupported_targets_match_trajectory_adapter_status() -> None:
     for path in TRAJECTORIES:
         trajectory = load_trajectory(path)

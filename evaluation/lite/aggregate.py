@@ -411,6 +411,9 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
             if not dimension_rows:
                 continue
             done = [row for row in dimension_rows if row.get("status") == "completed"]
+            unsupported = [
+                row for row in dimension_rows if row.get("status") == "unsupported"
+            ]
             stats = _two_level_stats(done)
             means = {metric: payload["mean"] for metric, payload in stats.items()}
             headline: dict[str, Any] | None = None
@@ -427,6 +430,7 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                 "num_rows": len(dimension_rows),
                 "num_cases": len({str(row.get("case_id")) for row in dimension_rows}),
                 "num_completed": len(done),
+                "num_unsupported": len(unsupported),
                 "headline": headline,
                 "means": means,
                 "stats": stats,
@@ -500,15 +504,20 @@ def write_summary_csv(
             for dimension_id in dimension_ids:
                 summary = dimensions.get(dimension_id) or {}
                 headline = summary.get("headline") or {}
-                row.append(headline.get("value"))
-                row.append(headline.get("std_across_cases"))
                 dimension = suite.dimensions[dimension_id]
                 headline_name = (
                     dimension.aggregate.headline
                     if dimension.aggregate is not None
                     else "n/a"
                 )
+                extras = _extra_mean_names(dimension, headline_name)
+                # A dimension the backend cannot express is N/A, not blank.
+                if summary.get("num_completed") == 0 and summary.get("num_unsupported"):
+                    row.extend(["unsupported", None] + ["unsupported"] * len(extras))
+                    continue
+                row.append(headline.get("value"))
+                row.append(headline.get("std_across_cases"))
                 means = summary.get("means") or {}
-                for extra in _extra_mean_names(dimension, headline_name):
+                for extra in extras:
                     row.append(means.get(extra))
             writer.writerow(row)

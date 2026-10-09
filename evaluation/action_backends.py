@@ -17,7 +17,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = ROOT / "experiments/tables_4_7/action_backends.yaml"
-TARGETS = ("camera", "ego_vehicle", "cue_ball", "table_objects")
+TARGETS = ("camera", "ego_vehicle", "cue_ball", "ball", "table_objects")
 
 
 class UnsupportedAction(ValueError):

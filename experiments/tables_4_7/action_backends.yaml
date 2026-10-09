@@ -15,6 +15,8 @@ action_targets:
   table4.racing_car.drive_v1: {target: ego_vehicle, frame: vehicle_body}
   table4.billiard_game.first_person_ball_wasd_v1: {target: cue_ball, frame: table_plane}
   table4.billiard_game.center_ball_shot_v1: {target: table_objects, frame: table_plane}
+  controllability.ball_roller.collision_path_v1: {target: ball, frame: ground_plane}
+  controllability.mirror_rolling_ball.axis_cycle_v1: {target: ball, frame: ground_plane}
   table7.camera.perturb_in_v1: {target: camera, frame: camera_yaw}
   table7.camera.perturb_out_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_in_v1: {target: camera, frame: camera_yaw}
@@ -27,6 +29,7 @@ backends:
       camera: reference
       ego_vehicle: reference
       cue_ball: reference
+      ball: reference
       table_objects: reference
 
   project_genie:
@@ -36,6 +39,7 @@ backends:
       camera: nominal_left_turn_calibrated
       ego_vehicle: nominal
       cue_ball: nominal
+      ball: nominal
     unsupported:
       table_objects: The hosted web interface has no placement, cue-angle, strength, spin, or execute controls.
     calibration:
@@ -52,6 +56,7 @@ backends:
       camera: response_calibrated_repeat_validated
       ego_vehicle: target_entity_validation_required
       cue_ball: target_entity_validation_required
+      ball: target_entity_validation_required
     unsupported:
       table_objects: No object-placement or cue-shot controls.
     # Visual degrees per mouse unit per frame. Two independent short-probe
@@ -75,6 +80,7 @@ backends:
     unsupported:
       ego_vehicle: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       cue_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       table_objects: No object-placement or cue-shot controls.
     # Response-side gains from clean Garden validation videos. Short
     # perturbations are linear; full turns accumulate a small direction-
@@ -94,8 +100,42 @@ backends:
     unsupported:
       ego_vehicle: Base Cam consumes camera extrinsics/intrinsics only; it cannot steer the car.
       cue_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
+      ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
       table_objects: Base Cam consumes camera extrinsics/intrinsics only.
     # Response is nonlinear and horizon-sensitive, so nominal Unity pose paths
     # are frozen without correction. Exact-horizon Garden run0 responses were
     # -17.72 / +41.37 degrees (perturbations) and +54.91 / +277.88 degrees
     # (signed full turns); report realized yaw alongside consistency metrics.
+
+  # Action-conditioned LingBot-World. One frame per 100 ms action tick, so the
+  # real frame rate is 10 fps even though the mp4 container is tagged 16 fps
+  # (see candidate_fps_override). Evaluated on object-control scenes only; the
+  # camera cases use lingbot_world_cam.
+  lingbot_world_act:
+    interface: action_conditioned
+    action_tick_ms: 100
+    real_fps: 10.0
+    container_fps: 16.0
+    supports:
+      ball: nominal
+    unsupported:
+      camera: The Act variant is evaluated on object-control scenes; camera cases use lingbot_world_cam.
+      ego_vehicle: No Act adapter for vehicle control.
+      cue_ball: No Act adapter for cue-ball control.
+      table_objects: No object-placement or cue-shot controls.
+
+  # Waypoint-1.5 is a first-person keys + mouse model: W/A/S/D translate and the
+  # mouse rotates the ego camera. It has no channel for an object, so asking it
+  # to steer one would silently move the camera instead -- recorded as
+  # unsupported rather than scored.
+  waypoint15:
+    interface: keyboard_mouse
+    fps: 60.0
+    frames_per_control_step: 4
+    supports:
+      camera: nominal
+    unsupported:
+      ego_vehicle: Keys and mouse drive the first-person ego camera; there is no vehicle channel.
+      cue_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      table_objects: Keys and mouse drive the first-person ego camera; there is no object channel.

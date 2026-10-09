@@ -1,0 +1,18 @@
+{
+  "channels": [
+    "horizontal",
+    "vertical"
+  ],
+  "control_hz": 100,
+  "duration_sec": 5.77,
+  "frame": "ground_plane",
+  "lite_case_id": "BallRoller/ctrl",
+  "schema_version": 1,
+  "sources": {
+    "action.npz": "51a8436142a138934590e534fda075684e466018399ef5f86c572b9c2f2bc86d",
+    "actions.jsonl": "8b4e6b9ba8611db8c37a07d5255a385092f79296aaf781cce4193f5156a3d570",
+    "trajectory.yaml": "b87726bc63bfb3d0a624e8187956512061c1ab5b47c22f5229fc7fea0e34d95b"
+  },
+  "target": "ball",
+  "trajectory_id": "controllability.ball_roller.collision_path_v1"
+}
