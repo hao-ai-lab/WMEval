@@ -6,7 +6,7 @@ rollout and compares them against Unity-side references:
   1. Detect key objects on every sampled frame with GroundingDINO.
   2. Associate detections across frames into per-object tracks with a
      lightweight ByteTrack-style tracker (``bytetracker`` /
-     ``cjm_byte_track`` if installed -- see ``README_kinematics_mechanics.md``
+     ``cjm_byte_track`` if installed -- see the "Kinematics & Mechanics" section of ``README.md``
      for the exact optional dependency this repo expects, matching
      ``tools/groundingdino_bytetrack.py``).
   3. Estimate camera ego-motion between frames from the *static* anchor

@@ -11,12 +11,12 @@ PyYAML>=6.0,<7
 #   evaluation/modules/lpips_causal_vlm.py imports it directly, unlike
 #   prompt_consistency's provider below which only uses `requests`.
 # - environment_object_consistency (paper appendix B.1, see
-#   README_environment_object_consistency.md): torch, transformers, sam2
+#   README.md, "Environment Object & Character Consistency"): torch, transformers, sam2
 #   (already required by shadow_consistency) plus a DINOv2 checkpoint fetched
 #   at runtime via `torch.hub.load('facebookresearch/dinov2', ...)` (no extra
 #   pip package — needs network access to github.com on first run).
 # - kinematics_mechanics (paper appendix B.3, see
-#   README_kinematics_mechanics.md): torch, transformers (GroundingDINO
+#   README.md, "Kinematics & Mechanics"): torch, transformers (GroundingDINO
 #   detection reuses the same HF zero-shot-object-detection path as
 #   shadow_consistency) plus a ByteTrack implementation — either of:
 #     cjm-byte-track   # matches tools/groundingdino_bytetrack.py
