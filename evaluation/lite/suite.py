@@ -72,6 +72,9 @@ NORMALIZATION_TOKENS: dict[str, str | None] = {
     "none": None,
     "beamdomino_native": None,
     "liquid_832x464_16fps": "liquid",
+    # Resample to the case's reference video (fps, resolution, frame count);
+    # used by the Table 4/7 cells so frame k aligns with Unity ground truth k.
+    "match_reference": "reference",
 }
 
 MODEL_PARAMS_FILENAME = "model.yaml"
@@ -182,11 +185,18 @@ def _normalize_candidate(
     if kind is None:
         return candidate.candidate_video
 
-    from .normalization import normalize_liquid_video
+    from .normalization import normalize_liquid_video, normalize_to_reference
 
     destination = _default_normalized_path(output_root, candidate)
     if not destination.is_file():
-        normalize_liquid_video(candidate.candidate_video, destination)
+        if kind == "reference":
+            if case.reference_video is None:
+                raise SuiteRunError(f"{case.case_id}: match_reference needs a reference video")
+            normalize_to_reference(
+                candidate.candidate_video, destination, reference=case.reference_video
+            )
+        else:
+            normalize_liquid_video(candidate.candidate_video, destination)
     return destination
 
 
