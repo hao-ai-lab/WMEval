@@ -78,3 +78,13 @@ def test_pose_yaw_mapping_follows_requested_direction_and_wraps() -> None:
     assert MODULE.pose_yaw_source_indices(
         poses, start_frame=2, yaw_offsets_deg=np.array([0.0, 90.0, 180.0, 270.0])
     ) == [2, 1, 0, 3]
+
+
+def test_media_tool_uses_repo_pinned_fallback(tmp_path: Path, monkeypatch) -> None:
+    bundled = tmp_path / ".local" / "bin" / "ffmpeg"
+    bundled.parent.mkdir(parents=True)
+    bundled.write_bytes(b"binary")
+    monkeypatch.setattr(MODULE.shutil, "which", lambda _name: None)
+    monkeypatch.setattr(MODULE, "REPO_ROOT", tmp_path)
+
+    assert MODULE.media_tool("ffmpeg") == str(bundled)

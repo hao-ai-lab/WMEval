@@ -97,6 +97,7 @@ def audit(root: Path, *, strict: bool) -> dict[str, Any]:
 
     compiled: dict[Path, Any] = {}
     for case in cases:
+        excluded = case.get("execution_scope") == "excluded_by_user"
         trajectory_path = (root / str(case["trajectory"])).resolve()
         try:
             item = compiled.setdefault(trajectory_path, compile_trajectory(trajectory_path))
@@ -111,7 +112,11 @@ def audit(root: Path, *, strict: bool) -> dict[str, Any]:
             message = f"{case['case_id']}: first_frame is missing"
             (errors if strict else warnings).append(message)
         elif not (root / str(first_frame)).resolve().is_file():
-            errors.append(f"{case['case_id']}: first_frame does not exist: {first_frame}")
+            message = f"{case['case_id']}: first_frame does not exist: {first_frame}"
+            if excluded:
+                warnings.append(message + " (excluded cell; not launch-blocking)")
+            else:
+                errors.append(message)
         prompt_source = case.get("prompt_source")
         if not prompt_source or not (root / str(prompt_source)).resolve().is_file():
             errors.append(f"{case['case_id']}: prompt_source is missing or does not exist")

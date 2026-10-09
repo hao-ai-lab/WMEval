@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standardize five Project Genie runs for an existing WMEval Lite case."""
+"""Standardize repeated model runs for an existing WMEval Lite case."""
 from __future__ import annotations
 
 import argparse
@@ -22,6 +22,17 @@ if str(REPO_ROOT) not in sys.path:
 from evaluation.provenance_paths import resolve_recorded_path
 
 REPEATS = tuple(f"run{index}" for index in range(5))
+
+
+def media_tool(name: str) -> str | None:
+    """Resolve a system media binary or the repository-pinned fallback."""
+    system = shutil.which(name)
+    if system:
+        return system
+    bundled = REPO_ROOT / ".local" / "bin" / name
+    if bundled.is_file():
+        return str(bundled)
+    return None
 
 
 def sha256(path: Path) -> str:
@@ -328,7 +339,7 @@ def standardize(
     source_kind: str,
     target: dict[str, int | float],
 ) -> None:
-    ffmpeg = shutil.which("ffmpeg")
+    ffmpeg = media_tool("ffmpeg")
     if not ffmpeg:
         raise RuntimeError("ffmpeg is required")
     source_info = probe(source)
@@ -381,11 +392,13 @@ def prepare(
     lite_case_id: str,
     output: Path,
     *,
+    model: str = "project_genie",
     camera_trajectory_mode: str | None = None,
     reference_start_frame: int = 0,
     reference_target_yaw_deg: float = 360.0,
     candidate_params: dict[str, Any] | None = None,
     reference_video_override: Path | None = None,
+    repeat_ids: tuple[str, ...] = REPEATS,
 ) -> dict[str, Any]:
     run_root = run_root.resolve()
     output = output.resolve()
@@ -402,7 +415,7 @@ def prepare(
     target = probe(reference)
     camera_gt = _load_camera_ground_truth(case_root) if camera_trajectory_mode else None
     receipt_rows: list[tuple[str, Path, dict[str, Any]]] = []
-    for repeat_id in REPEATS:
+    for repeat_id in repeat_ids:
         receipt_path = run_root / repeat_id / "receipt.json"
         receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
         if receipt.get("status") != "complete" or receipt.get("repeat_id") != repeat_id:
@@ -429,7 +442,7 @@ def prepare(
             (str(receipt.get("first_frame_sha256")), str(receipt.get("actions_sha256")))
         )
         row = {
-            "model": "project_genie",
+            "model": model,
             "case_id": lite_case_id,
             "seed": repeat_id,
             "candidate_video": str(destination),
@@ -493,7 +506,7 @@ def prepare(
             }
         )
     if len(input_hashes) != 1:
-        raise ValueError("five runs do not share one conditioning/action input pair")
+        raise ValueError("runs do not share one conditioning/action input pair")
     output.mkdir(parents=True, exist_ok=True)
     candidate_manifest = output / "candidate_manifest.jsonl"
     candidate_manifest.write_text(
@@ -508,6 +521,7 @@ def prepare(
         "reference_video": str(reference.resolve()),
         "reference_video_sha256": sha256(reference),
         "target_metadata": target,
+        "repeat_count": len(repeat_ids),
         "shared_input_hashes": list(next(iter(input_hashes))),
         "source_selection_policy": source_selection_policy,
         "camera_reference_mapping": (
@@ -522,7 +536,7 @@ def prepare(
         ),
         "candidate_params": candidate_params,
         "parity_limitations": [
-            "The paper does not publish exact Project Genie prompts, numeric action timelines, or web adapter details.",
+            "The paper does not publish exact prompts, numeric action timelines, or backend adapter details.",
             "The Lite evaluator is a diagnostic proxy and does not implement every published Table 4/7 metric with paper-identical semantics.",
             "Project Genie web generations expose independent run IDs, not controllable RNG seeds.",
         ],
@@ -541,19 +555,23 @@ def main() -> int:
     parser.add_argument("--run-root", type=Path, required=True)
     parser.add_argument("--lite-case-id", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--model", default="project_genie")
     parser.add_argument(
         "--camera-trajectory-mode", choices=("full_turn", "perturbation")
     )
     parser.add_argument("--reference-start-frame", type=int, default=0)
     parser.add_argument("--reference-target-yaw-deg", type=float, default=360.0)
+    parser.add_argument("--repeat-count", type=int, default=5)
     args = parser.parse_args()
     report = prepare(
         args.run_root,
         args.lite_case_id,
         args.output_dir,
+        model=args.model,
         camera_trajectory_mode=args.camera_trajectory_mode,
         reference_start_frame=args.reference_start_frame,
         reference_target_yaw_deg=args.reference_target_yaw_deg,
+        repeat_ids=tuple(f"run{index}" for index in range(args.repeat_count)),
     )
     print(json.dumps({"status": report["status"], "runs": len(report["runs"]), "output": str(args.output_dir.resolve())}, indent=2))
     return 0

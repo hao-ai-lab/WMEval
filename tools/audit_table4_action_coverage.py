@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shutil
 import statistics
 import subprocess
 from pathlib import Path
@@ -16,6 +17,17 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 TABLE_ROOT = ROOT / "experiments/tables_4_7"
 RUN_ROOT = ROOT / "runs/project_genie/table4"
+
+
+def _media_tool(name: str) -> str:
+    """Resolve a system binary or this repository's pinned local fallback."""
+    system = shutil.which(name)
+    if system:
+        return system
+    bundled = ROOT / ".local" / "bin" / name
+    if bundled.is_file():
+        return str(bundled)
+    return name
 
 
 def sha256(path: Path) -> str:
@@ -63,7 +75,7 @@ def reference_timeline(capture: Path) -> dict[str, Any]:
             "source": "incomplete_png_sequence",
         }
     command = [
-        "ffprobe",
+        _media_tool("ffprobe"),
         "-v",
         "error",
         "-count_frames",

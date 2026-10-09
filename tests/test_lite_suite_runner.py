@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 import yaml
 
-from evaluation.lite.output import PER_CASE_RESULTS_FILENAME, read_rows
+from evaluation.lite.output import PER_CASE_RESULTS_FILENAME, read_rows, write_rows
 from evaluation.lite.suite import SuiteRunError, run_suite
 from lite_suite_test_utils import (
     DEFAULT_SUITE_YAML,
@@ -374,6 +374,45 @@ def test_run_suite_resume_skips_done_items(
     assert len(runner.calls) == 1  # second pass resumed
     rows = read_rows(tmp_path / "out" / PER_CASE_RESULTS_FILENAME)
     assert len(rows) == 1
+
+
+def test_run_suite_resume_retries_error_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    suite_root = _registry_only_suite(tmp_path)
+    model_root = tmp_path / "genie3"
+    write_candidates(model_root, ["scene_a/main"])
+    mock_video_probing(monkeypatch)
+    runner = RecordingRunner()
+    output_dir = tmp_path / "out"
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+    results_path = output_dir / PER_CASE_RESULTS_FILENAME
+    rows = read_rows(results_path)
+    rows[0]["status"] = "error"
+    rows[0]["error"] = "transient GPU failure"
+    write_rows(results_path, rows)
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+
+    assert len(runner.calls) == 2
+    rows = read_rows(results_path)
+    assert len(rows) == 1
+    assert rows[0]["status"] == "completed"
 
 
 def test_run_suite_resume_replaces_stale_fingerprint_row(

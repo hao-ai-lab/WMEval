@@ -307,6 +307,7 @@ def run_suite(
         existing_rows = read_rows(results_path)
         current_rows: list[dict[str, Any]] = []
         stale_count = 0
+        retryable_count = 0
         for row in existing_rows:
             case = cases.get(str(row.get("case_id") or ""))
             if case is None:
@@ -320,15 +321,28 @@ def run_suite(
             )
             current_fingerprint = case.evaluator_lock.get("evaluator_fingerprint")
             if recorded_fingerprint == current_fingerprint:
-                current_rows.append(row)
+                # An interrupted or temporarily misconfigured run can leave an
+                # error row behind.  Treating that row as done makes --resume
+                # skip the item forever, so remove it before constructing the
+                # completed-key set and let the item run again.
+                if row.get("status") == STATUS_ERROR:
+                    retryable_count += 1
+                else:
+                    current_rows.append(row)
             else:
                 stale_count += 1
-        if stale_count:
+        if stale_count or retryable_count:
             write_rows(results_path, current_rows)
-            emit(
-                f"[wmeval-lite] removed {stale_count} stale result row(s) "
-                "whose evaluator fingerprint changed"
-            )
+            if stale_count:
+                emit(
+                    f"[wmeval-lite] removed {stale_count} stale result row(s) "
+                    "whose evaluator fingerprint changed"
+                )
+            if retryable_count:
+                emit(
+                    f"[wmeval-lite] removed {retryable_count} retryable error "
+                    "row(s)"
+                )
         done_keys = {row_key(row) for row in current_rows}
 
     resolved_adapters: Mapping[str, DimensionEvaluator] = (

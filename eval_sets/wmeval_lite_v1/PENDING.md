@@ -93,6 +93,286 @@ contracts below; those remain open until their suite-wide evidence lands.
 
 ---
 
+## Concrete P0 release specification
+
+This is the **target contract to implement**, not a claim that the files or
+commands described below already exist. Existing CLI commands are identified
+separately. Closing P0 means delivering this end-to-end product, not just more
+reference videos. Changes here specify work; they do not launch generations,
+authorize additional paid evaluations, or publish data.
+
+### A. What a downloader receives
+
+Keep the existing `suite.yaml` / `cases/<Scene>/<variant>/case.yaml` layout and
+extend it with versioned schemas and explicit generation/reference manifests.
+The evaluator is a separately pinned code release; it is not a Unity project.
+The following filenames are proposed additions except for the existing suite,
+case bundles, checksums, and evaluator outputs noted below.
+
+```text
+wmeval_lite_v1/
+  README.md, DATASET_CARD.md, LICENSE, ATTRIBUTION.md
+  release.json                     # dataset/code revisions, scope, file hashes/sizes
+  suite.yaml                       # existing case-to-dimension mapping
+  schemas/                         # generation, actions, references, jobs, results
+  metric_catalog.json              # formulas, units, direction, validity, aggregation
+  expected_jobs.jsonl               # complete case/repeat/seed roster, before generation
+  evaluator_assets.lock.json        # CV code/weights, schemas, environment identities
+  cases/<Scene>/<variant>/
+    case.yaml                      # existing evaluator config; no private paths
+    generation.json                # prompt, image, action schedule, timing, capabilities
+    conditioning/
+      first_frame.png              # exact RGB conditioning pixels, not decode-at-runtime
+      actions.json                 # typed, timed controls with explicit target entities
+      camera.npz                   # ONLY if camera-pose conditioning is required
+    reference/
+      manifest.json                # per-metric input inventory and provenance
+      checksums.sha256             # retain existing checksum/lock machinery
+      <existing-reference>.mp4     # where reference-based; useful for visual inspection
+      frames/                      # lossless frames consumed by the reference evaluator
+      frame_index.json             # frame IDs, timestamps, sampling/alignment, hashes
+      artifacts/                   # existing arrays/JSON/NPZ, extended as required
+  baselines/<baseline_id>/          # rights-cleared candidates, receipts, expected scores
+  acceptance/                      # clean-install evidence, fixtures, tolerance checks
+```
+
+Do not duplicate an existing `reference/ref.png` unnecessarily: a manifest may
+point to that frozen file. Every one of the 19 cases must resolve to an explicit
+conditioning image with a pixel/byte hash; no adapter may independently choose
+or extract it. The audit found **10 explicit first frames and 9 video-frame-0
+fallbacks**. Bake and verify the latter once, checking that frame time, camera
+pose, object state, and the start of the action schedule agree. If an authored
+sketch is the intended input, retain and label it; do not quietly replace it
+with a Unity frame. An intentional image/reference mismatch needs an explicit
+protocol rationale and alignment test.
+
+Ship all reference frames a metric actually reads: metrics that track every
+frame need the full evaluation-rate sequence, not just a judge contact sheet.
+Lossless shards are an equivalent storage layout. Runtime evaluators must
+consume these frozen frames or a verified equivalent decoding path; merely
+adding PNGs that the evaluator ignores does not close P0-03. Reference-free
+cases need no invented reference movie. Every optional artifact is declared
+required, not applicable with a reason, or missing/blocking in the inventory.
+
+All paths inside the dataset must be relative and relocatable. Every file has
+a size/hash and provenance, and every array has a schema; no executable pickle
+is required to load reference data. Reject escaping paths and unsafe archive
+members. A rights-cleared baseline-video archive may be downloaded separately,
+but the release manifest must pin it and the acceptance test must retrieve it.
+Future rollout frames/answers are **evaluation-only**, never model inputs.
+
+### B. Exactly which Unity references and annotations are needed
+
+The release roster is **19 cases across 9 scenes, 8 dimensions, and 31
+case-dimension assignments**, not all 9 × 8 combinations. One case's rollout
+is reused by its assigned dimensions. A dimension is a scoring view, not a
+request to regenerate the same condition. `suite.yaml` remains authoritative.
+
+| Dimension (case count) | Required baked evaluation inputs, where applicable | Returned measurements |
+| --- | --- | --- |
+| `lpips` (6) | Exact RGB comparison frames/timebase; for causal LPIPS, frozen reference event IDs, times/windows and labels plus matching policy. Freeze reference-side judgments instead of re-running them per candidate. | Perceptual distance, event-match coverage; causal and temporal-only values separately labeled. |
+| `action_controllability` (2) | Timed numeric controls with target object/camera; reference frames; intrinsics/extrinsics and synthetic-flow calibration/targets used by `control_motion`. Bake reference-side flow or supply a pinned, Unity-free derivation. | Motion endpoint error, compensated/dynamic variants and bad-pixel rates, with valid pixel/frame counts. |
+| `prompt_scene_consistency` (6) | Canonical prompt and conditioning image; frozen environment/object rubrics, judge sampling and scoring configuration. No Unity trajectory target is required by this reference-free metric. | Environment, object and overall adherence, item-level judgments and coverage. |
+| `lighting_shading` (1) | Fixed-sun condition and action protocol, shadow/object anchors, masks/configuration used by the pipeline, and pinned analytic geometry-floor parameters/code or baked outputs. This case has no matching fixed-sun Unity movie; do not substitute the rotating-sun capture. | SRR, SDR, MOSD, SDJ, SAS, SSD, estimability and floor context; not a fabricated Unity-video similarity score. |
+| `environment_object_consistency` (6) | Reference RGB frames; camera poses/intrinsics; stable object/character IDs, Unity world transforms, anchor definitions and visibility/validity masks; required reference tracking/depth/appearance caches or pinned derivations. | Object permanence, pairwise-distance/depth errors and character consistency where applicable, with anchor/frame coverage. |
+| `kinematics_mechanics` (3) | Same camera/object correspondence data; masses and size/calibration quantities used by the metric; reference 2D/3D trajectories, timebase, velocities/momentum/energy or their exact deterministic derivation and smoothing rule. | FDE/DTW and mechanical error/exact-match outputs where supported, per object, with units and missing-label validity. |
+| `physical_causality` (3) | Reference frames; fixed QA, answer keys, event order/contact labels and timing where available; judge rubrics/version and repeated-judgment policy. Distinguish simulation contact records from judged events. | Per-question/per-step causal correctness and aggregate causal scores, judge repeat details and failures. |
+| `fluid_mechanics` (4) | Four profiles (rest, step-hold, impulse-decay, chirp-strafe); reference frames/timebase, bottle/control trace, liquid/bottle masks, flow/PIV arrays, surface/volume/spectrum references consumed by the four modules, or pinned Unity-free derivations. Reuse portable NPZ artifacts. | Velocity, volume conservation, surface orientation and slosh-spectrum results per profile; keep axes separate. |
+
+`reference/manifest.json` must list each asset's consuming metric and
+`source_kind`: direct Unity export, recovered calibration, analytic derivation,
+CV pseudo-label, VLM annotation, or human annotation. Include original source
+hash, extraction code/configuration and confidence/validity where relevant.
+For example, SAM/RAFT outputs on a Unity-rendered video are **not ground-truth
+fluid particle velocities**. Recovered camera poses are not direct Unity poses.
+Do not promise unexported dense depth, segmentation, collision impulses, or
+particle fields as ground truth; add them only if a released metric needs them
+and they can be obtained with verified provenance.
+
+Array contracts must state dtype/shape, seconds/frame correspondence, metres
+versus Unity units, axis directions/handedness, quaternion ordering, and whether
+poses are camera-to-world or world-to-camera. Intrinsics must specify the image
+resolution and pixel convention; masks and projected anchors must use the same
+image geometry. Freeze the existing per-case conventions or publish explicit
+conversions rather than relabeling old arrays. Acceptance fixtures must check
+reprojection, temporal alignment, object-ID joins, array lengths and validity.
+Ship measured self-match baselines/tolerances: CV-based evaluation of a Unity
+video against itself need not be zero or perfect.
+
+### C. How users generate a new or existing model's rollouts
+
+1. Download a pinned dataset revision and verify every manifest/hash. Choose
+   the full release protocol or a named subset; a subset must stay labeled.
+2. Export the complete job list **before** checking which candidates exist.
+   Each job records `job_id`, dataset/condition hashes, case ID, model identity,
+   repeat ID, requested seed, expected output, and assigned dimensions. A
+   proposed baseline is five repeats with seeds `42, 1, 2, 3, 4`, matching prior
+   Lite runs, **pending P0-01 sign-off**. That would mean **95 generations and
+   155 dimension-result rows per fully supported model**, before internal
+   judge repeats. Table 4/7's separate repeat protocol is not this default.
+3. Connect an adapter with two operations: capability validation and generation.
+   Input: job plus `generation.json` and only its allowlisted conditioning
+   assets. Output: raw video plus receipt. Ship an adapter template, a no-cost
+   deterministic fixture, and one real supported example. Existing models use
+   the same contract; no model-specific changes to evaluator internals.
+4. The adapter supplies the exact prompt/image and compiles controls to its
+   backend. `generation.json` must declare duration, requested timestamps/fps,
+   frame count, native/evaluation geometry, perspective, image preprocessing,
+   interpolation, prompt policy and required control channels. `actions.json`
+   must declare time intervals and sampling/hold rules, target entity, typed
+   channel/value/units, key order, coordinate frame, and absolute/relative mode.
+   State whether output frame 0 is the supplied image or the first prediction;
+   specify action-to-frame latency and the last-frame endpoint convention.
+5. Reject or record unsupported conditions **before** spending GPU/API time.
+   Keyboard control of the camera is not control of the ball. A text-only model
+   cannot silently enter the image-conditioned track; an image-only model must
+   not silently drop a required text/control channel. Pose, keyboard and other
+   backends may compile the same semantic schedule only with documented
+   calibration and fidelity checks. Approximate/prompt-only substitutes must
+   be labeled as a separate protocol, not pooled with exact-control results.
+6. Write the raw video, timing metadata and a generation receipt: checkpoint
+   revision/hash, adapter code, requested/actual seed (including unsupported
+   seeds), full parameters, actual prompt/image/control hashes, compiled
+   controls, retries, output hash and deviations. Apply the released
+   normalization once for evaluation; preserve raw output and transform log.
+   Resume only when input/model/config/output identities still match.
+7. Emit the existing runner's strict `candidates.jsonl`, joining it to the
+   richer receipt/job manifest by identity. Do not add unrecognized fields to
+   the current candidate schema. Existing videos may be imported only after
+   checking conditions and provenance; otherwise mark them legacy/exploratory.
+
+All 19 cases need a concrete duration/action schedule; **standardized does not
+mean forcing every scene to have the same duration or the same trajectory**.
+The current action inventory has 15 native machine-readable cases and four
+requiring supplemental contracts: BilliardGame/prompt_first,
+ChessBoard/walk_third, WanderingGarden/scene_first, SunRisesAndSets/lighting.
+Machine-readable does not establish correct action-target semantics or support
+on every backend. Resolve these gaps in the release manifests, not ad hoc
+adapter overrides.
+
+This is replay of **fixed, open-loop conditions**. Arbitrary interactive actions
+cannot be scored against the same baked trajectory as though it were their
+Unity counterfactual. New action sequences require newly authored references
+or a separately declared reference-free protocol. Adapters must not receive
+future reference RGB, object trajectories, reference answers, or metric outputs;
+test this input boundary even though the public dataset itself is inspectable.
+
+### D. How the evaluation codebase will run
+
+After installing the pinned evaluator environment and downloading its pinned
+CV assets, users supply their candidate manifest. Hosted-judge credentials are
+needed only for declared judge-dependent metrics. Dataset reference preparation
+must require neither Unity nor reference-side API calls. Candidate-side CV and
+judge computation still runs. Preflight must show dimensions, GPU/memory needs,
+API egress and estimated cost; a no-API selection is explicitly partial, not
+an all-metrics run. Paid tests require an explicit opt-in.
+
+These commands **already exist**; the paths illustrate a downloaded dataset
+and candidate manifest, not a currently published release URL:
+
+```bash
+python tools/run_wmeval_lite.py validate --suite /data/wmeval_lite_v1
+python tools/run_wmeval_lite.py list-cases --suite /data/wmeval_lite_v1
+python tools/run_wmeval_lite.py run \
+  --suite /data/wmeval_lite_v1 \
+  --candidate-manifest /data/my_model/candidates.jsonl \
+  --output-dir /data/results/my_model --dry-run
+python tools/run_wmeval_lite.py run \
+  --suite /data/wmeval_lite_v1 \
+  --candidate-manifest /data/my_model/candidates.jsonl \
+  --output-dir /data/results/my_model --device cuda --resume
+```
+
+An existing-format manifest row is:
+
+```json
+{"model":"my_model","case_id":"BallRoller/ctrl","seed":"42","candidate_video":"/data/my_model/BallRoller/ctrl/42.mp4"}
+```
+
+**Still to implement and document as runnable commands:** full-suite
+export/download/verify; dependency and capability preflight; generation-job
+planning/execution; receipt validation; expected-job/metric completeness checks;
+and the final reproducibility report. Do not present these as existing CLI
+subcommands. The current `--dry-run` resolves discovered work; it does not prove
+that all expected jobs exist or that CV/API evaluation will succeed.
+
+The runner must then verify candidate integrity and condition identity, apply
+the frozen frame alignment/normalization, load baked references, compute only
+the required candidate-side features, run declared judges, and aggregate using
+the locked metric policy. Check video decoding through the final expected frame,
+not just file existence. Short/truncated clips must not be silently padded or
+looped into successful long-horizon evaluations. Test retry/resume against a
+changed candidate, changed reference, changed evaluator and interrupted output.
+
+### E. What results users get
+
+Retain the existing three outputs, extending their schemas explicitly rather
+than breaking current consumers:
+
+- `per_case_results.jsonl`: currently one row per model/case/seed/dimension,
+  with status, metrics, `full_report`, timing and evaluator-lock summary. Add
+  job/receipt, candidate/reference and environment hashes; normalization identity;
+  per-metric value/unit/direction, source, status/reason, valid/expected counts;
+  and evidence paths. Keep per-object/per-event/per-frame detail inspectable.
+- `aggregate_summary.json`: retain per-case means, across-case statistics and
+  within-case seed dispersion. Add expected/generated/evaluated/valid counts,
+  missing and excluded identities, aggregation weights and repeat definitions.
+  Use the same declared case set for model comparisons and show coverage beside
+  scores. Never rank a partial supported subset as the full benchmark.
+- `aggregate_summary.csv`: retain machine-readable dimension summaries, adding
+  coverage/status columns and keeping metric units/direction discoverable.
+
+New required companion outputs are `coverage.json` (every planned job and metric,
+including absent candidates), `run_manifest.json` (complete invocation and
+dependency identities), an `evidence/` tree (tracks/masks/selected frames and
+auditable judge request/response artifacts with secrets redacted), and a concise
+`report.md` linking results and failures. A fancy HTML dashboard is not P0.
+Retain or link source candidates so a reported score can be traced to its video.
+
+Define per-metric statuses for `ok`, `unsupported`, `missing_candidate`,
+`invalid_candidate`, `not_applicable`, `unmeasurable`, and `error`, with reasons.
+These are proposed output-schema additions, not current runner enum guarantees.
+Refusals/rate limits are judge failures, not model scores. A genuine missing
+object can still incur the metric's specified penalty; detection or calibration
+failure must not automatically become that penalty. Nulls are never favorable
+zeros. Keep causal LPIPS separate from temporal fallback and candidate seed
+variance separate from judge variance. Publish no cross-dimension scalar unless
+its normalization and weights have been explicitly approved.
+
+### F. Concrete P0 hand-off and acceptance artifacts
+
+Each P0 below must link its checked-in implementation, test command, and actual
+acceptance output. These are required deliverables, not merely discussion topics.
+
+| Item | Artifact/test that closes it |
+| --- | --- |
+| P0-01 | Signed-off roster/repeat policy, metric catalog, dataset/code licenses, asset-level redistribution inventory and dataset card. |
+| P0-02 | Version-pinned public package + file manifest + exporter/downloader; anonymous download into a relocated clean directory verifies every file. |
+| P0-03 | 19 reference manifests, explicit conditioning image for every case, frozen consumed frames and metric assets; provenance, reprojection/time/object-join checks and self-match tolerances pass. |
+| P0-04 | 19 generation/action manifests including the four supplemental cases; schema validation and target/timing/capability rejection fixtures pass. |
+| P0-05 | Adapter template + fixture + real example; complete expected-job plan, generation receipts, import/resume checks and runner-compatible candidates manifest. |
+| P0-06 | Pinned full environment and CV asset lock; preflight passes with no private paths or warm developer caches and reports any API requirements. |
+| P0-07 | Per-case normalization and metric-status schemas; tests for temporal offset, geometry mismatch, truncated video, missing anchors/labels and unsupported controls. |
+| P0-08 | Frozen reference judgments/QA/rubrics and candidate judge audit fixture; repeat/refusal policy, redaction and explicit egress/cost opt-in. |
+| P0-09 | Expected-versus-actual coverage gate, extended result artifacts and downloadable baseline candidates/scores; changed-byte resume and aggregation tests. |
+| P0-10 | Published clean-machine transcript using the actual downloaded package: fixture generation, real candidate ingestion, all 8 dimensions, coverage checks, resume, and scores within declared tolerances. |
+
+Additional omissions found while making the workflow concrete, all required
+under the existing P0 IDs:
+
+- [ ] **P0-03/04:** settle first-frame versus first-prediction indexing, action
+  latency and reference/conditioning initial-state agreement for every case.
+- [ ] **P0-04/05:** publish a capability/track matrix; prohibit silent camera
+  versus object substitutions, dropped inputs, or text-only/I2V pooling.
+- [ ] **P0-05:** test the generation input allowlist so future reference frames
+  and evaluator answers do not leak through the adapter interface.
+- [ ] **P0-02/03:** validate archive/path safety and safe array loading, and wire
+  frozen reference frames into the actual consuming code path.
+- [ ] **P0-07/09:** cover absent jobs as well as failed metric rows; preserve
+  raw outputs, decoding failures, action compilation and normalization receipts.
+- [ ] **P0-08/10:** document hosted-judge opt-in, credential redaction, repeat
+  policy, and a clearly labeled no-API subset; do not promise offline all-metrics.
+
 ## Release cleanup pending register
 
 Owners below are responsibility areas, not newly assigned individuals. A

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "captured_utc": "2026-10-04",
+  "assets": {
+    "grounding_dino": {
+      "model_id": "IDEA-Research/grounding-dino-tiny",
+      "revision": "a2bb814dd30d776dcf7e30523b00659f4f141c71",
+      "weight": "model.safetensors",
+      "sha256": "1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3"
+    },
+    "depth_anything_metric_outdoor": {
+      "model_id": "depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf",
+      "revision": "fd2c22027eaf20374204f14099b8341e1925ad39",
+      "weight": "model.safetensors",
+      "sha256": "ad065c77a7421ca55159a1f0db9433397a607690f2d76bb8a6fc54b1be7a3124"
+    },
+    "sam2": {
+      "model_id": "facebook/sam2.1-hiera-large",
+      "revision": "665f8e2ad61cf5f53d65644ff27c8ee525124610",
+      "weight": "sam2.1_hiera_large.pt",
+      "sha256": "2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318"
+    },
+    "dinov2": {
+      "source": "facebookresearch/dinov2",
+      "source_revision": "7764ea0f912e53c92e82eb78a2a1631e92725fc8",
+      "variant": "dinov2_vits14",
+      "weight": "dinov2_vits14_pretrain.pth",
+      "sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9"
+    }
+  },
+  "dependency_lock": "requirements-gpu.lock"
+}

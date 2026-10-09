@@ -42,6 +42,23 @@ def test_pose_yaw_selection_supports_reverse_direction_and_wrap() -> None:
     assert np.all(circular_error <= 1.3)
 
 
+def test_unity_pose_conversion_preserves_relative_transform() -> None:
+    angles = np.deg2rad(np.array([0.0, 45.0]))
+    proper = np.stack([np.eye(4), np.eye(4)])
+    proper[:, 0, 0] = np.cos(angles)
+    proper[:, 0, 2] = np.sin(angles)
+    proper[:, 2, 0] = -np.sin(angles)
+    proper[:, 2, 2] = np.cos(angles)
+    reflection = np.diag([1.0, 1.0, -1.0, 1.0])
+    unity = reflection[None] @ proper
+    converted, status = MODULE.proper_opencv_c2w(unity)
+    assert status == "unity_world_z_reflection_to_right_handed"
+    assert np.allclose(np.linalg.det(converted[:, :3, :3]), 1.0)
+    original_relative = np.linalg.inv(unity[0]) @ unity[1]
+    converted_relative = np.linalg.inv(converted[0]) @ converted[1]
+    assert np.allclose(original_relative, converted_relative)
+
+
 def test_plan_covers_all_twelve_table7_cells() -> None:
     plans = MODULE._plans()
     assert len(plans) == 12

@@ -28,6 +28,17 @@ PROJECT_GENIE_MIN_WIDTH = 1280
 PROJECT_GENIE_MIN_HEIGHT = 704
 
 
+def _media_tool(name: str) -> str:
+    """Resolve a system binary or this repository's pinned local fallback."""
+    system = shutil.which(name)
+    if system:
+        return system
+    bundled = REPO_ROOT / ".local" / "bin" / name
+    if bundled.is_file():
+        return str(bundled)
+    return name
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -117,7 +128,7 @@ def _materialize_frame(root: Path, spec: dict[str, Any], destination: Path) -> d
             raise FileNotFoundError(source)
         frame_index = int(spec["frame_index"])
         command = [
-            "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
+            _media_tool("ffmpeg"), "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
             "-vf", f"select=eq(n\\,{frame_index})", "-frames:v", "1", str(destination),
         ]
         subprocess.run(command, check=True)

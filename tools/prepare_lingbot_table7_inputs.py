@@ -182,6 +182,26 @@ def pose_yaw_source_indices(
     return np.asarray(selected, dtype=np.int64)
 
 
+def proper_opencv_c2w(poses: np.ndarray) -> tuple[np.ndarray, str]:
+    """Convert left-handed Unity-world C2W matrices to proper rotations.
+
+    LingBot interpolates rotations with scipy, which correctly rejects the
+    determinant -1 matrices emitted by the Unity captures.  Reflecting the
+    world Z axis changes only the world basis: relative camera transforms and
+    therefore the requested path are preserved.
+    """
+    determinants = np.linalg.det(poses[:, :3, :3])
+    if np.all(determinants > 0.0):
+        return poses.copy(), "already_right_handed"
+    if not np.all(determinants < 0.0):
+        raise ValueError("pose timeline mixes proper and reflected rotations")
+    reflection = np.diag([1.0, 1.0, -1.0, 1.0]).astype(poses.dtype)
+    converted = reflection[None] @ poses
+    if not np.all(np.linalg.det(converted[:, :3, :3]) > 0.0):
+        raise ValueError("failed to convert Unity poses to proper rotations")
+    return converted, "unity_world_z_reflection_to_right_handed"
+
+
 def _validate_sources(plan: Plan) -> tuple[Path, Path, Path, np.ndarray, np.ndarray]:
     pose_path = REPO_ROOT / plan.source_poses
     intrinsics_path = REPO_ROOT / plan.source_intrinsics
@@ -227,7 +247,8 @@ def prepare(plan: Plan, output_root: Path) -> dict[str, object]:
     output_dir.mkdir(parents=True, exist_ok=True)
     output_poses = output_dir / "poses.npy"
     output_intrinsics = output_dir / "intrinsics.npy"
-    np.save(output_poses, poses[indices])
+    selected_poses, handedness_conversion = proper_opencv_c2w(poses[indices])
+    np.save(output_poses, selected_poses)
     np.save(output_intrinsics, intrinsics[indices])
 
     receipt: dict[str, object] = {
@@ -240,7 +261,8 @@ def prepare(plan: Plan, output_root: Path) -> dict[str, object]:
         "frame_count": FRAME_COUNT,
         "fps": FPS,
         "duration_sec": (FRAME_COUNT - 1) / FPS,
-        "pose_convention": "OpenCV camera-to-world; no conversion applied",
+        "pose_convention": "OpenCV camera-to-world in a right-handed world basis",
+        "pose_handedness_conversion": handedness_conversion,
         "intrinsics_convention": "fx_fy_cx_cy",
         "source_mode": plan.source_mode,
         "source_start_frame": plan.start_frame,
