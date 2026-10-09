@@ -1,6 +1,8 @@
 # WMEval Lite release gaps — Unity-free, plug-and-play dataset
 
-Updated 2026-10-05 for `lanxiang/release-cleanup`.
+Updated 2026-10-08 for `lanxiang/release-cleanup` (open-model runners from
+`lanxiang/release-cleanup-oss-models` integrated; action-backend registry added;
+per-dimension READMEs merged into the root `README.md`).
 
 Release promise: a new user can download a versioned dataset and evaluator,
 generate their model's videos from the supplied conditions, and evaluate them
@@ -58,11 +60,50 @@ Read-only audit of the current worktree on 2026-10-05:
   adapter and release-wide job manifest are missing. The Lite runner builds
   work from discovered candidates, so absent expected case/repeat rows need a
   separate completeness gate, not just file validation.
-- `eval_sets/README.md` and the HF draft have stale scope statements.
+- The HF draft still has stale scope statements (the stale
+  `eval_sets/README.md` was folded into the root `README.md` on 2026-10-08).
   `requirements-lite.txt` is not a full evaluator environment; macOS and CUDA
   locks exist separately. No root license or checked-in `.github` CI workflow
   was found. `control_motion.py` still resolves an external PTLFlow checkout,
   and some CV models are fetched by mutable aliases.
+
+Follow-up audit on 2026-10-08 (after integrating the open-model runners):
+
+- `pytest tests` passes (677 passed, 1 skipped) with the ignored `runs/` data
+  and the sibling paper checkout present; tests that read `runs/` or
+  `../_arxiv__WorldModel_Eval` are not yet hermetic.
+- **Table 4/7 action standardization exists; Lite does not.** All five Table
+  4/7 backends (Unity, Project Genie, Matrix-Game 2.0/3.0, LingBot Base Cam)
+  compile from the hash-locked semantic trajectories. Action targets, native
+  timelines, supported/unsupported targets with reasons, and frozen camera
+  gains are declared once in
+  [`action_backends.yaml`](../../experiments/tables_4_7/action_backends.yaml)
+  and enforced by `evaluation/action_backends.py`; input preparation refuses
+  unsupported target/backend pairs. The 19 Lite bundles still mix
+  `actions.txt` browser programs, unnamed 4/5-column `action.npy` arrays and
+  prose, with no target/frame semantics.
+- **Lite action/target mismatch.** `RacingCar/prompt_third` is wired to
+  `kinematics_mechanics` and `environment_object_consistency`, but its action
+  is a camera-only "hold ArrowLeft 10 s" orbit around a parked car, so the
+  kinematics row measures a static vehicle. The Table 4 drive trajectory
+  (`racing_car_drive.yaml`, steer/throttle/brake) is the correct control.
+- **Cross-model calibration is not uniform.** Matrix-Game 2.0 uses one pooled
+  gain; Matrix-Game 3.0 uses four regime/direction gains fitted on
+  WanderingGarden, which is also a scored scene; LingBot keeps nominal poses
+  and realizes -17.7/+41.4 degrees for +/-45-degree perturbations and
+  +54.9/+277.9 degrees for full turns. Consistency scores therefore compare
+  different viewpoints unless realized yaw is reported alongside them.
+- **Repeat policy differs by model.** LingBot runs an adaptive 5-to-30
+  expansion (360-row queue); other models use five runs.
+- `experiments/tables_4_7/evaluator_assets.lock.json` now pins GroundingDINO,
+  Depth Anything (metric outdoor), SAM 2.1 and DINOv2 by revision and hash for
+  the Table 4/7 evaluator; RAFT, LPIPS/VGG, PTLFlow, OpenPIV and the indoor
+  depth checkpoint are not pinned, and the 19 Lite case locks remain empty.
+- Reference-side judgments are not all baked: causal-LPIPS contact events are
+  re-judged on the Unity video for every candidate; the Unity-reference
+  prompt-consistency scores reported in the paper are not stored in the
+  bundles; `lighting_shading` is reference-free and its bundle has no Unity
+  video.
 
 The critical path is: clear distribution rights and freeze scope; export the
 complete reference/conditioning contract; make generation and evaluation
@@ -424,6 +465,11 @@ Owners below are responsibility areas, not newly assigned individuals. A
   executable manifests, not generator-specific guesses. **Done when:** every
   case has a machine-readable schedule and unsupported camera/object-control
   combinations are rejected or explicitly reported before generation.
+  *Progress 2026-10-08:* Table 4/7 trajectories have declared action targets
+  and per-backend capability checks (`action_backends.yaml`). Remaining: carry
+  target/frame semantics into a versioned per-case `actions.json`, migrate the
+  19 Lite bundles (including the four supplemental cases), and replace the
+  camera-only action on `RacingCar/prompt_third` for its kinematics assignment.
 
 - [ ] **P0-05 · Generation infrastructure — new-model adapter and job contract.**
   Provide a documented adapter interface/template and a working example that
@@ -437,6 +483,11 @@ Owners below are responsibility areas, not newly assigned individuals. A
   to benchmark internals; a fixture adapter proves the plumbing and a real
   supported backend demonstrates generation-to-evaluation. This does not require
   implementing every model or pretending all models support every action type.
+  *Progress 2026-10-08:* deterministic adapters, hashed receipts, queues and
+  resume exist for Matrix-Game 2.0/3.0 and LingBot Base Cam on the Table 4/7
+  track (`tools/model_adapters/`, `tools/prepare_*_inputs.py`,
+  `tools/run_*`). These are model-specific; the model-neutral adapter
+  template, no-cost fixture adapter and Lite job export are still missing.
 
 - [ ] **P0-06 · Runtime infrastructure — supported install and dependency
   preflight.** Supply a tested full-evaluation environment for at least one
@@ -448,6 +499,9 @@ Owners below are responsibility areas, not newly assigned individuals. A
   list GPU/RAM/API requirements, and fail before expensive work. **Done when:**
   a fresh environment installs and passes dependency/artifact checks without
   hard-coded developer paths or silently using mutable model aliases.
+  *Progress 2026-10-08:* `evaluator_assets.lock.json` pins four Table 4/7 CV
+  checkpoints; extend it to RAFT, LPIPS/VGG, PTLFlow, OpenPIV and indoor depth
+  and propagate it into the Lite case locks.
 
 - [ ] **P0-07 · Runner + metric owners — normalization and validity contract.**
   Lock fps, duration, time origin, frame alignment, resolution, and crop/pad
@@ -472,6 +526,8 @@ Owners below are responsibility areas, not newly assigned individuals. A
   bitwise repeatability or immutable snapshots where providers do not offer
   them. **Done when:** reference scoring is fixed, judge-dependent results are
   auditable, and regression tolerances/rebaselining rules are documented.
+  Include the Unity-reference prompt-consistency scores and the causal-LPIPS
+  reference events in the frozen fixtures (neither is in the bundles today).
 
 - [ ] **P0-09 · Results owner — comparable results and completeness checks.**
   Separate generation seeds/repeats from judge repeats and document aggregation
@@ -496,6 +552,10 @@ Owners below are responsibility areas, not newly assigned individuals. A
   commands, and generated readiness priorities. **Done when:** a third party
   follows the documented workflow unassisted and the exact release artifacts
   pass; a local bundle-validation pass alone does not close this item.
+  *Progress 2026-10-08:* one root `README.md` now carries installation,
+  quickstart, suite matrix, action trajectories and every dimension's full
+  evaluator reference. Make the test suite hermetic (no reads from ignored
+  `runs/` or the sibling paper checkout) before wiring CI.
 
 Existing implementation to retain: RacingCar first-person is excluded from
 active Table 4 scoring; the CUDA handoff is hashed and relocatable; causal and
@@ -510,6 +570,15 @@ evaluator fingerprints. These are partial foundations, not P0 completion.
   timing/gain and target success without changing the semantic trajectory.
   Add BeamDomino object-strike and bottle/camera adapters where feasible.
   Unsupported declarations are mandatory in P0; wider adapter support is P1.
+  Adopt one calibration policy for every backend (same probe set, acceptance
+  bands, held-out non-scored validation scene); re-check the Matrix-Game 3.0
+  gains off WanderingGarden; report realized yaw next to every consistency
+  score; validate Matrix-Game 2.0 car/ball target control (thresholded WASD
+  drops control magnitude); calibrate the Project Genie right turn.
+- [ ] **Results owner (`multi-model`) — one repeat policy.** Reconcile LingBot's
+  adaptive 5-to-30 expansion with the five-run protocol used elsewhere, keep
+  the five-run cohort as the reported paper selection, and declare each
+  model's native fps/duration and the applied resampling in every result row.
 - [ ] **Kinematics owner — stronger physical calibration.** Add held-out
   reprojection/self-match checks and near-zero-motion error floors. Quantify
   depth-domain bias and rounding sensitivity; use physically interpretable
