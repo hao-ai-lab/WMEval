@@ -1,0 +1,32 @@
+schema_version: 1
+trajectory_id: table4.billiard_game.first_person_ball_wasd_v1
+description: Cue-ball control using only browser-expressible forward and lateral actions; shared across first- and third-person observations.
+duration_sec: 10.0
+control_hz: 30
+channels:
+  forward: {kind: continuous, min: -1.0, max: 1.0, unit: normalized_ball_impulse}
+  lateral: {kind: continuous, min: -1.0, max: 1.0, unit: normalized_ball_impulse}
+segments:
+  - {start_sec: 0.0, end_sec: 1.0, values: {forward: 0.0, lateral: 0.0}}
+  - {start_sec: 1.0, end_sec: 1.5, values: {forward: 0.65, lateral: 0.0}}
+  - {start_sec: 1.5, end_sec: 3.5, values: {forward: 0.0, lateral: 0.0}}
+  - {start_sec: 3.5, end_sec: 4.0, values: {forward: 0.0, lateral: 0.22}}
+  - {start_sec: 4.0, end_sec: 6.0, values: {forward: 0.0, lateral: 0.0}}
+  - {start_sec: 6.0, end_sec: 6.5, values: {forward: 0.0, lateral: -0.28}}
+  - {start_sec: 6.5, end_sec: 10.0, values: {forward: 0.0, lateral: 0.0}}
+paper_alignment:
+  status: reconstructed
+  matched: [scene, first_and_third_person_views, controlled_ball_motion, five_generations, metrics]
+  missing: >-
+    The paper does not publish its numeric action timeline or scene-scale transform.
+    This user-selected rerun uses direct ball control instead of the
+    appendix's fixed-overhead spin-aware cue-shot protocol.
+  source: ../../../../_arxiv__WorldModel_Eval/text/7_appendix_implementations.tex
+adapters:
+  unity: {status: ready, control_mode: ball_wasd, channels: [forward, lateral]}
+  project_genie:
+    status: nominal
+    note: The W/A/D mapping is browser-expressible; generated-world gain remains reconstructed rather than published.
+    key_rules:
+      - {channel: forward, threshold: 0.25, positive_key: KeyW, negative_key: KeyS}
+      - {channel: lateral, threshold: 0.15, positive_key: KeyD, negative_key: KeyA}

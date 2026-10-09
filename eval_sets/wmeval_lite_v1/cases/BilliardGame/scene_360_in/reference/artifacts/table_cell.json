@@ -1,0 +1,24 @@
+{
+  "character_prompt": "The white cue ball.",
+  "claim_scope": "paper_protocol_reconstruction_not_exact_paper_parity",
+  "dimension": "environment_object_consistency",
+  "lite_case_id": "BilliardGame/scene_360_in",
+  "orientation_frame_status": "unity_reconstructed_validated",
+  "paper_orientation": "inward",
+  "preparation": "billiard_unity_capture",
+  "schema_version": 1,
+  "sources": {
+    "action.npy": "98a9c58f1d9d6b92c42641d7e6b875244f5461f298f67cdde4caa738721a424e",
+    "action.npz": "fc89715ec9b6cb4eec65ccd52831d625a90b5bd64a4f66859cfeb5cd8085cc4c",
+    "actions.jsonl": "475464fc6c6588c87a99495e3ddd9c49846b6d07b471871f796f794e3f6546e5",
+    "actions.txt": "cd7ae0afab76799bff60f9015bfb07d5d90077fa4daefb9a46c4b82a1d630ce9",
+    "intrinsics.npy": "5529ce26fe370a129c8f97ba3afc9139024b0824407b83d7a87429da8199f542",
+    "object_transforms.json": "a4fc0589c7ccaa03884bec44fd34826e6b9955cc1cebc9bb9a150c27f4f2f734",
+    "poses.npy": "0a91a1b58af0bc7bc74d1c1a3f89bb31f2ce60426e924b0d4fdd3706d53b8d6e",
+    "ref.png": "2b1448e6861aa51a8ca0148933e5e1c3df56db303110c299176ab5c808b34222",
+    "reference.mp4": "677c9fb671c5b6d46c948f6d73d5a0540f7f28420348bd517595ab8502f8afcf",
+    "trajectory.yaml": "16008bd3e1bd2b5497b424eab147eda7a7858572ce3d1afb5ccb62d509e9d6c4"
+  },
+  "table_cell": "table7/BilliardGame/360_in",
+  "trajectory_id": "table7.camera.360_in_v1"
+}

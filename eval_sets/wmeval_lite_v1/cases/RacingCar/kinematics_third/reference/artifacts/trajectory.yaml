@@ -1,0 +1,38 @@
+schema_version: 1
+trajectory_id: table4.racing_car.drive_v1
+description: Acceleration, bidirectional steering, braking, and settle trajectory.
+duration_sec: 10.0
+control_hz: 30
+channels:
+  steer: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  throttle: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  brake: {kind: discrete, min: 0, max: 1, unit: boolean}
+segments:
+  - {start_sec: 0.0, end_sec: 1.0, values: {steer: 0.0, throttle: 0.0, brake: 0}}
+  - {start_sec: 1.0, end_sec: 3.0, values: {steer: 0.0, throttle: 0.8, brake: 0}}
+  - {start_sec: 3.0, end_sec: 4.0, values: {steer: 0.5, throttle: 0.6, brake: 0}}
+  - {start_sec: 4.0, end_sec: 6.0, values: {steer: 0.0, throttle: 0.8, brake: 0}}
+  - {start_sec: 6.0, end_sec: 7.0, values: {steer: -0.5, throttle: 0.6, brake: 0}}
+  - {start_sec: 7.0, end_sec: 8.0, values: {steer: 0.0, throttle: 0.8, brake: 0}}
+  - {start_sec: 8.0, end_sec: 9.0, values: {steer: 0.0, throttle: 0.0, brake: 1}}
+  - {start_sec: 9.0, end_sec: 10.0, values: {steer: 0.0, throttle: 0.0, brake: 0}}
+paper_alignment:
+  status: reconstructed
+  matched: [scene, action_space, first_and_third_person_views, five_generations, metrics]
+  missing: The paper source does not publish its numeric per-step control timeline.
+  source: ../../../../_arxiv__WorldModel_Eval/text/7_appendix_scenes.tex
+  repository_context: >-
+    The Lite RacingCar action.npy has five model-adapter channels and its
+    actions.txt describes a camera turn; it is not the Unity CarAgent action
+    schema. CarAgent.cs and the paper both define two continuous actions
+    (steer, throttle) plus one discrete brake branch, which this semantic
+    trajectory preserves.
+adapters:
+  unity: {status: ready, channels: [steer, throttle, brake]}
+  project_genie:
+    status: nominal
+    note: Keyboard mapping requires latency/gain calibration in the generated world.
+    key_rules:
+      - {channel: steer, threshold: 0.25, positive_key: KeyD, negative_key: KeyA}
+      - {channel: throttle, threshold: 0.25, positive_key: KeyW, negative_key: KeyS}
+      - {channel: brake, threshold: 0.5, positive_key: KeyS}

@@ -1,0 +1,21 @@
+{
+  "character_prompt": "",
+  "claim_scope": "paper_protocol_reconstruction_not_exact_paper_parity",
+  "dimension": "environment_object_consistency",
+  "lite_case_id": "WanderingGarden/scene_perturb_in",
+  "orientation_frame_status": "unity_bridge_validated",
+  "paper_orientation": "inward",
+  "preparation": "garden",
+  "schema_version": 1,
+  "sources": {
+    "action.npy": "55171151a4042416c87105acbfe5f1017aa9e5340a6f73320bad60f84b1da6dc",
+    "action.npz": "dbcc9bbb0473106a99b4c3907860d25cf7b5ca75d48d027053672649dff6eb4b",
+    "actions.jsonl": "258eb138c4162ac5e69d38670c2bbe23028d711122d3ddda18bad7721173f8d8",
+    "actions.txt": "ce99a7ce7ee33916f1d0e153fc8836135a1d9b7b75c5355092533d8ae709f930",
+    "ref.png": "195a2384dac3aad0aea93b508d381b8162b37b3e7a60b8e68a047698593ae742",
+    "reference_source_indices": "[0, 149, 148, 147, 146, 145, 144, 143, 142, 141, 140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131, 131]",
+    "trajectory.yaml": "ae53bd32c4359f1a1471b5dfa584ad4c27d41171eba55541e2b52e5e3993a1cf"
+  },
+  "table_cell": "table7/WanderingGarden/perturb_in",
+  "trajectory_id": "table7.camera.perturb_in_v1"
+}

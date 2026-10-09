@@ -57,6 +57,11 @@ def inspect_case(
         op_count = len(ops)
         non_comment = [line for line in text.splitlines() if line.strip() and not line.lstrip().startswith("#")]
         text_kind = "executable_json" if ops else ("structured_text" if non_comment else "comment_only")
+    # Compiled Table 4/7 bundles keep the numeric schedule in actions.txt and the
+    # Project Genie browser program in actions.jsonl.
+    actions_jsonl = artifacts / "actions.jsonl"
+    if not op_count and actions_jsonl.is_file():
+        op_count = len(parse_json_ops(actions_jsonl.read_text(encoding="utf-8")))
 
     numeric: dict[str, Any] | None = None
     if action_npy.is_file():

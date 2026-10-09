@@ -760,11 +760,22 @@ dimensions:
       max_pairs: 32
     cases:
     - BallRoller/ctrl
-    - MirrorRollingBall/prompt_third
     - RacingCar/prompt_third
     - ChessBoard/walk_third
     - WanderingGarden/scene_first
-    - BilliardGame/prompt_first
+    # Table 7 cells (tools/build_table_lite_cases.py)
+    - WanderingGarden/scene_perturb_in
+    - WanderingGarden/scene_perturb_out
+    - WanderingGarden/scene_360_in
+    - WanderingGarden/scene_360_out
+    - BilliardGame/scene_perturb_in
+    - BilliardGame/scene_perturb_out
+    - BilliardGame/scene_360_in
+    - BilliardGame/scene_360_out
+    - MirrorRollingBall/scene_perturb_in
+    - MirrorRollingBall/scene_perturb_out
+    - MirrorRollingBall/scene_360_in
+    - MirrorRollingBall/scene_360_out
     aggregate:
       headline: object_permanence_pct
       direction: higher
@@ -784,8 +795,9 @@ dimensions:
       max_pairs: 32
     cases:
     - BallRoller/ctrl
-    - RacingCar/prompt_third
-    - BilliardGame/prompt_first
+    # Table 4 cells (tools/build_table_lite_cases.py)
+    - RacingCar/kinematics_third
+    - BilliardGame/kinematics_first
     aggregate:
       headline: fde_m_mean
       direction: lower

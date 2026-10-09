@@ -1,0 +1,46 @@
+schema_version: 2
+case_id: RacingCar/kinematics_third
+scene: RacingCar
+display_name: RacingCar table4 third
+prompt: "A very wide, straight highway under a clear blue sky, with dark roadside\
+  \ barriers, green grass, and long rows of tall trees on both sides. The road begins\
+  \ abruptly at a starting point, with no ground behind it\u2014only open sky, as\
+  \ if the road is suspended in space. A yellow sports car with two black racing stripes\
+  \ is parking exactly at the start of the road, centered in the frame, viewed from\
+  \ behind. The car faces forward into the long empty highway. Bright daytime lighting,\
+  \ clean and minimal environment. The character is the yellow sports car"
+perspective: third_person
+modules:
+- kinematics_mechanics
+reference:
+  first_frame: reference/ref.png
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: match_reference
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+module_params:
+  kinematics_mechanics:
+    kin_text_prompt: car.
+    kin_track_point: bbox_bottom_center
+    kin_depth_lift: false
+    kin_mechanics_estimator: aligned_peak_finite_difference
+    kin_event_alignment_tolerance_frames: 5
+    kin_event_min_neighbor_ratio: 0.5
+    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/poses.npy
+    kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    kin_unity_object_masses_json: reference/artifacts/object_masses.json
+    kin_plane_calibration_json: reference/artifacts/plane_calibration.json
+evaluator_lock:
+  code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
+  evaluator_fingerprint: 2fe54f7767cbc9c309a7b10e7321c2a1
+  release_id: wmeval-lite-v1
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}

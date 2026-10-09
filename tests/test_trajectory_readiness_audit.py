@@ -15,10 +15,16 @@ SPEC.loader.exec_module(MODULE)
 
 def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
     result = MODULE.inventory(MODULE.DEFAULT_CASES)
-    assert result["case_count"] == 19
+    assert result["case_count"] == 33
     by_id = {row["case_id"]: row for row in result["cases"]}
     assert by_id["RacingCar/prompt_third"]["status"] == "ready"
-    assert "kinematics_mechanics" in by_id["RacingCar/prompt_third"]["dimensions"]
+    # Table 4/7 cells are first-class Lite cases with compiled trajectories
+    # (numeric schedule + Project Genie browser program in actions.jsonl).
+    for case_id in ("RacingCar/kinematics_third", "WanderingGarden/scene_360_in"):
+        assert by_id[case_id]["effective_status"] == "native_machine_readable_ready"
+        assert by_id[case_id]["backend_readiness"]["project_genie_browser"] == "native_executable_ready"
+    assert "kinematics_mechanics" in by_id["RacingCar/kinematics_third"]["dimensions"]
+    assert "kinematics_mechanics" not in by_id["RacingCar/prompt_third"]["dimensions"]
     assert by_id["WanderingGarden/scene_first"]["status"] == "underspecified"
     assert (
         by_id["WanderingGarden/scene_first"]["effective_status"]
@@ -40,17 +46,17 @@ def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
         == "supplemental_reconstruction_ready"
     )
     assert result["effective_status_counts"] == {
-        "native_machine_readable_ready": 15,
+        "native_machine_readable_ready": 29,
         "supplemental_reconstruction_ready": 4,
     }
     assert result["backend_readiness_counts"] == {
         "unity_or_numeric_evaluator": {
-            "native_numeric_ready": 15,
+            "native_numeric_ready": 29,
             "supplemental_numeric_ready": 3,
             "supplemental_semantic_numeric_only": 1,
         },
         "project_genie_browser": {
-            "native_executable_ready": 9,
+            "native_executable_ready": 23,
             "not_machine_executable": 7,
             "supplemental_executable_ready": 3,
         },

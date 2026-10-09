@@ -1,0 +1,39 @@
+schema_version: 2
+case_id: BilliardGame/scene_perturb_out
+scene: BilliardGame
+display_name: BilliardGame table7 perturb_out
+prompt: A carom-billiard table contains a white cue ball, a yellow ball, and a red
+  ball on dark gray felt bordered by light rails with diamond sight markers. The white
+  cue ball is the persistent target object. The initial Unity conditioning view is
+  outward-facing away from the scene's designated target objects and anchors. From
+  that orientation, the camera performs the controlled 45-degree camera perturbation
+  used by the paper and then holds its terminal pose.
+perspective: third_person
+modules:
+- environment_object_consistency
+reference:
+  first_frame: reference/ref.png
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: match_reference
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+module_params:
+  environment_object_consistency:
+    eoc_text_prompt: yellow ball.|red ball.
+    eoc_character_prompt: white ball.
+    eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    eoc_unity_poses_npy: reference/artifacts/poses.npy
+    eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+evaluator_lock:
+  code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
+  evaluator_fingerprint: 60ee526a2b68d6469a4830e5678818d4
+  release_id: wmeval-lite-v1
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions: {}

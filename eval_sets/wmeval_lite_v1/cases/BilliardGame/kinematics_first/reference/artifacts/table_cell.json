@@ -1,0 +1,26 @@
+{
+  "character_prompt": "The white cue ball.",
+  "claim_scope": "paper_protocol_reconstruction_not_exact_paper_parity",
+  "dimension": "kinematics_mechanics",
+  "lite_case_id": "BilliardGame/kinematics_first",
+  "orientation_frame_status": null,
+  "paper_orientation": null,
+  "preparation": "billiard_kinematics_capture",
+  "schema_version": 1,
+  "sources": {
+    "action.npy": "553bdc2834b6497e39766193fef895094c616a775f1b969a909e652b096b18a0",
+    "action.npz": "1d7137c3f34a71d90bb9901e81d93bbaab7a8f8e154a04d28acb8fa7ad0f8ae8",
+    "actions.jsonl": "ec2ffb90102f15a523fff760b664d7ca450142acef5913e8be6eb10369527aa2",
+    "actions.txt": "3156ec316d26990218ccdc202ded619123b0ce0fb3a565800734e2fd1447a796",
+    "intrinsics.npy": "90ebd6231de6e876a9c60ba4e64e82c4da0269da8a22950ae7e2bb441075459d",
+    "object_masses.json": "95062978d1d5ff05e7de7d8558564570abc79b103421ac9841e6bc828ea335db",
+    "object_transforms.json": "b24dcc87dd99aeca0e3ffebec7468b175f94d470e4e599ddd5ad1f428b342517",
+    "plane_calibration.json": "37071822cf45baf06a40f40ff00172225f77f7fabe0372fa4ea7a0be258a32fc",
+    "poses.npy": "b2139816bd6f0e92b9b2eebffba81a3e93ab3107d5c6c207e5e5c54a9470b2f2",
+    "ref.png": "897d7efcf48d31d6028b4a2c220f86fc7ff8832241fa2f3079b2e46646ba7fa6",
+    "reference.mp4": "09d1cec34d90c8763f84421f1d6d010a93cfe71a8488a73ae8c1b5d87027d351",
+    "trajectory.yaml": "e8c4c6b02b960f02c170ebc574e8c40b6a39492e4652f7009740d96abb2c8a39"
+  },
+  "table_cell": "table4/BilliardGame/first",
+  "trajectory_id": "table4.billiard_game.first_person_ball_wasd_v1"
+}
