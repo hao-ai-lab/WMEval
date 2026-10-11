@@ -27,6 +27,11 @@ trajectory.yaml, without substituting a yaw-only turn or stretching time:
   model revision is 6fc824ffc338d64c97c77e2eb8c0f4cfc24d82bd. Run 20 steps,
   full BF16, two GPUs with DiT/T5 FSDP and Ulysses size 2. The no-UI wrapper
   only disables the keyboard/camera diagnostic overlay.
+  Upstream converts the sampled poses to frame-relative transforms and
+  normalizes translation by the maximum step norm. The bundle records the
+  intended metre-scale geometry; model conditioning uses those native
+  normalized units. This native processing is retained and recorded, rather
+  than claiming that the model enforces an absolute two-metre radius.
 - HY WorldPlay: 64 latent poses spaced at 4/24 seconds for 253 native frames
   at 24 fps. Inputs are OpenCV C2W and seed intrinsics, consumed by native
   pose_to_input. Pose samples after t=10 hold the endpoint and are excluded
@@ -93,6 +98,10 @@ workspace environment. `tools/prepare_lighting_evaluator.py` downloads the
 case's locked GroundingDINO and SAM2 large weights, verifies SHA-256 and binds
 this task's dedicated HF cache to those revisions. Set HF_HUB_OFFLINE=1 and
 TRANSFORMERS_OFFLINE=1 for all scoring calls. Preserve evaluator provenance.
+When making a small source archive, include sam2/, setup.py, pyproject.toml,
+README.md, MANIFEST.in and LICENSE. MANIFEST.in includes the YAML configs in
+the installed wheel. Check the large-model Hydra config and execute the CUDA
+connected-components kernel before accepting the installation.
 
 Each candidate's receipt supplies `lighting_time_mapping`: schema version 1,
 native fps, canonical_zero_frame and video_sha256. Lite verifies CFR timestamps

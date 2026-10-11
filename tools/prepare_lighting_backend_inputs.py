@@ -65,6 +65,11 @@ def prepare(case_directory: Path, output: Path, backend: str) -> dict:
                'seed_preprocessing': 'preserve square aspect ratio; upstream resolution resize only',
                'terminal_hold_after_sec': 10 if times[-1]>10 else None,
                'files': {name: sha256(output/name) for name in files}}
+    if backend == 'lingbot':
+        receipt['native_translation_normalization'] = (
+            'Pinned upstream samples every fourth pose, computes frame-relative transforms, '
+            'and divides translations by their maximum norm. Input geometry remains in '
+            'metres; encoded translation uses upstream normalized units. No response correction.')
     (output / 'adapter_receipt.json').write_text(json.dumps(receipt, indent=2)+'\n')
     return receipt
 

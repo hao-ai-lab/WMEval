@@ -487,6 +487,7 @@ def run_suite(
         )
         if input_fingerprints.get(key) is not None:
             row['candidate_input_fingerprint'] = input_fingerprints[key]
+            row['required_repeats'] = 5
         append_row(results_path, row)
         emit(
             f"[wmeval-lite] {dimension.dimension_id}/{case.case_id}/"
