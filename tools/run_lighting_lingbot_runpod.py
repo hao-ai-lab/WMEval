@@ -85,7 +85,7 @@ def main() -> None:
                 print(json.dumps({'seed':seed,'status':'verified_existing'}),flush=True)
                 continue
             raise FileExistsError(f'existing incomplete run requires explicit diagnosis: {output}')
-        command=[str(Path(sys.executable).parent/'torchrun'),'--nproc_per_node=2',str(wrapper),
+        command=[sys.executable,'-m','torch.distributed.run','--nproc_per_node=2',str(wrapper),
                  '--task','i2v-A14B','--size','480*832','--ckpt_dir',str(model),
                  '--image',str(args.case/case['reference']['first_frame']),
                  '--action_path',str(inputs),'--dit_fsdp','--t5_fsdp','--ulysses_size','2',
