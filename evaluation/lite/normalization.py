@@ -14,10 +14,43 @@ LIQUID_NORM_FPS = 16
 
 # ffmpeg can hang on malformed inputs; bound every normalization call.
 DEFAULT_NORMALIZATION_TIMEOUT_SEC = 600.0
+LIGHTING_NORM_FPS = 12
 
 
 class NormalizationError(RuntimeError):
     """Candidate video normalization (ffmpeg) failed."""
+
+
+def normalize_lighting_video(
+    source: str | Path, destination: str | Path, *,
+    timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
+) -> dict[str, float]:
+    """Sample at 12 fps using timestamps, preserving size and playback speed.
+
+    Apply BEFORE GroundingDINO/SAM tracking. A rounded frame stride does not
+    normalize 16/17/20-fps inputs to 12 fps. Lossless encoding avoids adding
+    another lossy compression pass to shadow-mask measurements.
+    """
+    destination = Path(destination)
+    if Path(source).resolve() == destination.resolve():
+        raise NormalizationError("normalization must not overwrite the source video")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
+               "-vf", f"setpts=PTS-STARTPTS,fps=fps={LIGHTING_NORM_FPS}:start_time=0:round=near",
+               "-an", "-c:v", "libx264", "-crf", "0", "-pix_fmt", "yuv420p",
+               "-movflags", "+faststart", str(destination)]
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True, timeout=timeout_sec)
+        actual = _probe(destination, timeout_sec=timeout_sec)
+    except FileNotFoundError as exc:
+        raise NormalizationError("ffmpeg/ffprobe executable not found") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise NormalizationError(f"ffmpeg/ffprobe timed out normalizing {source}") from exc
+    except subprocess.CalledProcessError as exc:
+        raise NormalizationError(f"lighting normalization failed: {(exc.stderr or '').strip()}") from exc
+    if abs(actual["fps"] - LIGHTING_NORM_FPS) > 1e-6:
+        raise NormalizationError(f"expected {LIGHTING_NORM_FPS} fps, got {actual['fps']}")
+    return actual
 
 
 def _scale_fps_filter() -> str:

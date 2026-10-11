@@ -1,0 +1,25 @@
+diagnostic_schema_version: 1
+trajectory_id: lighting.camera.look_at_orbit_v2
+kind: look_at_orbit
+target: camera
+world_frame: right_handed_y_up
+camera_frame: opencv_c2w
+sun: fixed
+status: diagnostic_unvalidated
+parameters:
+  duration: 10.0
+  fps: 16.0
+  radius: 2.0
+  height: 1.6
+  target_height: 0.75
+  degrees: 360.0
+  vertical_fov: 60.0
+  width: 832
+  image_height: 480
+  seed_aspect: 1.0
+notes:
+  - Positive angle follows the right-hand rule around +Y; CCW viewed from above.
+  - Camera starts on +Z and always looks at the table centre.
+  - Height, scale and FOV are nominal; they are not calibrated from the seed image.
+  - Intrinsics are encoded in LingBot's 832x480 convention for the square seed.
+  - Do not replace the locked paper action with this diagnostic until validated.

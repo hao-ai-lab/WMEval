@@ -290,7 +290,7 @@ BeamDomino causal / causal_glancing / causal_direct_strike
 
 ## 6. Lighting & shading — `lighting_shading`
 
-**Owner:** _TBD_ · **Paper:** SunRisesAndSets table · **Lite cases:**
+**Owner:** Forrest Dai · **Paper:** SunRisesAndSets table · **Lite cases:**
 SunRisesAndSets/lighting (first person, fixed sun, walking orbit; reference-free)
 
 **Run it for a new model:** the single path with `--dimensions lighting_shading`. Key files:
@@ -305,7 +305,22 @@ SunRisesAndSets/lighting (first person, fixed sun, walking orbit; reference-free
 | Model | In paper | Status |
 | --- | --- | --- |
 | Project Genie, LingBot-World, Matrix-Game 3.0, HY-WorldPlay, Waypoint-1.5 | ✅ | ✅ reproduces the paper (rollouts on a Modal volume) |
-| Matrix-Game 2.0 | ✅ | ⚠️ reproduces the paper except Scene Retention |
+| Matrix-Game 2.0 | ✅ | ✅ native Scene Retention is 22.916%; the old 68.76% paper value was erroneous (see suite note and pinned baseline) |
+
+2026-10-10 evidence: all 30 native videos have been checksum-verified against
+`WMEval-lighting-repro:MANIFEST.json` and pinned with native frame metadata and
+six metrics in `baselines/lighting_paper_native.json`. The 2026-10-09 Lite run
+matches the saved September rows on all 180 metric values. Genie supplies five
+independent hosted runs, with no recorded numeric generation seeds. This
+verifies historical rescoring, not regeneration under a matched camera orbit.
+HF publication remains open.
+
+`lighting_fps12` now resamples timestamps before tracking; the existing case
+still uses its native paper protocol until the new baseline is ready. The
+earlier rounded-stride scratch comparison was not a common-12-fps comparison.
+Explicit look-at orbit and Waypoint fallback diagnostics, including control
+receipts and observed limitations, are documented in
+`experiments/lighting_orbit_diagnostics/README.md` at the repository root.
 
 - [ ] **One semantic orbit trajectory** compiled per backend, replacing `actions_per_model.json`.
 - [ ] **Normalize fps** (or report jitter per second).
