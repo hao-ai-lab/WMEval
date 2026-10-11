@@ -119,22 +119,28 @@ trajectory_support:
         evidence: eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/unity_qa.json
       lingbot_world_cam:
         status: supported
-        reason: Pinned Cam source accepts per-frame C2W and intrinsics; a 161-pose complete orbit was accepted in the diagnostic. Generation distortion remains measured model behavior.
+        reason: Pinned Cam source accepts per-frame C2W and intrinsics; all five formal seeds accepted the 161-pose complete orbit and completed Lite scoring. Generation distortion remains measured model behavior.
         source_revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6
-        evidence: experiments/lighting_orbit_diagnostics/results.json
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
       matrix_game_2:
         status: pending_calibration
         reason: Joint translation and yaw input units require a frozen full-orbit adapter; Table 7 yaw gains alone are insufficient.
       matrix_game_3:
-        status: pending_calibration
-        reason: Joint translation and yaw input units require a frozen full-orbit adapter; Table 7 yaw gains alone are insufficient.
+        status: supported
+        reason: The pinned native pose path receives the full analytic C2W orbit with a fixed basis and intrinsics conversion; auxiliary keys use the audited native units. All five formal seeds and Lite scoring completed without response correction.
+        source_revision: 756776d516233027631008761d4d40ddaea3e23a
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
       waypoint:
         status: pending_calibration
-        reason: Joint D and continuous mouse inputs were accepted; native speed/yaw mapping remains unverified. Out-of-view diagnostic outputs do not establish unsupported capability.
+        reason: Four independent native probes completed with bounded-startup compilation. One translation fit failed the fixed span/R2 threshold; the other passed, so a repeat-consistent translation mapping remains unqualified. Generated scene errors do not establish unsupported capability.
         source_revision: b3f1e725b222679a517632918cc78bba0c9fa433
+        evidence: experiments/lighting_orbit_v2/results/waypoint_round2_calibration.json
       hy_worldplay:
-        status: pending_adapter
-        reason: Native pose_to_input accepts OpenCV C2W plus K. The analytic adapter supplies 64 latent poses for 253 frames at 24 fps, holding the endpoint after 10 seconds; execution and required checkpoint access remain unverified.
+        status: supported
+        reason: Pinned native pose_to_input consumed 64 analytic C2W poses and K for 253 frames at 24 fps; all five formal seeds and Lite scoring completed. Full action state loaded strictly, native four-step AR/torch_causal attention and BF16 retained, endpoint held after 10 seconds.
+        source_revision: 1588e1336e842b03b0a7860c654ebd7c46bb065e
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
       project_genie:
         status: pending_calibration
-        reason: Hosted translation plus turning and their timing need validation; missing access or quotas will be recorded as blocked_access.
+        reason: Independent D and Left response fits passed; five frozen 40-cycle joint-input repeats were generated, downloaded, matched and scored. Identical input spans map to 8.9583-10.1667 native seconds, so exact native timing and camera closure remain unqualified. Diagnostic scores are excluded from formal protocol coverage.
+        evidence: experiments/lighting_orbit_v2/results/genie_diagnostic_summary.json

@@ -27,6 +27,7 @@ def main():
     p.add_argument('--model', type=Path, required=True)
     p.add_argument('--vae', type=Path, required=True)
     p.add_argument('--batch-spec', type=Path, required=True)
+    p.add_argument('--compile-profile', choices=['native', 'bounded_startup'], default='native')
     args = p.parse_args()
     source_manifest = json.loads((args.source / 'source_provenance.json').read_text())
     if source_manifest['revision'] != 'b3f1e725b222679a517632918cc78bba0c9fa433':
@@ -42,7 +43,21 @@ def main():
             raise ValueError(f'changed Waypoint checkpoint: {name}')
     if sha256(args.vae) != '806f78a06266ba58bb982d8680add1a249aefcc96237e8a0aa60298617744682':
         raise ValueError('wrong pinned TAEHV1.5 checkpoint')
-    from world_engine import WorldEngine, CtrlInput
+    # Keep the native model and FlexAttention graph, while avoiding the long
+    # exhaustive matmul autotuning pass on a fresh GPU/network-volume cache.
+    native_compile = torch.compile
+    compile_options = {'max_autotune': False, 'coordinate_descent_tuning': False,
+                       'triton.cudagraphs': False}
+    if args.compile_profile == 'bounded_startup':
+        def bounded_compile(model=None, **kwargs):
+            kwargs.pop('mode', None)
+            kwargs['options'] = {**kwargs.get('options', {}), **compile_options}
+            return native_compile(model, **kwargs)
+        torch.compile = bounded_compile
+    try:
+        from world_engine import WorldEngine, CtrlInput
+    finally:
+        torch.compile = native_compile
     import world_engine
     installed = Path(world_engine.__file__).resolve().parent
     for name, expected in source_manifest['files'].items():
@@ -86,6 +101,8 @@ def main():
             'dependency_versions': dependencies, 'native_fps': 60, 'frames_per_step': 4,
             'canonical_zero_frame': 4, 'native_frames': 4 + 4 * len(keys),
             'native_scheduler_sigmas': list(engine.model_cfg.scheduler_sigmas), 'quantization': None,
+            'compile_profile': args.compile_profile,
+            'compile_option_overrides': compile_options if args.compile_profile == 'bounded_startup' else {},
             'text_conditioning': None, 'model_state': 'Native reset clears KV/streaming VAE/timestamps per seed; eval weights reused.'}
         receipt_path.write_text(json.dumps(receipt, indent=2) + '\n')
         start = time.monotonic()

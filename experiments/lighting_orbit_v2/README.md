@@ -35,7 +35,16 @@ trajectory.yaml, without substituting a yaw-only turn or stretching time:
 - HY WorldPlay: 64 latent poses spaced at 4/24 seconds for 253 native frames
   at 24 fps. Inputs are OpenCV C2W and seed intrinsics, consumed by native
   pose_to_input. Pose samples after t=10 hold the endpoint and are excluded
-  from scoring. Runtime/checkpoint verification is still pending.
+  from scoring. The pinned source is 1588e1336e842b03b0a7860c654ebd7c46bb065e
+  and action model is f4c29235647707b571479a69b569e4166f9f5bf8. All five
+  formal seeds completed native four-step AR generation and Lite scoring.
+  Strict loading verified all 1,905 tensors and 8,557,933,856 parameters;
+  use native BF16, two GPUs with sequence parallelism, torch_causal attention,
+  no quantization, super-resolution, prompt rewriting or compilation.
+  `tools/prepare_hy_runtime.py` records the pinned text/vision/Glyph assets;
+  the native vision path must include `vision_encoder/siglip/`.
+  `tools/run_lighting_hy_runpod.py` enforces the worker deadline and caches
+  the native pipeline across the five seeds, resetting inference state each time.
 - MG3: 177 native frames at 17 fps, four clips. A fixed reflected world basis
   maps canonical +Y-up into native XY-floor/+Z-up C2W, preserving every
   camera-relative transform. The pose pipeline receives the exact orbit;
@@ -44,12 +53,35 @@ trajectory.yaml, without substituting a yaw-only turn or stretching time:
   without claiming literal metre-scale output. The square seed stays square
   (928x928 for the 704x1280 area limit), with K transformed to preserve 60°.
   Use the pinned Matrix source 756776d516233027631008761d4d40ddaea3e23a and
-  checkpoint 382aa382a03cec057360755aa72c7735025770bb. Runtime verification
-  is pending; the numeric adapter's geometry and timing tests pass.
-- MG2, Waypoint and hosted Genie: full translation plus look-at adapters
-  are still pending. Existing Table 7 yaw calibrations do not establish a
+  checkpoint 382aa382a03cec057360755aa72c7735025770bb. All five fixed seeds
+  completed native generation and Lite scoring. Verified video hashes and
+  per-seed metrics are in `results/run_summary.json`.
+- MG2 and Waypoint: repeat-consistent translation calibration remains
+  unqualified. Four Waypoint probes completed in the native Torch 2.11
+  environment with bounded-startup compilation; one D probe failed the fixed
+  fit threshold. `results/waypoint_round2_calibration.json` retains that evidence.
+  Existing Table 7 yaw calibrations do not establish a
   metric-space orbit. An input interface's poor generated video remains a
   measured outcome; it does not make that backend unsupported.
+
+Hosted Genie has five completed independent diagnostic repeats. The frozen
+program uses forty 323-ms wall-clock cycles: simultaneous D+Left for 114 ms,
+D for 112 ms, then release until the absolute cycle deadline. It targets
+0.25 canonical seconds and 9 degrees per cycle, with a fixed 2.25-second
+released tail outside the action. Compile it with
+`tools/prepare_lighting_genie_controls.py --output <directory>`.
+All runs use the same prompt, first-person mode and 1280x704 letterboxed seed;
+numeric generation seeds are unavailable, so actual hosted export IDs are recorded.
+Five ordered screenshot checkpoints verify each video association. The same
+input spans 8.9583-10.1667 native seconds across repeats: HTML media currentTime
+and the remaining-time bar include waiting and cannot supply a native frame clock.
+The generated camera also approaches the tabletop; a complete two-metre
+look-at closure is not established. These are completed diagnostic runs, with
+first-ten-native-second Lite scores in `results/genie_diagnostic_summary.json`,
+excluded from formally qualified protocol coverage. The first frozen repeat is
+shown in `results/genie_first_repeat_contact_sheet.jpg` without output selection.
+No output retiming,
+quality-based seed replacement or post-hoc trajectory correction was applied.
 
 Independent key/mouse calibration uses `tools/prepare_lighting_key_controls.py`
 with fixed calibration seeds 1001 and 1002, before formal seeds are generated.
@@ -128,6 +160,12 @@ expiry. Do not leave an idle GPU attached while doing local work.
 
 ## Scoring and release checks
 
+LingBot and MG3 currently have complete five-seed results in
+`results/run_summary.json`. This is partial coverage of the six-backend release;
+the remaining pending backends keep the new case inactive. The report records
+the first valid native video and its normalized hash for each seed, including
+poor model outcomes. Calibration probes are excluded from formal aggregation.
+
 Install SAM2 source at 2b90b9f5ceec907a1c18123530e92e794ad901a4 in the
 workspace environment. `tools/prepare_lighting_evaluator.py` downloads the
 case's locked GroundingDINO and SAM2 large weights, verifies SHA-256 and binds
@@ -147,7 +185,7 @@ Short, VFR and mismatched-hash candidates fail instead of being padded.
 Generation coverage is not complete until all required backends have five
 valid runs (Genie has five independent hosted run IDs rather than invented
 numeric seeds), or a demonstrated unsupported interface is explicitly N/A.
-Run the same bundles with `tools/run_wmeval_lite.py --dimensions lighting_shading`.
+Run the same bundles with `tools/run_wmeval_lite.py run --dimensions lighting_shading`.
 Compare a fresh result and a resume; invalidate stale candidate/evaluator hashes.
 Do not calculate a complete-model aggregate from fewer than five successful
 seeds, or represent missing results as zero. Switch the active lighting case

@@ -30,9 +30,11 @@ def finalize_shard_indices(output: Path, manifest: dict) -> None:
             continue
         path = output / name
         index = json.loads(path.read_text())
-        prefix = str(Path(name).parent)
+        prefix = Path(name).parent
         shards = sorted(set(index['weight_map'].values()))
-        entries = [manifest['files'][f'{prefix}/{shard}'] for shard in shards]
+        if any(Path(shard).is_absolute() or '..' in Path(shard).parts for shard in shards):
+            raise ValueError('unsafe checkpoint shard path')
+        entries = [manifest['files'][str(prefix / shard)] for shard in shards]
         if not all(entry['conversion'] == 'float32_to_bfloat16' for entry in entries):
             continue
         index.setdefault('metadata', {})['total_size'] = sum(entry['tensor_data_bytes'] for entry in entries)
@@ -69,12 +71,19 @@ def main() -> None:
             'model_revision': '382aa382a03cec057360755aa72c7735025770bb',
             'source_revision': '756776d516233027631008761d4d40ddaea3e23a',
             'prefixes': ('base_distilled_model/',)},
+        'tencent/HY-WorldPlay': {
+            'model_revision': 'f4c29235647707b571479a69b569e4166f9f5bf8',
+            'source_revision': '1588e1336e842b03b0a7860c654ebd7c46bb065e',
+            # Native create_pipeline strictly loads the complete action state,
+            # then casts the transformer to BF16 before inference.
+            'prefixes': ('ar_distilled_action_model/',)},
     }
     audit = audited.get(args.repo)
     if args.native_bf16_dit and (audit is None or revision != audit['model_revision']):
         parser.error('requires an audited repository and its fixed native BF16 model revision')
     # Only select runtime inputs; do not download demo media or other models.
-    files = [f for f in row['files'] if f['path'].endswith(('.json', '.yaml', '.yml', '.pth', '.safetensors', '.model'))]
+    files = [f for f in row['files'] if f['path'].endswith(
+        ('.json', '.yaml', '.yml', '.pth', '.pt', '.bin', '.txt', '.safetensors', '.model'))]
     output.mkdir(parents=True, exist_ok=True)
     temporary.mkdir(parents=True, exist_ok=True)
     manifest_path = output / 'checkpoint_provenance.json'

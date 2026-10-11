@@ -322,6 +322,20 @@ Explicit look-at orbit and Waypoint fallback diagnostics, including control
 receipts and observed limitations, are documented in
 `experiments/lighting_orbit_diagnostics/README.md` at the repository root.
 
+The complete 10-second look-at orbit is now bundled as the inactive candidate
+`SunRisesAndSets/lighting_orbit_v2`, with Unity geometry/closure QA and explicit
+12-fps timestamp normalization. LingBot, Matrix-Game3 and HY-WorldPlay each have five formal
+seeds (42,1,2,3,4), verified native/normalized hashes and complete Lite scores in
+`experiments/lighting_orbit_v2/results/run_summary.json`. MG2/Waypoint still
+need repeat-consistent translation calibration. Genie completed five frozen
+40-cycle joint-input repeats with native downloads, screenshot association
+and Lite diagnostic scores. Its input spans 8.9583-10.1667 native seconds,
+so precise timing and full camera closure remain unqualified; diagnostic
+evidence is in `results/genie_diagnostic_summary.json` under that experiment.
+These pending states are incomplete work, never N/A. See
+`experiments/lighting_orbit_v2/README.md` and the exact-trajectory capability
+registry in `experiments/tables_4_7/action_backends.yaml`.
+
 - [ ] **One semantic orbit trajectory** compiled per backend, replacing `actions_per_model.json`.
 - [ ] **Normalize fps** (or report jitter per second).
 - [ ] **Bundle or pin the six rollouts** in the HF baseline set.
