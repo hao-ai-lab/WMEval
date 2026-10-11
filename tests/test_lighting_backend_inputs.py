@@ -4,6 +4,8 @@ from pathlib import Path
 import numpy as np
 
 from tools.prepare_lighting_backend_inputs import prepare
+from evaluation.camera_orbit import orbit_poses
+import yaml
 
 CASE = Path(__file__).resolve().parents[1]/'eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2'
 
@@ -29,3 +31,21 @@ def test_hy_latent_spacing_and_terminal_hold_are_not_time_stretched(tmp_path):
     np.testing.assert_allclose(np.array(rows['15']['extrinsic'])[:3,3],[2,1.6,0],atol=1e-7)
     np.testing.assert_allclose(rows['60']['extrinsic'],rows['63']['extrinsic'],atol=1e-14)
     assert receipt['terminal_hold_after_sec']==10
+
+
+def test_mg3_native_basis_preserves_camera_relative_orbit(tmp_path):
+    receipt = prepare(CASE, tmp_path, 'matrix-game3')
+    data = np.load(tmp_path/'conditioning.npz')
+    times = np.array(json.loads((tmp_path/'native_control_times.json').read_text()))
+    raw = yaml.safe_load((CASE/'reference/artifacts/trajectory.yaml').read_text())
+    canonical = orbit_poses(raw, np.minimum(times, 10))
+    native = data['poses']
+    np.testing.assert_allclose(np.linalg.det(native[:, :3, :3]), -1, atol=1e-12)
+    np.testing.assert_allclose(np.linalg.inv(native[0]) @ native,
+                               np.linalg.inv(canonical[0]) @ canonical, atol=1e-12)
+    assert times[170] == 10 and len(times) == 177
+    np.testing.assert_allclose(native[170:], np.broadcast_to(native[170], (7,4,4)), atol=1e-12)
+    assert not data['keyboard'][170:].any() and not data['mouse'][170:].any()
+    assert set(np.unique(data['keyboard'])) == {0, 1}
+    assert data['keyboard'][:170, 3].sum() == np.floor(170 * receipt['auxiliary_controls']['translation_duty_cycle'])
+    np.testing.assert_allclose(data['mouse'][:170, 1].sum() * 15, -360, rtol=1e-6)

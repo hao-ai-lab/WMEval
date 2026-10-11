@@ -52,6 +52,36 @@ def prepare(case_directory: Path, output: Path, backend: str) -> dict:
                                                      for i,p in enumerate(poses)}, indent=2)+'\n')
         files = ['poses.json']
         convention = 'OpenCV c2w; K from square seed, normalized by upstream pose_to_input'
+    elif backend == 'matrix-game3':
+        fps, frames = 17, 177  # Four native clips: 57 + 3 * 40.
+        times = np.arange(frames, dtype=np.float64) / fps
+        poses = orbit_poses(raw, np.minimum(times, 10))
+        # The native world uses XY as its floor and Z up, with det(R)=-1.
+        # A fixed world-basis change preserves every camera-relative transform.
+        basis = np.array([[0., 0., -1.], [1., 0., 0.], [0., 1., 0.]])
+        native = poses.copy()
+        native[:, :3, :3] = basis @ poses[:, :3, :3]
+        native[:, :3, 3] = (basis @ (poses[:, :3, 3] - poses[0, :3, 3]).T).T
+        keyboard = np.zeros((frames, 6), dtype=np.float32)
+        mouse = np.zeros((frames, 2), dtype=np.float32)
+        moving = times < 10
+        rate = sum(float(s['values']['orbit_phase_rate_deg_s']) *
+                   (float(s['end_sec']) - float(s['start_sec'])) for s in raw['segments']) / 10
+        # Native D moves 0.1235 m per frame; binary auxiliary keys use a
+        # deterministic duty cycle. The explicit poses remain authoritative.
+        duty = abs(np.deg2rad(rate) * raw['geometry']['radius_m'] / fps) / 0.1235
+        if duty > 1:
+            raise ValueError('orbit speed exceeds the audited native auxiliary key speed')
+        index = np.arange(frames)
+        keyboard[moving, 3 if rate >= 0 else 2] = (
+            np.floor((index[moving] + 1) * duty) - np.floor(index[moving] * duty))
+        mouse[moving, 1] = -rate / fps / 15.0
+        np.savez_compressed(output / 'conditioning.npz', poses=native,
+                            keyboard=keyboard, mouse=mouse,
+                            seed_intrinsics=camera_intrinsics(raw, 1024, 1024),
+                            world_basis=basis)
+        files = ['conditioning.npz']
+        convention = 'Native XY-floor/Z-up c2w, det(R)=-1; fixed reflected world basis from canonical OpenCV c2w'
     else:
         raise ValueError(f'no verified numeric-pose interface: {backend}')
     (output / 'native_control_times.json').write_text(json.dumps(times.tolist())+'\n')
@@ -70,6 +100,14 @@ def prepare(case_directory: Path, output: Path, backend: str) -> dict:
             'Pinned upstream samples every fourth pose, computes frame-relative transforms, '
             'and divides translations by their maximum norm. Input geometry remains in '
             'metres; encoded translation uses upstream normalized units. No response correction.')
+    if backend == 'matrix-game3':
+        receipt['native_translation_normalization'] = (
+            'Pinned upstream interpolates latent poses, computes frame-relative transforms, '
+            'and divides translations by their maximum norm; no response correction.')
+        receipt['auxiliary_controls'] = {'native_translation_m_per_key_frame': 0.1235,
+                                        'native_yaw_deg_per_mouse_unit': 15.0,
+                                        'translation_duty_cycle': duty,
+                                        'explicit_poses_authoritative': True}
     (output / 'adapter_receipt.json').write_text(json.dumps(receipt, indent=2)+'\n')
     return receipt
 
@@ -78,7 +116,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--case', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--backend', choices=['lingbot','hy-worldplay'], required=True)
+    parser.add_argument('--backend', choices=['lingbot','hy-worldplay','matrix-game3'], required=True)
     args = parser.parse_args()
     print(json.dumps(prepare(args.case, args.output, args.backend), indent=2))
 

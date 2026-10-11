@@ -28,6 +28,75 @@ DEPENDENCIES = {'torch':'2.8.0', 'flash-attn':'2.8.3', 'transformers':'4.51.3',
                 'diffusers':'0.33.1', 'numpy':'1.26.4', 'scipy':'1.15.3'}
 
 
+def run_batch(args, root, source, model, case, adapter, hardware, dependencies, deadline):
+    """Keep weights resident while native generate resets seed-local state."""
+    parent = root/'outputs/lighting_orbit_v2/LingBot'
+    pending = []
+    for seed in args.seeds:
+        output = parent/f'seed_{seed}'
+        output.mkdir(parents=True, exist_ok=True)
+        path, video = output/'receipt.json', output/'video.mp4'
+        if path.exists():
+            prior = json.loads(path.read_text())
+            if prior.get('status') == 'completed' and prior.get('adapter') == adapter and video.is_file() and prior.get('video_sha256') == sha256(video):
+                print(json.dumps({'seed':seed, 'status':'verified_existing'}), flush=True)
+                continue
+            raise FileExistsError(f'existing incomplete run requires explicit diagnosis: {output}')
+        pending.append({'seed':seed, 'receipt':str(path), 'video':str(video)})
+    if not pending:
+        return
+    batch = parent/('batch_'+datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ'))
+    batch.mkdir()
+    spec = batch/'batch_spec.json'
+    spec.write_text(json.dumps({'schema_version':1, 'runs':pending}, indent=2)+'\n')
+    wrapper = Path(__file__).parent/'model_adapters/lingbot_batch_no_ui.py'
+    command = [sys.executable, '-m', 'torch.distributed.run', '--nproc_per_node=2', str(wrapper),
+               '--batch-spec',str(spec), '--task','i2v-A14B', '--size','480*832', '--ckpt_dir',str(model),
+               '--image',str(args.case/case['reference']['first_frame']), '--action_path',str(root/'inputs/lingbot-orbit-v2'),
+               '--dit_fsdp','--t5_fsdp','--ulysses_size','2','--frame_num','161','--sample_steps','20',
+               '--base_seed',str(pending[0]['seed']), '--prompt',case['prompt']]
+    for item in pending:
+        path = Path(item['receipt'])
+        path.write_text(json.dumps({'schema_version':1, 'status':'queued', 'seed':item['seed'],
+            'model':'LingBot', 'source_revision':SOURCE_REVISION, 'model_revision':MODEL_REVISION,
+            'adapter':adapter, 'command':command, 'hardware':hardware, 'dependency_versions':dependencies,
+            'python_version':sys.version, 'checkpoint_manifest_sha256':sha256(model/'checkpoint_provenance.json'),
+            'runner_sha256':sha256(Path(__file__)), 'wrapper_sha256':sha256(wrapper),
+            'no_ui_wrapper_sha256':sha256(wrapper.with_name('lingbot_no_ui.py')),
+            'batch_spec_sha256':sha256(spec), 'shared_model_allocation':True,
+            'checkpoint_io':'Official Diffusers disable_mmap path, scoped shim for 0.33.1 sharded dispatch; identical stored tensors.',
+            'seed_state':'Native generate recreates noise generator and scheduler per call; eval weights reused.',
+            'generation_log':str(batch/'generation.log')}, indent=2)+'\n')
+        (path.parent/'generation.log').symlink_to(Path('..')/batch.name/'generation.log')
+    process = None
+    try:
+        remaining = (deadline-datetime.now(timezone.utc)).total_seconds()
+        if remaining <= 60:
+            raise TimeoutError('generation deadline reached; release the Pod')
+        with (batch/'generation.log').open('w') as log:
+            process = subprocess.Popen(command, cwd=source, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+            code = process.wait(timeout=remaining-30)
+        if code != 0:
+            raise RuntimeError(f'batched generation failed: {batch}/generation.log')
+        for item in pending:
+            receipt = json.loads(Path(item['receipt']).read_text())
+            if receipt['status'] != 'completed' or receipt['video_sha256'] != sha256(Path(item['video'])):
+                raise ValueError(f'incomplete or mismatched batch receipt: {item["seed"]}')
+            print(json.dumps({'seed':item['seed'], 'status':'completed', 'elapsed_sec':receipt['elapsed_sec']}), flush=True)
+    except BaseException as error:
+        if process is not None and process.poll() is None:
+            os.killpg(process.pid, signal.SIGTERM)
+            try: process.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                os.killpg(process.pid, signal.SIGKILL); process.wait()
+        for item in pending:
+            path = Path(item['receipt']); receipt = json.loads(path.read_text())
+            if receipt['status'] in {'running','queued'}:
+                receipt.update(status='failed', error=f'{type(error).__name__}: {error}')
+                path.write_text(json.dumps(receipt, indent=2)+'\n')
+        raise
+
+
 def main() -> None:
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--workspace',type=Path,default=Path('/workspace/WMEval-lighting-orbit'))
@@ -71,6 +140,11 @@ def main() -> None:
     hardware=subprocess.check_output(['nvidia-smi','--query-gpu=name,memory.total,driver_version','--format=csv,noheader'],text=True)
     os.environ['LINGBOT_SOURCE']=str(source)
     os.environ['OMP_NUM_THREADS']='4'
+    if len(set(args.seeds)) != len(args.seeds):
+        parser.error('seeds must be distinct')
+    if len(args.seeds) > 1:
+        run_batch(args, root, source, model, case, adapter, hardware, dependencies, deadline)
+        return
     for seed in args.seeds:
         remaining=(deadline-datetime.now(timezone.utc)).total_seconds()
         if remaining<=60:

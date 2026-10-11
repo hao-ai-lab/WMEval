@@ -36,7 +36,17 @@ trajectory.yaml, without substituting a yaw-only turn or stretching time:
   at 24 fps. Inputs are OpenCV C2W and seed intrinsics, consumed by native
   pose_to_input. Pose samples after t=10 hold the endpoint and are excluded
   from scoring. Runtime/checkpoint verification is still pending.
-- MG2, MG3, Waypoint and hosted Genie: full translation plus look-at adapters
+- MG3: 177 native frames at 17 fps, four clips. A fixed reflected world basis
+  maps canonical +Y-up into native XY-floor/+Z-up C2W, preserving every
+  camera-relative transform. The pose pipeline receives the exact orbit;
+  its auxiliary D keys use the native 0.1235 m/frame duty cycle and mouse
+  yaw uses 15 degrees/unit. Native normalization retains the nominal geometry
+  without claiming literal metre-scale output. The square seed stays square
+  (928x928 for the 704x1280 area limit), with K transformed to preserve 60°.
+  Use the pinned Matrix source 756776d516233027631008761d4d40ddaea3e23a and
+  checkpoint 382aa382a03cec057360755aa72c7735025770bb. Runtime verification
+  is pending; the numeric adapter's geometry and timing tests pass.
+- MG2, Waypoint and hosted Genie: full translation plus look-at adapters
   are still pending. Existing Table 7 yaw calibrations do not establish a
   metric-space orbit. An input interface's poor generated video remains a
   measured outcome; it does not make that backend unsupported.
@@ -86,6 +96,14 @@ python tools/run_lighting_lingbot_runpod.py \
 
 The runner records fixed source/model revisions, conditioning and input
 hashes, dependency versions, hardware, command, elapsed time and video hash.
+Multi-seed runs keep one immutable model allocation and distributed group.
+Each native generate call recreates the seeded noise generator and scheduler;
+completed receipts remain intact if a later seed fails. Shared generation
+logs and the batch specification are linked from every receipt. On network
+storage, the batch wrapper uses the official Diffusers disable_mmap load path.
+Diffusers 0.33.1 omits this flag in its sharded dispatch, so a scoped wrapper
+for this checkpoint forwards it. Stored tensors, model settings and sampling
+are unchanged; record the full shard hash and tensor-equivalence check.
 It kills the complete torchrun process group when the supplied deadline
 expires. Pod lifecycle is managed separately: preserve /workspace and
 terminate the generation Pod immediately on completion, failure or budget
