@@ -51,6 +51,23 @@ trajectory.yaml, without substituting a yaw-only turn or stretching time:
   metric-space orbit. An input interface's poor generated video remains a
   measured outcome; it does not make that backend unsupported.
 
+Independent key/mouse calibration uses `tools/prepare_lighting_key_controls.py`
+with fixed calibration seeds 1001 and 1002, before formal seeds are generated.
+MG2 preserves the complete square seed as a 352x352 image centred in its native
+640x352 canvas; K is transformed by the same scale and 144-pixel horizontal
+offset. The probes apply D or mouse-yaw separately for two seconds. The native
+model exports at 12 fps, despite a different framerate advertised elsewhere.
+`tools/analyze_lighting_control_probe.py` measures metric camera response using
+seed mesh points, forward/backward optical flow and robust PnP. It rejects
+insufficient correspondence fits instead of assigning unsupported status.
+The portable mesh points in `calibration_assets/` were obtained by
+`tools/unity/LightingSeedGeometry.cs` from the original static scene's exact
+MeshFilter triangles. Their seed rerender has MAE=0, and maximum reprojection
+error is 0.00252 pixels. Alpha texture/skinned-mesh mismatches must be rejected.
+These assets are independent calibration evidence, not formal output correction.
+Keep unresolved response measurements pending; only accepted independent gains
+can compile a full D-plus-yaw schedule for formal generation.
+
 `experiments/tables_4_7/action_backends.yaml` tracks capability for this exact
 trajectory. Pending adapter/calibration/access is incomplete work, not N/A.
 Only a demonstrated interface inability qualifies as unsupported.

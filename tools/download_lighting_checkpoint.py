@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fetch pinned checkpoint files, optionally storing native BF16 DiT weights.
 
-FP32-to-BF16 conversion matches LingBot's explicit torch_dtype=bfloat16 load;
+FP32-to-BF16 conversion matches the audited native torch_dtype=bfloat16 load;
 it is recorded as a derived asset, not represented as the original HF blob.
 Download and convert one shard at a time to bound disk/RAM on a cheap Pod.
 """
@@ -60,16 +60,28 @@ def main() -> None:
     revision = row['revision']
     if len(revision) != 40:
         parser.error('requires a pinned 40-character HF revision')
-    if args.native_bf16_dit and args.repo != 'robbyant/lingbot-world-base-cam':
-        parser.error('native BF16 conversion has only been audited for LingBot Cam')
+    audited = {
+        'robbyant/lingbot-world-base-cam': {
+            'model_revision': '6fc824ffc338d64c97c77e2eb8c0f4cfc24d82bd',
+            'source_revision': 'a43bec7f8091c83e9b30b16b912f6fc906236fa6',
+            'prefixes': ('high_noise_model/', 'low_noise_model/')},
+        'Skywork/Matrix-Game-3.0': {
+            'model_revision': '382aa382a03cec057360755aa72c7735025770bb',
+            'source_revision': '756776d516233027631008761d4d40ddaea3e23a',
+            'prefixes': ('base_distilled_model/',)},
+    }
+    audit = audited.get(args.repo)
+    if args.native_bf16_dit and (audit is None or revision != audit['model_revision']):
+        parser.error('requires an audited repository and its fixed native BF16 model revision')
     # Only select runtime inputs; do not download demo media or other models.
-    files = [f for f in row['files'] if f['path'].endswith(('.json', '.pth', '.safetensors', '.model'))]
+    files = [f for f in row['files'] if f['path'].endswith(('.json', '.yaml', '.yml', '.pth', '.safetensors', '.model'))]
     output.mkdir(parents=True, exist_ok=True)
     temporary.mkdir(parents=True, exist_ok=True)
     manifest_path = output / 'checkpoint_provenance.json'
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {
         'schema_version': 1, 'repo_id': args.repo, 'revision': revision, 'files': {},
-        'conversion': 'FP32 DiT to native BF16, matching upstream from_pretrained(torch_dtype=torch.bfloat16)' if args.native_bf16_dit else 'none'}
+        'conversion': 'FP32 DiT to native BF16, matching upstream from_pretrained(torch_dtype=torch.bfloat16)' if args.native_bf16_dit else 'none',
+        'audited_source_revision': audit['source_revision'] if args.native_bf16_dit else None}
     if manifest['repo_id'] != args.repo or manifest['revision'] != revision:
         raise ValueError('existing output belongs to a different checkpoint revision')
     os.environ.setdefault('HF_XET_CHUNK_CACHE_SIZE_BYTES', '0')
@@ -90,7 +102,7 @@ def main() -> None:
         if info.get('sha256') and original_hash != info['sha256']:
             raise ValueError(f'published HF LFS checksum mismatch: {name}')
         destination.parent.mkdir(parents=True, exist_ok=True)
-        convert = args.native_bf16_dit and name.endswith('.safetensors') and name.startswith(('high_noise_model/', 'low_noise_model/'))
+        convert = args.native_bf16_dit and name.endswith('.safetensors') and name.startswith(audit['prefixes'])
         tensor_bytes = None
         if convert:
             import torch
