@@ -39,8 +39,8 @@ protocol:
   time_mapping: receipt-derived native frame offset; no stretch
 evaluator_lock:
   release_id: wmeval-lite-v1
-  code_revision: 36200626c1d427479ed0148bd28d2c3382f2bb6a
-  evaluator_fingerprint: 895162e52027f8ca6ea0167d597e60f5
+  code_revision: e48f75cf80ddd581148f085099913696480ec0c6
+  evaluator_fingerprint: 074084a54f5d7b5a9b1e38a9fc55b689
   module_config: {}
   artifact_schema_versions:
     camera_pose_samples: 1
