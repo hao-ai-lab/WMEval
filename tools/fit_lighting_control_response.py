@@ -10,8 +10,8 @@ from pathlib import Path
 import numpy as np
 
 
-def fit(rows, cumulative, kind):
-    valid = [r for r in rows if r['pose'] is not None and r['frame'] <= 24]
+def fit(rows, cumulative, kind, end_frame=24):
+    valid = [r for r in rows if r['pose'] is not None and r['frame'] <= end_frame]
     if len(valid) < 12:
         return {'status': 'unresolved', 'reason': 'fewer than 12 valid geometric frames'}
     poses = np.array([r['pose']['c2w'] for r in valid])
@@ -30,6 +30,7 @@ def fit(rows, cumulative, kind):
     r2 = float(1 - np.sum(residual ** 2) / max(1e-12, np.sum((y - y.mean()) ** 2)))
     ok = np.isfinite(slope) and (slope > 0 if kind == 'strafe' else abs(slope) > 1e-6)
     ok = ok and r2 >= .9 and rms <= (.04 if kind == 'strafe' else 2)
+    ok = ok and np.ptp(y) >= (.1 if kind == 'strafe' else 5)
     return {'status': 'measured' if ok else 'unresolved', 'gain': float(slope),
             'fit_r2': r2, 'residual_rms_m' if kind == 'strafe' else 'residual_rms_deg': rms,
             'valid_frames': len(valid), 'last_valid_frame': valid[-1]['frame'],
@@ -41,6 +42,7 @@ def main():
     p.add_argument('--probe-root', type=Path, required=True)
     p.add_argument('--schedule-root', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--model', choices=['Matrix-Game2', 'Waypoint'], default='Matrix-Game2')
     args = p.parse_args()
     measurements, hashes = {}, {}
     for seed in (1001, 1002):
@@ -49,8 +51,11 @@ def main():
             path = args.probe_root / name / 'pose_measurement.json'
             data = json.loads(path.read_text())
             controls = np.load(args.schedule_root / f'{name}.npz', allow_pickle=False)
-            values = controls['keyboard'][:, 3] if kind == 'strafe' else controls['mouse'][:, 1]
-            measurements[name] = fit(data['frames'], np.cumsum(values), kind)
+            values = controls['keyboard'][:, 3] if kind == 'strafe' else controls['mouse'][:, 0 if args.model == 'Waypoint' else 1]
+            if args.model == 'Waypoint':
+                values = np.concatenate([np.zeros(4), np.repeat(values, 4)])
+            measurements[name] = fit(data['frames'], np.cumsum(values), kind,
+                len(values) - 1 if args.model == 'Waypoint' else 24)
             hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
     ok = all(m['status'] == 'measured' for m in measurements.values())
     gains = {}
@@ -65,7 +70,7 @@ def main():
             gains[kind] = float(np.mean(values))
             gains[f'{kind}_relative_range'] = float(relative_range)
     result = {'schema_version': 1, 'status': 'calibrated' if ok else 'unresolved',
-        'model': 'Matrix-Game2', 'calibration_seeds': [1001, 1002],
+        'model': args.model, 'calibration_seeds': [1001, 1002],
         'translation_m_per_key_frame': gains.get('strafe'),
         'yaw_deg_per_mouse_unit': gains.get('yaw'), 'measurements': measurements,
         'measurement_sha256': hashes, 'consistency': gains,

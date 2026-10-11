@@ -61,6 +61,8 @@ def main() -> None:
     pipeline.process_video = process_video
     sys.argv = [str(args.source / 'generate.py'), *native_args]
     parsed = upstream._parse_args()
+    if parsed.size not in upstream.MAX_AREA_CONFIGS:
+        raise ValueError('size selector must be a key in the pinned native MAX_AREA_CONFIGS')
     if parsed.interactive or parsed.num_iterations != 4:
         raise ValueError('requires the native pose pipeline with four iterations')
     if parsed.use_int8 or parsed.num_inference_steps != 3 or parsed.use_base_model:
