@@ -174,31 +174,59 @@ Key files: `cases/<Scene>/scene_*/` (`ref.png`, `reference.mp4`,
 ## 2. Action controllability — `action_controllability`
 
 **Owner:** _TBD_ · **Paper:** controllability table · **Lite cases:**
-BallRoller/ctrl, BeamDomino/causal
+BallRoller/ctrl, BeamDomino/causal, MirrorRollingBall/lpips_collision
 
 **Run it for a new model:** the single path with `--dimensions action_controllability`. Key
-files: `cases/BallRoller/ctrl/`, `cases/BeamDomino/causal/` (`actions.txt`,
-`action.npy`, `reference.mp4`), `evaluation/modules/control_motion.py`,
-`tools/evaluate_world_model_controllability.py`.
+files: `cases/<Scene>/<variant>/reference/artifacts/` (`trajectory.yaml`, `action.npz`,
+`actions.jsonl`, `actions.json` = declared target), `evaluation/modules/control_motion.py`,
+`experiments/tables_4_7/action_backends.yaml`. A model registered with a `real_fps` there
+(e.g. `lingbot_world_act`) needs no `model.yaml`.
 
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
-| BallRoller/ctrl | ✅ keys + `action.npy` (target not declared) | ✅ video; flow computed at eval time | ❌ none |
-| BeamDomino/causal | ⚠️ 2-channel ball force, no key program | ✅ video | ❌ identity (`beamdomino_native`) |
+| BallRoller/ctrl | ✅ `controllability.ball_roller.collision_path_v1`, target `ball` | ✅ video; flow computed at eval time | `none` (kept, see below) |
+| BeamDomino/causal | ✅ `controllability.beam_domino.clean_strike_v1`, target `ball` (shared with §5) | ✅ video (726-frame, replaced in #32) | `beamdomino_native` (identity) |
+| MirrorRollingBall/lpips_collision | ✅ `controllability.mirror_rolling_ball.axis_cycle_v1`, target `ball` | ✅ video | `none` |
 
 | Model | In paper | Status |
 | --- | --- | --- |
-| Project Genie | ✅ | ⚠️ BallRoller runnable via keys; BeamDomino force not expressible from this branch |
-| LingBot-World (Act) | ✅ | ❌ no adapter |
-| Waypoint-1.5 | ✅ (GT-RAFT only) | ⚠️ scored; WASD moves the ego camera, not the ball |
+| Project Genie | ✅ | ✅ W/A/S/D program compiled from each trajectory (`actions.jsonl`) |
+| LingBot-World (Act) | ✅ | ⚠️ scored from existing rollouts; no generation adapter in this repo |
+| Waypoint-1.5 | ✅ (GT-RAFT only) | ✅ reported `unsupported` for target `ball` (no object channel) |
 
-- [ ] **Declare the action target** (`cue_ball` / `ball`) in each case's `actions.json`;
-  models without an object channel report `unsupported`. Done when: Waypoint rows show
-  `unsupported`, not a 755 px EPE.
-- [ ] **BeamDomino adapter or explicit `unsupported`** per backend in `action_backends.yaml`.
-- [ ] **Bake the reference flow** into the case; **vendor PTLFlow** and pin its checkpoint.
-- [ ] **Resample both cases** to the reference fps/resolution; headline relative EPE.
-- [ ] **Add a MirrorRollingBall controllability case** (in the paper, not in Lite).
+- [x] **Declare the action target** in each case's `actions.json`; models without an object
+  channel report `unsupported`. Evidence: `728228b`, `2220da2`; a Waypoint candidate on
+  `BallRoller/ctrl` through `run_wmeval_lite.py` yields `status: unsupported` with the
+  recorded reason and empty metrics; aggregates carry `num_unsupported`, the CSV prints
+  `unsupported`.
+- [x] **BeamDomino adapter or explicit `unsupported`** per backend in `action_backends.yaml`
+  (new `ball` target classified for every backend). Evidence: `2220da2`. The BeamDomino
+  trajectory equals the case's `action.npy` on all 121 shared steps; §5 can reuse it.
+- [ ] **Bake the reference flow** into the case; **vendor PTLFlow**. RAFT's checkpoint is now
+  pinned (explicit weights enum + SHA-256 in `evaluator_assets.lock.json`, tested). Still open:
+  - Synthetic RAFT (Table 3 "Mean Flow Cosine" / "Pixel EPE") is not computed in Lite. It
+    needs `synthetic_flow.py` and a calibration from `github.com/shaoxiongduan/ptlflow`, a
+    personal fork (one 289-line file plus a root `calibration.json` of unknown provenance).
+    Vendoring it is an attribution/licensing decision for the release owner (P0-01).
+  - Baked reference flow costs ~1.8 MB per pair at 1280x720 float16 (24-32 pairs per case);
+    needs a bundle-size decision. It would buy determinism/speed only; the candidate side
+    still runs RAFT.
+- [x] **Headline relative EPE** (done) / **resample to the reference** (decided against).
+  Measured on BallRoller (Modal, 5 seeds), relative EPE: Genie `none` 0.55 vs
+  `match_reference` 0.46 (paper 0.55 ± 0.11); LingBot `none` 0.16 vs `match_reference` 0.13
+  (paper 0.16 ± 0.01). Time-stretching the whole clip onto the reference duration breaks
+  paper parity (and doubles LingBot's compared pairs, 11 -> 23); the module already handles
+  the 832x464 / 16 fps-tagged clips against the 1280x720 reference, so `none` is kept.
+- [x] **MirrorRollingBall controllability** is served by `MirrorRollingBall/lpips_collision`
+  (its reference is byte-identical to the paper's third-person capture). Evidence: below.
+
+**Verified 2026-10-10** (Modal, 5 seeds, `candidate_normalization: none`; relative EPE / cosine,
+paper Table 3 in parentheses):
+
+| | BallRoller | BeamDomino | MirrorRollingBall |
+| --- | --- | --- | --- |
+| Project Genie | 0.55 / 0.71 (0.55 / 0.71) | 0.43 / 0.99 (0.44 / 0.98) | 0.77 / 0.83 (0.77 / 0.84) |
+| LingBot-World (Act) | 0.16 / 0.99 (0.16 / 0.99) | 0.34 / 0.99 (0.34 / 0.98) | 0.49 / 0.94 (0.49 / 0.94) |
 
 ## 3. Kinematics & mechanics — `kinematics_mechanics`
 
@@ -342,28 +370,57 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 ## 8. Perceptual similarity — `lpips`
 
 **Owner:** _TBD_ · **Paper:** causal-LPIPS table · **Lite cases:**
-MirrorRollingBall/lpips_collision, BeamDomino/causal, LiquidContainer × 4
+MirrorRollingBall/lpips_collision, BeamDomino/causal, BallRoller/ctrl, LiquidContainer x 4
 
 **Run it for a new model:** the single path with `--dimensions lpips` (`OPENAI_API_KEY` for
-event detection). Key files: `cases/MirrorRollingBall/lpips_collision/`,
-`evaluation/modules/lpips*.py`, `tools/evaluate_world_model_lpips.py`.
+the candidate's event detection; the reference is no longer judged). Key files:
+`cases/<Scene>/<variant>/reference/artifacts/contact_events.json`,
+`evaluation/modules/lpips*.py`, `tools/freeze_reference_events.py` (+ `_modal`).
 
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
-| MirrorRollingBall/lpips_collision | ✅ keys + `action.npy` | ⚠️ contact events re-judged per candidate | ❌ none |
-| BeamDomino/causal | ⚠️ ball force (§5) | ⚠️ re-judged (0/1/3/0/0 contacts on one reference) | ❌ identity |
-| LiquidContainer × 4 | ⚠️ bottle motion (§4) | ⚠️ re-judged | ✅ resampled |
+| BallRoller/ctrl | ✅ (see §2) | ✅ frozen (5/5 passes agree on 1 collision) | `none` |
+| MirrorRollingBall/lpips_collision | ✅ (see §2) | ✅ frozen (judge found 2-6 events/pass; 1 kept by majority) | `none` |
+| BeamDomino/causal | ✅ (see §2) | ✅ frozen (2 events/pass at differing frames; 1 kept) | `beamdomino_native` |
+| LiquidContainer x 4 | ⚠️ bottle motion (§4) | ⚠️ not frozen (run the tool once §4 settles) | ✅ resampled |
 
 | Model | In paper | Status |
 | --- | --- | --- |
-| Project Genie | ✅ | ⚠️ Mirror runnable via keys |
-| LingBot-World (Act) | ✅ | ❌ no adapter |
-| Waypoint-1.5 | — | ⚠️ BeamDomino fell back to temporal LPIPS |
+| Project Genie | ✅ | ✅ scored on all three paper scenes |
+| LingBot-World (Act) | ✅ | ⚠️ scored from existing rollouts; no generation adapter in this repo |
+| Waypoint-1.5 | — | ⚠️ reports `unsupported` where the case target is `ball` |
 
-- [ ] **Freeze reference contact events** once per case. Done when: every candidate row
-  reuses the same reference events.
-- [ ] **Flag `causal` vs `temporal_only` per row**; never average them in one headline.
-- [ ] **Resample** MirrorRollingBall/lpips_collision and BeamDomino/causal.
+- [x] **Freeze reference contact events** once per case. Evidence: `2220da2`. Every pass is
+  stored; events are those a majority (3 of 5) of passes agree on, so every candidate row
+  reuses the same events. The file records the reference video's SHA-256 and the loader
+  rejects a mismatch. BallRoller was missing from the `lpips` dimension although the
+  paper's cLPIPS table has it; it is added here.
+  - Caveat: with the frozen events the default `lpips_causal_event_source: both` (candidate
+    judged live) could not be re-validated because the OpenAI account ran out of credits.
+    Offline (`event_source: reference`, zero API calls, 30/30 rows) the frozen events
+    reproduce the paper except LingBot on BeamDomino (table below).
+  - Judge bug (pre-existing, not fixed for live judging): side relabeling overwrites an
+    event's `evidence_frame_indices` with its own local window, which the grid sanitizer
+    then rejects as `evidence_not_in_grid` unless a frame happens to coincide with the main
+    grid. This is why one reference gave 0/1/3/0/0 contacts. Frozen events are exempt (their
+    evidence counts as seen); live judging of candidates still drops such events.
+- [x] **Flag `causal` vs `temporal_only` per row** — already implemented (`lpips_causal_mean`,
+  `lpips_temporal_fallback_mean`, matched-event counts); the dimension summary now also
+  carries `lpips_primary_source_counts`.
+- [x] **Resample** — decided against `match_reference` for these cases (see §2 evidence); the
+  paper values above are reproduced with `candidate_normalization: none`.
+
+**Verified 2026-10-10** (Modal, 5 seeds, frozen reference events, `event_source: reference`,
+no hosted judge; paper Table 8 in parentheses):
+
+| | BallRoller | BeamDomino | MirrorRollingBall |
+| --- | --- | --- | --- |
+| Project Genie | 0.547 (0.56 ± 0.02) | 0.620 (0.60 ± 0.02) | 0.729 (0.72 ± 0.02) |
+| LingBot-World (Act) | 0.382 (0.38 ± 0.02) | **0.547** (0.61 ± 0.02) | 0.632 (0.62 ± 0.05) |
+
+LingBot on BeamDomino is low because its event timing drifts from the reference's: mapping the
+reference's timing onto it misses its own contact. `event_source: both` (judging the candidate)
+gave 0.615 before the freeze; re-checking it needs API credits.
 
 ---
 

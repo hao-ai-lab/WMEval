@@ -26,6 +26,19 @@
       "variant": "dinov2_vits14",
       "weight": "dinov2_vits14_pretrain.pth",
       "sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9"
+    },
+    "raft_large": {
+      "source": "torchvision.models.optical_flow.raft_large",
+      "weights_enum": "C_T_SKHT_V2",
+      "weight": "raft_large_C_T_SKHT_V2-ff5fadd5.pth",
+      "sha256": "ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322"
+    },
+    "lpips_vgg": {
+      "source": "lpips (pip) net=vgg, v0.1 linear layers + torchvision vgg16 backbone",
+      "backbone_weight": "vgg16-397923af.pth",
+      "backbone_sha256": "397923af8e79cdbb6a7127f12361acd7a2f83e06b05044ddf496e83de57a5bf0",
+      "linear_weight": "lpips/weights/v0.1/vgg.pth",
+      "linear_sha256": "a78928a0af1e5f0fcb1f3b9e8f8c3a2a5a3de244d830ad5c1feddc79b8432868"
     }
   },
   "dependency_lock": "requirements-gpu.lock"
