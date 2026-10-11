@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+from pathlib import Path
 from time import perf_counter
 from typing import Any, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
@@ -427,6 +429,18 @@ def _log_vlm_usage(model: str, resp: Any) -> None:
         pass
 
 
+def _api_timeout(read_sec: float) -> Any:
+    """OpenAI request timeout with a short connect phase.
+
+    A bare float sets every phase, including connect, so one dead connection
+    stalls a judge call for the whole read budget (minutes) before the SDK's
+    retry can replace it. A 10 s connect limit lets it fail fast and retry.
+    """
+    from openai import Timeout
+
+    return Timeout(read_sec, connect=min(10.0, read_sec))
+
+
 def repair_json_object_with_model(
     *,
     client: Any,
@@ -455,7 +469,7 @@ def repair_json_object_with_model(
     else:
         create_kwargs["temperature"] = 0
 
-    client = client.with_options(timeout=timeout_sec, max_retries=1)
+    client = client.with_options(timeout=_api_timeout(timeout_sec), max_retries=1)
     resp = client.chat.completions.create(**create_kwargs)
     _log_vlm_usage(model, resp)
     repaired_text = (resp.choices[0].message.content or "").strip()
@@ -1492,7 +1506,7 @@ def call_openai_vision_judge(
             "openai package required for causal_vlm_collision. pip install openai"
         ) from exc
 
-    client = OpenAI(api_key=api_key, timeout=timeout_sec, max_retries=2)
+    client = OpenAI(api_key=api_key, timeout=_api_timeout(timeout_sec), max_retries=2)
     image_parts: List[Dict[str, Any]] = []
     for bgr in frames_bgr:
         image_parts.append(
@@ -1521,7 +1535,7 @@ def call_openai_vision_judge(
         return create_kwargs
 
     def _run_chat(user_prompt_text: str, *, call_timeout_sec: float) -> str:
-        run_client = client.with_options(timeout=call_timeout_sec, max_retries=2)
+        run_client = client.with_options(timeout=_api_timeout(call_timeout_sec), max_retries=2)
         resp = run_client.chat.completions.create(**_build_create_kwargs(user_prompt_text))
         _log_vlm_usage(model, resp)
         return (resp.choices[0].message.content or "").strip()
@@ -2131,6 +2145,42 @@ def relabel_event_semantics(
     return ensure_event_semantics(relabeled), logs
 
 
+FROZEN_REFERENCE_EVENTS_SCHEMA_VERSION = 1
+
+
+def load_frozen_reference_events(
+    events_json: str | Path, reference_video: str | Path
+) -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
+    """Load a reference's judged contact events instead of re-judging the video.
+
+    Returns what ``detect_event_candidates`` returns for the reference -- the raw
+    judge payload and the sampled grid indices -- so the runtime normalizes,
+    splits and pairs frozen events exactly as it does live ones. The file records
+    the SHA-256 of the reference video it was judged on; a mismatch is an error
+    rather than a silent reuse of another video's events.
+    """
+    data = json.loads(Path(events_json).read_text(encoding="utf-8"))
+    if data.get("schema_version") != FROZEN_REFERENCE_EVENTS_SCHEMA_VERSION:
+        raise ValueError(f"{events_json}: unsupported frozen-events schema {data.get('schema_version')!r}")
+    digest = hashlib.sha256(Path(reference_video).read_bytes()).hexdigest()
+    if data.get("reference_video_sha256") != digest:
+        raise ValueError(
+            f"{events_json} was judged on a different reference video "
+            f"(expected sha256 {data.get('reference_video_sha256')}, got {digest})"
+        )
+    judge = data["selected"]
+    payload = dict(judge["payload"])
+    payload["frozen_reference_events"] = True
+    # Side relabeling replaces an event's evidence with frames from its own local
+    # window, which are generally not on the main grid. They are frames the judge
+    # saw, so they count as seen; otherwise the grid check would discard the
+    # frozen event every run.
+    seen = {int(index) for index in judge["grid_frame_indices"]}
+    for event in payload.get("events") or []:
+        seen.update(int(i) for i in event.get("evidence_frame_indices") or [] if isinstance(i, (int, float)))
+    return payload, sorted(seen), []
+
+
 def detect_event_candidates(
     video_path: str,
     *,
@@ -2296,6 +2346,9 @@ def analyze_causal_vlm_lpips(
         "causal_match_mode_requested": match_mode,
         "lpips_vlm_effective_contact_types": list(contact_types),
         "lpips_vlm_effective_directional_sides": sorted(directional_sides),
+        "reference_events_source": (
+            "frozen" if artifacts.get("lpips_reference_events_json") else "live_judge"
+        ),
     }
 
     if context.num_pairs == 0:
@@ -2376,6 +2429,10 @@ def analyze_causal_vlm_lpips(
         parallel_videos = bool(artifacts.get("lpips_vlm_parallel_videos", True))
 
         def _run_reference() -> Tuple[Dict[str, Any], List[int], List[np.ndarray]]:
+            frozen_events = artifacts.get("lpips_reference_events_json")
+            if frozen_events:
+                _log_causal("reference_events_frozen", events_json=str(frozen_events))
+                return load_frozen_reference_events(frozen_events, context.reference_video)
             _log_causal("reference_judge_start", video_path=context.reference_video)
             return detect_event_candidates(
                 context.reference_video,

@@ -1,0 +1,18 @@
+{
+  "channels": [
+    "horizontal",
+    "vertical"
+  ],
+  "control_hz": 10,
+  "duration_sec": 12.1,
+  "frame": "ground_plane",
+  "lite_case_id": "BeamDomino/causal",
+  "schema_version": 1,
+  "sources": {
+    "action.npz": "74c1330fab61d5426e68aa616247bb4c45e8812f1340abcd9a8b848f919db1f8",
+    "actions.jsonl": "021e4a74667fd9b1cb3011413bc60b581fb7952270c028fa4c8653c0acfa7d26",
+    "trajectory.yaml": "29ac4da8a069976a996a9148562d79d771892ab7f00bbb268779e098c1b0018f"
+  },
+  "target": "ball",
+  "trajectory_id": "controllability.beam_domino.clean_strike_v1"
+}

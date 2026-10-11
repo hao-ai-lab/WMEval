@@ -17,6 +17,7 @@ action_targets:
   table4.billiard_game.center_ball_shot_v1: {target: table_objects, frame: table_plane}
   controllability.ball_roller.collision_path_v1: {target: ball, frame: ground_plane}
   controllability.mirror_rolling_ball.axis_cycle_v1: {target: ball, frame: ground_plane}
+  controllability.beam_domino.clean_strike_v1: {target: ball, frame: ground_plane}
   table7.camera.perturb_in_v1: {target: camera, frame: camera_yaw}
   table7.camera.perturb_out_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_in_v1: {target: camera, frame: camera_yaw}

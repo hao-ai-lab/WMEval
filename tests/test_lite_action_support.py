@@ -56,6 +56,40 @@ def test_unsupported_reason_follows_the_backend_registry(tmp_path: Path) -> None
     assert unsupported_reason(artifacts, "some_unregistered_model") is None
 
 
+def test_registered_real_frame_rate_is_applied_without_a_model_yaml(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    payload = copy.deepcopy(DEFAULT_SUITE_YAML)
+    del payload["dimensions"]["toy_promptcons"]
+    suite_root = write_suite(tmp_path / "suite", payload)
+    write_reference_case(suite_root / "cases")
+    mock_video_probing(monkeypatch)
+
+    seen: dict[str, object] = {}
+    for model in ("lingbot_world_act", "project_genie"):
+        runner = RecordingRunner()
+        model_root = tmp_path / model
+        write_candidates(model_root, ["scene_a/main"])
+        run_suite(
+            suite_root=suite_root, output_dir=tmp_path / f"out_{model}", model_root=model_root,
+            runner=runner, log=_quiet,
+        )
+        seen[model] = runner.calls[0].get("candidate_fps_override")
+
+    assert seen["lingbot_world_act"] == 10.0  # one frame per 100 ms action tick
+    assert seen["project_genie"] is None  # no registered real frame rate
+
+    # An explicit model.yaml value still wins over the registry.
+    model_root = tmp_path / "lingbot_world_act"
+    (model_root / "model.yaml").write_text("candidate_fps_override: 12.5\n", encoding="utf-8")
+    runner = RecordingRunner()
+    run_suite(
+        suite_root=suite_root, output_dir=tmp_path / "out_explicit", model_root=model_root,
+        runner=runner, log=_quiet,
+    )
+    assert runner.calls[0]["candidate_fps_override"] == 12.5
+
+
 def test_run_suite_reports_unsupported_instead_of_scoring(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

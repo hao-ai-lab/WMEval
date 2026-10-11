@@ -19,6 +19,7 @@ modules:
 - control_motion
 - environment_object_consistency
 - kinematics_mechanics
+- lpips
 module_params:
   environment_object_consistency:
     eoc_text_prompt: ramp. dome. cube.
@@ -33,6 +34,8 @@ module_params:
     kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
     kin_unity_object_masses_json: reference/artifacts/object_masses.json
     kin_track_thresh: 0.3
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json
 reference:
   video: reference/reference.mp4
   checksums: reference/checksums.sha256
@@ -47,7 +50,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
-  evaluator_fingerprint: b8b436b1891ccfedc79531d22e5c833d
+  evaluator_fingerprint: cd71e18c0a81fc4bbfe3b259b77fbf19
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

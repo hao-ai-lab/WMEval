@@ -425,8 +425,14 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                     "std_across_cases": headline_stats.get("std_across_cases"),
                     "direction": dimension.aggregate.direction,
                 }
+            source_counts: dict[str, int] = {}
+            for row in done:
+                source = _get(row, "metrics", "lpips_primary_source")
+                if isinstance(source, str):
+                    source_counts[source] = source_counts.get(source, 0) + 1
             dimension_summaries[dimension_id] = {
                 "display_name": dimension.display_name,
+                **({"lpips_primary_source_counts": source_counts} if source_counts else {}),
                 "num_rows": len(dimension_rows),
                 "num_cases": len({str(row.get("case_id")) for row in dimension_rows}),
                 "num_completed": len(done),

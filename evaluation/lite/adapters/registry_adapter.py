@@ -36,6 +36,7 @@ METRIC_CONFIG_KEYS = frozenset(
         "lpips_sampling",
         "lpips_causal_event_source",
         "lpips_causal_lpips_pairing",
+        "lpips_reference_events_json",
         "lpips_vlm_model",
         "lpips_vlm_coarse_model",
         "lpips_vlm_prompt_version",

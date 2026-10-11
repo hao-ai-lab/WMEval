@@ -1,0 +1,21 @@
+{
+  "action_npy": "beam_domino_clean_strike.action.npy",
+  "action_npy_sha256": "0371ff402932fb88f3c16516f7f213ef6dc4888aa09b3b713cc7cc7a8215386b",
+  "action_npz": "beam_domino_clean_strike.action.npz",
+  "action_npz_sha256": "cfbc3b378b5d8f788cbe77c15d4f94413316e36e550914f0d78a9e23fb85a11c",
+  "actions_txt": "beam_domino_clean_strike.actions.txt",
+  "actions_txt_sha256": "aeccc306e876a270707abb96cd269c9a87a91029e1d7574ec3ca4a6f1503086a",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "horizontal",
+    "vertical"
+  ],
+  "project_genie_actions": "beam_domino_clean_strike.actions.jsonl",
+  "project_genie_actions_sha256": "021e4a74667fd9b1cb3011413bc60b581fb7952270c028fa4c8653c0acfa7d26",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "29ac4da8a069976a996a9148562d79d771892ab7f00bbb268779e098c1b0018f",
+  "source": "../trajectories/beam_domino_clean_strike.yaml",
+  "step_count": 121,
+  "trajectory_id": "controllability.beam_domino.clean_strike_v1"
+}

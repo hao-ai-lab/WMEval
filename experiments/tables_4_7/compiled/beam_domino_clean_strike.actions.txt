@@ -1,0 +1,12 @@
+# controllability.beam_domino.clean_strike_v1 -- generated action trajectory.
+# Provenance: beam_domino_clean_strike.yaml (semantic SHA-256: 29ac4da8a069976a996a9148562d79d771892ab7f00bbb268779e098c1b0018f)
+# Alignment: reconstructed; 121 steps; channels: horizontal, vertical
+# start_s end_s horizontal vertical
+0.0 2.0 0.0 0.0
+2.0 7.0 0.0 1.0
+7.0 12.1 0.0 0.0
+
+# Project Genie browser actions:
+{"ms": 2000, "op": "wait"}
+{"keys": ["KeyW"], "ms": 5000, "op": "hold"}
+{"ms": 5100, "op": "wait"}

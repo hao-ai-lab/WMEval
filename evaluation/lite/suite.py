@@ -29,6 +29,7 @@ from .adapters.base import (
     DimensionEvaluator,
 )
 from .action_support import unsupported_reason
+from evaluation import action_backends
 from .aggregate import (
     build_aggregate,
     write_aggregate_json,
@@ -123,6 +124,30 @@ def _merge_candidate_params(
         seed=candidate.seed,
         candidate_video=candidate.candidate_video,
         params=merged,
+    )
+
+
+def _with_backend_defaults(candidate: CandidateRow) -> CandidateRow:
+    """Fill params the backend registry knows, e.g. a model's real frame rate.
+
+    Generators that write one frame per fixed action tick tag their mp4 with an
+    unrelated fps; the registry records the real rate so users need not know to
+    pass ``candidate_fps_override``. Explicit candidate/model params still win.
+    """
+    if "candidate_fps_override" in candidate.params:
+        return candidate
+    try:
+        real_fps = action_backends.backend(candidate.model).get("real_fps")
+    except KeyError:
+        return candidate
+    if real_fps is None:
+        return candidate
+    return CandidateRow(
+        model=candidate.model,
+        case_id=candidate.case_id,
+        seed=candidate.seed,
+        candidate_video=candidate.candidate_video,
+        params={**candidate.params, "candidate_fps_override": float(real_fps)},
     )
 
 
@@ -293,7 +318,8 @@ def run_suite(
         allowed_cases=frozenset(case_ids),
     )
     candidate_rows = [
-        _merge_candidate_params(row, model_params) for row in candidate_rows
+        _with_backend_defaults(_merge_candidate_params(row, model_params))
+        for row in candidate_rows
     ]
 
     work_items = [
