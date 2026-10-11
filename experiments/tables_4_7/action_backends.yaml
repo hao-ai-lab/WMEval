@@ -21,6 +21,12 @@ action_targets:
   table7.camera.360_out_v1: {target: camera, frame: camera_yaw}
 
 backends:
+  hy_worldplay:
+    scope: trajectories_only
+    interface: pending_source_audit
+  waypoint:
+    scope: trajectories_only
+    interface: keyboard_mouse
   unity:
     interface: unity_runtime_args
     supports:
@@ -99,3 +105,36 @@ backends:
     # are frozen without correction. Exact-horizon Garden run0 responses were
     # -17.72 / +41.37 degrees (perturbations) and +54.91 / +277.88 degrees
     # (signed full turns); report realized yaw alongside consistency metrics.
+
+# Full translation plus look-at is reviewed independently from Table 7 yaw.
+# Pending means incomplete work, never N/A or a model-quality rejection.
+trajectory_support:
+  lighting.camera.look_at_orbit_v2:
+    target: camera
+    backends:
+      unity:
+        status: supported
+        reason: Deterministic 121-frame capture verifies the complete orbit, fixed sun and static objects against analytic C2W; endpoint and pixel closure evidence are in the case bundle.
+        source_revision: 84a06a422ae0a0d04153596e881c85be8d4ff3f1
+        evidence: eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/unity_qa.json
+      lingbot_world_cam:
+        status: supported
+        reason: Pinned Cam source accepts per-frame C2W and intrinsics; a 161-pose complete orbit was accepted in the diagnostic. Generation distortion remains measured model behavior.
+        source_revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6
+        evidence: experiments/lighting_orbit_diagnostics/results.json
+      matrix_game_2:
+        status: pending_calibration
+        reason: Joint translation and yaw input units require a frozen full-orbit adapter; Table 7 yaw gains alone are insufficient.
+      matrix_game_3:
+        status: pending_calibration
+        reason: Joint translation and yaw input units require a frozen full-orbit adapter; Table 7 yaw gains alone are insufficient.
+      waypoint:
+        status: pending_calibration
+        reason: Joint D and continuous mouse inputs were accepted; native speed/yaw mapping remains unverified. Out-of-view diagnostic outputs do not establish unsupported capability.
+        source_revision: b3f1e725b222679a517632918cc78bba0c9fa433
+      hy_worldplay:
+        status: pending_adapter
+        reason: Native pose_to_input accepts OpenCV C2W plus K. The analytic adapter supplies 64 latent poses for 253 frames at 24 fps, holding the endpoint after 10 seconds; execution and required checkpoint access remain unverified.
+      project_genie:
+        status: pending_calibration
+        reason: Hosted translation plus turning and their timing need validation; missing access or quotas will be recorded as blocked_access.

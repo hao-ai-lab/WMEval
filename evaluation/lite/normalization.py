@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import math
 import shutil
 import subprocess
 from pathlib import Path
@@ -19,6 +22,61 @@ LIGHTING_NORM_FPS = 12
 
 class NormalizationError(RuntimeError):
     """Candidate video normalization (ffmpeg) failed."""
+
+
+def normalize_lighting_window(
+    source: str | Path, destination: str | Path, *, time_mapping: dict,
+    timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
+) -> dict[str, float]:
+    """Verified native timeline -> [0,10) at 12 fps, without playback stretch.
+
+    The generation receipt supplies a frozen frame offset and native FPS.
+    Reject short/VFR inputs before ffmpeg can conceal missing time by padding.
+    """
+    source, destination = Path(source), Path(destination)
+    if source.resolve() == destination.resolve():
+        raise NormalizationError("normalization must not overwrite the source video")
+    if time_mapping.get("schema_version") != 1:
+        raise NormalizationError("lighting_time_mapping schema_version must be 1")
+    offset, fps = time_mapping.get("canonical_zero_frame"), time_mapping.get("native_fps")
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        raise NormalizationError("canonical_zero_frame must be a nonnegative integer")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not math.isfinite(fps) or fps <= 0:
+        raise NormalizationError("native_fps must be finite and positive")
+    with source.open("rb") as handle:
+        digest = hashlib.file_digest(handle, "sha256").hexdigest()
+    if time_mapping.get("video_sha256") != digest:
+        raise NormalizationError("lighting time mapping does not match candidate video hash")
+    current = _probe(source, timeout_sec=timeout_sec)
+    if abs(current["fps"] - fps) > 1e-6:
+        raise NormalizationError("native_fps differs from decoded video")
+    expected_native = 10 * fps
+    if abs(expected_native - round(expected_native)) > 1e-8:
+        raise NormalizationError("10 seconds must contain an integral native frame count")
+    required = offset + round(expected_native)
+    if current["frames"] < required:
+        raise NormalizationError(f"short lighting video: {current['frames']} native frames, need {required}")
+    try:
+        result = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_frames",
+                                 "-show_entries", "frame=best_effort_timestamp_time", "-of", "json", str(source)],
+                                check=True, capture_output=True, text=True, timeout=timeout_sec)
+        frames = json.loads(result.stdout)["frames"]
+        pts = [float(f["best_effort_timestamp_time"]) for f in frames[:required]]
+        if len(pts) != required or any(abs((p - pts[0]) - i / fps) > 2e-5 for i, p in enumerate(pts)):
+            raise NormalizationError("lighting receipt requires a constant-rate native timeline")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
+                        "-vf", f"trim=start_frame={offset}:end_frame={required},setpts=PTS-STARTPTS,"
+                        f"fps=fps={LIGHTING_NORM_FPS}:start_time=0:round=near",
+                        "-frames:v", "120", "-an", "-c:v", "libx264", "-crf", "0",
+                        "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(destination)],
+                       check=True, capture_output=True, text=True, timeout=timeout_sec)
+        actual = _probe(destination, timeout_sec=timeout_sec)
+    except (FileNotFoundError, KeyError, ValueError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        raise NormalizationError(f"lighting window normalization failed: {exc}") from exc
+    if actual != {**current, "fps": 12.0, "frames": 120}:
+        raise NormalizationError(f"lighting window has unexpected geometry/timeline: {actual}")
+    return actual
 
 
 def normalize_lighting_video(

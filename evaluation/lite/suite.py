@@ -76,6 +76,7 @@ NORMALIZATION_TOKENS: dict[str, str | None] = {
     # used by the Table 4/7 cells so frame k aligns with Unity ground truth k.
     "match_reference": "reference",
     "lighting_fps12": "lighting",
+    "lighting_orbit_10s_fps12": "lighting_orbit",
 }
 
 MODEL_PARAMS_FILENAME = "model.yaml"
@@ -186,9 +187,17 @@ def _normalize_candidate(
     if kind is None:
         return candidate.candidate_video
 
-    from .normalization import normalize_liquid_video, normalize_to_reference, normalize_lighting_video
+    from .normalization import normalize_liquid_video, normalize_to_reference, normalize_lighting_video, normalize_lighting_window
 
     destination = _default_normalized_path(output_root, candidate)
+    if kind == "lighting_orbit":
+        mapping = candidate.params.get("lighting_time_mapping")
+        if not isinstance(mapping, Mapping):
+            raise SuiteRunError(f"{case.case_id}: candidate requires receipt-derived lighting_time_mapping")
+        # This small artifact must be verified/rebuilt for changed receipt/input,
+        # even when a previous candidate occupied the same output path.
+        normalize_lighting_window(candidate.candidate_video, destination, time_mapping=dict(mapping))
+        return destination
     if not destination.is_file():
         if kind == "reference":
             if case.reference_video is None:
