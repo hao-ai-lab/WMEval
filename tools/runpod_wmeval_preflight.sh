@@ -6,7 +6,7 @@ if [[ ! -d /workspace ]] || ! mountpoint -q /workspace; then
   exit 2
 fi
 export WMEVAL_RUNPOD_ROOT=/workspace/WMEval-lighting-orbit
-mkdir -p "$WMEVAL_RUNPOD_ROOT"/{cache/{pip,huggingface,torch,cuda,triton,uv},tmp,logs,envs,model_sources,models,outputs}
+mkdir -p "$WMEVAL_RUNPOD_ROOT"/{cache/{pip,huggingface,torch,cuda,triton,inductor,extensions,uv},tmp,logs,envs,model_sources,models,outputs}
 export TMPDIR="$WMEVAL_RUNPOD_ROOT/tmp"
 export PIP_CACHE_DIR="$WMEVAL_RUNPOD_ROOT/cache/pip"
 export PIP_REQUIRE_VIRTUALENV=true
@@ -17,6 +17,8 @@ export HF_HUB_CACHE="$HF_HOME/hub"
 export TORCH_HOME="$WMEVAL_RUNPOD_ROOT/cache/torch"
 export CUDA_CACHE_PATH="$WMEVAL_RUNPOD_ROOT/cache/cuda"
 export TRITON_CACHE_DIR="$WMEVAL_RUNPOD_ROOT/cache/triton"
+export TORCHINDUCTOR_CACHE_DIR="$WMEVAL_RUNPOD_ROOT/cache/inductor"
+export TORCH_EXTENSIONS_DIR="$WMEVAL_RUNPOD_ROOT/cache/extensions"
 export UV_CACHE_DIR="$WMEVAL_RUNPOD_ROOT/cache/uv"
 export PYTHONUNBUFFERED=1
 export HF_XET_CHUNK_CACHE_SIZE_BYTES=0

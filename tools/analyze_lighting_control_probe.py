@@ -43,7 +43,7 @@ def estimate_pose(world, pixels, intrinsics):
     if rms > 3 or not np.isfinite(c2w).all():
         return None
     return {'c2w': c2w.tolist(), 'inliers': len(i), 'tracked_points': len(world),
-            'reprojection_rms_px': rms}
+            'reprojection_rms_px': rms, 'inlier_indices': i.tolist()}
 
 
 def analyze(video, geometry, seed_image, canvas_size):
@@ -84,6 +84,11 @@ def analyze(video, geometry, seed_image, canvas_size):
             good &= np.isfinite(forward[:, 0]).all(axis=1)
             pixels, indices = forward[good, 0], indices[good]
             row['pose'] = estimate_pose(world[indices], pixels.astype(np.float64), k)
+            if row['pose'] is not None:
+                # Once rejected, do not propagate a confidently tracked but
+                # geometrically incorrect surface correspondence into later fits.
+                inliers = np.array(row['pose'].pop('inlier_indices'), dtype=int)
+                pixels, indices = pixels[inliers], indices[inliers]
         rows.append(row)
         previous = current
     capture.release()
