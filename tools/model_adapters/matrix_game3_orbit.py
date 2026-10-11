@@ -124,7 +124,15 @@ def main() -> None:
                 receipt_path.write_text(json.dumps(receipt, indent=2) + '\n')
             started = time.monotonic()
             try:
-                upstream.generate(settings)
+                try:
+                    upstream.generate(settings)
+                except SystemExit as termination:
+                    # Pinned native pipeline ends with exit() after exporting.
+                    # Keep the completed video and resident model for the next
+                    # seed; a nonzero exit or missing export remains a failure.
+                    exported = Path(settings.output_dir) / f'{settings.save_name}.mp4'
+                    if termination.code not in (None, 0) or (rank == 0 and not exported.is_file()):
+                        raise
                 if rank == 0:
                     video = Path(item['video'])
                     video.parent.mkdir(parents=True, exist_ok=True)
