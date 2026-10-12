@@ -14,6 +14,7 @@ from evaluation.modules._causal_step_judge import JudgeRequest
 from evaluation.modules._causal_step_recorded_judge import (
     RecordedAnswersError,
     RecordedJudge,
+    check_recording_matches_judge,
     load_recorded_answers,
 )
 
@@ -117,6 +118,37 @@ def test_recorded_answers_expose_pass_count_and_judge_settings(tmp_path: Path):
     assert recorded.num_passes == 2
     assert recorded.judge_settings["model"] == "gpt-5.4"
     assert recorded.judge_settings["num_frame_samples"] == 8
+
+
+def _live(**overrides) -> dict:
+    settings = {"model": "gpt-5.4", "num_frame_samples": 8, "prompt_version": "v1",
+                "temperature": None}
+    settings.update(overrides)
+    return settings
+
+
+def test_check_recording_accepts_the_judge_that_produced_it(tmp_path: Path):
+    path = tmp_path / "judge_answers.json"
+    path.write_text(json.dumps(_artifact([{"1|descriptive": "A"}])))
+
+    check_recording_matches_judge(load_recorded_answers(path), _live())
+
+
+@pytest.mark.parametrize(
+    "field, value",
+    [("model", "gpt-5.4-mini"), ("num_frame_samples", 4), ("prompt_version", "v2")],
+)
+def test_check_recording_rejects_a_judge_it_was_not_recorded_with(
+    tmp_path: Path, field: str, value
+):
+    """Replaying a K=8 recording against a K=4 candidate judge (or another
+    model / prompt) compares the two sides under different protocols; the
+    delta would then measure the config change, not the world model."""
+    path = tmp_path / "judge_answers.json"
+    path.write_text(json.dumps(_artifact([{"1|descriptive": "A"}])))
+
+    with pytest.raises(RecordedAnswersError, match=field):
+        check_recording_matches_judge(load_recorded_answers(path), _live(**{field: value}))
 
 
 def test_write_then_load_round_trips(tmp_path: Path):

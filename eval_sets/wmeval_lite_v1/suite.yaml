@@ -841,18 +841,28 @@ dimensions:
       REPEATED JUDGE PASSES. CSR is all-or-nothing per video
       (`max_chain_length >= num_segments`, causalstep/metrics.py), so ONE judge
       pass over a case -- which bundles one video -- can only ever report csr 0
-      or 100, and the judge is not reproducible at temperature 0 (two runs of
-      this exact config differ on 4 of 19 items; `glancing` has been observed at
-      both 0 and 100). `causal_step_judge_repeats: 5` is what makes the reported
-      numbers match the paper's cell semantics: CSR over five passes is
-      successes/5, which is how the published per-shape reference figures land
-      at clean 100, far 100, glancing 60 (= 3/5). Lower it and csr becomes a
-      coin flip again; amcl/ws/dua/icra degrade gracefully either way.
+      or 100. The judge is sampled, not deterministic: gpt-5.4 rejects a
+      non-default temperature, so none is sent and answers come from the API
+      default (two runs of this exact config differ on 4 of 19 items;
+      `glancing` has been observed at both 0 and 100).
+      `causal_step_judge_repeats: 5` makes CSR successes/5, so a fractional
+      value is expressible. It is NOT the paper's estimator: Table 12's CSR is
+      over five rollouts (generation variance), lite's is over five judge
+      passes of one rollout (judge-sampling variance). The shipped reference
+      recordings give csr_unity 80 / 20 / 0 (canonical / glancing /
+      direct_strike) against Table 12's 100 / 60 / 100; the misses are all
+      descriptive QAs, and direct_strike's segment-1 item is wrong 5/5 (see
+      PENDING.md), which forces its CSR to 0. Lower the repeats and csr
+      becomes a coin flip again; amcl/ws/dua/icra degrade gracefully either
+      way.
       THE REFERENCE SIDE IS A FIXTURE, NOT A RUN. When a case ships
       `reference/artifacts/judge_answers.json`, the reference side replays those
       recorded passes instead of calling the judge -- zero API cost, and
       csr_unity stops moving between runs. The recording carries the settings
-      that produced it, and its pass count sets the default repeat count. Record
+      that produced it, and its pass count sets the default repeat count. A run
+      whose live judge differs from the recording in model, frame count or
+      prompt version is refused rather than silently compared across
+      protocols. Record
       or re-record with:
         python tools/record_causal_reference_answers.py <case_dir> --passes 5
       A case with no recording still runs; it just pays the live judge on both
