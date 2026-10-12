@@ -2077,8 +2077,10 @@ def relabel_event_sides_on_video(
             updated["contact_class"] = clean["contact_class"]
             updated["side"] = clean["side"]
             updated["side_confidence"] = clean["side_confidence"]
+            # Relabel frames come from the event's own window, mostly off the main
+            # grid; keep the detection evidence (grid frames) as the event's evidence.
             if clean["evidence_frame_indices"]:
-                updated["evidence_frame_indices"] = clean["evidence_frame_indices"]
+                updated["side_evidence_frame_indices"] = clean["evidence_frame_indices"]
             if clean["evidence_summary"]:
                 updated["evidence_summary"] = clean["evidence_summary"]
             if clean["confidence"] > 0.0:

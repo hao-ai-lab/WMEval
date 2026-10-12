@@ -104,3 +104,31 @@ def test_frozen_events_reject_an_unknown_schema(tmp_path: Path) -> None:
     reference.write_bytes(b"x")
     with pytest.raises(ValueError, match="unsupported frozen-events schema"):
         load_frozen_reference_events(_write_frozen(tmp_path, reference, schema_version=99), reference)
+
+
+def test_side_relabel_keeps_grid_evidence_so_the_event_survives_the_grid_check(monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    from evaluation.modules import lpips_causal_vlm as m
+
+    monkeypatch.setattr(
+        m, "get_video_metadata", lambda path: SimpleNamespace(frame_count=100, fps=10.0)
+    )
+    monkeypatch.setattr(m, "load_frames_by_indices", lambda path, idx: [object() for _ in idx])
+    monkeypatch.setattr(
+        m,
+        "call_openai_vision_judge",
+        lambda *a, **k: {
+            "contact_class": "lateral",
+            "side": "left",
+            "side_confidence": 0.9,
+            "evidence_frame_indices": [41, 43],
+            "confidence": 0.8,
+        },
+    )
+    event = {"frame": 40, "evidence_frame_indices": [40, 44], "side": "unknown"}
+    relabeled, _ = m.relabel_event_sides_on_video("v.mp4", [event], model="x", artifacts={})
+    kept, dropped = m.sanitize_events_to_grid(relabeled, {40, 44, 48})
+    assert kept and not dropped
+    assert relabeled[0]["evidence_frame_indices"] == [40, 44]
+    assert relabeled[0]["side_evidence_frame_indices"] == [41, 43]
