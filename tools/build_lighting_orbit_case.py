@@ -32,6 +32,31 @@ def sha(path):
         return hashlib.file_digest(handle, 'sha256').hexdigest()
 
 
+def write_table_cell(case: Path):
+    """Add transport metadata without changing the frozen action/media bytes."""
+    raw = yaml.safe_load((case / 'case.yaml').read_text())
+    artifacts = case / 'reference/artifacts'
+    trajectory = yaml.safe_load((artifacts / 'trajectory.yaml').read_text())
+    sources = {}
+    for path in sorted((case / 'reference').rglob('*')):
+        if path.is_file() and path.name not in {'checksums.sha256', 'table_cell.json'}:
+            sources[path.relative_to(case).as_posix()] = sha(path)
+    cell = {'schema_version': 1, 'dimension': 'lighting_shading',
+            'lite_case_id': raw['case_id'], 'table_cell': 'lighting_shading/' + raw['case_id'],
+            'trajectory_id': trajectory['trajectory_id'], 'target': 'camera',
+            'claim_scope': 'explicit_nominal_camera_input_not_guaranteed_model_response',
+            'preparation': 'unity_editor_fixed_sun_look_at_orbit',
+            'duration_sec': 10, 'geometry': trajectory['geometry'], 'sources': sources}
+    (artifacts / 'table_cell.json').write_text(json.dumps(cell, indent=2, sort_keys=True) + '\n')
+    raw['reference']['artifacts']['table_cell'] = 'reference/artifacts/table_cell.json'
+    (case / 'case.yaml').write_text(yaml.safe_dump(raw, sort_keys=False, allow_unicode=True))
+    paths = sorted(path for path in (case / 'reference').rglob('*')
+                   if path.is_file() and path.name != 'checksums.sha256')
+    (case / 'reference/checksums.sha256').write_text(''.join(
+        f'{sha(path)}  {path.relative_to(case).as_posix()}\n' for path in paths))
+    return cell
+
+
 def build(capture: Path, destination: Path, revision: str):
     if destination.exists():
         raise FileExistsError(f'refusing to replace case: {destination}')
@@ -123,6 +148,7 @@ def build(capture: Path, destination: Path, revision: str):
                           'module_config':{},'artifact_schema_versions':{'camera_pose_samples':1},'dependency_versions':{}},
         'module_params':{'shadow_consistency':{'shadow_text_prompt':'table. chair. lamp.','shadow_anchor_label':'table'}}}
     (destination/'case.yaml').write_text(yaml.safe_dump(raw,sort_keys=False,allow_unicode=True))
+    write_table_cell(destination)
     return qa
 
 

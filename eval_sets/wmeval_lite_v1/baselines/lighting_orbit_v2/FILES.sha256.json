@@ -1,0 +1,158 @@
+{
+  "files": {
+    "README.md": {
+      "bytes": 2776,
+      "sha256": "f36227d790bd11c7e0d2a8c7502f3904a68e1f4ba1fcd9d8461e79ff2019f52f"
+    },
+    "candidates.jsonl": {
+      "bytes": 5531,
+      "sha256": "fccb2b20bf0ea16d9c85adab0e070cba8e97e44f2c29bd71138c6474e541be6b"
+    },
+    "candidates/hy_worldplay/seed_1/generation_receipt.json": {
+      "bytes": 17587,
+      "sha256": "c529b760529b27cbf77532e51dadb5ebed64b0496712fa47884b13c1ef50d63b"
+    },
+    "candidates/hy_worldplay/seed_1/video.mp4": {
+      "bytes": 368722,
+      "sha256": "9707191e0636996a03f886291090462cccf04f24f7694429f89b01c11852c502"
+    },
+    "candidates/hy_worldplay/seed_2/generation_receipt.json": {
+      "bytes": 17587,
+      "sha256": "7632f105b84ff5358c3696799013f480f72fdc89e83d9dd159b72d71c9137495"
+    },
+    "candidates/hy_worldplay/seed_2/video.mp4": {
+      "bytes": 444852,
+      "sha256": "584d0331d2348f236a5a64a631135dea23ddf390377fbf1df43e0073a9fb27d5"
+    },
+    "candidates/hy_worldplay/seed_3/generation_receipt.json": {
+      "bytes": 17587,
+      "sha256": "63450e0be2a0db66b381b43556fd31a77b97b2e6278baa55001371e547be90a3"
+    },
+    "candidates/hy_worldplay/seed_3/video.mp4": {
+      "bytes": 383826,
+      "sha256": "75cfa12f754ce4cf7093e5241520e2a613756bfa3ab73abc1d09466949633938"
+    },
+    "candidates/hy_worldplay/seed_4/generation_receipt.json": {
+      "bytes": 17587,
+      "sha256": "4d7544cf673eecd56103a543fd3afe70a6b1ec422dd323207d4412db6ab88b65"
+    },
+    "candidates/hy_worldplay/seed_4/video.mp4": {
+      "bytes": 343943,
+      "sha256": "b73ed85214ed2b8018d65761833a793ad88bfb0aa359d18aef768072ad4008e1"
+    },
+    "candidates/hy_worldplay/seed_42/generation_receipt.json": {
+      "bytes": 17589,
+      "sha256": "900a5a10fbe5b3af3dba657fb068fdaec31ee2bb4fc1c31310c1ee3cf48ca361"
+    },
+    "candidates/hy_worldplay/seed_42/video.mp4": {
+      "bytes": 573441,
+      "sha256": "9fe86dae39241753a5513d26d0e45c2231fc8dfc0a260d6ba701ecba6a36b197"
+    },
+    "candidates/lingbot_world_cam/seed_1/generation_receipt.json": {
+      "bytes": 4802,
+      "sha256": "c46792947535f7e0e0c490b39ac122244c956f94d2fa5ff1d47039ddea826dd9"
+    },
+    "candidates/lingbot_world_cam/seed_1/video.mp4": {
+      "bytes": 8820985,
+      "sha256": "95cc1418d9250b7f9a611d517158c5548a6a95a29ce9e42aa8dfdd089d4b1ef4"
+    },
+    "candidates/lingbot_world_cam/seed_2/generation_receipt.json": {
+      "bytes": 4802,
+      "sha256": "9d4b4818eb7fc1035239ca0eeb910fffd3117b117b26b6b86bd5a8e0cfbfefc0"
+    },
+    "candidates/lingbot_world_cam/seed_2/video.mp4": {
+      "bytes": 7972084,
+      "sha256": "f43be48f4c8239697b3d72cfc91bb6d1ee00b0029257d06f4052bbdc14581388"
+    },
+    "candidates/lingbot_world_cam/seed_3/generation_receipt.json": {
+      "bytes": 4802,
+      "sha256": "6dbfa7f4986a82d92f94a41efe241c4d1a2909dafcb0fc58f1fd99a532cb7258"
+    },
+    "candidates/lingbot_world_cam/seed_3/video.mp4": {
+      "bytes": 7493873,
+      "sha256": "5aa6c694ab17f32ee4e3d5ad83bd11c924d9da46e8a04b0755b06a9e6771643f"
+    },
+    "candidates/lingbot_world_cam/seed_4/generation_receipt.json": {
+      "bytes": 4802,
+      "sha256": "c06afca654ccd359c2da0777cf37ff7f1fa5c86cd737d9edaf8251b4164eadcf"
+    },
+    "candidates/lingbot_world_cam/seed_4/video.mp4": {
+      "bytes": 6275829,
+      "sha256": "be61b1da5978669d3de6923045802acedb3c20e29bdcef5afc586d6a208456c1"
+    },
+    "candidates/lingbot_world_cam/seed_42/generation_receipt.json": {
+      "bytes": 4804,
+      "sha256": "6d587222d3f6721909c1c8fa727b4ba76e52496e660fbeed729ad08f4980ba9b"
+    },
+    "candidates/lingbot_world_cam/seed_42/video.mp4": {
+      "bytes": 6597018,
+      "sha256": "68679fa54813af7baad99d15d3bce0c7ce5feb6b99d4fda46cab6550e8079a7f"
+    },
+    "candidates/matrix_game_3/seed_1/generation_receipt.json": {
+      "bytes": 5063,
+      "sha256": "c162e46a866722de65a3e5274d458f5547c3e4abeaadbb6f0c720cb5747c76b3"
+    },
+    "candidates/matrix_game_3/seed_1/video.mp4": {
+      "bytes": 1518796,
+      "sha256": "d1fa7715d0101364f6adf4f70a54806c57dc8c769fd3c98a8505162f5cd2ea96"
+    },
+    "candidates/matrix_game_3/seed_2/generation_receipt.json": {
+      "bytes": 5064,
+      "sha256": "4ece12071ace0dbb6c6cb87c6ad94db46b1d55ca83a05f4166280e2c27e65009"
+    },
+    "candidates/matrix_game_3/seed_2/video.mp4": {
+      "bytes": 1608651,
+      "sha256": "fa8fadf52caa8eef0e9f80933cfb704050934270540f59a3af8de318625dda18"
+    },
+    "candidates/matrix_game_3/seed_3/generation_receipt.json": {
+      "bytes": 5064,
+      "sha256": "b49139acbd5dfe9184772103a581a03f7a7619d2c8c624ad7a1d0cbbf5b931c9"
+    },
+    "candidates/matrix_game_3/seed_3/video.mp4": {
+      "bytes": 1486592,
+      "sha256": "d1dd00184c5010e110536292f385de1987432c61b4da7e04dc239da6b2994e1b"
+    },
+    "candidates/matrix_game_3/seed_4/generation_receipt.json": {
+      "bytes": 5064,
+      "sha256": "abacd0a02450b25488535fbee2bda5976d58ccc118eb841c326980bf4b4caefd"
+    },
+    "candidates/matrix_game_3/seed_4/video.mp4": {
+      "bytes": 1434736,
+      "sha256": "8275a6cf56624441e21366292958ac632cf8ec9f256c14e877edaa7dc85c2375"
+    },
+    "candidates/matrix_game_3/seed_42/generation_receipt.json": {
+      "bytes": 5441,
+      "sha256": "9a6a55b63a8ae096648f106e248220ccae4858ec18a28878c288399330190b87"
+    },
+    "candidates/matrix_game_3/seed_42/video.mp4": {
+      "bytes": 1515980,
+      "sha256": "79712fc6a1a35ee55e3319b925e600d2bc2d940194d1662a3642e9dda57b9ea1"
+    },
+    "expected_jobs.json": {
+      "bytes": 4018,
+      "sha256": "1538a8dbca1a86c0e25f823696079d13dca0304930b5a9e7113285e3a67f0db4"
+    },
+    "expected_scores.json": {
+      "bytes": 6380,
+      "sha256": "5b7eb9e5a18da031f600bf36f9f21805192199b4641fc861f6638987e3de9aa6"
+    },
+    "fresh_results/aggregate_summary.json": {
+      "bytes": 22106,
+      "sha256": "a6027f00c9bebb58bd2e00366aabd69bf51f065dfe46b9c2bf11f7dd5c9d9274"
+    },
+    "fresh_results/per_case_results.jsonl": {
+      "bytes": 15797,
+      "sha256": "6825fb23788f0f8096d25cff2b9d233586cf253b6b9ddc05d9f127abfcd64879"
+    },
+    "release_archive_pin.json": {
+      "bytes": 258,
+      "sha256": "dd605a5607296c85f5becbbd04212e7e49aee209e676489bfb4023950738dbc6"
+    },
+    "release_sources.json": {
+      "bytes": 7532,
+      "sha256": "eebea60b876e8e5909d4a054c56fecc57e7b70d7612c16715239840f666bcbdf"
+    }
+  },
+  "schema_version": 1,
+  "status": "packaged_strict_acceptance_pending"
+}

@@ -322,23 +322,33 @@ Explicit look-at orbit and Waypoint fallback diagnostics, including control
 receipts and observed limitations, are documented in
 `experiments/lighting_orbit_diagnostics/README.md` at the repository root.
 
-The complete 10-second look-at orbit is now bundled as the inactive candidate
-`SunRisesAndSets/lighting_orbit_v2`, with Unity geometry/closure QA and explicit
-12-fps timestamp normalization. LingBot, Matrix-Game3 and HY-WorldPlay each have five formal
-seeds (42,1,2,3,4), verified native/normalized hashes and complete Lite scores in
-`experiments/lighting_orbit_v2/results/run_summary.json`. MG2/Waypoint still
-need repeat-consistent translation calibration. Genie completed five frozen
-40-cycle joint-input repeats with native downloads, screenshot association
-and Lite diagnostic scores. Its input spans 8.9583-10.1667 native seconds,
-so precise timing and full camera closure remain unqualified; diagnostic
-evidence is in `results/genie_diagnostic_summary.json` under that experiment.
-These pending states are incomplete work, never N/A. See
-`experiments/lighting_orbit_v2/README.md` and the exact-trajectory capability
-registry in `experiments/tables_4_7/action_backends.yaml`.
+The complete 10-second look-at orbit is bundled as
+SunRisesAndSets/lighting_orbit_v2, with Unity geometry/closure QA, explicit
+12-fps timestamp normalization, and the standard table_cell.json metadata.
+LingBot, Matrix-Game3 and HY-WorldPlay each have five formal seeds (42,1,2,3,4),
+verified hashes and complete Lite scores in
+experiments/lighting_orbit_v2/results/run_summary.json.
+The pinned MG2/Waypoint input interfaces have no documented metric path mapping;
+Genie's hosted UI has no native-frame action submission. These three are
+explicitly unsupported/N/A for this strict trajectory, not for generic camera
+movement and not because their videos look poor. Source and timing evidence:
+experiments/lighting_orbit_v2/results/capability_audit.json.
+Five Genie diagnostic exports and their scores remain separate from formal
+aggregation. The standalone fifteen-video release package, public scorer and
+relative candidate manifest are now checked into baselines/lighting_orbit_v2.
+On 2026-10-11, all fifteen were recomputed on RTX PRO 4500; all normalized
+video hashes match the original RTX PRO 6000 run. Actual Lite resume skipped
+all fifteen and preserved the score-row hash. Strict1e-6 comparison nevertheless
+failed for 21/90 values (max MOSD 0.04deg, SDJ 0.17deg/frame, SAS 0.18pp, SSD 0.0148;
+SRR/SDR unchanged). This numerical stability gap is not resolved by replacing
+reference scores or relaxing the threshold after the fact. Evidence and both
+score sets: experiments/lighting_orbit_v2/results/release_verification/.
+The candidate remains inactive pending numerical acceptance. HF publication
+remains separate.
 
-- [ ] **One semantic orbit trajectory** compiled per backend, replacing `actions_per_model.json`.
-- [ ] **Normalize fps** (or report jitter per second).
-- [ ] **Bundle or pin the six rollouts** in the HF baseline set.
+- [x] **One semantic orbit trajectory** with explicit target, supported native pose compilers and audited N/A interfaces; historical per-model actions retained separately.
+- [x] **Normalize fps**: ten-second native window, exactly 120 frames at 12fps, no padding or retiming.
+- [ ] **Final bundle acceptance and release pin**: fifteen supported rollouts packaged, three N/A decisions explicit; dataset/checksum/actual resume passed; strict GPU metric comparison failed 21/90. Numerical acceptance and final archive pin still open. HF publication is separate.
 - [ ] After release (optional): `ChessBoard/lighting`, moving-sun `lighting_sunsweep`.
 
 ## 7. Prompt-scene consistency — `prompt_scene_consistency`

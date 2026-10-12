@@ -1,0 +1,145 @@
+{
+  "bundle_manifest_sha256": "ed546dd08de10bad8422b28a61e8caaae01b852b3e933e02af48122c75683a52",
+  "compared_metrics": 90,
+  "comparison_tolerance": 1e-06,
+  "completed_at_utc": "2026-10-12T03:15:42.413935+00:00",
+  "completed_rows": 15,
+  "completed_rows_observed": 14,
+  "deadline_utc": "2026-10-12T03:16:55.043570+00:00",
+  "differences": [
+    {
+      "absolute_error": 0.0010999999999996568,
+      "metric": "shadow_shape_drift",
+      "model": "HY-WorldPlay",
+      "seed": "1"
+    },
+    {
+      "absolute_error": 0.00999999999999801,
+      "metric": "multi_object_sun_disagreement_deg",
+      "model": "HY-WorldPlay",
+      "seed": "2"
+    },
+    {
+      "absolute_error": 0.00140000000000029,
+      "metric": "shadow_shape_drift",
+      "model": "HY-WorldPlay",
+      "seed": "2"
+    },
+    {
+      "absolute_error": 0.010000000000000231,
+      "metric": "shadow_area_stability_pct",
+      "model": "HY-WorldPlay",
+      "seed": "3"
+    },
+    {
+      "absolute_error": 0.009599999999999831,
+      "metric": "shadow_shape_drift",
+      "model": "HY-WorldPlay",
+      "seed": "3"
+    },
+    {
+      "absolute_error": 0.00010000000000021103,
+      "metric": "shadow_shape_drift",
+      "model": "HY-WorldPlay",
+      "seed": "4"
+    },
+    {
+      "absolute_error": 0.010000000000005116,
+      "metric": "multi_object_sun_disagreement_deg",
+      "model": "HY-WorldPlay",
+      "seed": "42"
+    },
+    {
+      "absolute_error": 9.999999999976694e-05,
+      "metric": "shadow_shape_drift",
+      "model": "HY-WorldPlay",
+      "seed": "42"
+    },
+    {
+      "absolute_error": 0.00999999999999801,
+      "metric": "multi_object_sun_disagreement_deg",
+      "model": "LingBot",
+      "seed": "2"
+    },
+    {
+      "absolute_error": 0.03999999999999915,
+      "metric": "multi_object_sun_disagreement_deg",
+      "model": "LingBot",
+      "seed": "3"
+    },
+    {
+      "absolute_error": 0.000700000000000145,
+      "metric": "shadow_shape_drift",
+      "model": "LingBot",
+      "seed": "3"
+    },
+    {
+      "absolute_error": 0.009999999999999787,
+      "metric": "shadow_area_stability_pct",
+      "model": "LingBot",
+      "seed": "4"
+    },
+    {
+      "absolute_error": 0.00999999999999801,
+      "metric": "multi_object_sun_disagreement_deg",
+      "model": "LingBot",
+      "seed": "42"
+    },
+    {
+      "absolute_error": 0.17999999999999972,
+      "metric": "shadow_area_stability_pct",
+      "model": "LingBot",
+      "seed": "42"
+    },
+    {
+      "absolute_error": 0.16999999999999993,
+      "metric": "shadow_direction_jitter_deg_per_frame",
+      "model": "LingBot",
+      "seed": "42"
+    },
+    {
+      "absolute_error": 0.014800000000000146,
+      "metric": "shadow_shape_drift",
+      "model": "LingBot",
+      "seed": "42"
+    },
+    {
+      "absolute_error": 0.00020000000000131024,
+      "metric": "shadow_shape_drift",
+      "model": "Matrix-Game3",
+      "seed": "1"
+    },
+    {
+      "absolute_error": 0.00999999999999801,
+      "metric": "shadow_area_stability_pct",
+      "model": "Matrix-Game3",
+      "seed": "2"
+    },
+    {
+      "absolute_error": 0.005300000000000082,
+      "metric": "shadow_shape_drift",
+      "model": "Matrix-Game3",
+      "seed": "2"
+    },
+    {
+      "absolute_error": 0.00039999999999906777,
+      "metric": "shadow_shape_drift",
+      "model": "Matrix-Game3",
+      "seed": "3"
+    },
+    {
+      "absolute_error": 0.004900000000001015,
+      "metric": "shadow_shape_drift",
+      "model": "Matrix-Game3",
+      "seed": "42"
+    }
+  ],
+  "error": "ValueError: fresh release metrics differ from verified original scores",
+  "fresh_results_sha256": "6811e15aa8ea656dc4eb1fb434aa002544b7c1449937115756d08809e29490e3",
+  "maximum_absolute_metric_error": 0.17999999999999972,
+  "required_jobs": 15,
+  "resume_results_sha256": "6811e15aa8ea656dc4eb1fb434aa002544b7c1449937115756d08809e29490e3",
+  "resume_rows_unchanged": true,
+  "schema_version": 1,
+  "status": "failed_metric_comparison"
+}

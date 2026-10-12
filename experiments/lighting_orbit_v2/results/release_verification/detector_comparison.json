@@ -1,0 +1,111 @@
+{
+  "note": "Same input SHA, same detection IDs/labels; numerical outputs vary. Does not isolate hardware from all other runtime differences.",
+  "rows": [
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 1.9073486328125e-05,
+      "maximum_detection_score_difference": 7.152557373046875e-07,
+      "model": "HY-WorldPlay",
+      "seed": "1"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.001068115234375,
+      "maximum_detection_score_difference": 9.745359420776367e-05,
+      "model": "HY-WorldPlay",
+      "seed": "2"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.00030517578125,
+      "maximum_detection_score_difference": 0.00010645389556884766,
+      "model": "HY-WorldPlay",
+      "seed": "3"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.002471923828125,
+      "maximum_detection_score_difference": 0.00018787384033203125,
+      "model": "HY-WorldPlay",
+      "seed": "4"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.0037841796875,
+      "maximum_detection_score_difference": 0.00024014711380004883,
+      "model": "HY-WorldPlay",
+      "seed": "42"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.003387451171875,
+      "maximum_detection_score_difference": 0.0002772212028503418,
+      "model": "LingBot",
+      "seed": "1"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 1.52587890625e-05,
+      "maximum_detection_score_difference": 1.895427703857422e-05,
+      "model": "LingBot",
+      "seed": "2"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.0008544921875,
+      "maximum_detection_score_difference": 9.870529174804688e-05,
+      "model": "LingBot",
+      "seed": "3"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.0006103515625,
+      "maximum_detection_score_difference": 0.0001971125602722168,
+      "model": "LingBot",
+      "seed": "4"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.001007080078125,
+      "maximum_detection_score_difference": 0.0005255937576293945,
+      "model": "LingBot",
+      "seed": "42"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.0033111572265625,
+      "maximum_detection_score_difference": 0.0004615187644958496,
+      "model": "Matrix-Game3",
+      "seed": "1"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.00079345703125,
+      "maximum_detection_score_difference": 0.00018107891082763672,
+      "model": "Matrix-Game3",
+      "seed": "2"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.00262451171875,
+      "maximum_detection_score_difference": 0.00015342235565185547,
+      "model": "Matrix-Game3",
+      "seed": "3"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.004608154296875,
+      "maximum_detection_score_difference": 0.0005180835723876953,
+      "model": "Matrix-Game3",
+      "seed": "4"
+    },
+    {
+      "identity_order_matches": true,
+      "maximum_box_coordinate_difference_px": 0.0013427734375,
+      "maximum_detection_score_difference": 0.0001469254493713379,
+      "model": "Matrix-Game3",
+      "seed": "42"
+    }
+  ],
+  "schema_version": 1
+}

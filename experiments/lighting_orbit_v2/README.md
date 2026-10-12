@@ -56,13 +56,13 @@ trajectory.yaml, without substituting a yaw-only turn or stretching time:
   checkpoint 382aa382a03cec057360755aa72c7735025770bb. All five fixed seeds
   completed native generation and Lite scoring. Verified video hashes and
   per-seed metrics are in `results/run_summary.json`.
-- MG2 and Waypoint: repeat-consistent translation calibration remains
-  unqualified. Four Waypoint probes completed in the native Torch 2.11
-  environment with bounded-startup compilation; one D probe failed the fixed
-  fit threshold. `results/waypoint_round2_calibration.json` retains that evidence.
-  Existing Table 7 yaw calibrations do not establish a
-  metric-space orbit. An input interface's poor generated video remains a
-  measured outcome; it does not make that backend unsupported.
+- MG2 and Waypoint are N/A for this release's metric look-at trajectory.
+  Their pinned native interfaces expose keyboard/mouse tokens, not a camera
+  pose/target or a documented key-to-metre conversion. The independent probes
+  remain diagnostic evidence and do not establish a verified physical mapping.
+  This classification concerns the audited input interface, not scene quality
+  or the models' ability to navigate freely. Source hashes, symbols and the
+  exact scope are in results/capability_audit.json.
 
 Hosted Genie has five completed independent diagnostic repeats. The frozen
 program uses forty 323-ms wall-clock cycles: simultaneous D+Left for 114 ms,
@@ -78,7 +78,8 @@ and the remaining-time bar include waiting and cannot supply a native frame cloc
 The generated camera also approaches the tabletop; a complete two-metre
 look-at closure is not established. These are completed diagnostic runs, with
 first-ten-native-second Lite scores in `results/genie_diagnostic_summary.json`,
-excluded from formally qualified protocol coverage. The first frozen repeat is
+excluded from formally qualified protocol coverage; the hosted UI is N/A
+for the required native-frame-indexed metric input. The first frozen repeat is
 shown in `results/genie_first_repeat_contact_sheet.jpg` without output selection.
 No output retiming,
 quality-based seed replacement or post-hoc trajectory correction was applied.
@@ -97,7 +98,7 @@ The portable mesh points in `calibration_assets/` were obtained by
 MeshFilter triangles. Their seed rerender has MAE=0, and maximum reprojection
 error is 0.00252 pixels. Alpha texture/skinned-mesh mismatches must be rejected.
 These assets are independent calibration evidence, not formal output correction.
-Keep unresolved response measurements pending; only accepted independent gains
+Keep unresolved response measurements separate from input-interface support; only accepted independent gains
 can compile a full D-plus-yaw schedule for formal generation.
 
 `experiments/tables_4_7/action_backends.yaml` tracks capability for this exact
@@ -160,9 +161,10 @@ expiry. Do not leave an idle GPU attached while doing local work.
 
 ## Scoring and release checks
 
-LingBot and MG3 currently have complete five-seed results in
-`results/run_summary.json`. This is partial coverage of the six-backend release;
-the remaining pending backends keep the new case inactive. The report records
+LingBot, MG3 and HY have complete five-seed results in
+results/run_summary.json. The other three pinned interfaces are explicitly
+N/A for the strict trajectory, with source-level evidence; no zero scores or
+missing-seed aggregates are substituted. The report records
 the first valid native video and its normalized hash for each seed, including
 poor model outcomes. Calibration probes are excluded from formal aggregation.
 
@@ -188,7 +190,46 @@ numeric seeds), or a demonstrated unsupported interface is explicitly N/A.
 Run the same bundles with `tools/run_wmeval_lite.py run --dimensions lighting_shading`.
 Compare a fresh result and a resume; invalidate stale candidate/evaluator hashes.
 Do not calculate a complete-model aggregate from fewer than five successful
-seeds, or represent missing results as zero. Switch the active lighting case
-only after generation, normalization, six metrics and portable bundle checks
-pass. Update PENDING.md and open a PR against lanxiang/release-cleanup; publishing
+seeds, or represent missing results as zero. The active lighting case switches only after the standalone bundle passes
+its fresh-score and resume acceptance checks. Update PENDING.md and open a PR against lanxiang/release-cleanup; publishing
 baseline media and merging are separate actions.
+
+## Standalone release package
+
+tools/build_lighting_release_package.py builds a self-contained scorer and
+dataset from the fifteen verified generation receipts. All candidate paths
+are relative; the package contains the full Unity/action case, table_cell.json,
+the public evaluation sources, asset/version locks and the six support decisions.
+Genie diagnostic media are kept outside the formal candidate manifest.
+The fifteen expected jobs and three N/A entries are explicit.
+
+The archive is byte-reproducible. Verification rejects changed or missing
+data/code, but ignores Python's runtime bytecode and the documented results/cache
+directories. Runtime files are never silently incorporated into the archive.
+A source generation_case.yaml retains the original authoring identity; adding
+transport metadata does not alter any frozen pose, action or video bytes.
+
+Fresh scoring uses the same tools/run_wmeval_lite.py path on an extracted clean
+directory. tools/verify_lighting_release_run.py splits the fifteen jobs between
+two GPUs, compares every one of the ninety metric values with tolerance 1e-6,
+runs the real Lite resume command, and requires unchanged result-row hashes.
+The initial verification attempt failed before scoring on runtime bytecode;
+the regression and local fix are retained. The corrected run completed all
+fifteen candidates on RTX PRO 4500, with all normalized input hashes unchanged.
+Actual resume preserved the fifteen score rows exactly. 21/90 metric values
+differ from the original RTX PRO 6000 result at strict 1e-6. Max differences are
+MOSD 0.04deg, SDJ 0.17deg/frame, SAS 0.18 percentage points, SSD 0.0148; SRR/SDR are
+identical. The cause is not isolated; all first-frame detector outputs also
+show floating-point differences. results/release_verification is not a passing
+strict comparison. Do not overwrite the old scores or silently broaden the
+tolerance. The canonical case stays inactive until numerical acceptance.
+Evidence is in results/release_verification/.
+
+Model generation sources and checkpoint inventories are in source_provenance/,
+generation_model_inventory.json and the two HY inventories. Clone the listed
+official source revisions, verify the listed source hashes, and install their
+manifest at the native wrapper's expected source_provenance.json (LingBot/Matrix)
+or source_manifest.json (HY). Checkpoints are fetched at immutable revisions
+with tools/download_lighting_checkpoint.py / tools/prepare_hy_runtime.py.
+No private scratch directory, old Pod or model weights inside this package are
+needed for evaluating its bundled videos. HF publication is a separate action.

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "case_id": "SunRisesAndSets/lighting_orbit_v2",
   "status": "five_diagnostic_repeats_complete_timing_not_qualified",
-  "formal_protocol_coverage": "0/5 certified",
+  "formal_protocol_coverage": "N/A",
   "hosted_repeats": 5,
   "numeric_generation_seeds": null,
   "program": "../genie_controls_frozen.json",
@@ -232,5 +232,7 @@
     "Identical 40-cycle input replay mapped to 8.9583\u201310.1667 native seconds. Screenshot alignment confirms association, not exact trajectory adherence.",
     "Generated views approach the tabletop; full 2m-radius camera closure is not established. Model geometry errors do not establish unsupported controls."
   ],
-  "artifact_storage": "Native videos, controls and score outputs retained on Forrest-Dai-WMEval network volume /workspace/WMEval-lighting-orbit; verified local backups. Baseline media publication remains separate."
+  "artifact_storage": "Native videos, controls and score outputs retained on Forrest-Dai-WMEval network volume /workspace/WMEval-lighting-orbit; verified local backups. Baseline media publication remains separate.",
+  "release_support": "unsupported",
+  "capability_evidence": "capability_audit.json"
 }

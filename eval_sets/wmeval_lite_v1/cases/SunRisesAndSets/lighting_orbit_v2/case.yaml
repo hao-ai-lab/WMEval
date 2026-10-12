@@ -26,6 +26,7 @@ reference:
     scene_calibration: reference/artifacts/calibration.json
     unity_qa: reference/artifacts/unity_qa.json
     evaluator_assets_lock: reference/artifacts/evaluator_assets.lock.json
+    table_cell: reference/artifacts/table_cell.json
 protocol:
   candidate_normalization: lighting_orbit_10s_fps12
   min_duration_sec: 10.0
