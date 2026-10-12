@@ -42,8 +42,8 @@
           "choices": [
             "A) the floor ball collides with the platform's outer edge and rebounds without touching any leg",
             "B) the floor ball passes under the platform without contacting the platform at all",
-            "C) the floor ball collides with one of the platform's vertical supporting legs (not the top surface)",
-            "D) the floor ball rolls onto the platform's top surface and comes to rest beside the yellow ball"
+            "C) the floor ball runs into the platform's front-right corner at floor level, striking a supporting leg and stopping there as the platform begins to shift",
+            "D) the floor ball turns away before reaching the platform and rolls off toward the left-side dominoes"
           ],
           "correct_answer": "C"
         },
