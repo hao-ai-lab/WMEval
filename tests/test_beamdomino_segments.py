@@ -83,8 +83,9 @@ def test_detect_segments_raises_when_no_ball_impact():
     log = {
         "trajectory_id": "no_hit",
         "frames": [
+            # Only a startup settling contact, before the default 0.1 s cutoff.
             _frame(0, 0.0),
-            _frame(1, 0.5, collisions=[_collision("FloorBall", "Pillar", 0.0)]),
+            _frame(1, 0.02, collisions=[_collision("FloorBall", "Pillar", 0.0)]),
             _frame(2, 1.0),
         ],
     }
@@ -138,7 +139,7 @@ def test_detect_segments_glancing_when_roof_never_tips():
             _shape_frame(5, 2.0, fallen=3),
         ],
     }
-    out = detect_segments(log, ball_impulse_threshold=0.0, ball_impact_min_time_sec=0.1)
+    out = detect_segments(log)
 
     assert out["trajectory_shape"] == "glancing"
     assert [(e["name"], e["start_sec"], e["end_sec"]) for e in out["events"]] == [
@@ -163,7 +164,7 @@ def test_detect_segments_direct_strike_when_ball_hits_a_domino_first():
             _shape_frame(4, 2.0, fallen=3),
         ],
     }
-    out = detect_segments(log, ball_impulse_threshold=0.0, ball_impact_min_time_sec=0.1)
+    out = detect_segments(log)
 
     assert out["trajectory_shape"] == "direct_strike"
     assert [(e["name"], e["start_sec"], e["end_sec"]) for e in out["events"]] == [

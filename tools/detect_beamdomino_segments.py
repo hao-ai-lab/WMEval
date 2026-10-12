@@ -122,8 +122,8 @@ def detect_segments(
     *,
     plateau_window_sec: float = 0.5,
     fallen_tilt_deg: float = 30.0,
-    ball_impulse_threshold: float = 0.01,
-    ball_impact_min_time_sec: float = 0.0,
+    ball_impulse_threshold: float = 0.0,
+    ball_impact_min_time_sec: float = 0.1,
     motion_onset_velocity_mps: float = 0.5,
     platform_tilt_threshold_deg: float = 5.0,
 ) -> Dict[str, Any]:
@@ -359,10 +359,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--plateau-window-sec", type=float, default=0.5)
     p.add_argument("--fallen-tilt-deg", type=float, default=30.0,
                    help="Domino is 'fallen' once max(|rot.x|,|rot.z|) exceeds this.")
-    p.add_argument("--ball-impulse-threshold", type=float, default=0.01,
-                   help="Min collision impulse to count as a ball impact (filters resting contacts).")
-    p.add_argument("--ball-impact-min-time-sec", type=float, default=0.0,
-                   help="Skip ball collisions before this sim-time (filters t=0 settling contacts).")
+    p.add_argument("--ball-impulse-threshold", type=float, default=0.0,
+                   help="Min collision impulse to count as a ball impact. 0 by default: Unity "
+                        "logs real FloorBall<->Pillar/Domino contacts with impulse 0.0.")
+    p.add_argument("--ball-impact-min-time-sec", type=float, default=0.1,
+                   help="Skip ball collisions before this sim-time (filters the t~0.02s "
+                        "settling contacts, which the 0 impulse threshold would otherwise accept).")
     p.add_argument("--motion-onset-velocity-mps", type=float, default=0.5,
                    help="FloorBall speed (m/s) at which the rolling segment begins. "
                         "Falls back to t=0 if the log has no velocity field.")
