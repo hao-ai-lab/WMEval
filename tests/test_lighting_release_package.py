@@ -1,5 +1,6 @@
 import hashlib
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -110,3 +111,36 @@ def test_package_build_inputs_resolve_relative_to_manifest(tmp_path, monkeypatch
     inputs.write_text(json.dumps(inventory))
     monkeypatch.chdir(repo)
     assert build(inputs, tmp_path / 'relative-inputs', repo)['formal_jobs'] == 15
+
+
+def test_transport_metadata_refreshes_stale_case_lock_without_changing_inputs(tmp_path):
+    from evaluation.lite.authoring import _fingerprint
+    from tools.build_lighting_orbit_case import write_table_cell
+    source = Path(__file__).resolve().parents[1] / 'eval_sets/wmeval_lite_v1/cases' / 'SunRisesAndSets/lighting_orbit_v2'
+    case = tmp_path / 'case'
+    shutil.copytree(source, case)
+    inputs = {p.relative_to(case): hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in (case / 'reference').rglob('*') if p.is_file()
+              and p.name not in {'checksums.sha256', 'table_cell.json'}}
+    raw = yaml.safe_load((case / 'case.yaml').read_text())
+    raw['evaluator_lock']['evaluator_fingerprint'] = 'stale'
+    (case / 'case.yaml').write_text(yaml.safe_dump(raw, sort_keys=False))
+    write_table_cell(case)
+    raw = yaml.safe_load((case / 'case.yaml').read_text())
+    assert raw['evaluator_lock']['evaluator_fingerprint'] == _fingerprint(case, raw)
+    for relative, expected in inputs.items():
+        assert hashlib.sha256((case / relative).read_bytes()).hexdigest() == expected
+
+
+def test_strict_score_verification_rejects_hardware_variation_before_inference(tmp_path):
+    from tools.verify_lighting_release_run import check_pinned_hardware
+    case = tmp_path / 'eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/case.yaml'
+    case.parent.mkdir(parents=True)
+    case.write_text(yaml.safe_dump({'evaluator_lock': {'dependency_versions': {
+        'gpu': 'NVIDIA RTX PRO 6000 Blackwell Server Edition', 'nvidia_driver': '595.91.07'}}}))
+    valid = 'NVIDIA RTX PRO 6000 Blackwell Server Edition, 595.91.07\n'
+    assert check_pinned_hardware(tmp_path, 1, valid)['policy'] == 'pinned_gpu_and_driver'
+    with pytest.raises(ValueError, match='pinned GPU'):
+        check_pinned_hardware(tmp_path, 1, 'NVIDIA RTX PRO 4500 Blackwell, 595.91.07\n')
+    with pytest.raises(ValueError, match='not enough GPUs'):
+        check_pinned_hardware(tmp_path, 2, valid)

@@ -12,6 +12,7 @@ import signal
 import subprocess
 import sys
 import time
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -22,11 +23,29 @@ def sha(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def check_pinned_hardware(root, gpu_count, inventory=None):
+    case = yaml.safe_load((Path(root) / 'eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/case.yaml').read_text())
+    pins = case.get('evaluator_lock', {}).get('dependency_versions', {})
+    if not pins.get('gpu'):
+        return {'policy': 'legacy_case_without_hardware_pin'}
+    if inventory is None:
+        inventory = subprocess.check_output(
+            ['nvidia-smi', '--query-gpu=name,driver_version', '--format=csv,noheader'], text=True)
+    devices = [tuple(part.strip() for part in line.split(','))
+               for line in inventory.splitlines() if line.strip()]
+    if len(devices) < gpu_count:
+        raise ValueError('not enough GPUs for the selected verification worker count')
+    for name, driver in devices[:gpu_count]:
+        if name != pins['gpu'] or driver != pins.get('nvidia_driver'):
+            raise ValueError('strict score reproduction requires the pinned GPU and driver; '
+                             'use ordinary Lite scoring for a separately reported hardware-variation run')
+    return {'policy': 'pinned_gpu_and_driver', 'devices': devices[:gpu_count]}
+
+
 def run(root, output, deadline, *, gpu_count=2):
     root, output = Path(root).resolve(), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     from tools.build_lighting_release_package import verify
-    rows = [json.loads(line) for line in (root / "candidates.jsonl").read_text().splitlines()]
     workers = []
     status = {"schema_version": 1, "status": "running", "deadline_utc": deadline.isoformat(),
               "bundle_manifest_sha256": sha(root / "MANIFEST.json"), "required_jobs": 15}
@@ -36,6 +55,9 @@ def run(root, output, deadline, *, gpu_count=2):
     save()
     try:
         verify(root)
+        rows = [json.loads(line) for line in (root / "candidates.jsonl").read_text().splitlines()]
+        status['hardware'] = check_pinned_hardware(root, gpu_count)
+        save()
         for index in range(gpu_count):
             manifest = output / f"worker_{index}.jsonl"
             subset = rows[index::gpu_count]

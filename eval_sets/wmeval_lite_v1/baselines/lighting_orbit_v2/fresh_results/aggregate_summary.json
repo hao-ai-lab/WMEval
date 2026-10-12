@@ -19,25 +19,25 @@
             "direction": "lower"
           },
           "means": {
-            "multi_object_sun_disagreement_deg": 37.378,
+            "multi_object_sun_disagreement_deg": 37.374,
             "scene_retention_rate_pct": 100.0,
-            "shadow_area_stability_pct": 5.598,
+            "shadow_area_stability_pct": 5.6,
             "shadow_detection_rate_pct": 100.0,
             "shadow_direction_jitter_deg_per_frame": 0.43599999999999994,
-            "shadow_shape_drift": 3.0361800000000003
+            "shadow_shape_drift": 3.0385999999999997
           },
           "stats": {
             "multi_object_sun_disagreement_deg": {
-              "mean": 37.378,
+              "mean": 37.374,
               "std_across_cases": null,
-              "min_case_mean": 37.378,
-              "max_case_mean": 37.378,
+              "min_case_mean": 37.374,
+              "max_case_mean": 37.374,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 37.378
+                "SunRisesAndSets/lighting_orbit_v2": 37.374
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 19.008188235599942
+                "SunRisesAndSets/lighting_orbit_v2": 19.00278479591873
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -60,16 +60,16 @@
               }
             },
             "shadow_area_stability_pct": {
-              "mean": 5.598,
+              "mean": 5.6,
               "std_across_cases": null,
-              "min_case_mean": 5.598,
-              "max_case_mean": 5.598,
+              "min_case_mean": 5.6,
+              "max_case_mean": 5.6,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 5.598
+                "SunRisesAndSets/lighting_orbit_v2": 5.6
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 1.7386690311844866
+                "SunRisesAndSets/lighting_orbit_v2": 1.7357563193029144
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -108,16 +108,16 @@
               }
             },
             "shadow_shape_drift": {
-              "mean": 3.0361800000000003,
+              "mean": 3.0385999999999997,
               "std_across_cases": null,
-              "min_case_mean": 3.0361800000000003,
-              "max_case_mean": 3.0361800000000003,
+              "min_case_mean": 3.0385999999999997,
+              "max_case_mean": 3.0385999999999997,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 3.0361800000000003
+                "SunRisesAndSets/lighting_orbit_v2": 3.0385999999999997
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 0.704904452390535
+                "SunRisesAndSets/lighting_orbit_v2": 0.7061145551537654
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -136,7 +136,7 @@
                 "shadow_area_stability_pct": 5.21,
                 "shadow_detection_rate_pct": 100.0,
                 "shadow_direction_jitter_deg_per_frame": 0.15,
-                "shadow_shape_drift": 2.4216
+                "shadow_shape_drift": 2.4227
               }
             },
             {
@@ -145,12 +145,12 @@
               "status": "completed",
               "error": null,
               "metrics": {
-                "multi_object_sun_disagreement_deg": 58.46,
+                "multi_object_sun_disagreement_deg": 58.45,
                 "scene_retention_rate_pct": 100.0,
                 "shadow_area_stability_pct": 5.31,
                 "shadow_detection_rate_pct": 100.0,
                 "shadow_direction_jitter_deg_per_frame": 0.62,
-                "shadow_shape_drift": 3.3543
+                "shadow_shape_drift": 3.3557
               }
             },
             {
@@ -161,10 +161,10 @@
               "metrics": {
                 "multi_object_sun_disagreement_deg": 19.17,
                 "scene_retention_rate_pct": 100.0,
-                "shadow_area_stability_pct": 3.57,
+                "shadow_area_stability_pct": 3.58,
                 "shadow_detection_rate_pct": 100.0,
                 "shadow_direction_jitter_deg_per_frame": 0.32,
-                "shadow_shape_drift": 3.3952
+                "shadow_shape_drift": 3.4048
               }
             },
             {
@@ -178,7 +178,7 @@
                 "shadow_area_stability_pct": 5.52,
                 "shadow_detection_rate_pct": 100.0,
                 "shadow_direction_jitter_deg_per_frame": 0.15,
-                "shadow_shape_drift": 2.1749
+                "shadow_shape_drift": 2.1748
               }
             },
             {
@@ -187,12 +187,12 @@
               "status": "completed",
               "error": null,
               "metrics": {
-                "multi_object_sun_disagreement_deg": 57.38,
+                "multi_object_sun_disagreement_deg": 57.37,
                 "scene_retention_rate_pct": 100.0,
                 "shadow_area_stability_pct": 8.38,
                 "shadow_detection_rate_pct": 100.0,
                 "shadow_direction_jitter_deg_per_frame": 0.94,
-                "shadow_shape_drift": 3.8349
+                "shadow_shape_drift": 3.835
               }
             }
           ],
@@ -215,30 +215,30 @@
           "num_completed": 5,
           "headline": {
             "metric": "shadow_direction_jitter_deg_per_frame",
-            "value": 4.308,
+            "value": 4.3420000000000005,
             "std_across_cases": null,
             "direction": "lower"
           },
           "means": {
-            "multi_object_sun_disagreement_deg": 52.8,
+            "multi_object_sun_disagreement_deg": 52.79600000000001,
             "scene_retention_rate_pct": 100.0,
-            "shadow_area_stability_pct": 17.308,
+            "shadow_area_stability_pct": 17.342000000000002,
             "shadow_detection_rate_pct": 99.834,
-            "shadow_direction_jitter_deg_per_frame": 4.308,
-            "shadow_shape_drift": 7.77022
+            "shadow_direction_jitter_deg_per_frame": 4.3420000000000005,
+            "shadow_shape_drift": 7.77332
           },
           "stats": {
             "multi_object_sun_disagreement_deg": {
-              "mean": 52.8,
+              "mean": 52.79600000000001,
               "std_across_cases": null,
-              "min_case_mean": 52.8,
-              "max_case_mean": 52.8,
+              "min_case_mean": 52.79600000000001,
+              "max_case_mean": 52.79600000000001,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 52.8
+                "SunRisesAndSets/lighting_orbit_v2": 52.79600000000001
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 10.107121251869888
+                "SunRisesAndSets/lighting_orbit_v2": 10.112787943984584
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -261,16 +261,16 @@
               }
             },
             "shadow_area_stability_pct": {
-              "mean": 17.308,
+              "mean": 17.342000000000002,
               "std_across_cases": null,
-              "min_case_mean": 17.308,
-              "max_case_mean": 17.308,
+              "min_case_mean": 17.342000000000002,
+              "max_case_mean": 17.342000000000002,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 17.308
+                "SunRisesAndSets/lighting_orbit_v2": 17.342000000000002
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 4.329384482810461
+                "SunRisesAndSets/lighting_orbit_v2": 4.312971133684991
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -293,32 +293,32 @@
               }
             },
             "shadow_direction_jitter_deg_per_frame": {
-              "mean": 4.308,
+              "mean": 4.3420000000000005,
               "std_across_cases": null,
-              "min_case_mean": 4.308,
-              "max_case_mean": 4.308,
+              "min_case_mean": 4.3420000000000005,
+              "max_case_mean": 4.3420000000000005,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 4.308
+                "SunRisesAndSets/lighting_orbit_v2": 4.3420000000000005
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 2.1235512708667996
+                "SunRisesAndSets/lighting_orbit_v2": 2.0855862485162295
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
               }
             },
             "shadow_shape_drift": {
-              "mean": 7.77022,
+              "mean": 7.77332,
               "std_across_cases": null,
-              "min_case_mean": 7.77022,
-              "max_case_mean": 7.77022,
+              "min_case_mean": 7.77332,
+              "max_case_mean": 7.77332,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 7.77022
+                "SunRisesAndSets/lighting_orbit_v2": 7.77332
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 1.8368828833107458
+                "SunRisesAndSets/lighting_orbit_v2": 1.83468910091056
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -346,7 +346,7 @@
               "status": "completed",
               "error": null,
               "metrics": {
-                "multi_object_sun_disagreement_deg": 52.68,
+                "multi_object_sun_disagreement_deg": 52.69,
                 "scene_retention_rate_pct": 100.0,
                 "shadow_area_stability_pct": 16.1,
                 "shadow_detection_rate_pct": 100.0,
@@ -360,12 +360,12 @@
               "status": "completed",
               "error": null,
               "metrics": {
-                "multi_object_sun_disagreement_deg": 44.93,
+                "multi_object_sun_disagreement_deg": 44.89,
                 "scene_retention_rate_pct": 100.0,
                 "shadow_area_stability_pct": 18.16,
                 "shadow_detection_rate_pct": 99.17,
                 "shadow_direction_jitter_deg_per_frame": 2.93,
-                "shadow_shape_drift": 9.5391
+                "shadow_shape_drift": 9.5398
               }
             },
             {
@@ -376,7 +376,7 @@
               "metrics": {
                 "multi_object_sun_disagreement_deg": 52.77,
                 "scene_retention_rate_pct": 100.0,
-                "shadow_area_stability_pct": 12.67,
+                "shadow_area_stability_pct": 12.66,
                 "shadow_detection_rate_pct": 100.0,
                 "shadow_direction_jitter_deg_per_frame": 4.04,
                 "shadow_shape_drift": 5.4153
@@ -388,12 +388,12 @@
               "status": "completed",
               "error": null,
               "metrics": {
-                "multi_object_sun_disagreement_deg": 44.27,
+                "multi_object_sun_disagreement_deg": 44.28,
                 "scene_retention_rate_pct": 100.0,
-                "shadow_area_stability_pct": 15.4,
+                "shadow_area_stability_pct": 15.58,
                 "shadow_detection_rate_pct": 100.0,
-                "shadow_direction_jitter_deg_per_frame": 2.36,
-                "shadow_shape_drift": 6.5923
+                "shadow_direction_jitter_deg_per_frame": 2.53,
+                "shadow_shape_drift": 6.6071
               }
             }
           ],
@@ -423,10 +423,10 @@
           "means": {
             "multi_object_sun_disagreement_deg": 67.29400000000001,
             "scene_retention_rate_pct": 100.0,
-            "shadow_area_stability_pct": 25.078,
+            "shadow_area_stability_pct": 25.080000000000002,
             "shadow_detection_rate_pct": 98.332,
             "shadow_direction_jitter_deg_per_frame": 11.064,
-            "shadow_shape_drift": 9.08986
+            "shadow_shape_drift": 9.09202
           },
           "stats": {
             "multi_object_sun_disagreement_deg": {
@@ -462,16 +462,16 @@
               }
             },
             "shadow_area_stability_pct": {
-              "mean": 25.078,
+              "mean": 25.080000000000002,
               "std_across_cases": null,
-              "min_case_mean": 25.078,
-              "max_case_mean": 25.078,
+              "min_case_mean": 25.080000000000002,
+              "max_case_mean": 25.080000000000002,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 25.078
+                "SunRisesAndSets/lighting_orbit_v2": 25.080000000000002
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 1.3798079576520788
+                "SunRisesAndSets/lighting_orbit_v2": 1.382967823197633
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -510,16 +510,16 @@
               }
             },
             "shadow_shape_drift": {
-              "mean": 9.08986,
+              "mean": 9.09202,
               "std_across_cases": null,
-              "min_case_mean": 9.08986,
-              "max_case_mean": 9.08986,
+              "min_case_mean": 9.09202,
+              "max_case_mean": 9.09202,
               "n_cases": 1,
               "case_means": {
-                "SunRisesAndSets/lighting_orbit_v2": 9.08986
+                "SunRisesAndSets/lighting_orbit_v2": 9.09202
               },
               "seed_std_by_case": {
-                "SunRisesAndSets/lighting_orbit_v2": 0.7077725679905943
+                "SunRisesAndSets/lighting_orbit_v2": 0.7073785881690227
               },
               "valid_repeats_by_case": {
                 "SunRisesAndSets/lighting_orbit_v2": 5
@@ -538,7 +538,7 @@
                 "shadow_area_stability_pct": 24.39,
                 "shadow_detection_rate_pct": 95.83,
                 "shadow_direction_jitter_deg_per_frame": 9.3,
-                "shadow_shape_drift": 8.1915
+                "shadow_shape_drift": 8.1917
               }
             },
             {
@@ -549,10 +549,10 @@
               "metrics": {
                 "multi_object_sun_disagreement_deg": 71.2,
                 "scene_retention_rate_pct": 100.0,
-                "shadow_area_stability_pct": 26.82,
+                "shadow_area_stability_pct": 26.83,
                 "shadow_detection_rate_pct": 97.5,
                 "shadow_direction_jitter_deg_per_frame": 10.08,
-                "shadow_shape_drift": 8.9111
+                "shadow_shape_drift": 8.9164
               }
             },
             {
@@ -566,7 +566,7 @@
                 "shadow_area_stability_pct": 23.83,
                 "shadow_detection_rate_pct": 100.0,
                 "shadow_direction_jitter_deg_per_frame": 10.94,
-                "shadow_shape_drift": 9.0881
+                "shadow_shape_drift": 9.0885
               }
             },
             {
@@ -594,7 +594,7 @@
                 "shadow_area_stability_pct": 24.05,
                 "shadow_detection_rate_pct": 98.33,
                 "shadow_direction_jitter_deg_per_frame": 14.47,
-                "shadow_shape_drift": 9.0895
+                "shadow_shape_drift": 9.0944
               }
             }
           ],

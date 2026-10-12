@@ -5,7 +5,7 @@ with eye height 1.6 m and a continuous look-at at the measured tabletop centre
 (1.2735698223114014 m). The fixed sun and static props come from the original
 SunRisesAndSets scene at revision 84a06a422ae0a0d04153596e881c85be8d4ff3f1.
 The portable candidate bundle is `SunRisesAndSets/lighting_orbit_v2`.
-The historical `SunRisesAndSets/lighting` case remains the paper rescoring path
+The historical `SunRisesAndSets/lighting` case remains the paper rescoring path via `--suite eval_sets/wmeval_lite_v1/lighting_paper_native`
 until the new generation and scoring coverage is complete.
 
 Unity capture supplies 121 camera samples at 12 Hz, including the closure at
@@ -190,9 +190,9 @@ numeric seeds), or a demonstrated unsupported interface is explicitly N/A.
 Run the same bundles with `tools/run_wmeval_lite.py run --dimensions lighting_shading`.
 Compare a fresh result and a resume; invalidate stale candidate/evaluator hashes.
 Do not calculate a complete-model aggregate from fewer than five successful
-seeds, or represent missing results as zero. The active lighting case switches only after the standalone bundle passes
-its fresh-score and resume acceptance checks. Update PENDING.md and open a PR against lanxiang/release-cleanup; publishing
-baseline media and merging are separate actions.
+seeds, or represent missing results as zero. The active lighting case is now lighting_orbit_v2 after pinned-hardware fresh-score
+and resume acceptance. The fifteen formal native videos are checked into the
+repository. Merging and HF publication are separate actions.
 
 ## Standalone release package
 
@@ -213,17 +213,30 @@ Fresh scoring uses the same tools/run_wmeval_lite.py path on an extracted clean
 directory. tools/verify_lighting_release_run.py splits the fifteen jobs between
 two GPUs, compares every one of the ninety metric values with tolerance 1e-6,
 runs the real Lite resume command, and requires unchanged result-row hashes.
-The initial verification attempt failed before scoring on runtime bytecode;
-the regression and local fix are retained. The corrected run completed all
-fifteen candidates on RTX PRO 4500, with all normalized input hashes unchanged.
-Actual resume preserved the fifteen score rows exactly. 21/90 metric values
-differ from the original RTX PRO 6000 result at strict 1e-6. Max differences are
-MOSD 0.04deg, SDJ 0.17deg/frame, SAS 0.18 percentage points, SSD 0.0148; SRR/SDR are
-identical. The cause is not isolated; all first-frame detector outputs also
-show floating-point differences. results/release_verification is not a passing
-strict comparison. Do not overwrite the old scores or silently broaden the
-tolerance. The canonical case stays inactive until numerical acceptance.
-Evidence is in results/release_verification/.
+The initial bytecode-inventory bug was fixed and regression tested. A PRO 4500
+run completed 15/15 with identical normalized inputs but 21/90 numerical differences;
+that complete audit remains in results/release_verification/.
+
+The subsequent original-model RTX PRO 6000 run completed 15/15 with all 90 metrics
+exactly equal at 1e-6, maximum absolute error 0, and actual resume preserved the row
+hash. Two independent LingBot/42 scores also matched the original. Its GPU/driver,
+environment, raw scores, commands and reports are in results/same_gpu_verification/.
+Strict verification requires the case-locked PRO 6000 model and driver; the checker
+rejects a different GPU before inference. Other hardware can use ordinary Lite
+scoring as a separately reported numerical-variation run.
+
+Adding transport metadata had left a stale derived case stamp. The stamp was
+corrected from the actual scored case and evaluator sources, with byte-identical
+reference assets, case parameters and metrics. Raw original rows remain unchanged;
+cached rows retain source_evaluator_lock and an explicit correction audit. Actual
+resume on the corrected identity also passed. Future metadata authoring refreshes
+this stamp automatically.
+
+Build from eval_sets/wmeval_lite_v1/baselines/lighting_orbit_v2/release_sources.json.
+The published baseline README provides full build, fresh-scoring and cached-resume
+commands. A copied cache replays all 15 rows on CPU without GPU or model downloads;
+changing candidate/evaluator fingerprints invalidates stale rows. Exact cross-GPU
+fresh-score equality is not claimed. No GPT API key is used.
 
 Model generation sources and checkpoint inventories are in source_provenance/,
 generation_model_inventory.json and the two HY inventories. Clone the listed

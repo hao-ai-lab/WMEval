@@ -1,0 +1,130 @@
+{
+  "suite_name": "WMEval lighting orbit release",
+  "version": "lighting-orbit-v2",
+  "aggregation": "mean_over_cases_of_mean_over_seeds",
+  "num_rows": 1,
+  "num_completed": 1,
+  "models": {
+    "LingBot": {
+      "dimensions": {
+        "lighting_shading": {
+          "display_name": "Lighting & Shading",
+          "num_rows": 1,
+          "num_cases": 1,
+          "num_completed": 1,
+          "headline": {
+            "metric": "shadow_direction_jitter_deg_per_frame",
+            "value": null,
+            "std_across_cases": null,
+            "direction": "lower"
+          },
+          "means": {
+            "multi_object_sun_disagreement_deg": null,
+            "scene_retention_rate_pct": null,
+            "shadow_area_stability_pct": null,
+            "shadow_detection_rate_pct": null,
+            "shadow_direction_jitter_deg_per_frame": null,
+            "shadow_shape_drift": null
+          },
+          "stats": {
+            "multi_object_sun_disagreement_deg": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "scene_retention_rate_pct": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_area_stability_pct": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_detection_rate_pct": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_direction_jitter_deg_per_frame": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_shape_drift": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            }
+          },
+          "per_case": [
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "42",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "scene_retention_rate_pct": 100.0,
+                "shadow_detection_rate_pct": 100.0,
+                "multi_object_sun_disagreement_deg": 44.28,
+                "shadow_direction_jitter_deg_per_frame": 2.53,
+                "shadow_area_stability_pct": 15.58,
+                "shadow_shape_drift": 6.6071
+              }
+            }
+          ],
+          "repeat_coverage": {
+            "SunRisesAndSets/lighting_orbit_v2": {
+              "required": 5,
+              "completed": 1
+            }
+          },
+          "coverage_status": "incomplete"
+        }
+      }
+    }
+  }
+}

@@ -146,6 +146,10 @@ def build(input_manifest, destination, repo=ROOT):
     evidence = repo / 'experiments/lighting_orbit_v2/results/release_verification'
     for path in sorted(evidence.glob('*.json*')):
         copy(path, destination / path.relative_to(repo))
+    exact = repo / 'experiments/lighting_orbit_v2/results/same_gpu_verification'
+    for path in sorted(exact.rglob('*')):
+        if path.is_file() and path.suffix in {'.json', '.jsonl', '.log', '.yaml', '.py'}:
+            copy(path, destination / path.relative_to(repo))
     cached = repo / 'eval_sets/wmeval_lite_v1/baselines/lighting_orbit_v2/fresh_results'
     for path in sorted(cached.glob('*.json*')):
         copy(path, destination / 'baseline_results' / path.name)
@@ -210,6 +214,8 @@ def build(input_manifest, destination, repo=ROOT):
         "    cp -R baseline_results results\n"
         "    python tools/run_wmeval_lite.py run --dimensions lighting_shading "
         "--candidate-manifest candidates.jsonl --output-dir results --device cpu --resume\n\n"
+        "Cached replay requires PyTorch, NumPy, OpenCV and PyYAML installed, but loads no "
+        "model weights and needs no GPU or GPT API key.\n\n"
         "Native videos are sampled at 12fps over exactly ten seconds. No padding or time stretching. "
         "Fresh evaluation needs the case-locked Torch 2.8/CUDA 12.8 environment, SAM2 source "
         "2b90b9f5ceec907a1c18123530e92e794ad901a4 and the verified GroundingDINO/SAM2 assets. "
@@ -217,7 +223,9 @@ def build(input_manifest, destination, repo=ROOT):
         "HF_HUB_OFFLINE=1 / TRANSFORMERS_OFFLINE=1 after preparing it. No GPT API key is used. "
         "Generation receipts preserve original provenance; descriptive absolute paths inside receipts "
         "are archival commands, not dataset file dependencies. All evaluated files resolve within this bundle.\n")
-    verification = evidence / 'verification.json'
+    verification = exact / 'full_release/verification.json'
+    if not verification.exists():
+        verification = evidence / 'verification.json'
     if verification.exists():
         status = json.loads(verification.read_text())
         with (destination / 'README.md').open('a') as stream:
@@ -225,6 +233,13 @@ def build(input_manifest, destination, repo=ROOT):
                 'The archived verification report is authoritative. Dataset checksum verification '
                 'does not imply exact GPU-score reproducibility. Do not replace the expected scores '
                 'or relax their tolerance to hide a failed comparison.\n')
+            if status['status'] == 'passed':
+                stream.write('Strict fresh-score equality is verified on NVIDIA RTX PRO 6000 '
+                    'Blackwell Server Edition, driver 595.91.07, with the case-locked dependencies. '
+                    'The separate RTX PRO 4500 audit has small numerical differences and is retained. '
+                    'All raw scored rows are preserved. baseline_results contains the corrected '
+                    'derived case identity stamp, with source_evaluator_lock and an explicit stamp '
+                    'correction audit; its scores and evaluator inputs are unchanged.\n')
     manifest = {"schema_version": 1, "release_id": "wmeval-lighting-orbit-v2",
                 "case_id": CASE_ID, "support": support,
                 "scoring": {"fps": 12, "seconds": 10, "frames": 120},

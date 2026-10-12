@@ -1,0 +1,52 @@
+{
+  "case": "SunRisesAndSets/lighting_orbit_v2",
+  "completed_at_utc": "2026-10-12T04:01:31.890539+00:00",
+  "expected_metrics": {
+    "multi_object_sun_disagreement_deg": 44.28,
+    "scene_retention_rate_pct": 100.0,
+    "shadow_area_stability_pct": 15.58,
+    "shadow_detection_rate_pct": 100.0,
+    "shadow_direction_jitter_deg_per_frame": 2.53,
+    "shadow_shape_drift": 6.6071
+  },
+  "full_release_verified": true,
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition, 595.91.07",
+  "model": "LingBot",
+  "native_sha256": "68679fa54813af7baad99d15d3bce0c7ce5feb6b99d4fda46cab6550e8079a7f",
+  "original_repeats_equal": true,
+  "phase": "complete",
+  "repeats_match_original": true,
+  "runs": [
+    {
+      "differences_from_original": {},
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 44.28,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 15.58,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 2.53,
+        "shadow_shape_drift": 6.6071
+      },
+      "name": "original_1",
+      "normalized_sha256": "45110eb788f915a10a0b7f3fa175e36946ae193808cb582b10d44c3028097580",
+      "result_jsonl_sha256": "3cabd682f88b7a6ea38f95635d1379ecc050d1b6d29a9a64033ca34a27aef6ff"
+    },
+    {
+      "differences_from_original": {},
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 44.28,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 15.58,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 2.53,
+        "shadow_shape_drift": 6.6071
+      },
+      "name": "original_2",
+      "normalized_sha256": "45110eb788f915a10a0b7f3fa175e36946ae193808cb582b10d44c3028097580",
+      "result_jsonl_sha256": "95f8e352c87a55146c83e35e11eacb24e9ee87d97d162bdadf3c80e1a467b5ae"
+    }
+  ],
+  "schema_version": 1,
+  "seed": "42",
+  "status": "passed"
+}

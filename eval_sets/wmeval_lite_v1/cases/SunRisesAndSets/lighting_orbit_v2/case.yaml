@@ -41,10 +41,16 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: e48f75cf80ddd581148f085099913696480ec0c6
-  evaluator_fingerprint: 074084a54f5d7b5a9b1e38a9fc55b689
-  module_config: {}
+  evaluator_fingerprint: 1cfce35ed9cf319bc17c0afbfc8921d6
+  module_config: &id001
+    shadow_consistency:
+      shadow_text_prompt: table. chair. lamp.
+      shadow_anchor_label: table
   artifact_schema_versions:
     camera_pose_samples: 1
+    trajectory: 1
+    action_npz: 1
+    table_cell: 1
   dependency_versions:
     python: '3.12'
     torch: 2.8.0+cu128
@@ -52,7 +58,7 @@ evaluator_lock:
     opencv-python-headless: 4.10.0.84
     transformers: 4.51.3
     sam2_source_revision: 2b90b9f5ceec907a1c18123530e92e794ad901a4
-module_params:
-  shadow_consistency:
-    shadow_text_prompt: table. chair. lamp.
-    shadow_anchor_label: table
+    cuda: '12.8'
+    gpu: NVIDIA RTX PRO 6000 Blackwell Server Edition
+    nvidia_driver: 595.91.07
+module_params: *id001

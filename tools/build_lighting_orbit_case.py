@@ -54,6 +54,8 @@ def write_table_cell(case: Path):
                    if path.is_file() and path.name != 'checksums.sha256')
     (case / 'reference/checksums.sha256').write_text(''.join(
         f'{sha(path)}  {path.relative_to(case).as_posix()}\n' for path in paths))
+    from evaluation.lite.authoring import update_lock
+    update_lock(case, relock=False)
     return cell
 
 

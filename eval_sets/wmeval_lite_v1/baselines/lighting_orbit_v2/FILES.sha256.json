@@ -1,8 +1,8 @@
 {
   "files": {
     "README.md": {
-      "bytes": 2776,
-      "sha256": "f36227d790bd11c7e0d2a8c7502f3904a68e1f4ba1fcd9d8461e79ff2019f52f"
+      "bytes": 3186,
+      "sha256": "4697fb7bde4517758db40bc07c7e23483780bf4c53f6fbf771ccd5a3e0234011"
     },
     "candidates.jsonl": {
       "bytes": 5531,
@@ -137,16 +137,16 @@
       "sha256": "5b7eb9e5a18da031f600bf36f9f21805192199b4641fc861f6638987e3de9aa6"
     },
     "fresh_results/aggregate_summary.json": {
-      "bytes": 22106,
-      "sha256": "a6027f00c9bebb58bd2e00366aabd69bf51f065dfe46b9c2bf11f7dd5c9d9274"
+      "bytes": 22356,
+      "sha256": "e01c9ba4ca14727e1045907e152860fc1b5c8e38cb33a7f891251c49d3ff5f5d"
     },
     "fresh_results/per_case_results.jsonl": {
-      "bytes": 15797,
-      "sha256": "6825fb23788f0f8096d25cff2b9d233586cf253b6b9ddc05d9f127abfcd64879"
+      "bytes": 19485,
+      "sha256": "044d108a465a2e3608d8e27a1548ed45614bcf7059f02039e8130fa138b12c3d"
     },
     "release_archive_pin.json": {
-      "bytes": 258,
-      "sha256": "dd605a5607296c85f5becbbd04212e7e49aee209e676489bfb4023950738dbc6"
+      "bytes": 421,
+      "sha256": "5cc18130e22183c23c24b7b932c841be2f4b66aa75b35324383869f8b2dc622a"
     },
     "release_sources.json": {
       "bytes": 7532,
@@ -154,5 +154,5 @@
     }
   },
   "schema_version": 1,
-  "status": "packaged_strict_acceptance_pending"
+  "status": "pinned_gpu_acceptance_passed"
 }
