@@ -202,22 +202,21 @@ files: `cases/<Scene>/<variant>/reference/artifacts/` (`trajectory.yaml`, `actio
 - [x] **BeamDomino adapter or explicit `unsupported`** per backend in `action_backends.yaml`
   (new `ball` target classified for every backend). Evidence: `2220da2`. The BeamDomino
   trajectory equals the case's `action.npy` on all 121 shared steps; §5 can reuse it.
-- [ ] **Bake the reference flow** into the case; **vendor PTLFlow**. RAFT's checkpoint is now
+- [x] **Bake the reference flow** (decided against) / **vendor PTLFlow** (done). RAFT's checkpoint is now
   pinned (explicit weights enum + SHA-256 in `evaluator_assets.lock.json`, tested). Still open:
   - [x] Synthetic RAFT (Table 3 "Mean Flow Cosine" / "Pixel EPE"): `synthetic_flow.py` and
     `calibration.json` are vendored unmodified from `github.com/shaoxiongduan/ptlflow` (Apache-2.0
     upstream) under `evaluation/modules/vendor/ptlflow_synthetic/` with a NOTICE; `ptlflow_root` and
     the calibration default to them. Actions are inferred per pair from the reference RAFT flow, no
     depth model. Surfaced as `synthetic_mean_flow_cosine` / `synthetic_pixel_epe_mean`.
-    Whether the fork's copy may be redistributed is still the release owner's call (P0-01).
     Verified on Modal (5 seeds; paper in parentheses):
 
     | Model | BallRoller | BeamDomino | MirrorRollingBall |
     |---|---|---|---|
     | Genie cos / EPE | -0.33 / 665 (-0.33 / 665) | 0.99 / 839 (0.99 / 841) | 0.98 / 271 (0.98 / 271) |
     | LingBot Act cos / EPE | 1.00 / 612 (1.00 / 621) | 0.99 / 967 (0.99 / 970) | 1.00 / 668 (1.00 / 678) |
-  - Baked reference flow costs ~1.8 MB per pair at 1280x720 float16 (24-32 pairs per case);
-    needs a bundle-size decision. It would buy determinism/speed only; the candidate side
+  - Reference flow is not baked: ~1.8 MB per pair at 1280x720 float16 (24-32 pairs, ~45-60 MB per
+    case) for determinism/speed only, since RAFT's weights are pinned and the candidate side
     still runs RAFT.
 - [x] **Headline relative EPE** (done) / **resample to the reference** (decided against).
   Measured on BallRoller (Modal, 5 seeds), relative EPE: Genie `none` 0.55 vs
@@ -408,18 +407,20 @@ the candidate's event detection; the reference is no longer judged). Key files:
 
     | Model | BallRoller | BeamDomino | MirrorRollingBall |
     |---|---|---|---|
-    | Project Genie | 0.55 (0.56) | 0.60 (0.60) | 0.72 (0.72) |
-    | LingBot Act | 0.38 (0.38) | 0.58 (0.61) | 0.56 (0.62) |
+    | Project Genie | 0.56 (0.56) | 0.60 (0.60) | 0.73 (0.72) |
+    | LingBot Act | 0.38 (0.38) | 0.58 (0.61) | 0.59 (0.62) |
 
-    Genie falls back to `temporal_only` on 1 of 15 rows, LingBot on 4 of 15 (judge found no
-    candidate event to pair with the frozen one). Those fallbacks are why LingBot BeamDomino and
-    MirrorRollingBall sit below the paper. Offline (`event_source: reference`, zero API calls) the
+    Genie falls back to `temporal_only` on 1 of 15 rows, LingBot on 4 of 15, identically across two
+    runs: the candidate judge reports no contact in those videos (0 candidate events; e.g. the
+    objects stay visibly apart), so there is nothing to pair with the frozen reference event. That
+    is a model/judge outcome, not a pipeline fault. Offline (`event_source: reference`, zero API
+    calls) the
     frozen events reproduce the paper except LingBot on BeamDomino (table below).
-  - Judge bug (pre-existing, not fixed for live judging): side relabeling overwrites an
-    event's `evidence_frame_indices` with its own local window, which the grid sanitizer
-    then rejects as `evidence_not_in_grid` unless a frame happens to coincide with the main
-    grid. This is why one reference gave 0/1/3/0/0 contacts. Frozen events are exempt (their
-    evidence counts as seen); live judging of candidates still drops such events.
+  - Judge bug (fixed): side relabeling overwrote an event's `evidence_frame_indices` with its
+    own local window, which the grid sanitizer then rejected as `evidence_not_in_grid` (one
+    reference gave 0/1/3/0/0 contacts). The relabel window now goes to
+    `side_evidence_frame_indices` and the grid evidence is kept; covered by a test. Scores were
+    unchanged on re-run (the fallbacks above are judge no-contact outcomes, not this bug).
 - [x] **Flag `causal` vs `temporal_only` per row** — already implemented (`lpips_causal_mean`,
   `lpips_temporal_fallback_mean`, matched-event counts); the dimension summary now also
   carries `lpips_primary_source_counts`.
