@@ -287,6 +287,17 @@ BeamDomino causal / causal_glancing / causal_direct_strike
 - [ ] **Audit the LingBot (Cam) paper row** and label it if it used a different protocol.
 - [ ] **Keep `causal_step_judge_repeats: 5`** and record every candidate judge pass;
   re-baseline the frozen reference answers when the judge or prompt changes.
+  Five judge passes over one rollout is a different estimator from the paper's
+  five rollouts: it makes fractional CSR expressible but does not reproduce
+  Table 12. gpt-5.4 sends no temperature, so passes are sampled.
+- [x] **Refuse mismatched recordings.** `causal_step` now rejects a
+  `judge_answers.json` recorded with a different judge model, frame count or
+  prompt version (fef83e8).
+- [x] **Repair the four reference-side descriptive misses** (`direct_strike` seg1
+  stale distractor; `causal` seg2; `glancing` seg1 and seg2), checked against the
+  Unity logs and the judge's K=8 frames. Re-recorded and re-locked: `csr_unity`
+  80/20/0 → 100/80/100 (Table 12: 100/60/100); only `glancing` seg1 is below 5/5
+  (4/5). The Lite QA now differs from the paper's; see the suite.yaml banner (e4e1c9f).
 
 ## 6. Lighting & shading — `lighting_shading`
 
