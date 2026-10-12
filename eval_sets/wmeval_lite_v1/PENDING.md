@@ -204,10 +204,18 @@ files: `cases/<Scene>/<variant>/reference/artifacts/` (`trajectory.yaml`, `actio
   trajectory equals the case's `action.npy` on all 121 shared steps; §5 can reuse it.
 - [ ] **Bake the reference flow** into the case; **vendor PTLFlow**. RAFT's checkpoint is now
   pinned (explicit weights enum + SHA-256 in `evaluator_assets.lock.json`, tested). Still open:
-  - Synthetic RAFT (Table 3 "Mean Flow Cosine" / "Pixel EPE") is not computed in Lite. It
-    needs `synthetic_flow.py` and a calibration from `github.com/shaoxiongduan/ptlflow`, a
-    personal fork (one 289-line file plus a root `calibration.json` of unknown provenance).
-    Vendoring it is an attribution/licensing decision for the release owner (P0-01).
+  - [x] Synthetic RAFT (Table 3 "Mean Flow Cosine" / "Pixel EPE"): `synthetic_flow.py` and
+    `calibration.json` are vendored unmodified from `github.com/shaoxiongduan/ptlflow` (Apache-2.0
+    upstream) under `evaluation/modules/vendor/ptlflow_synthetic/` with a NOTICE; `ptlflow_root` and
+    the calibration default to them. Actions are inferred per pair from the reference RAFT flow, no
+    depth model. Surfaced as `synthetic_mean_flow_cosine` / `synthetic_pixel_epe_mean`.
+    Whether the fork's copy may be redistributed is still the release owner's call (P0-01).
+    Verified on Modal (5 seeds; paper in parentheses):
+
+    | Model | BallRoller | BeamDomino | MirrorRollingBall |
+    |---|---|---|---|
+    | Genie cos / EPE | -0.33 / 665 (-0.33 / 665) | 0.99 / 839 (0.99 / 841) | 0.98 / 271 (0.98 / 271) |
+    | LingBot Act cos / EPE | 1.00 / 612 (1.00 / 621) | 0.99 / 967 (0.99 / 970) | 1.00 / 668 (1.00 / 678) |
   - Baked reference flow costs ~1.8 MB per pair at 1280x720 float16 (24-32 pairs per case);
     needs a bundle-size decision. It would buy determinism/speed only; the candidate side
     still runs RAFT.

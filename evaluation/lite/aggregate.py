@@ -119,9 +119,12 @@ def _extract_control_motion(result: Mapping[str, Any]) -> dict[str, Any]:
                 _get(stats, "summary", "mean")
             )
     synthetic = result.get("synthetic_vs_candidate")
-    if isinstance(synthetic, Mapping):
-        metrics["synthetic_epe_mean"] = _numeric(
-            _get(synthetic, "epe_summary", "mean")
+    if isinstance(synthetic, Mapping) and synthetic.get("enabled"):
+        metrics["synthetic_mean_flow_cosine"] = _numeric(
+            _get(synthetic, "temporal_summary", "mf_cosine_mean")
+        )
+        metrics["synthetic_pixel_epe_mean"] = _numeric(
+            _get(synthetic, "temporal_summary", "pixel_epe_mean_mean")
         )
     return metrics
 

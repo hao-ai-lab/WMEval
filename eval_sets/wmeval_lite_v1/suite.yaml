@@ -677,6 +677,8 @@ dimensions:
       direction: lower
       extra_means:
       - cosine_similarity_dynamic_mean_raw
+      - synthetic_mean_flow_cosine
+      - synthetic_pixel_epe_mean
       - epe_dynamic_mean_compensated
       - epe_mean_raw
       - bad_pixel_rate_1px_mean
