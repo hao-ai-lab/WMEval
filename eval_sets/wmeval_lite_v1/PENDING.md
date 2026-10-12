@@ -403,10 +403,18 @@ the candidate's event detection; the reference is no longer judged). Key files:
   reuses the same events. The file records the reference video's SHA-256 and the loader
   rejects a mismatch. BallRoller was missing from the `lpips` dimension although the
   paper's cLPIPS table has it; it is added here.
-  - Caveat: with the frozen events the default `lpips_causal_event_source: both` (candidate
-    judged live) could not be re-validated because the OpenAI account ran out of credits.
-    Offline (`event_source: reference`, zero API calls, 30/30 rows) the frozen events
-    reproduce the paper except LingBot on BeamDomino (table below).
+  - Re-validated with the default `lpips_causal_event_source: both` (candidate judged live,
+    Modal, 5 seeds, 30/30 rows completed). Causal LPIPS, paper in parentheses:
+
+    | Model | BallRoller | BeamDomino | MirrorRollingBall |
+    |---|---|---|---|
+    | Project Genie | 0.55 (0.56) | 0.60 (0.60) | 0.72 (0.72) |
+    | LingBot Act | 0.38 (0.38) | 0.58 (0.61) | 0.56 (0.62) |
+
+    Genie falls back to `temporal_only` on 1 of 15 rows, LingBot on 4 of 15 (judge found no
+    candidate event to pair with the frozen one). Those fallbacks are why LingBot BeamDomino and
+    MirrorRollingBall sit below the paper. Offline (`event_source: reference`, zero API calls) the
+    frozen events reproduce the paper except LingBot on BeamDomino (table below).
   - Judge bug (pre-existing, not fixed for live judging): side relabeling overwrites an
     event's `evidence_frame_indices` with its own local window, which the grid sanitizer
     then rejects as `evidence_not_in_grid` unless a frame happens to coincide with the main
