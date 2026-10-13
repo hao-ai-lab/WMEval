@@ -1,0 +1,8 @@
+# wmeval_lite.liquid_container.fluid_rest.bottle_motion_v1 -- generated action trajectory.
+# Provenance: liquid_container_fluid_rest.yaml (semantic SHA-256: bfcab4fed1774e858685494ca9302e5b201cc52f5cf93e93827627ddc6e5e8e7)
+# Alignment: reconstructed; 240 steps; channels: forward, right, up
+# start_s end_s forward right up
+0.0 20.0 0.0 0.0 0.0
+
+# Project Genie browser actions:
+{"ms": 20000, "op": "wait"}

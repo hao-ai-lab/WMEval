@@ -39,6 +39,6 @@ evaluator_lock:
   artifact_schema_versions: {}
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
   dependency_versions: {}
-  evaluator_fingerprint: a2672794ee38a355e4da6af85e1b588e
+  evaluator_fingerprint: 23b42cea257cfee94250de7cf2fe170a
   module_config: {}
   release_id: wmeval-lite-v1

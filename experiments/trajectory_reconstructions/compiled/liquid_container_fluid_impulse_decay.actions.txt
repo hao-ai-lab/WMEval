@@ -1,0 +1,16 @@
+# wmeval_lite.liquid_container.fluid_impulse_decay.bottle_motion_v1 -- generated action trajectory.
+# Provenance: liquid_container_fluid_impulse_decay.yaml (semantic SHA-256: bd1409608bf4c43608ff0e0a7a7d0a63de7b3b1130fe450ed17d8b8cc59b2e02)
+# Alignment: reconstructed; 240 steps; channels: forward, right, up
+# start_s end_s forward right up
+0.0 2.0 0.0 0.0 0.0
+2.0 2.1666666666666665 0.0 0.0 1.0
+2.1666666666666665 11.0 0.0 0.0 0.0
+11.0 11.166666666666666 0.0 1.0 0.0
+11.166666666666666 20.0 0.0 0.0 0.0
+
+# Project Genie browser actions:
+{"ms": 2000, "op": "wait"}
+{"keys": ["Space"], "ms": 167, "op": "hold"}
+{"ms": 8833, "op": "wait"}
+{"keys": ["KeyD"], "ms": 167, "op": "hold"}
+{"ms": 8833, "op": "wait"}

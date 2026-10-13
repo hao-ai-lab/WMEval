@@ -1,0 +1,28 @@
+{
+  "action_target": "liquid_container",
+  "backend_support": {
+    "lingbot_world_cam": null,
+    "matrix_game_2": null,
+    "matrix_game_3": null,
+    "project_genie": "nominal",
+    "unity": "reference"
+  },
+  "claim_scope": "paper_protocol_reconstruction_not_exact_paper_parity",
+  "dimension": "fluid_mechanics",
+  "lite_case_id": "LiquidContainer/fluid_chirp_strafe",
+  "paper_alignment": "reconstructed",
+  "schema_version": 1,
+  "sources": {
+    "action.npy": "39af9283ba09b9f2eced7ad0640da2c5ab7332a69973ebdb38df2104c017756c",
+    "action.npz": "00bb639a89de3ef8d1b8dedde313046f86264984b2261c979b957eafceb474a8",
+    "actions.jsonl": "bace15fe7dfbf97640dbd09b2b74978337d8f57b4c2fce1fd2b1c7029c600be5",
+    "actions.txt": "7b7ae24a90163fe00b794736901c85d082f19508e44bb2f1e93bf60639ceeb1a",
+    "bottle_mask.npz": "9ced07a7a93b9f8fb4252d61f0db1ee43867abb8450c85985f1803ccbdb4f25d",
+    "liquid_mask.npz": "0e342b9f0be17575f5860f0d5382a95707bc38b2aef51456909fb8d717d2e56d",
+    "raft_pooled_flow.npz": "c89ec4e5ebedd53af419904de01ec503a295741628d1ff5e9fe9cf7176e35f71",
+    "reference.mp4": "5a66fb6cb4e4992a401cfafa4f4df1ec35c934d46a4dfc34803303fa1a0dbbf2",
+    "trajectory.yaml": "f10f581a1be3c8572c00af8c553d377ecd384c0a1de74680d2fc057369f457d5"
+  },
+  "table_cell": "tab:fluid-headline/LiquidContainer/chirp_strafe",
+  "trajectory_id": "wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1"
+}

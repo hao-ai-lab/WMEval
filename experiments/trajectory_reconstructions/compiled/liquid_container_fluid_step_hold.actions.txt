@@ -1,0 +1,12 @@
+# wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1 -- generated action trajectory.
+# Provenance: liquid_container_fluid_step_hold.yaml (semantic SHA-256: d98b58bcb5b92e2fab0296c575cb33cb03eec20f486bd3bb56c98f3cd9e5c80b)
+# Alignment: reconstructed; 240 steps; channels: forward, right, up
+# start_s end_s forward right up
+0.0 2.0 0.0 0.0 0.0
+2.0 10.0 0.0 1.0 0.0
+10.0 20.0 0.0 0.0 0.0
+
+# Project Genie browser actions:
+{"ms": 2000, "op": "wait"}
+{"keys": ["KeyD"], "ms": 8000, "op": "hold"}
+{"ms": 10000, "op": "wait"}

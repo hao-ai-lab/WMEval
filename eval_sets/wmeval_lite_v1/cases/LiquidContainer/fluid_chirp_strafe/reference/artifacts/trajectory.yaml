@@ -1,0 +1,99 @@
+schema_version: 1
+trajectory_id: wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1
+description: >-
+  Square-wave strafe (right = +/-1) whose frequency sweeps linearly 0.3 -> 3.0 Hz
+  over 20 s. Sampled at the nominal DECISION_HZ = 12 from chirp_strafe_action in
+  WorldModelBenchScenePrivate/GameScenes/LiquidContainer/bottle_controller_genie_profiles.py
+  (duration 20 s). Pitch, yaw and roll are forced to zero by the controller and
+  are omitted.
+duration_sec: 20.0
+control_hz: 12
+channels:
+  forward: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  right: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  up: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+segments:
+  - {start_sec: 0.0, end_sec: 1.3333333333333333, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 1.3333333333333333, end_sec: 2.25, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 2.25, end_sec: 3.0, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 3.0, end_sec: 3.6666666666666665, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 3.6666666666666665, end_sec: 4.333333333333333, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 4.333333333333333, end_sec: 4.833333333333333, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 4.833333333333333, end_sec: 5.333333333333333, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 5.333333333333333, end_sec: 5.833333333333333, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 5.833333333333333, end_sec: 6.25, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 6.25, end_sec: 6.75, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 6.75, end_sec: 7.083333333333333, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 7.083333333333333, end_sec: 7.5, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 7.5, end_sec: 7.916666666666667, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 7.916666666666667, end_sec: 8.25, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 8.25, end_sec: 8.583333333333334, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 8.583333333333334, end_sec: 8.916666666666666, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 8.916666666666666, end_sec: 9.25, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 9.25, end_sec: 9.583333333333334, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 9.583333333333334, end_sec: 9.916666666666666, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 9.916666666666666, end_sec: 10.166666666666666, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 10.166666666666666, end_sec: 10.5, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 10.5, end_sec: 10.75, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 10.75, end_sec: 11.083333333333334, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 11.083333333333334, end_sec: 11.333333333333334, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 11.333333333333334, end_sec: 11.583333333333334, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 11.583333333333334, end_sec: 11.833333333333334, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 11.833333333333334, end_sec: 12.166666666666666, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 12.166666666666666, end_sec: 12.416666666666666, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 12.416666666666666, end_sec: 12.666666666666666, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 12.666666666666666, end_sec: 12.916666666666666, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 12.916666666666666, end_sec: 13.166666666666666, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 13.166666666666666, end_sec: 13.416666666666666, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 13.416666666666666, end_sec: 13.583333333333334, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 13.583333333333334, end_sec: 13.833333333333334, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 13.833333333333334, end_sec: 14.083333333333334, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 14.083333333333334, end_sec: 14.333333333333334, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 14.333333333333334, end_sec: 14.5, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 14.5, end_sec: 14.75, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 14.75, end_sec: 15.0, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 15.0, end_sec: 15.166666666666666, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 15.166666666666666, end_sec: 15.416666666666666, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 15.416666666666666, end_sec: 15.583333333333334, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 15.583333333333334, end_sec: 15.833333333333334, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 15.833333333333334, end_sec: 16.0, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 16.0, end_sec: 16.25, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 16.25, end_sec: 16.416666666666668, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 16.416666666666668, end_sec: 16.583333333333332, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 16.583333333333332, end_sec: 16.833333333333332, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 16.833333333333332, end_sec: 17.0, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 17.0, end_sec: 17.166666666666668, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 17.166666666666668, end_sec: 17.416666666666668, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 17.416666666666668, end_sec: 17.583333333333332, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 17.583333333333332, end_sec: 17.75, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 17.75, end_sec: 17.916666666666668, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 17.916666666666668, end_sec: 18.166666666666668, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 18.166666666666668, end_sec: 18.333333333333332, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 18.333333333333332, end_sec: 18.5, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 18.5, end_sec: 18.666666666666668, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 18.666666666666668, end_sec: 18.833333333333332, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 18.833333333333332, end_sec: 19.0, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 19.0, end_sec: 19.166666666666668, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 19.166666666666668, end_sec: 19.333333333333332, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 19.333333333333332, end_sec: 19.5, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 19.5, end_sec: 19.666666666666668, values: {forward: 0.0, right: -1.0, up: 0.0}}
+  - {start_sec: 19.666666666666668, end_sec: 19.833333333333332, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 19.833333333333332, end_sec: 20.0, values: {forward: 0.0, right: -1.0, up: 0.0}}
+paper_alignment:
+  status: reconstructed
+  matched: [action_profile, action_surface, profile_timing, duration]
+  missing: >-
+    The reference capture stepped on wall-clock time (~10 Hz effective, 200-202
+    jittered decisions; the legacy action.npy); this is the nominal 12 Hz profile
+    the controller was written to, not the per-step record.
+  source: ../../../eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_chirp_strafe/reference/artifacts/actions.txt
+adapters:
+  unity:
+    status: reconstructed
+    channels: [forward, right, up]
+  project_genie:
+    status: nominal
+    key_rules:
+      - {channel: forward, threshold: 0.5, positive_key: KeyW, negative_key: KeyS}
+      - {channel: right, threshold: 0.5, positive_key: KeyD, negative_key: KeyA}
+      - {channel: up, threshold: 0.5, positive_key: Space}
