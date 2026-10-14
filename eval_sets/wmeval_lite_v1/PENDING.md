@@ -344,7 +344,12 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 - [x] **Record judge identity, requests and responses.** Every row's `full_report` has
   `judge` (settings, rubric and first-frame hashes) and `judge_calls` (resolved snapshot,
   response id, usage, raw output, request text and per-image hashes).
-- [ ] **Ship the ρ = 0.90 human-alignment fixture** as a regression check.
+- [x] **Ship the ρ = 0.90 human-alignment fixture** as a regression check. Evidence:
+  `human_alignment/prompt_scene_consistency.json` (human consensus per case and model:
+  3 raters, 126 videos; the paper's judge scores reproduce ρ 0.90 / τ 0.80 over the 5
+  models and 0.80 / 0.667 over the 4 generative ones).
+  `tools/check_prompt_human_alignment.py --results <per_case_results.jsonl>` recomputes it
+  for any run and exits non-zero below the paper value.
 - [ ] **Add Lite generation paths** for LingBot (Cam) and Matrix-Game 3.0.
 
 ## 8. Perceptual similarity — `lpips`
