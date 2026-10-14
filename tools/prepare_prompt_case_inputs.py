@@ -11,8 +11,11 @@ controls and writes the five-repeat queues the existing runners consume:
 * LingBot Base Cam: the case's Unity camera poses (in place in first person,
   around the character in third person) resampled to 161 frames at 16 fps,
   with per-frame ``[fx, fy, cx, cy]`` from the case intrinsics.
-* Matrix-Game 3.0: a 177-frame mouse-yaw schedule using the registry's
-  response-calibrated full-turn gain (camera yaw only, as for Table 7).
+* Matrix-Game 3.0: the key recipe its prompt-consistency rollouts were
+  generated with, as a 177-frame schedule for the deterministic adapter: the
+  ``j`` key (turn left, upstream ``CAM_VALUE`` 0.1) every frame, plus ``d``
+  (strafe right) in third person so the camera orbits the character; seeds
+  0-4. Third-person Matrix-Game has no native orbit control.
 
 Inputs and queues go to ``runs/prompt_scene_consistency/model_inputs/``; the
 candidate manifest for scoring is ``runs/prompt_scene_consistency/candidates.jsonl``::
@@ -50,7 +53,6 @@ from evaluation.lite.case_loader import LiteCase, load_case  # noqa: E402
 from evaluation.lite.suite_loader import load_suite  # noqa: E402
 from evaluation.trajectories import integrated_total, load_trajectory  # noqa: E402
 from tools.prepare_lingbot_table7_inputs import proper_opencv_c2w  # noqa: E402
-from tools.prepare_matrix_game_inputs import schedule_for  # noqa: E402
 
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 DIMENSION = "prompt_scene_consistency"
@@ -66,6 +68,11 @@ DEFAULT_OUTPUT = ROOT / "runs/prompt_scene_consistency"
 REPEATS = tuple(f"run{index}" for index in range(5))
 UNITY_FPS = 30.0
 MAX_RATE_ERROR_DEG_S = 1.0
+# Matrix-Game 3.0 interactive keys (pipeline/inference_interactive_pipeline.py):
+# j -> mouse [0, -CAM_VALUE], d -> keyboard [0, 0, 0, 1, 0, 0].
+MG3_CAM_VALUE = 0.1
+MG3_KEY_D = 3
+MG3_SEEDS = (0, 1, 2, 3, 4)
 
 
 def sha256(path: Path) -> str:
@@ -162,9 +169,21 @@ def prepare_lingbot(case: LiteCase, trajectory: dict[str, Any], output_root: Pat
 
 def prepare_matrix_game_3(case: LiteCase, trajectory: dict[str, Any], output_root: Path) -> dict[str, Any]:
     backend = action_backends.backend("matrix_game_3")
-    keyboard, mouse, mapping = schedule_for(
-        "matrix_game_3", {"case_id": case.case_id, "trajectory": TRAJECTORY}
-    )
+    action_backends.require_support("matrix_game_3", trajectory)
+    frames = int(backend["frames"])
+    orbit = case.perspective == "third_person"
+    keyboard = np.zeros((frames, int(backend["keyboard_width"])), dtype=np.float32)
+    mouse = np.zeros((frames, 2), dtype=np.float32)
+    mouse[:, 1] = -MG3_CAM_VALUE
+    if orbit:
+        keyboard[:, MG3_KEY_D] = 1.0
+    mapping = {
+        "kind": "interactive_key_recipe",
+        "keys_per_frame": {"mouse": "j", "keyboard": "d" if orbit else "q"},
+        "cam_value": MG3_CAM_VALUE,
+        "upstream_geometric_degrees_per_frame": MG3_CAM_VALUE
+        * float(backend["upstream_geometric_deg_per_mouse_unit"]),
+    }
     case_root = output_root / "model_inputs/matrix_game_3" / case.case_id
     case_root.mkdir(parents=True, exist_ok=True)
     schedule = case_root / "schedule.npz"
@@ -174,6 +193,7 @@ def prepare_matrix_game_3(case: LiteCase, trajectory: dict[str, Any], output_roo
         "frame_count": int(backend["frames"]),
         "fps": float(backend["fps"]),
         "mapping": mapping,
+        "seeds": list(MG3_SEEDS),
         "schedule": _relative(schedule),
         "schedule_sha256": sha256(schedule),
     }
@@ -210,6 +230,8 @@ def prepare(cases: list[LiteCase], output_root: Path) -> dict[str, Any]:
                     for key in ("model", "case_id", "conditioning_image", "environment_prompt", "character_prompt")
                     + (("poses", "intrinsics") if "poses" in receipt else ("schedule",))
                 }
+                if "seeds" in receipt:
+                    row["seed"] = receipt["seeds"][REPEATS.index(repeat)]
                 row.update(
                     {
                         "generation_repeat": repeat,

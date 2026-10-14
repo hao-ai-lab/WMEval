@@ -43,8 +43,14 @@ def generation_complete(candidate: Path) -> bool:
     )
 
 
+def seed_for(item: dict[str, Any]) -> int:
+    """The queue's explicit seed, else the Table 7 default for the repeat."""
+    if "seed" in item:
+        return int(item["seed"])
+    return 45000 + int(str(item["generation_repeat"]).removeprefix("run"))
+
+
 def build_command(item: dict[str, Any], gpus: int, gpu_index: int) -> list[str]:
-    run = str(item["generation_repeat"])
     output = (ROOT / str(item["candidate_video"])).parent
     return [
         str(PYTHON), "-m", "torch.distributed.run",
@@ -56,7 +62,7 @@ def build_command(item: dict[str, Any], gpus: int, gpu_index: int) -> list[str]:
         "--image", str(ROOT / str(item["conditioning_image"])),
         "--prompt", str(item["environment_prompt"]),
         "--output", str(output),
-        "--seed", str(45000 + int(run.removeprefix("run"))),
+        "--seed", str(seed_for(item)),
     ]
 
 
@@ -81,7 +87,7 @@ def run_item(item: dict[str, Any], dry_run: bool, gpus: int, gpu_index: int) -> 
         "model": "matrix_game_3",
         "case_id": item["case_id"],
         "generation_repeat": item["generation_repeat"],
-        "seed": 45000 + int(str(item["generation_repeat"]).removeprefix("run")),
+        "seed": seed_for(item),
         "source_revision": SOURCE_REVISION,
         "checkpoint_revision": CHECKPOINT_REVISION,
         "schedule_sha256": sha256(ROOT / str(item["schedule"])),

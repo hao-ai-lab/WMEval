@@ -355,8 +355,9 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
   (`prompt.camera.left_turn_v1`, target `camera`, 40 deg/s as in the Unity reference),
   baked into every case (`trajectory.yaml`, `action.npz`, `actions.jsonl`).
   `tools/prepare_prompt_case_inputs.py` compiles it to LingBot poses (the Unity camera path,
-  161 frames at 16 fps) and a Matrix-Game 3.0 mouse-yaw schedule (177 frames at 17 fps,
-  calibrated full-turn gain), and writes the five-repeat queues for
+  161 frames at 16 fps) and to the Matrix-Game 3.0 key recipe its rollouts were generated
+  with (177 frames at 17 fps: `j` every frame, plus `d` in third person to orbit the
+  character; seeds 0–4), and writes the five-repeat queues for
   `run_lingbot_table7.py --queue` / `run_matrix_game3.py --queue` plus the Lite candidate
   manifest.
 - [x] **Reproduced through the Lite path** (case bundle → 5 seeds →

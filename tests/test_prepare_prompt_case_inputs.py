@@ -54,13 +54,26 @@ def test_prepare_writes_runner_queues_and_a_lite_candidate_manifest(tmp_path: Pa
         assert yaw[-1] - yaw[0] == pytest.approx(-400.0, abs=10.0)
         assert np.load(lingbot / "intrinsics.npy").shape == (161, 4)
 
+        # Matrix-Game 3.0: j (turn left) every frame, plus d (strafe) to orbit in third person
         matrix = tmp_path / "model_inputs/matrix_game_3" / case.case_id
         schedule = np.load(matrix / "schedule.npz")
         receipt = json.loads((matrix / "receipt.json").read_text())
-        gain = receipt["mapping"]["visual_degrees_per_mouse_unit_per_frame"]
-        assert schedule["keyboard"].shape == (177, 6) and not schedule["keyboard"].any()
-        assert float(schedule["mouse"][:, 1].sum()) * gain == pytest.approx(-400.0, abs=1e-3)
+        keyboard, mouse = schedule["keyboard"], schedule["mouse"]
+        assert keyboard.shape == (177, 6) and mouse.shape == (177, 2)
+        assert np.all(mouse[:, 1] == np.float32(-0.1)) and not mouse[:, 0].any()
+        orbit = case.perspective == "third_person"
+        assert np.all(keyboard[:, 3] == (1.0 if orbit else 0.0))
+        assert not np.delete(keyboard, 3, axis=1).any()
+        assert receipt["mapping"]["keys_per_frame"] == {"mouse": "j", "keyboard": "d" if orbit else "q"}
         assert receipt["environment_prompt"] == case.prompt
+
+    matrix_rows = [
+        json.loads(line)
+        for line in (tmp_path / "model_inputs/matrix_game_3/generation_queue.jsonl").read_text().splitlines()
+    ]
+    assert {(row["generation_repeat"], row["seed"]) for row in matrix_rows} == {
+        (f"run{i}", i) for i in range(5)
+    }
 
     candidates = load_candidate_manifest(
         tmp_path / "candidates.jsonl", allowed_cases={case.case_id for case in cases}
@@ -82,3 +95,10 @@ def test_unity_poses_must_perform_the_commanded_turn(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="turns at -20"):
         prep.unity_camera(case, load_trajectory(prep.TABLE_ROOT / prep.TRAJECTORY))
+
+
+def test_matrix_game3_runner_uses_the_queue_seed_when_given() -> None:
+    from tools import run_matrix_game3 as runner
+
+    assert runner.seed_for({"generation_repeat": "run3", "seed": 3}) == 3
+    assert runner.seed_for({"generation_repeat": "run3"}) == 45003
