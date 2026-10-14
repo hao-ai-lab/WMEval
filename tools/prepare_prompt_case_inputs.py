@@ -5,17 +5,19 @@ Every ``prompt_scene_consistency`` case turns the camera left for 10 s at the
 Unity reference's 40 deg/s: the canonical semantic trajectory
 ``experiments/tables_4_7/trajectories/prompt_camera_left_turn.yaml``, baked into
 each case as ``reference/artifacts/trajectory.yaml`` (+ ``action.npz``,
-``actions.jsonl``). This tool compiles that turn onto each backend's native
-controls and writes the five-repeat queues the existing runners consume:
+``actions.jsonl``). This tool writes each backend's native inputs for that turn
+and the five-repeat queues the existing runners consume.
 
-* LingBot Base Cam: the case's Unity camera poses (in place in first person,
-  around the character in third person) resampled to 161 frames at 16 fps,
-  with per-frame ``[fx, fy, cx, cy]`` from the case intrinsics.
-* Matrix-Game 3.0: the key recipe its prompt-consistency rollouts were
-  generated with, as a 177-frame schedule for the deterministic adapter: the
-  ``j`` key (turn left, upstream ``CAM_VALUE`` 0.1) every frame, plus ``d``
-  (strafe right) in third person so the camera orbits the character; seeds
-  0-4. Third-person Matrix-Game has no native orbit control.
+Both backends follow the recipes their prompt-consistency rollouts were
+generated with, seeds 0-4:
+
+* LingBot Base Cam: 161 camera poses at 16 fps -- one counter-clockwise turn
+  in place in first person; two counter-clockwise orbits around the character,
+  looking at it, in third person.
+* Matrix-Game 3.0: a 177-frame key schedule for the deterministic adapter --
+  ``j`` (turn left, upstream ``CAM_VALUE`` 0.1) every frame, plus ``d``
+  (strafe right) in third person so the camera orbits the character, since
+  Matrix-Game has no native orbit control.
 
 Inputs and queues go to ``runs/prompt_scene_consistency/model_inputs/``; the
 candidate manifest for scoring is ``runs/prompt_scene_consistency/candidates.jsonl``::
@@ -51,8 +53,7 @@ if str(ROOT) not in sys.path:
 from evaluation import action_backends  # noqa: E402
 from evaluation.lite.case_loader import LiteCase, load_case  # noqa: E402
 from evaluation.lite.suite_loader import load_suite  # noqa: E402
-from evaluation.trajectories import integrated_total, load_trajectory  # noqa: E402
-from tools.prepare_lingbot_table7_inputs import proper_opencv_c2w  # noqa: E402
+from evaluation.trajectories import load_trajectory  # noqa: E402
 
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 DIMENSION = "prompt_scene_consistency"
@@ -66,13 +67,19 @@ BAKED = {
 }
 DEFAULT_OUTPUT = ROOT / "runs/prompt_scene_consistency"
 REPEATS = tuple(f"run{index}" for index in range(5))
-UNITY_FPS = 30.0
-MAX_RATE_ERROR_DEG_S = 1.0
+# The prompt-consistency rollouts used seeds 0-4 for both models.
+ROLLOUT_SEEDS = (0, 1, 2, 3, 4)
+# LingBot Base Cam [fx, fy, cx, cy] at 480x832: the in-place turn's defaults and
+# the upstream example intrinsics the orbit reused.
+LINGBOT_TURN_INTRINSICS = np.array([415.5298, 415.6922, 415.77786, 239.77779], dtype=np.float32)
+LINGBOT_ORBIT_INTRINSICS = np.array(
+    [502.9115905761719, 503.1081237792969, 415.7778625488281, 239.7777862548828], dtype=np.float32
+)
+LINGBOT_ORBIT_TURNS = 2
 # Matrix-Game 3.0 interactive keys (pipeline/inference_interactive_pipeline.py):
 # j -> mouse [0, -CAM_VALUE], d -> keyboard [0, 0, 0, 1, 0, 0].
 MG3_CAM_VALUE = 0.1
 MG3_KEY_D = 3
-MG3_SEEDS = (0, 1, 2, 3, 4)
 
 
 def sha256(path: Path) -> str:
@@ -109,20 +116,45 @@ def case_trajectory(case: LiteCase) -> dict[str, Any]:
     return load_trajectory(baked)
 
 
-def unity_camera(case: LiteCase, trajectory: dict[str, Any]) -> tuple[np.ndarray, np.ndarray]:
-    """Unity poses and (T, 4) intrinsics, checked to perform the commanded turn."""
-    poses = np.load(case.artifacts_dir / "poses.npy", allow_pickle=False)
-    k = np.load(case.artifacts_dir / "intrinsics.npy", allow_pickle=False)
-    if poses.ndim != 3 or poses.shape[1:] != (4, 4) or k.shape != (3, 3):
-        raise ValueError(f"{case.case_id}: unexpected poses {poses.shape} / intrinsics {k.shape}")
-    forward = poses[:, :3, 2].astype(np.float64)
-    yaw = np.rad2deg(np.unwrap(np.arctan2(forward[:, 0], forward[:, 2])))
-    rate = float(np.median(np.diff(yaw))) * UNITY_FPS
-    commanded = integrated_total(trajectory, "yaw_rate_deg_s") / float(trajectory["duration_sec"])
-    if abs(rate - commanded) > MAX_RATE_ERROR_DEG_S:
-        raise ValueError(f"{case.case_id}: Unity turns at {rate:.2f} deg/s, trajectory commands {commanded}")
-    intrinsics = np.tile([k[0, 0], k[1, 1], k[0, 2], k[1, 2]], (poses.shape[0], 1)).astype(np.float32)
-    return poses, intrinsics
+def lingbot_turn_in_place(frames: int) -> np.ndarray:
+    """First person: one counter-clockwise 360 deg yaw sweep in place, the last
+    pose stopping one step short of the start (build_poses.py defaults)."""
+    sign = -1.0  # counter-clockwise on screen in the OpenCV c2w convention
+    angles = np.deg2rad(0.0) + sign * np.linspace(
+        0.0, np.deg2rad(360.0), frames, dtype=np.float32, endpoint=False
+    )
+    poses = np.zeros((frames, 4, 4), dtype=np.float32)
+    poses[:, 3, 3] = 1.0
+    for index, angle in enumerate(angles):
+        c, s_ = float(np.cos(float(angle))), float(np.sin(float(angle)))
+        rotation = np.array([[c, 0.0, s_], [0.0, 1.0, 0.0], [-s_, 0.0, c]], dtype=np.float32)
+        # Composed onto the (identity) base pose exactly as the rollouts were.
+        poses[index, :3, :3] = np.eye(3, dtype=np.float32) @ rotation
+    return poses
+
+
+def _look_at_opencv_c2w(eye: np.ndarray, target: np.ndarray) -> np.ndarray:
+    z_axis = (target - eye) / np.linalg.norm(target - eye)
+    x_axis = np.cross(np.array([0.0, 1.0, 0.0]), z_axis)
+    x_axis = x_axis / np.linalg.norm(x_axis)
+    y_axis = np.cross(z_axis, x_axis)
+    c2w = np.eye(4, dtype=np.float32)
+    c2w[:3, 0], c2w[:3, 1], c2w[:3, 2], c2w[:3, 3] = x_axis, y_axis, z_axis, eye
+    return c2w
+
+
+def lingbot_orbit(frames: int) -> np.ndarray:
+    """Third person: the camera orbits the character counter-clockwise, twice
+    over the clip, looking at it (build_orbit_poses.py --turns 2
+    --orbit_sign -1; radius 1.8, centre (0, 0, 2), eye height 0.12)."""
+    center = np.array([0.0, 0.0, 2.0])
+    angles = -np.linspace(0.0, 2.0 * np.pi * LINGBOT_ORBIT_TURNS, frames, endpoint=False)
+    return np.stack(
+        [
+            _look_at_opencv_c2w(center + np.array([1.8 * np.sin(a), 0.12, 1.8 * np.cos(a)]), center)
+            for a in angles
+        ]
+    )
 
 
 def _relative(path: Path) -> str:
@@ -138,32 +170,27 @@ def prepare_lingbot(case: LiteCase, trajectory: dict[str, Any], output_root: Pat
     backend = action_backends.backend("lingbot_world_cam")
     action_backends.require_support("lingbot_world_cam", trajectory)
     frames, fps = int(backend["frames"]), float(backend["fps"])
-    poses, intrinsics = unity_camera(case, trajectory)
-    # Same timeline resampling as the Table 7 Unity captures: the reference
-    # spans the commanded 10 s, so uniform indices follow the commanded turn.
-    indices = np.rint(np.linspace(0, poses.shape[0] - 1, frames)).astype(np.int64)
-    selected, handedness = proper_opencv_c2w(poses[indices])
+    orbit = case.perspective == "third_person"
+    poses = lingbot_orbit(frames) if orbit else lingbot_turn_in_place(frames)
+    intrinsics = np.tile(LINGBOT_ORBIT_INTRINSICS if orbit else LINGBOT_TURN_INTRINSICS, (frames, 1))
     case_root = output_root / "model_inputs/lingbot_world_cam" / case.case_id
     case_root.mkdir(parents=True, exist_ok=True)
-    np.save(case_root / "poses.npy", selected)
-    np.save(case_root / "intrinsics.npy", intrinsics[indices])
+    np.save(case_root / "poses.npy", poses)
+    np.save(case_root / "intrinsics.npy", intrinsics)
     return {
         "model": "lingbot_world_cam",
         "frame_count": frames,
         "fps": fps,
         "mapping": {
-            "kind": "unity_camera_poses",
-            "source_mode": "timeline_resample",
-            "source_indices": indices.tolist(),
-            "pose_handedness_conversion": handedness,
-            "target_yaw_deg": integrated_total(trajectory, "yaw_rate_deg_s"),
+            "kind": "orbit_around_character" if orbit else "turn_in_place",
+            "pose_convention": "OpenCV camera-to-world",
+            "turns": LINGBOT_ORBIT_TURNS if orbit else 1,
         },
+        "seeds": list(ROLLOUT_SEEDS),
         "poses": _relative(case_root / "poses.npy"),
         "poses_sha256": sha256(case_root / "poses.npy"),
         "intrinsics": _relative(case_root / "intrinsics.npy"),
         "intrinsics_sha256": sha256(case_root / "intrinsics.npy"),
-        "source_poses": _relative(case.artifacts_dir / "poses.npy"),
-        "source_poses_sha256": sha256(case.artifacts_dir / "poses.npy"),
     }
 
 
@@ -193,7 +220,7 @@ def prepare_matrix_game_3(case: LiteCase, trajectory: dict[str, Any], output_roo
         "frame_count": int(backend["frames"]),
         "fps": float(backend["fps"]),
         "mapping": mapping,
-        "seeds": list(MG3_SEEDS),
+        "seeds": list(ROLLOUT_SEEDS),
         "schedule": _relative(schedule),
         "schedule_sha256": sha256(schedule),
     }
