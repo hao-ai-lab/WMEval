@@ -98,6 +98,7 @@ def run_item(item: dict[str, Any], dry_run: bool, gpus: int, gpu_index: int) -> 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--queue", type=Path, default=QUEUE)
     parser.add_argument("--case")
     parser.add_argument("--repeat")
     parser.add_argument("--limit", type=int)
@@ -108,7 +109,7 @@ def main() -> int:
     parser.add_argument("--shard-index", type=int)
     parser.add_argument("--shard-count", type=int)
     args = parser.parse_args()
-    items = [json.loads(line) for line in QUEUE.read_text(encoding="utf-8").splitlines() if line]
+    items = [json.loads(line) for line in args.queue.read_text(encoding="utf-8").splitlines() if line]
     if args.case:
         items = [item for item in items if item["case_id"] == args.case]
     if args.repeat:

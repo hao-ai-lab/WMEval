@@ -329,7 +329,7 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 | Model | In paper | Status |
 | --- | --- | --- |
 | Project Genie | ✅ | ⚠️ runnable; needs judge snapshot for reruns |
-| LingBot-World (Cam), Matrix-Game 3.0 | ✅ | ❌ no Lite generation path (camera rotation is supported by both) |
+| LingBot-World (Cam), Matrix-Game 3.0 | ✅ | ✅ Lite generation path (`tools/prepare_prompt_case_inputs.py`) |
 | HY-WorldPlay | ✅ | ❌ |
 | Waypoint-1.5 | ✅ | ✅ 30/30 rows |
 
@@ -350,7 +350,15 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
   models and 0.80 / 0.667 over the 4 generative ones).
   `tools/check_prompt_human_alignment.py --results <per_case_results.jsonl>` recomputes it
   for any run and exits non-zero below the paper value.
-- [ ] **Add Lite generation paths** for LingBot (Cam) and Matrix-Game 3.0.
+- [x] **Add Lite generation paths** for LingBot (Cam) and Matrix-Game 3.0. Evidence: the
+  cases' 10 s left turn is the canonical `trajectories/prompt_camera_left_turn.yaml`
+  (`prompt.camera.left_turn_v1`, target `camera`, 40 deg/s as in the Unity reference),
+  baked into every case (`trajectory.yaml`, `action.npz`, `actions.jsonl`).
+  `tools/prepare_prompt_case_inputs.py` compiles it to LingBot poses (the Unity camera path,
+  161 frames at 16 fps) and a Matrix-Game 3.0 mouse-yaw schedule (177 frames at 17 fps,
+  calibrated full-turn gain), and writes the five-repeat queues for
+  `run_lingbot_table7.py --queue` / `run_matrix_game3.py --queue` plus the Lite candidate
+  manifest.
 
 ## 8. Perceptual similarity — `lpips`
 

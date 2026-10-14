@@ -19,6 +19,7 @@ action_targets:
   table7.camera.perturb_out_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_in_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_out_v1: {target: camera, frame: camera_yaw}
+  prompt.camera.left_turn_v1: {target: camera, frame: camera_yaw}
 
 backends:
   unity:

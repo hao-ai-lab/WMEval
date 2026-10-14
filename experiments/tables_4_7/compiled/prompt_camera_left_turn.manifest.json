@@ -1,0 +1,20 @@
+{
+  "action_npy": "prompt_camera_left_turn.action.npy",
+  "action_npy_sha256": "4b85fccf18e93ca71fb0cfb2ed33dc9da21abf7abc1a16b894c3995f10628daa",
+  "action_npz": "prompt_camera_left_turn.action.npz",
+  "action_npz_sha256": "35a052e6999a15f1138f0baf229eda4561574e0076b2349b3d01d653b417492e",
+  "actions_txt": "prompt_camera_left_turn.actions.txt",
+  "actions_txt_sha256": "f0882d9d19ab9155d0d78145f92fb11a29e4da46ecfbcb760eb2abac3a73791b",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "yaw_rate_deg_s"
+  ],
+  "project_genie_actions": "prompt_camera_left_turn.actions.jsonl",
+  "project_genie_actions_sha256": "862f3c8fa9543110b9cca3df5923165db879352cf7a124bd46df6ad8fa1b9547",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "2344c6a9fc2c0f2469c83cb3013c89c3f4d8307d9767431c5718a63a1eff32bd",
+  "source": "../trajectories/prompt_camera_left_turn.yaml",
+  "step_count": 200,
+  "trajectory_id": "prompt.camera.left_turn_v1"
+}
