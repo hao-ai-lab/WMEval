@@ -708,9 +708,14 @@ dimensions:
     aggregate:
       headline: overall_score
       direction: higher
+      # *_unity: the Unity reference's frozen scores
+      # (reference/artifacts/reference_scores.json, read, not re-judged)
       extra_means:
       - env_score
       - obj_score
+      - overall_score_unity
+      - env_score_unity
+      - obj_score_unity
   lighting_shading:
     display_name: Lighting & Shading
     description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD) under the paper''s first-person, fixed-sun, walking-orbit regime. Live on its paper-target scene SunRisesAndSets/lighting since 2026-09-15 (see the dated banner above for provenance and the analytic geometry floor); ChessBoard/lighting is still pending a team decision (PENDING.md).'

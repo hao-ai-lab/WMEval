@@ -1,6 +1,9 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Literal, Optional, Tuple
@@ -8,6 +11,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple
 from .schemas import (
     AgentResult,
     ItemScore,
+    JudgeCallRecord,
     JudgeResult,
     RubricItem,
     Rubric,
@@ -130,6 +134,39 @@ Additionally, provide a top-level explanations object with:
 """
 
 
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+# Identifies the judge instructions a score was produced under; a frozen
+# reference score is only comparable while these are unchanged.
+SYSTEM_PROMPT_SHA256 = {
+    "environment": _sha256_text(ENV_JUDGE_SYSTEM_PROMPT),
+    "object": _sha256_text(OBJ_JUDGE_SYSTEM_PROMPT),
+}
+
+
+def _request_record(
+    *,
+    system_prompt: str,
+    user_text: str,
+    schema: Dict[str, Any],
+    images_b64: List[Tuple[str, str]],
+    model: str,
+) -> Dict[str, Any]:
+    """What was sent, minus the image payloads (kept as per-image hashes)."""
+    return {
+        "model": model,
+        "system_prompt_sha256": _sha256_text(system_prompt),
+        "schema_sha256": _sha256_text(json.dumps(schema, sort_keys=True)),
+        "user_text": user_text,
+        "images": [
+            {"label": label, "sha256": hashlib.sha256(base64.b64decode(b64)).hexdigest()}
+            for label, b64 in images_b64
+        ],
+    }
+
+
 def _get_provider_module(provider: str):
     if provider == "openai":
         from .providers import openai as mod
@@ -209,12 +246,12 @@ def _run_agent_call(
     mod: Any,
     api_key: str,
     model: str,
-) -> Tuple[List[ItemScore], TopLevelExplanation]:
+) -> Tuple[List[ItemScore], TopLevelExplanation, Optional[JudgeCallRecord]]:
     if not rubric_items:
         return [], TopLevelExplanation(
             summary=f"(no {agent_label.lower()} rubrics to evaluate)",
             issues=[],
-        )
+        ), None
 
     rubric_block = _format_items_block(rubric_items, agent_label)
     ref_labels = [l for l in candidate_labels if l == "ref_frame"]
@@ -229,6 +266,7 @@ def _run_agent_call(
         "Evaluate each rubric item and return structured JSON."
     )
 
+    response: Dict[str, Any] = {}
     raw = mod.call_vlm(
         system_prompt=system_prompt,
         user_text=user_text,
@@ -236,8 +274,21 @@ def _run_agent_call(
         schema=schema,
         api_key=api_key,
         model=model,
+        record=response,
     )
-    return _parse_vlm_output(raw)
+    item_scores, explanations = _parse_vlm_output(raw)
+    call = JudgeCallRecord(
+        agent=agent_label.lower(),
+        request=_request_record(
+            system_prompt=system_prompt,
+            user_text=user_text,
+            schema=schema,
+            images_b64=images_b64,
+            model=model,
+        ),
+        response=response,
+    )
+    return item_scores, explanations, call
 
 
 def judge_scene(
@@ -289,8 +340,8 @@ def judge_scene(
             system_prompt=OBJ_JUDGE_SYSTEM_PROMPT,
             **common,
         )
-        env_scores, env_expl = fut_env.result()
-        obj_scores, obj_expl = fut_obj.result()
+        env_scores, env_expl, env_call = fut_env.result()
+        obj_scores, obj_expl, obj_call = fut_obj.result()
 
     env_result = AgentResult(
         agent="environment",
@@ -328,4 +379,5 @@ def judge_scene(
         environment_result=env_result,
         object_result=obj_result,
         overall_score=overall,
+        judge_calls=[call for call in (env_call, obj_call) if call is not None],
     )

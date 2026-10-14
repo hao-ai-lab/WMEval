@@ -108,7 +108,11 @@ def call_vlm(
     model: str = DEFAULT_MODEL,
     timeout: int = 180,
     max_retries: int = 6,
+    record: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
+    """Judge call; when ``record`` is given it is filled with what the API
+    returned besides the answer (resolved model snapshot, response id, usage,
+    attempts, raw output text)."""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -147,7 +151,21 @@ def call_vlm(
             resp = r.json()
             _log_usage("openai", model, resp.get("usage"), api="responses")
             text = _extract_output_text(resp)
-            return json.loads(text)
+            parsed = json.loads(text)
+            if record is not None:
+                record.update(
+                    {
+                        "provider": "openai",
+                        "model_requested": model,
+                        "model_resolved": resp.get("model"),
+                        "response_id": resp.get("id"),
+                        "created_at": resp.get("created_at"),
+                        "usage": resp.get("usage"),
+                        "attempts": attempt + 1,
+                        "output_text": text,
+                    }
+                )
+            return parsed
         except Exception as e:
             last_err = e
             print(f"  [openai attempt {attempt+1}/{max_retries}] {e}", file=sys.stderr)

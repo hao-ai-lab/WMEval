@@ -314,7 +314,7 @@ SunRisesAndSets/lighting (first person, fixed sun, walking orbit; reference-free
 
 ## 7. Prompt-scene consistency — `prompt_scene_consistency`
 
-**Owner:** _TBD_ · **Paper:** prompt-consistency table · **Lite cases:**
+**Owner:** Rita Wu · **Paper:** prompt-consistency table · **Lite cases:**
 ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
 **Run it for a new model:** the single path with `--dimensions prompt_scene_consistency`
@@ -324,7 +324,7 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
-| all 6 | ✅ 10 s camera rotation | ⚠️ rubrics frozen; Unity reference scores not stored; hosted `gpt-5.4` judge | — low risk |
+| all 6 | ✅ 10 s camera rotation | ✅ rubrics and Unity reference scores frozen in the bundle; hosted `gpt-5.4` judge, snapshot recorded per call | — low risk |
 
 | Model | In paper | Status |
 | --- | --- | --- |
@@ -333,10 +333,18 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 | HY-WorldPlay | ✅ | ❌ |
 | Waypoint-1.5 | ✅ | ✅ 30/30 rows |
 
-- [ ] **Freeze the Unity reference scores** per case (judge model + prompt version +
-  sampled frames). Done when: reference rows load from the bundle.
-- [ ] **Record judge identity, requests and responses**; ship the ρ = 0.90 human-alignment
-  fixture as a regression check.
+- [x] **Freeze the Unity reference scores** per case (judge model + prompt version +
+  sampled frames). Done when: reference rows load from the bundle. Evidence:
+  `tools/freeze_prompt_reference_scores.py --passes 5` →
+  `cases/*/prompt_*/reference/artifacts/reference_scores.json` (5 passes each,
+  `gpt-5.4-2026-03-05`). Rows report `overall_score_unity` / `env_score_unity` /
+  `obj_score_unity` from that file and mark it `stale` instead when the judge settings or
+  the Unity video change. Unity overall, first / third: ChessBoard 1.000 / 1.000,
+  MirrorRollingBall 0.953 / 1.000, RacingCar 0.840 / 0.837.
+- [x] **Record judge identity, requests and responses.** Every row's `full_report` has
+  `judge` (settings, rubric and first-frame hashes) and `judge_calls` (resolved snapshot,
+  response id, usage, raw output, request text and per-image hashes).
+- [ ] **Ship the ρ = 0.90 human-alignment fixture** as a regression check.
 - [ ] **Add Lite generation paths** for LingBot (Cam) and Matrix-Game 3.0.
 
 ## 8. Perceptual similarity — `lpips`
