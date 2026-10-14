@@ -328,9 +328,9 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
 | Model | In paper | Status |
 | --- | --- | --- |
-| Project Genie | ✅ | ⚠️ runnable; needs judge snapshot for reruns |
-| LingBot-World (Cam), Matrix-Game 3.0 | ✅ | ✅ Lite generation path (`tools/prepare_prompt_case_inputs.py`) |
-| HY-WorldPlay | ✅ | ❌ |
+| Project Genie | ✅ | ✅ 5-run reproduced through Lite; judge snapshot recorded per call |
+| LingBot-World (Cam), Matrix-Game 3.0 | ✅ | ✅ 5-run reproduced; Lite generation path (`tools/prepare_prompt_case_inputs.py`) |
+| HY-WorldPlay | ✅ | ⚠️ 5-run reproduced from the existing rollouts; no Lite generation path |
 | Waypoint-1.5 | ✅ | ✅ 30/30 rows |
 
 - [x] **Freeze the Unity reference scores** per case (judge model + prompt version +
@@ -359,6 +359,12 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
   calibrated full-turn gain), and writes the five-repeat queues for
   `run_lingbot_table7.py --queue` / `run_matrix_game3.py --queue` plus the Lite candidate
   manifest.
+- [x] **Reproduced through the Lite path** (case bundle → 5 seeds →
+  `run_wmeval_lite.py --dimensions prompt_scene_consistency`): Project Genie, LingBot (Cam),
+  Matrix-Game 3.0 and HY-WorldPlay, 120/120 rows. Against the paper's values, per-cell mean
+  |Δ| is 0.023 (max 0.067) and the model ranking is unchanged
+  (Unity 0.938 > Genie 0.905 > LingBot 0.891 > HY 0.792 > Matrix-Game 3.0 0.745);
+  `tools/check_prompt_human_alignment.py` gives ρ 0.90 / 0.80, as in the paper.
 
 ## 8. Perceptual similarity — `lpips`
 
