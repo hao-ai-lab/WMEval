@@ -178,8 +178,9 @@ from Unity:
     `*_unity`. The judge rubrics ship in `reference/artifacts/rubrics/`.
   - *LPIPS contact events*: `reference/artifacts/contact_events.json` holds the
     frozen reference-side contact events for `MirrorRollingBall/lpips_collision`,
-    `BeamDomino/causal` and `BallRoller/ctrl`. The four LiquidContainer cases in
-    the `lpips` dimension do not ship frozen events.
+    `BeamDomino/causal` and `BallRoller/ctrl`. The four LiquidContainer cases
+    ship it too, with 0 consensus events (no candidate contact reached 3 of 5
+    passes), so LPIPS uses its temporal fallback there.
 - **Reference-side CV outputs** for fluid mechanics: the SAM2 liquid and
   bottle masks and the pooled RAFT flow of each LiquidContainer reference
   (`*.npz`). Only the candidate side runs SAM2 and RAFT.
@@ -212,8 +213,12 @@ dataset:
 
 ## Differences from the paper
 
-> TODO: to be filled in by the maintainers. This section will list where this
-> release departs from the paper's protocol, cases and published numbers.
+See [`DIFFERENCES_FROM_PAPER.md`](DIFFERENCES_FROM_PAPER.md): roster and
+prompt-driven rows dropped as N/A, per-dimension action trajectories (including
+the prompt cases' as-run inputs), frozen judge outputs and their effect on the
+Unity reference numbers, and evaluation behavior added after the paper. How the
+frozen judge outputs are produced and re-baselined:
+[`FROZEN_JUDGE_OUTPUTS.md`](FROZEN_JUDGE_OUTPUTS.md).
 
 ## License
 

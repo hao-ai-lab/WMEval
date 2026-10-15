@@ -87,7 +87,7 @@ On Modal GPUs, `modal run tools/run_wmeval_lite_modal.py::main --model-root /can
 
 ## WMEval Lite Suite
 
-`eval_sets/wmeval_lite_v1/` is one suite with one CLI. `suite.yaml` declares the dimensions and is the single source of truth for case wiring; each case ships as a checksummed bundle under `cases/<Scene>/<variant>/`. The current release roster is **32 cases across 9 scenes, 8 dimensions and 41 case–dimension assignments**, including the 14 Table 4/7 cells (`<Scene>/scene_<variant>` for Table 7, `<Scene>/kinematics_<view>` for Table 4).
+`eval_sets/wmeval_lite_v1/` is one suite with one CLI. `suite.yaml` declares the dimensions and is the single source of truth for case wiring; each case ships as a checksummed bundle under `cases/<Scene>/<variant>/`. The current release roster is **32 cases across 9 scenes, 8 dimensions and 43 case–dimension assignments**, including the 14 Table 4/7 cells (`<Scene>/scene_<variant>` for Table 7, `<Scene>/kinematics_<view>` for Table 4).
 
 | Dimension | Question | Headline metrics |
 | --- | --- | --- |
@@ -2442,6 +2442,23 @@ closer to the reference at the sampled anchors.
 
 </details>
 
+
+### Release tooling
+
+| Task | Command / file |
+| --- | --- |
+| New model: jobs and N/A cases | `python tools/expected_jobs.py --model <name> --output runs/<name>` · `tools/model_adapters/TEMPLATE.md` |
+| Check the environment before a run | `python tools/preflight_lite.py --device <cuda\|mps\|cpu>` |
+| No-cost candidates for tests | `python tools/fixture_backend.py --output-root <dir>` |
+| Hosted judge through a gateway | `python tools/judge_gateway.py --key-file <key> [--script <tool>] -- <args>` |
+| Export / verify the HF package | `python tools/export_hf_package.py export --output <dir>` · `... verify <dir>` |
+| Case dependency locks | `python tools/lock_case_dependencies.py [--check]` |
+| Differences from the paper | `eval_sets/wmeval_lite_v1/DIFFERENCES_FROM_PAPER.md` |
+| Frozen judge outputs, re-baselining | `eval_sets/wmeval_lite_v1/FROZEN_JUDGE_OUTPUTS.md` |
+
+Rows carry `input_contract`, `metric_status` and `action_support`; a dimension
+headline needs `repeat_policy.required_repeats` (5) seeds per applicable case,
+otherwise the aggregate keeps it as `provisional_value`.
 
 ### Case × Dimension Matrix
 
