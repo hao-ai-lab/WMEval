@@ -88,7 +88,7 @@ MANIFEST_FORMAT_VERSION = 1
 EXTRA_DIRS = ("human_alignment", "baselines")
 DATASET_CARD = "DATASET_CARD.md"
 # User-facing notes the dataset card links to; shipped as-is.
-RELEASE_DOCS = ("DIFFERENCES_FROM_PAPER.md", "FROZEN_JUDGE_OUTPUTS.md")
+RELEASE_DOCS = ("DIFFERENCES_FROM_PAPER.md", "FROZEN_JUDGE_OUTPUTS.md", "SELF_MATCH_BOUNDS.md")
 
 # Never exported, never counted as "extra" by verify.
 CACHE_DIR_NAMES = frozenset(

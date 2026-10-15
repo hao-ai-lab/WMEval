@@ -180,7 +180,7 @@ Key files: `cases/<Scene>/scene_*/` (`ref.png`, `reference.mp4`,
 - [x] **Legacy cases:** ChessBoard/walk_third and WanderingGarden/scene_first carry bundled
   trajectories. Normalization stays `none` (switching would change scores); mismatched
   candidates are flagged by `input_contract`.
-- [ ] **Publish per-scene self-match bounds** and the Mirror photogrammetric caveat.
+- [x] **Publish per-scene self-match bounds** (`SELF_MATCH_BOUNDS.md`). Garden depth/distance floors are as large as model values and not measurable; check the Garden bridge GT alignment before comparing models there.
 
 ## 2. Action controllability — `action_controllability`
 
