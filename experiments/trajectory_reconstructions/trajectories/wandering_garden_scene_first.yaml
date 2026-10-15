@@ -1,0 +1,25 @@
+schema_version: 1
+trajectory_id: wmeval_lite.wandering_garden.scene_first.yaw_sweep_v1
+description: >-
+  In-place first-person yaw sweep of the Unity reference capture: 150 frames at
+  15 fps (10 s) with a constant 2.4 degrees per frame, i.e. +36 deg/s, no
+  translation. Read from the bundle's poses.npy (same yaw convention as the
+  Table 7 camera trajectories, where 360_in is -36 deg/s).
+duration_sec: 10.0
+control_hz: 15
+channels:
+  yaw_rate_deg_s: {kind: continuous, min: -360.0, max: 360.0, unit: deg_per_sec}
+segments:
+  - {start_sec: 0.0, end_sec: 10.0, values: {yaw_rate_deg_s: 36.0}}
+paper_alignment:
+  status: exact
+  matched: [reference_capture_duration, frame_rate, constant_yaw_rate, in_place_position]
+  missing: none
+  source: ../../../eval_sets/wmeval_lite_v1/cases/WanderingGarden/scene_first/reference/artifacts/poses.npy
+adapters:
+  unity: {status: exact, channel: yaw_rate_deg_s}
+  project_genie:
+    status: nominal
+    nominal_yaw_rate_deg_s: 36.0
+    key_rules:
+      - {channel: yaw_rate_deg_s, threshold: 1.0, positive_key: ArrowRight, negative_key: ArrowLeft}

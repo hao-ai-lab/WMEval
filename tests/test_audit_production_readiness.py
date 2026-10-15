@@ -8,8 +8,8 @@ def test_production_readiness_manifest_covers_live_suite() -> None:
     assert report["manifest_errors"] == []
     assert report["summary"]["dimension_count"] == 8
     assert report["summary"]["case_count"] == 34
-    assert report["summary"]["native_trajectory_case_count"] == 30
-    assert report["summary"]["supplemental_trajectory_case_count"] == 4
+    assert report["summary"]["native_trajectory_case_count"] == 32
+    assert report["summary"]["supplemental_trajectory_case_count"] == 2
     assert report["summary"]["open_priority_counts"] == {
         "P0": 11,
         "P1": 13,
@@ -34,8 +34,8 @@ def test_production_readiness_report_surfaces_portability_gaps() -> None:
     # The 12 Table 7 cells are native Lite cases; the two remaining
     # supplemental rows are the legacy ChessBoard walk and indoor Garden cases.
     assert rows["environment_object_consistency"]["trajectory_coverage"] == {
-        "native": 14,
-        "supplemental": 2,
+        "native": 16,
+        "supplemental": 0,
         "other": 0,
     }
     assert rows["kinematics_mechanics"]["trajectory_coverage"] == {

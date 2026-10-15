@@ -29,7 +29,7 @@ def test_chess_walk_compiles_exact_documented_capture_schedule(tmp_path: Path) -
         (trajectories / source.name).write_text(source.read_text())
     report = compile_manifest(copied)
     assert report["status"] == "ready"
-    assert report["case_count"] == 9
+    assert report["case_count"] == 10
     assert load_actions_jsonl(
         copied / "compiled" / "chess_walk_third.actions.jsonl"
     )

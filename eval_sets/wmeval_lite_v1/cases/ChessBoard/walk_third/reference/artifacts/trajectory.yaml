@@ -1,0 +1,36 @@
+schema_version: 1
+trajectory_id: wmeval_lite.chess_board.walk_third.capture_v1
+description: >-
+  Exact 90-frame control schedule documented by the Unity reference capture's
+  ChessCaptureBootstrap at 30 Hz.
+duration_sec: 3.0
+control_hz: 30
+channels:
+  move_x: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  move_y: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  jump: {kind: discrete, min: 0, max: 1, unit: boolean}
+  sprint: {kind: discrete, min: 0, max: 1, unit: boolean}
+segments:
+  - {start_sec: 0.0, end_sec: 0.8333333333333334, values: {move_x: 0.0, move_y: 1.0, jump: 0, sprint: 0}}
+  - {start_sec: 0.8333333333333334, end_sec: 1.0, values: {move_x: 0.8, move_y: 0.6, jump: 0, sprint: 0}}
+  - {start_sec: 1.0, end_sec: 1.0333333333333334, values: {move_x: 0.8, move_y: 0.6, jump: 1, sprint: 0}}
+  - {start_sec: 1.0333333333333334, end_sec: 1.5, values: {move_x: 0.8, move_y: 0.6, jump: 0, sprint: 0}}
+  - {start_sec: 1.5, end_sec: 2.3333333333333335, values: {move_x: 0.0, move_y: 1.0, jump: 0, sprint: 1}}
+  - {start_sec: 2.3333333333333335, end_sec: 3.0, values: {move_x: -0.5, move_y: 1.0, jump: 0, sprint: 0}}
+paper_alignment:
+  status: exact
+  matched: [reference_capture_duration, control_rate, move_vectors, jump_frame, sprint_frames]
+  missing: none
+  source: ../../../eval_sets/wmeval_lite_v1/cases/ChessBoard/walk_third/reference/artifacts/actions.txt
+adapters:
+  unity:
+    status: exact
+    channels: [move_x, move_y, jump, sprint]
+  project_genie:
+    status: nominal
+    key_rules:
+      - {channel: move_x, threshold: 0.4, positive_key: KeyD, negative_key: KeyA}
+      - {channel: move_y, threshold: 0.4, positive_key: KeyW, negative_key: KeyS}
+      - {channel: jump, threshold: 0.5, positive_key: Space}
+      - {channel: sprint, threshold: 0.5, positive_key: Shift}
+

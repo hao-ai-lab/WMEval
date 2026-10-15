@@ -69,8 +69,14 @@ def inspect_case(
     if action_npy.is_file():
         array = np.load(action_npy, allow_pickle=False)
         numeric = {"shape": list(array.shape), "dtype": str(array.dtype)}
+    action_npz = artifacts / "action.npz"
+    if numeric is None and action_npz.is_file():
+        # Standardized bundles may carry only the compiled semantic trajectory.
+        with np.load(action_npz, allow_pickle=False) as compiled:
+            values = compiled["values"]
+            numeric = {"shape": list(values.shape), "dtype": str(values.dtype), "source": "action.npz"}
 
-    if numeric and text_kind in {"executable_json", "structured_text"}:
+    if numeric and (text_kind in {"executable_json", "structured_text"} or trajectory):
         status = "ready"
     elif numeric:
         status = "numeric_only"

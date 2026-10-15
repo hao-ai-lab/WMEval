@@ -31,7 +31,8 @@ PHYSICS_TRAJECTORIES = sorted(
 
 def test_every_canonical_trajectory_declares_exactly_one_action_target() -> None:
     declared = set(action_backends.registry()["action_targets"])
-    ids = {load_trajectory(path)["trajectory_id"] for path in [*TRAJECTORIES, *PHYSICS_TRAJECTORIES]}
+    lite_only = [RECONSTRUCTIONS / "chess_walk_third.yaml", RECONSTRUCTIONS / "wandering_garden_scene_first.yaml"]
+    ids = {load_trajectory(path)["trajectory_id"] for path in [*TRAJECTORIES, *PHYSICS_TRAJECTORIES, *lite_only]}
     assert ids == declared
 
 

@@ -18,7 +18,7 @@ on each touched case to re-lock it.
 
 Usage::
 
-    python tools/bundle_reconstructed_trajectories.py
+    python tools/bundle_reconstructed_trajectories.py [--cases ChessBoard/walk_third ...]
 """
 from __future__ import annotations
 
@@ -50,6 +50,9 @@ PAPER_CELLS = {
     "LiquidContainer/fluid_impulse_decay": ("fluid_mechanics", "tab:fluid-headline/LiquidContainer/impulse_decay"),
     "LiquidContainer/fluid_chirp_strafe": ("fluid_mechanics", "tab:fluid-headline/LiquidContainer/chirp_strafe"),
     "LiquidContainer/fluid_step_hold": ("fluid_mechanics", "tab:fluid-headline/LiquidContainer/step_hold"),
+    # Lite-only cases (not in the paper): no table cell.
+    "ChessBoard/walk_third": ("environment_object_consistency", None),
+    "WanderingGarden/scene_first": ("environment_object_consistency", None),
 }
 
 
@@ -79,7 +82,8 @@ def bundle(case_id: str, trajectory_path: Path) -> Path:
     (artifacts / "table_cell.json").write_text(json.dumps({
         "action_target": target,
         "backend_support": support,
-        "claim_scope": "paper_protocol_reconstruction_not_exact_paper_parity",
+        "claim_scope": ("lite_only_case_not_in_paper" if cell is None
+                        else "paper_protocol_reconstruction_not_exact_paper_parity"),
         "dimension": dimension,
         "lite_case_id": case_id,
         "paper_alignment": trajectory["paper_alignment"]["status"],
@@ -93,11 +97,12 @@ def bundle(case_id: str, trajectory_path: Path) -> Path:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.parse_args()
+    parser.add_argument("--cases", nargs="*", help="only these case ids (default: every mapped case)")
+    args = parser.parse_args()
     manifest = yaml.safe_load((RECON_ROOT / "manifest.yaml").read_text(encoding="utf-8"))
     for case in manifest["cases"]:
         case_id = str(case["case_id"])
-        if case_id not in PAPER_CELLS:
+        if case_id not in PAPER_CELLS or (args.cases and case_id not in args.cases):
             continue
         print(bundle(case_id, RECON_ROOT / case["trajectory"]).relative_to(ROOT))
     return 0
