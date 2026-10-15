@@ -38,10 +38,16 @@ def load_queue(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
+def seed_for(item: dict[str, Any]) -> int:
+    """The queue's explicit seed, else the Table 7 default for the repeat."""
+    if "seed" in item:
+        return int(item["seed"])
+    return 42000 + int(str(item["generation_repeat"]).removeprefix("run"))
+
+
 def build_command(
     item: dict[str, Any], source: Path, checkpoint: Path, python: Path
 ) -> list[str]:
-    repeat_number = int(str(item["generation_repeat"]).removeprefix("run"))
     output = ROOT / str(item["candidate_video"])
     action_path = (ROOT / str(item["poses"])).parent
     return [
@@ -61,7 +67,7 @@ def build_command(
         "--t5_fsdp",
         "--ulysses_size", "8",
         "--frame_num", str(action_backends.backend("lingbot_world_cam")["frames"]),
-        "--base_seed", str(42000 + repeat_number),
+        "--base_seed", str(seed_for(item)),
         "--prompt", str(item["environment_prompt"]),
         "--save_file", str(output),
     ]
@@ -99,6 +105,7 @@ def run_item(
         "model": "lingbot_world_cam",
         "case_id": item["case_id"],
         "generation_repeat": item["generation_repeat"],
+        "seed": seed_for(item),
         "source_revision": SOURCE_REVISION,
         "checkpoint_revision": CHECKPOINT_REVISION,
         "conditioning_image_sha256": sha256(ROOT / str(item["conditioning_image"])),

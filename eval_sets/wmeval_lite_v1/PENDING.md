@@ -393,7 +393,7 @@ HF publication remains a separate action, not a release acceptance blocker here.
 
 ## 7. Prompt-scene consistency — `prompt_scene_consistency`
 
-**Owner:** _TBD_ · **Paper:** prompt-consistency table · **Lite cases:**
+**Owner:** Rita Wu · **Paper:** prompt-consistency table · **Lite cases:**
 ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
 **Run it for a new model:** the single path with `--dimensions prompt_scene_consistency`
@@ -403,20 +403,49 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
-| all 6 | ✅ 10 s camera rotation | ⚠️ rubrics frozen; Unity reference scores not stored; hosted `gpt-5.4` judge | — low risk |
+| all 6 | ✅ 10 s camera rotation | ✅ rubrics and Unity reference scores frozen in the bundle; hosted `gpt-5.4` judge, snapshot recorded per call | — low risk |
 
 | Model | In paper | Status |
 | --- | --- | --- |
-| Project Genie | ✅ | ⚠️ runnable; needs judge snapshot for reruns |
-| LingBot-World (Cam), Matrix-Game 3.0 | ✅ | ❌ no Lite generation path (camera rotation is supported by both) |
-| HY-WorldPlay | ✅ | ❌ |
+| Project Genie | ✅ | ✅ 5-run reproduced through Lite; judge snapshot recorded per call |
+| LingBot-World (Cam), Matrix-Game 3.0 | ✅ | ✅ 5-run reproduced; Lite generation path (`tools/prepare_prompt_case_inputs.py`) |
+| HY-WorldPlay | ✅ | ⚠️ 5-run reproduced from the existing rollouts; no Lite generation path |
 | Waypoint-1.5 | ✅ | ✅ 30/30 rows |
 
-- [ ] **Freeze the Unity reference scores** per case (judge model + prompt version +
-  sampled frames). Done when: reference rows load from the bundle.
-- [ ] **Record judge identity, requests and responses**; ship the ρ = 0.90 human-alignment
-  fixture as a regression check.
-- [ ] **Add Lite generation paths** for LingBot (Cam) and Matrix-Game 3.0.
+- [x] **Freeze the Unity reference scores** per case (judge model + prompt version +
+  sampled frames). Done when: reference rows load from the bundle. Evidence:
+  `tools/freeze_prompt_reference_scores.py --passes 5` →
+  `cases/*/prompt_*/reference/artifacts/reference_scores.json` (5 passes each,
+  `gpt-5.4-2026-03-05`). Rows report `overall_score_unity` / `env_score_unity` /
+  `obj_score_unity` from that file and mark it `stale` instead when the judge settings or
+  the Unity video change. Unity overall, first / third: ChessBoard 1.000 / 1.000,
+  MirrorRollingBall 0.953 / 1.000, RacingCar 0.840 / 0.837.
+- [x] **Record judge identity, requests and responses.** Every row's `full_report` has
+  `judge` (settings, rubric and first-frame hashes) and `judge_calls` (resolved snapshot,
+  response id, usage, raw output, request text and per-image hashes).
+- [x] **Ship the ρ = 0.90 human-alignment fixture** as a regression check. Evidence:
+  `human_alignment/prompt_scene_consistency.json` (human consensus per case and model:
+  3 raters, 126 videos; the paper's judge scores reproduce ρ 0.90 / τ 0.80 over the 5
+  models and 0.80 / 0.667 over the 4 generative ones).
+  `tools/check_prompt_human_alignment.py --results <per_case_results.jsonl>` recomputes it
+  for any run and exits non-zero below the paper value.
+- [x] **Add Lite generation paths** for LingBot (Cam) and Matrix-Game 3.0. Evidence: the
+  cases' 10 s left turn is the canonical `trajectories/prompt_camera_left_turn.yaml`
+  (`prompt.camera.left_turn_v1`, target `camera`, 40 deg/s as in the Unity reference),
+  baked into every case (`trajectory.yaml`, `action.npz`, `actions.jsonl`).
+  `tools/prepare_prompt_case_inputs.py` writes the inputs the rollouts were generated with
+  (seeds 0–4): LingBot poses, 161 frames at 16 fps (one counter-clockwise turn in place in
+  first person, two orbits around the character in third person); Matrix-Game 3.0 keys,
+  177 frames at 17 fps (`j` every frame, plus `d` in third person to orbit). It writes the
+  five-repeat queues for
+  `run_lingbot_table7.py --queue` / `run_matrix_game3.py --queue` plus the Lite candidate
+  manifest.
+- [x] **Reproduced through the Lite path** (case bundle → 5 seeds →
+  `run_wmeval_lite.py --dimensions prompt_scene_consistency`): Project Genie, LingBot (Cam),
+  Matrix-Game 3.0 and HY-WorldPlay, 120/120 rows. Against the paper's values, per-cell mean
+  |Δ| is 0.023 (max 0.067) and the model ranking is unchanged
+  (Unity 0.938 > Genie 0.905 > LingBot 0.891 > HY 0.792 > Matrix-Game 3.0 0.745);
+  `tools/check_prompt_human_alignment.py` gives ρ 0.90 / 0.80, as in the paper.
 
 ## 8. Perceptual similarity — `lpips`
 

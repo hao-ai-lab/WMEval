@@ -16,6 +16,7 @@ reference:
   artifacts:
     actions_file: reference/artifacts/actions.txt
     synthetic_action_dir: reference/artifacts
+    reference_scores: reference/artifacts/reference_scores.json
 protocol:
   candidate_normalization: none
   min_duration_sec: 1.0
@@ -24,7 +25,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
-  evaluator_fingerprint: 20c9959670b3962ffa729ffff3b3260a
+  evaluator_fingerprint: fdb0be9ea1ce2588a87d6ab0bb9fb89d
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions: {}

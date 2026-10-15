@@ -53,6 +53,7 @@ def call_vlm(
     max_tokens: int = 8192,
     timeout: int = 180,
     max_retries: int = 3,
+    record: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     headers = {
         "x-api-key": api_key,
@@ -83,7 +84,20 @@ def call_vlm(
                 _raise_with_body(r)
             resp = r.json()
             text = _extract_text(resp)
-            return json.loads(text)
+            parsed = json.loads(text)
+            if record is not None:
+                record.update(
+                    {
+                        "provider": "anthropic",
+                        "model_requested": model,
+                        "model_resolved": resp.get("model"),
+                        "response_id": resp.get("id"),
+                        "usage": resp.get("usage"),
+                        "attempts": attempt + 1,
+                        "output_text": text,
+                    }
+                )
+            return parsed
         except Exception as e:
             last_err = e
             print(f"  [anthropic attempt {attempt+1}/{max_retries}] {e}", file=sys.stderr)

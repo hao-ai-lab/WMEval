@@ -733,9 +733,14 @@ dimensions:
     aggregate:
       headline: overall_score
       direction: higher
+      # *_unity: the Unity reference's frozen scores
+      # (reference/artifacts/reference_scores.json, read, not re-judged)
       extra_means:
       - env_score
       - obj_score
+      - overall_score_unity
+      - env_score_unity
+      - obj_score_unity
   lighting_shading:
     display_name: Lighting & Shading
     description: 'Fixed-sun full camera look-at orbit: explicit two-metre radius, ten native seconds, exactly 120 timestamp-sampled frames at 12fps. Three supported pose backends with five seeds each; other strict interfaces are N/A. Historical native-paper scoring is retained in lighting_paper_native/. Strict numerical reproduction is verified on the pinned RTX PRO 6000 environment.'
