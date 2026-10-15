@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
   "captured_utc": "2026-10-04",
+  "amended_utc": "2026-10-15",
   "assets": {
     "grounding_dino": {
       "model_id": "IDEA-Research/grounding-dino-tiny",
@@ -39,6 +40,54 @@
       "backbone_sha256": "397923af8e79cdbb6a7127f12361acd7a2f83e06b05044ddf496e83de57a5bf0",
       "linear_weight": "lpips/weights/v0.1/vgg.pth",
       "linear_sha256": "a78928a0af1e5f0fcb1f3b9e8f8c3a2a5a3de244d830ad5c1feddc79b8432868"
+    },
+    "depth_anything_metric_indoor": {
+      "model_id": "depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf",
+      "revision": "8078d68a9c75a972131914f6afd0c1723be0da7f",
+      "weight": "model.safetensors",
+      "sha256": "e990eb82fbf11b05b7813261196a2b841bdcf5a05f64396724a8987fa90504a3",
+      "used_by": "evaluation/modules/environment_object_consistency.py DEPTH_METRIC_INDOOR_MODEL: depth auto-selection candidate for environment_object_consistency and for kinematics_mechanics when kin_depth_lift is true, unless eoc_depth_model / kin_depth_model overrides it"
+    },
+    "depth_anything_relative_small": {
+      "model_id": "depth-anything/Depth-Anything-V2-Small-hf",
+      "revision": "5426e4f0f36572d16453bbda7a8389317b1bef99",
+      "weight": "model.safetensors",
+      "sha256": "3152477ce0d8d6978d76b995120de97cb5b928701fd0f817769f59e249a16b70",
+      "used_by": "evaluation/modules/vendor/ptlflow_synthetic/synthetic_flow.py load_depth_model() default; control_motion loads it only when synthetic_use_depth is true (off in wmeval_lite_v1)"
+    },
+    "sam2_small": {
+      "model_id": "facebook/sam2.1-hiera-small",
+      "revision": "ee5bba1d82bb8749febdf90f45e84b687142ba03",
+      "weight": "sam2.1_hiera_small.pt",
+      "sha256": "6d1aa6f30de5c92224f8172114de081d104bbd23dd9dc5c58996f0cad5dc4d38",
+      "used_by": "fluid modules' liquid_sam2_model (evaluation/modules/_liquid_common.py get_liquid_mask_video; wmeval_lite_v1 fluid_mechanics metric_config)"
+    },
+    "ptlflow_synthetic": {
+      "source": "https://github.com/shaoxiongduan/ptlflow",
+      "upstream": "https://github.com/hmorimitsu/ptlflow (Apache-2.0)",
+      "source_revision": "9397588204a48ad826ad168b9bd6961a78f09661",
+      "source_revision_note": "commit that added synthetic_flow.py and calibration.json; both files are byte-identical (same blob ids) at fork main 3c3557d0dfc086c55b21b6763f3de86fcfaeb67c, checked 2026-10-15",
+      "vendored_path": "evaluation/modules/vendor/ptlflow_synthetic",
+      "files": {
+        "synthetic_flow.py": {
+          "blob": "5c2a4226d1c22bccc999e68b1df72846b2801728",
+          "sha256": "1483c15d48aa6956d00aaae96b334403ae877535538adaa2a1b16e26c48a8623"
+        },
+        "calibration.json": {
+          "blob": "6cc790175330b1d34a2b48f73167bbcdef373059",
+          "sha256": "08129757e02367a9591369beeccf64a78c8e16cbff3177f5ff704c1e8d9f9911"
+        }
+      },
+      "notice": "NOTICE.md",
+      "notice_sha256": "a336d2297ab08e7028a02e23163fa7287fa6fe6d4e91db832f6e50ac007a9508",
+      "used_by": "evaluation/modules/control_motion.py synthetic-flow metrics (action_controllability)"
+    },
+    "openpiv": {
+      "package": "OpenPIV",
+      "import_name": "openpiv",
+      "version": "0.26.1",
+      "version_source": "requirements-macos.lock and the local .venv; not listed in requirements-gpu.lock",
+      "used_by": "evaluation/modules/_liquid_common.py get_piv_field (openpiv.pyprocess.extended_search_area_piv / get_coordinates), called by liquid_velocity only when liquid_flow_estimator == 'openpiv' (wmeval_lite_v1 fluid_mechanics uses 'raft')"
     }
   },
   "dependency_lock": "requirements-gpu.lock"
