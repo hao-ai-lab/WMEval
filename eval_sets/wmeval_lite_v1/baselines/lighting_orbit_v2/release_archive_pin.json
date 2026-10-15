@@ -1,0 +1,11 @@
+{
+  "archive_sha256": "ef52a7e6d4d1ca3d62bbb8fa6abf83aa7d5e61ad6025b49eb12c59f02258dd95",
+  "bytes": 56397998,
+  "driver": "595.91.07",
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "manifest_sha256": "34cd59bc1c6b676018a3ba830ecf24c9c306584df4707add1a53b998d6031147",
+  "maximum_absolute_metric_error": 0,
+  "schema_version": 1,
+  "status": "pinned_gpu_acceptance_passed",
+  "strict_metrics_compared": 90
+}

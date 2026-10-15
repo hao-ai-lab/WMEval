@@ -177,6 +177,27 @@ def test_aggregate_excludes_non_completed_rows_from_means() -> None:
     assert summary["means"]["lpips_mean"] == 0.2
 
 
+def test_required_five_repeats_never_publish_a_partial_headline() -> None:
+    suite = _suite_with({'toy_metric': _dimension('toy_metric')})
+    rows = [{**_row(seed=str(seed),metrics={'lpips_mean':0.2*seed}), 'required_repeats':5}
+            for seed in range(1,6)]
+    def summary(values):
+        return build_aggregate(suite,values)['models']['genie3']['dimensions']['toy_metric']
+    partial=summary(rows[:4])
+    assert partial['coverage_status']=='incomplete'
+    assert partial['headline']['value'] is None and partial['means']['lpips_mean'] is None
+    full=summary(rows)
+    assert full['coverage_status']=='complete' and full['headline']['value']==pytest.approx(.6)
+    # Five successful videos do not justify a metric mean from four values.
+    rows[-1]['metrics']['lpips_mean']=None
+    missing=summary(rows)
+    assert missing['headline']['value'] is None
+    assert missing['stats']['lpips_mean']['valid_repeats_by_case']['scene_a/main']==4
+    # Repeating one seed's row cannot satisfy the independent repeat count.
+    duplicate=summary(rows[:4]+[rows[0]])
+    assert duplicate['coverage_status']=='incomplete' and duplicate['headline']['value'] is None
+
+
 def test_write_summary_csv_one_row_per_model(tmp_path: Path) -> None:
     suite = _suite_with({"toy_metric": _dimension("toy_metric")})
     rows = [
@@ -223,7 +244,10 @@ def test_extract_metrics_control_motion() -> None:
                     "3px": {"summary": {"mean": 0.1}},
                 },
             },
-            "synthetic_vs_candidate": {"epe_summary": {"mean": 4.0}},
+            "synthetic_vs_candidate": {
+                "enabled": True,
+                "temporal_summary": {"mf_cosine_mean": 0.9, "pixel_epe_mean_mean": 4.0},
+            },
         }
     }
 
@@ -237,7 +261,8 @@ def test_extract_metrics_control_motion() -> None:
     # bad-pixel rates come from the compensated section when present
     assert metrics["bad_pixel_rate_1px_mean"] == 0.4
     assert metrics["bad_pixel_rate_3px_mean"] == 0.1
-    assert metrics["synthetic_epe_mean"] == 4.0
+    assert metrics["synthetic_mean_flow_cosine"] == 0.9
+    assert metrics["synthetic_pixel_epe_mean"] == 4.0
 
 
 def test_extract_metrics_causal_step_families() -> None:

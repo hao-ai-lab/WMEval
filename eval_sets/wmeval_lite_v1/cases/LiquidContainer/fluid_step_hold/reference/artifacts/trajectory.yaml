@@ -1,0 +1,36 @@
+schema_version: 1
+trajectory_id: wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1
+description: >-
+  2 s rest, 8 s right = +1, 8 s ring-down, 2 s tail. Sampled at the nominal
+  DECISION_HZ = 12 from step_hold_action in
+  WorldModelBenchScenePrivate/GameScenes/LiquidContainer/bottle_controller_genie_profiles.py
+  (duration 20 s). Pitch, yaw and roll are forced to zero by the controller and
+  are omitted.
+duration_sec: 20.0
+control_hz: 12
+channels:
+  forward: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  right: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  up: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+segments:
+  - {start_sec: 0.0, end_sec: 2.0, values: {forward: 0.0, right: 0.0, up: 0.0}}
+  - {start_sec: 2.0, end_sec: 10.0, values: {forward: 0.0, right: 1.0, up: 0.0}}
+  - {start_sec: 10.0, end_sec: 20.0, values: {forward: 0.0, right: 0.0, up: 0.0}}
+paper_alignment:
+  status: reconstructed
+  matched: [action_profile, action_surface, profile_timing, duration]
+  missing: >-
+    The reference capture stepped on wall-clock time (~10 Hz effective, 200-202
+    jittered decisions; the legacy action.npy); this is the nominal 12 Hz profile
+    the controller was written to, not the per-step record.
+  source: ../../../eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_step_hold/reference/artifacts/actions.txt
+adapters:
+  unity:
+    status: reconstructed
+    channels: [forward, right, up]
+  project_genie:
+    status: nominal
+    key_rules:
+      - {channel: forward, threshold: 0.5, positive_key: KeyW, negative_key: KeyS}
+      - {channel: right, threshold: 0.5, positive_key: KeyD, negative_key: KeyA}
+      - {channel: up, threshold: 0.5, positive_key: Space}

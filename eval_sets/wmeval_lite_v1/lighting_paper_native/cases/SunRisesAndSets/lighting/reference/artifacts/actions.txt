@@ -1,0 +1,4 @@
+[
+  {"op": "setview", "key": "first", "note": "first-person at standing eye height (~1.6 m); no body, hands or held items in frame"},
+  {"op": "hold", "key": "ArrowLeft", "ms": 10000, "note": "walk counter-clockwise around the round dining table at a constant ~2 m radius, one full loop over the clip, table kept centred in view; the sun stays fixed (fixed-sun, walking-orbit regime)"}
+]

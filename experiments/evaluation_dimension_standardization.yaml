@@ -32,7 +32,7 @@ cross_cutting_gaps:
     priority: P0
     severity: high
     status: open
-    gap: Case evaluator locks contain evaluator fingerprints, but dependency_versions and artifact_schema_versions are empty in every live case.
+    gap: Some live case evaluator locks still have empty dependency_versions or artifact_schema_versions. The active lighting orbit now pins its dependencies, hardware and artifact versions; other dimensions remain to be completed.
     remediation: Populate machine-verifiable dependency and artifact-schema versions, then refresh evaluator fingerprints.
   - id: install_contract
     priority: P2
@@ -150,18 +150,22 @@ dimensions:
         remediation: Record API/model snapshot metadata and maintain a frozen regression fixture with expected tolerance bands.
 
   lighting_shading:
-    readiness: partial
+    readiness: ready
     standardized:
       case_bundle_contract: true
       evaluator_config: true
       aggregation: true
-      action_trajectory: partial
+      action_trajectory: true
       lighting_regime: true
+    evidence:
+      - eval_sets/wmeval_lite_v1/baselines/lighting_orbit_v2/README.md
+      - experiments/lighting_orbit_v2/results/same_gpu_verification/full_release/verification.json
     gaps:
       - priority: P1
         severity: high
-        gap: The orbit has an exact browser schedule but only a semantic reconstructed numeric trajectory, so Unity replay is not exact.
-        remediation: Capture and lock the original Unity controller trace with camera poses and timestamps.
+        status: closed
+        gap: The old orbit lacked a locked metric Unity camera trajectory.
+        remediation: The active look-at case now ships timestamped poses, action.npz, trajectory.yaml, explicit camera target, Unity closure QA, five seeds per supported backend and exact pinned-GPU scoring verification.
       - priority: P2
         severity: medium
         gap: The fixed-sun paper protocol and optional moving-sun interpretation require different metrics, but only the fixed-sun protocol is implemented.

@@ -42,6 +42,7 @@ def _merge_lpips_artifacts(
     lpips_vlm_scene_key: Optional[str],
     lpips_causal_event_source: str,
     lpips_causal_lpips_pairing: Optional[str],
+    lpips_reference_events_json: Optional[str] = None,
     lpips_vlm_pair_accept_cost: Optional[float],
     lpips_vlm_skip_cost: Optional[float],
     lpips_vlm_parallel_videos: bool,
@@ -116,6 +117,8 @@ def _merge_lpips_artifacts(
         raw = str(lpips_causal_lpips_pairing).strip().lower()
         if raw and raw != "auto":
             context.artifacts["lpips_causal_lpips_pairing"] = raw
+    if lpips_reference_events_json:
+        context.artifacts["lpips_reference_events_json"] = str(lpips_reference_events_json)
     if lpips_vlm_pair_accept_cost is not None:
         context.artifacts["lpips_vlm_pair_accept_cost"] = float(lpips_vlm_pair_accept_cost)
     if lpips_vlm_skip_cost is not None:
@@ -223,6 +226,7 @@ def run_world_model_evaluation(
     lpips_vlm_scene_key: Optional[str] = None,
     lpips_causal_event_source: str = "both",
     lpips_causal_lpips_pairing: Optional[str] = None,
+    lpips_reference_events_json: Optional[str] = None,
     lpips_vlm_pair_accept_cost: Optional[float] = None,
     lpips_vlm_skip_cost: Optional[float] = None,
     lpips_vlm_parallel_videos: bool = True,
@@ -387,6 +391,7 @@ def run_world_model_evaluation(
                 lpips_vlm_scene_key=lpips_vlm_scene_key,
                 lpips_causal_event_source=lpips_causal_event_source,
                 lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+                lpips_reference_events_json=lpips_reference_events_json,
                 lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
                 lpips_vlm_skip_cost=lpips_vlm_skip_cost,
                 lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,
@@ -475,6 +480,7 @@ def run_world_model_evaluation(
         lpips_vlm_scene_key=lpips_vlm_scene_key,
         lpips_causal_event_source=lpips_causal_event_source,
         lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+        lpips_reference_events_json=lpips_reference_events_json,
         lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
         lpips_vlm_skip_cost=lpips_vlm_skip_cost,
         lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,

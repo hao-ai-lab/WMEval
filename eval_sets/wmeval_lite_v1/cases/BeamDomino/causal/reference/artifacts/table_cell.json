@@ -1,0 +1,29 @@
+{
+  "action_target": "rolling_ball",
+  "backend_support": {
+    "lingbot_world_cam": null,
+    "matrix_game_2": null,
+    "matrix_game_3": null,
+    "project_genie": "nominal_binary_keys",
+    "unity": "reference"
+  },
+  "claim_scope": "paper_protocol_reconstruction_not_exact_paper_parity",
+  "dimension": "physical_causality",
+  "lite_case_id": "BeamDomino/causal",
+  "paper_alignment": "exact",
+  "schema_version": 1,
+  "sources": {
+    "action.npy": "1734f93e7c3a38d5f8755f70a9ea2dc79522b001a2047adb514bc982bb7e855c",
+    "action.npz": "01f0334c84928a9ee6b146f3f051e5922b41ab2e934e7994db77cbfc41bbae2b",
+    "actions.jsonl": "a30450bee5067b6649e56eb85d4e09d19c0caf47beee6e948292e5c6fb5c9e1b",
+    "actions.txt": "82726d868388747b01b052bcee16b426f10caded63231ed720f6a2ec6e924709",
+    "intrinsics.npy": "1c1013d3753c18670bd70e3fc99ac5adebf6134ea458c3d918c9eb4981390399",
+    "judge_answers.json": "b0db21b166d6dfd5ca5cfeb776cf2de3d21ee153c869f0ceb2d86466d0f25216",
+    "poses.npy": "b9dc8d175d92a8d37dbc105d932f0e685e969fe35c0afa017b9a5a06a157c4f4",
+    "qa_dataset.json": "6767cadb135c06ff838aead4ca4efe63a9b7f0c999f5dc9527b141ab2fe6772c",
+    "reference.mp4": "bfdffd34bc20efcc4a3fa1f4cbf01b6ce1a3a98b08b015873935f6ad09a9db6c",
+    "trajectory.yaml": "3aae6bbd53cdcd68e3a9ec00337da2e190e2499472593a668eaf6b75839957d6"
+  },
+  "table_cell": "tab:causality_per_traj/BeamDomino/canonical",
+  "trajectory_id": "wmeval_lite.beam_domino.causal.ball_force_v1"
+}

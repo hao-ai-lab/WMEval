@@ -1,0 +1,21 @@
+{
+  "action_npy": "beam_domino_causal.action.npy",
+  "action_npy_sha256": "1734f93e7c3a38d5f8755f70a9ea2dc79522b001a2047adb514bc982bb7e855c",
+  "action_npz": "beam_domino_causal.action.npz",
+  "action_npz_sha256": "01f0334c84928a9ee6b146f3f051e5922b41ab2e934e7994db77cbfc41bbae2b",
+  "actions_txt": "beam_domino_causal.actions.txt",
+  "actions_txt_sha256": "82e5333580576cb144952776621f3fdfbcae7292e99f62533b8d73fb855911a8",
+  "alignment_status": "exact",
+  "channel_names": [
+    "z_force",
+    "x_force"
+  ],
+  "project_genie_actions": "beam_domino_causal.actions.jsonl",
+  "project_genie_actions_sha256": "a30450bee5067b6649e56eb85d4e09d19c0caf47beee6e948292e5c6fb5c9e1b",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "3aae6bbd53cdcd68e3a9ec00337da2e190e2499472593a668eaf6b75839957d6",
+  "source": "../trajectories/beam_domino_causal.yaml",
+  "step_count": 122,
+  "trajectory_id": "wmeval_lite.beam_domino.causal.ball_force_v1"
+}

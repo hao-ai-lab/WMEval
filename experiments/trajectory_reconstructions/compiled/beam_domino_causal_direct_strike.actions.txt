@@ -1,0 +1,16 @@
+# wmeval_lite.beam_domino.causal_direct_strike.ball_force_v1 -- generated action trajectory.
+# Provenance: beam_domino_causal_direct_strike.yaml (semantic SHA-256: 456ce66ff292ba8077a681429903d609b11fa34b8d898b6abdef053012f2008d)
+# Alignment: exact; 122 steps; channels: z_force, x_force
+# start_s end_s z_force x_force
+0.0 2.0 0.0 0.0
+2.0 3.0 0.0 1.0
+3.0 4.5 0.6 1.0
+4.5 7.0 1.0 0.0
+7.0 12.2 0.0 0.0
+
+# Project Genie browser actions:
+{"ms": 2000, "op": "wait"}
+{"keys": ["KeyD"], "ms": 1000, "op": "hold"}
+{"keys": ["KeyD", "KeyW"], "ms": 1500, "op": "hold"}
+{"keys": ["KeyW"], "ms": 2500, "op": "hold"}
+{"ms": 5200, "op": "wait"}

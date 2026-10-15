@@ -27,7 +27,7 @@
           "video_id": "BeamDomino_causal",
           "segment_index": 2,
           "qa_type": "descriptive",
-          "answer": "D"
+          "answer": "C"
         },
         {
           "video_id": "BeamDomino_causal",
@@ -73,46 +73,46 @@
         {
           "video_id": "BeamDomino_causal",
           "segment_index": 2,
-          "qa_type": "descriptive",
-          "answer": "D"
-        },
-        {
-          "video_id": "BeamDomino_causal",
-          "segment_index": 3,
-          "qa_type": "causal",
-          "answer": "A"
-        },
-        {
-          "video_id": "BeamDomino_causal",
-          "segment_index": 3,
-          "qa_type": "descriptive",
-          "answer": "A"
-        },
-        {
-          "video_id": "BeamDomino_causal",
-          "segment_index": 4,
-          "qa_type": "causal",
-          "answer": "A"
-        },
-        {
-          "video_id": "BeamDomino_causal",
-          "segment_index": 4,
-          "qa_type": "descriptive",
-          "answer": "B"
-        }
-      ]
-    },
-    {
-      "video_id": "BeamDomino_causal",
-      "answers": [
-        {
-          "video_id": "BeamDomino_causal",
-          "segment_index": 1,
           "qa_type": "descriptive",
           "answer": "C"
         },
         {
           "video_id": "BeamDomino_causal",
+          "segment_index": 3,
+          "qa_type": "causal",
+          "answer": "A"
+        },
+        {
+          "video_id": "BeamDomino_causal",
+          "segment_index": 3,
+          "qa_type": "descriptive",
+          "answer": "A"
+        },
+        {
+          "video_id": "BeamDomino_causal",
+          "segment_index": 4,
+          "qa_type": "causal",
+          "answer": "A"
+        },
+        {
+          "video_id": "BeamDomino_causal",
+          "segment_index": 4,
+          "qa_type": "descriptive",
+          "answer": "B"
+        }
+      ]
+    },
+    {
+      "video_id": "BeamDomino_causal",
+      "answers": [
+        {
+          "video_id": "BeamDomino_causal",
+          "segment_index": 1,
+          "qa_type": "descriptive",
+          "answer": "A"
+        },
+        {
+          "video_id": "BeamDomino_causal",
           "segment_index": 2,
           "qa_type": "causal",
           "answer": "A"
@@ -121,7 +121,7 @@
           "video_id": "BeamDomino_causal",
           "segment_index": 2,
           "qa_type": "descriptive",
-          "answer": "D"
+          "answer": "C"
         },
         {
           "video_id": "BeamDomino_causal",
@@ -168,7 +168,7 @@
           "video_id": "BeamDomino_causal",
           "segment_index": 2,
           "qa_type": "descriptive",
-          "answer": "D"
+          "answer": "C"
         },
         {
           "video_id": "BeamDomino_causal",
@@ -215,7 +215,7 @@
           "video_id": "BeamDomino_causal",
           "segment_index": 2,
           "qa_type": "descriptive",
-          "answer": "D"
+          "answer": "C"
         },
         {
           "video_id": "BeamDomino_causal",

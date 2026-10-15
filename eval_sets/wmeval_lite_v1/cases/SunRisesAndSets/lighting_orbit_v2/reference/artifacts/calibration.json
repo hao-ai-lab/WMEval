@@ -1,0 +1,75 @@
+{
+    "scene": "Assets/Scenes/SampleScene.unity",
+    "unityVersion": "6000.3.8f1",
+    "tableSelection": "GameObject exact name Table23; aggregate Renderer.bounds",
+    "targetSelection": "table mesh bounds centre x/z and max.y",
+    "floorSelection": "GameObject Plane transform.position.y",
+    "tableBoundsCenter": {
+        "x": 0.0,
+        "y": 0.6367848515510559,
+        "z": -8.940696716308594e-7
+    },
+    "tableBoundsSize": {
+        "x": 1.760000467300415,
+        "y": 1.273569941520691,
+        "z": 1.7600003480911255
+    },
+    "originUnity": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": -8.940696716308594e-7
+    },
+    "targetUnity": {
+        "x": 0.0,
+        "y": 1.2735698223114014,
+        "z": -8.940696716308594e-7
+    },
+    "radiusM": 2.0,
+    "eyeHeightM": 1.600000023841858,
+    "durationSec": 10.0,
+    "verticalFovDeg": 60.0,
+    "width": 1024,
+    "height": 1024,
+    "fps": 12,
+    "localToUnity": "diag(1,1,-1) plus originUnity; local RH +Y up; initial local +Z",
+    "lights": [
+        {
+            "name": "Directional Light",
+            "type": "Directional",
+            "position": {
+                "x": 0.0,
+                "y": 3.0,
+                "z": 0.0
+            },
+            "euler": {
+                "x": 63.399993896484378,
+                "y": 330.0,
+                "z": 0.0000019067700804953348
+            },
+            "forward": {
+                "x": -0.22387953102588654,
+                "y": -0.8941541910171509,
+                "z": 0.38777080178260805
+            },
+            "color": {
+                "r": 1.0,
+                "g": 1.0,
+                "b": 1.0,
+                "a": 1.0
+            },
+            "intensity": 2.0,
+            "colorTemperature": 5000.0,
+            "enabled": true,
+            "useColorTemperature": true
+        }
+    ],
+    "disabledBehaviours": [
+        "CameraOrbitAgent",
+        "DayAndNight",
+        "KeyboardCameraController",
+        "Unity.MLAgents.DecisionRequester",
+        "Unity.MLAgents.Policies.BehaviorParameters",
+        "Unity.MLAgents.Sensors.CameraSensorComponent",
+        "UnityEngine.Rendering.Volume"
+    ]
+}

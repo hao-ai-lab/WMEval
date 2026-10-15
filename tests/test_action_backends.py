@@ -23,10 +23,29 @@ def _cases() -> list[dict]:
     return yaml.safe_load((TABLE_ROOT / "cases.yaml").read_text(encoding="utf-8"))["cases"]
 
 
+RECONSTRUCTIONS = ROOT / "experiments/trajectory_reconstructions/trajectories"
+PHYSICS_TRAJECTORIES = sorted(
+    [*RECONSTRUCTIONS.glob("beam_domino_*.yaml"), *RECONSTRUCTIONS.glob("liquid_container_*.yaml")]
+)
+
+
 def test_every_canonical_trajectory_declares_exactly_one_action_target() -> None:
     declared = set(action_backends.registry()["action_targets"])
-    ids = {load_trajectory(path)["trajectory_id"] for path in TRAJECTORIES}
+    ids = {load_trajectory(path)["trajectory_id"] for path in [*TRAJECTORIES, *PHYSICS_TRAJECTORIES]}
     assert ids == declared
+
+
+def test_physics_trajectories_are_unity_and_genie_only() -> None:
+    assert len(PHYSICS_TRAJECTORIES) == 7
+    for path in PHYSICS_TRAJECTORIES:
+        trajectory = load_trajectory(path)
+        target = action_backends.action_target(trajectory)
+        assert target in {"rolling_ball", "liquid_container"}, path.name
+        assert trajectory["adapters"]["project_genie"]["status"] != "unsupported", path.name
+        assert action_backends.support_status("project_genie", target) is not None
+        for name in ("matrix_game_2", "matrix_game_3", "lingbot_world_cam"):
+            with pytest.raises(action_backends.UnsupportedAction):
+                action_backends.require_support(name, trajectory)
 
 
 def test_table4_actuates_scene_entities_and_table7_only_the_camera() -> None:
@@ -53,6 +72,29 @@ def test_camera_only_backend_rejects_vehicle_control_with_recorded_reason() -> N
         action_backends.require_support("lingbot_world_cam", drive)
     assert action_backends.require_support("matrix_game_2", drive) == "ego_vehicle"
     assert action_backends.support_status("matrix_game_2", "ego_vehicle") == "target_entity_validation_required"
+
+
+@pytest.mark.parametrize(
+    "stem,trajectory_id",
+    [
+        ("ball_roller_collision_path", "controllability.ball_roller.collision_path_v1"),
+        ("mirror_rolling_ball_axis_cycle", "controllability.mirror_rolling_ball.axis_cycle_v1"),
+    ],
+)
+def test_ball_control_trajectories_actuate_the_ball(stem: str, trajectory_id: str) -> None:
+    trajectory = load_trajectory(TABLE_ROOT / f"trajectories/{stem}.yaml")
+    assert trajectory["trajectory_id"] == trajectory_id
+    assert action_backends.action_target(trajectory) == "ball"
+
+
+def test_object_free_backends_are_unsupported_for_ball_control_with_a_reason() -> None:
+    trajectory = load_trajectory(TABLE_ROOT / "trajectories/ball_roller_collision_path.yaml")
+    with pytest.raises(action_backends.UnsupportedAction, match="no object channel"):
+        action_backends.require_support("waypoint15", trajectory)
+    with pytest.raises(action_backends.UnsupportedAction, match="cannot move the ball"):
+        action_backends.require_support("lingbot_world_cam", trajectory)
+    for name in ("unity", "project_genie", "lingbot_world_act"):
+        assert action_backends.require_support(name, trajectory) == "ball"
 
 
 def test_project_genie_unsupported_targets_match_trajectory_adapter_status() -> None:
@@ -96,3 +138,26 @@ def test_held_sampling_zeroes_controls_after_the_trajectory_ends() -> None:
     assert values.shape == (129, 3)
     assert np.all(values[np.arange(129) / 12.0 >= 10.0] == 0.0)
     assert values[24, 1] > 0  # 2.0 s: throttle segment
+
+
+def test_complete_orbit_support_is_independent_of_yaw_target_support(tmp_path):
+    orbit={'trajectory_id':'lighting.camera.look_at_orbit_v2','kind':'camera_look_at_orbit','target':'camera'}
+    assert action_backends.require_support('lingbot_world_cam',orbit)=='camera'
+    assert action_backends.support_status('matrix_game_2','camera') is not None
+    with pytest.raises(action_backends.UnsupportedAction,match='metric'):
+        action_backends.require_support('matrix_game_2',orbit)
+    raw=yaml.safe_load(action_backends.REGISTRY_PATH.read_text())
+    decision=raw['trajectory_support'][orbit['trajectory_id']]['backends']['matrix_game_2']
+    decision.update(status='pending_calibration',reason='Test conversion is not audited yet.')
+    pending=tmp_path/'pending.yaml';pending.write_text(yaml.safe_dump(raw))
+    with pytest.raises(action_backends.IncompleteAction,match='pending_calibration'):
+        action_backends.require_support('matrix_game_2',orbit,path=pending)
+    decision.update(status='unsupported',reason='Test interface supplies yaw only.')
+    path=tmp_path/'backends.yaml';path.write_text(yaml.safe_dump(raw))
+    with pytest.raises(action_backends.UnsupportedAction,match='yaw only'):
+        action_backends.require_support('matrix_game_2',orbit,path=path)
+    del raw['trajectory_support']
+    raw['action_targets'][orbit['trajectory_id']]={'target':'camera'}
+    path2=tmp_path/'target_only.yaml';path2.write_text(yaml.safe_dump(raw))
+    with pytest.raises(action_backends.IncompleteAction,match='alone'):
+        action_backends.require_support('matrix_game_2',orbit,path=path2)

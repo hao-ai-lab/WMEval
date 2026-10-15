@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "trajectory_id": "lighting.camera.look_at_orbit_v2",
+  "scope": "The pinned release interfaces and compiler for this metric look-at trajectory; not general camera/free-navigation support.",
+  "required_input": {
+    "target": "camera",
+    "duration_sec": 10,
+    "radius_m": 2,
+    "eye_height_m": 1.6,
+    "look_at_m": [
+      0,
+      1.2735698223114014,
+      0
+    ],
+    "native_frame_indexed_timeline": true
+  },
+  "decision_rule": "A supported input must encode the canonical pose path with a documented native conversion, or have a verified input-side metric/time conversion. A generated camera need not obey its input: output quality is not a support test.",
+  "backends": {
+    "matrix_game_2": {
+      "status": "unsupported",
+      "reason_code": "native_controller_has_no_metric_path_mapping",
+      "source_revision": "756776d516233027631008761d4d40ddaea3e23a",
+      "native_input": "Per-decoded-frame keyboard [forward,back,left,right] and mouse [vertical,horizontal] arrays.",
+      "available": [
+        "simultaneous translation and yaw tokens",
+        "deterministic native frame index"
+      ],
+      "missing": [
+        "world-space camera poses/target",
+        "documented conversion from a key frame to metres"
+      ],
+      "sources": [
+        {
+          "path": "Matrix-Game-2/utils/conditions.py",
+          "sha256": "e3402ebda4c74a760b6b343a51a7c062cbc74ce4d04fb805d40c3af949b3607d",
+          "symbol": "Bench_actions_universal, KEYBOARD_IDX, CAMERA_VALUE_MAP"
+        },
+        {
+          "path": "Matrix-Game-2/inference.py",
+          "sha256": "5b19961c40e664a5f91fc284befbac8552cb5d45e0dea98693436282056e15b2",
+          "symbol": "InteractiveGameInference.generate_videos"
+        }
+      ],
+      "calibration_scope": "Four independent response probes are retained. They do not establish a verified physical unit conversion. Their generated appearance is not the reason for N/A."
+    },
+    "waypoint": {
+      "status": "unsupported",
+      "reason_code": "native_controller_has_no_metric_path_mapping",
+      "source_revision": "b3f1e725b222679a517632918cc78bba0c9fa433",
+      "native_input": "CtrlInput(button IDs, mouse dx/dy velocity, scroll); 4 decoded frames per control step.",
+      "available": [
+        "simultaneous translation and yaw tokens",
+        "deterministic native frame index"
+      ],
+      "missing": [
+        "world-space camera poses/target",
+        "documented conversion from a key frame to metres"
+      ],
+      "sources": [
+        {
+          "path": "src/world_engine.py",
+          "sha256": "b73f07ab28abd355819c751671faa9ebcb54e31594499b709edea0244c4d02e6",
+          "symbol": "CtrlInput, WorldEngine.prep_inputs, WorldEngine._prep_inputs"
+        }
+      ],
+      "calibration_scope": "Four native probes completed; no accepted repeat-consistent physical mapping. A failed response fit by itself is not interface evidence: the source-level missing unit/target mapping is recorded separately."
+    },
+    "project_genie": {
+      "status": "unsupported",
+      "reason_code": "hosted_controls_not_native_frame_indexed",
+      "native_input": "Hosted first-person UI: W/A/S/D, arrows and space held for wall-clock durations.",
+      "available": [
+        "simultaneous D plus arrow-left",
+        "five independent recorded exports"
+      ],
+      "missing": [
+        "frame-indexed action submission",
+        "verified relation between wall input times and native output times",
+        "world-space camera pose/target input"
+      ],
+      "evidence": "genie_diagnostic_summary.json",
+      "timing_native_span_sec": [
+        8.958333333333334,
+        9.25,
+        10,
+        10.083333333333334,
+        10.166666666666666
+      ],
+      "exclusion_rule": "The held-input timing and input-side geometry limitation cause strict-protocol N/A. Approaching the table, scene distortion or low metric scores are not exclusion reasons."
+    }
+  }
+}

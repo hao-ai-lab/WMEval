@@ -29,6 +29,7 @@ _MODULE_PARAM_PATH_KEYS = frozenset(
         "kin_unity_poses_npy",
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
+        "lpips_reference_events_json",
     }
 )
 

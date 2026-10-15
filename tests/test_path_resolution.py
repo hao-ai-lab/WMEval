@@ -34,5 +34,8 @@ def test_resolve_ptlflow_root_accepts_parent_unity_root(tmp_path: Path) -> None:
     assert resolve_ptlflow_root(None, repo_root=tmp_path) == str(ptlflow_root.resolve())
 
 
-def test_resolve_ptlflow_root_falls_back_to_workspace() -> None:
-    assert resolve_ptlflow_root(None, repo_root=Path("/tmp/definitely_missing_root")) == "/workspace/ptlflow"
+def test_resolve_ptlflow_root_falls_back_to_vendored_copy() -> None:
+    resolved = Path(resolve_ptlflow_root(None, repo_root=Path("/tmp/definitely_missing_root")))
+    assert resolved == ROOT / "evaluation" / "modules" / "vendor" / "ptlflow_synthetic"
+    assert (resolved / "synthetic_flow.py").is_file()
+    assert (resolved / "calibration.json").is_file()

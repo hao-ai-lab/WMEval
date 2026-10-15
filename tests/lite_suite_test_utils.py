@@ -231,14 +231,18 @@ def write_rubric(
 def mock_video_probing(monkeypatch: pytest.MonkeyPatch, duration_sec: float = 10.0) -> None:
     from evaluation.lite import validation
 
-    def metadata(path: str) -> VideoMetadata:
+    def metadata(path: str, fps_override: float | None = None) -> VideoMetadata:
+        # Like the real probe: an override replaces the container fps and so the
+        # duration derived from the (unchanged) frame count.
+        frame_count = int(duration_sec * 10)
+        fps = float(fps_override) if fps_override is not None else 10.0
         return VideoMetadata(
             path=str(path),
-            fps=10.0,
-            frame_count=int(duration_sec * 10),
+            fps=fps,
+            frame_count=frame_count,
             width=832,
             height=464,
-            duration_sec=duration_sec,
+            duration_sec=frame_count / fps,
         )
 
     monkeypatch.setattr(validation.video_io, "get_video_metadata", metadata)

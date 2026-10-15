@@ -29,9 +29,9 @@
           "segment_index": 1,
           "question": "What is the blue ball on the floor doing during this segment, and how is it moving relative to the white central platform with the yellow ball on top?",
           "choices": [
-            "A) rolling steadily along the floor away from the central white platform that has another ball resting on top of it",
+            "A) rolling back toward the camera and away from the central white platform, growing larger in view",
             "B) bouncing upward off the floor into the side of the central white platform that has another ball resting on top of it",
-            "C) rolling steadily along the floor toward the central white platform that has another ball resting on top of it",
+            "C) rolling steadily along the floor away from the camera, toward the central white platform that has another ball resting on top of it",
             "D) remaining nearly stationary on the floor beside the central white platform that has another ball resting on top of it"
           ],
           "correct_answer": "C"
@@ -41,8 +41,8 @@
           "question": "What happens when the blue floor ball reaches the white platform in the middle of the scene?",
           "choices": [
             "A) the floor ball misses the platform entirely and the platform stays untouched while the ball rolls past",
-            "B) the floor ball rolls under the platform and lifts it up before the platform collapses",
-            "C) the floor ball brushes against the platform but the platform stays standing on its legs without tipping over",
+            "B) the floor ball stops against one of the platform's legs and stays there while the platform stays standing",
+            "C) the floor ball rolls underneath the platform between its legs, clipping them on the way through, and the platform stays standing without tipping over",
             "D) the floor ball slams into the platform and knocks it over onto one side"
           ],
           "correct_answer": "C"
