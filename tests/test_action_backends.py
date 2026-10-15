@@ -96,3 +96,26 @@ def test_held_sampling_zeroes_controls_after_the_trajectory_ends() -> None:
     assert values.shape == (129, 3)
     assert np.all(values[np.arange(129) / 12.0 >= 10.0] == 0.0)
     assert values[24, 1] > 0  # 2.0 s: throttle segment
+
+
+def test_complete_orbit_support_is_independent_of_yaw_target_support(tmp_path):
+    orbit={'trajectory_id':'lighting.camera.look_at_orbit_v2','kind':'camera_look_at_orbit','target':'camera'}
+    assert action_backends.require_support('lingbot_world_cam',orbit)=='camera'
+    assert action_backends.support_status('matrix_game_2','camera') is not None
+    with pytest.raises(action_backends.UnsupportedAction,match='metric'):
+        action_backends.require_support('matrix_game_2',orbit)
+    raw=yaml.safe_load(action_backends.REGISTRY_PATH.read_text())
+    decision=raw['trajectory_support'][orbit['trajectory_id']]['backends']['matrix_game_2']
+    decision.update(status='pending_calibration',reason='Test conversion is not audited yet.')
+    pending=tmp_path/'pending.yaml';pending.write_text(yaml.safe_dump(raw))
+    with pytest.raises(action_backends.IncompleteAction,match='pending_calibration'):
+        action_backends.require_support('matrix_game_2',orbit,path=pending)
+    decision.update(status='unsupported',reason='Test interface supplies yaw only.')
+    path=tmp_path/'backends.yaml';path.write_text(yaml.safe_dump(raw))
+    with pytest.raises(action_backends.UnsupportedAction,match='yaw only'):
+        action_backends.require_support('matrix_game_2',orbit,path=path)
+    del raw['trajectory_support']
+    raw['action_targets'][orbit['trajectory_id']]={'target':'camera'}
+    path2=tmp_path/'target_only.yaml';path2.write_text(yaml.safe_dump(raw))
+    with pytest.raises(action_backends.IncompleteAction,match='alone'):
+        action_backends.require_support('matrix_game_2',orbit,path=path2)

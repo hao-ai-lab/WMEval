@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "calibrated_open_loop_fine_pulses",
+  "canonical_duration_sec": 10,
+  "canonical_step_sec": 0.25,
+  "cycles": 40,
+  "clock": "wall_clock",
+  "assumed_native_per_wall_ratio": 0.7738572066462889,
+  "segments": [
+    {
+      "keys": "d+Left",
+      "duration_ms": 114
+    },
+    {
+      "keys": "d",
+      "duration_ms": 112
+    }
+  ],
+  "settle_ms": 2250,
+  "pose_target": "CCW360 radius2m eye1.6m lookat tabletop center",
+  "caveat": "Visible media clock and UI timer include waiting time. Native timing must be verified for each export. No rendered-image feedback changes keys.",
+  "frozen_at_utc": "2026-10-11T21:40:10.566Z",
+  "timing_calibration": "results/genie_calibration.json",
+  "timing_scope": "Open-loop nominal native timeline; per-export timing audit required",
+  "cycle_wall_ms": 323,
+  "scheduler": "fixed absolute wall-clock cycle deadlines, compensate RPC overhead in released remainder",
+  "freeze_id": "fine40-native10-v1"
+}

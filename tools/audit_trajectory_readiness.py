@@ -49,6 +49,8 @@ def inspect_case(
     artifacts = case_dir / "reference" / "artifacts"
     actions_txt = artifacts / "actions.txt"
     action_npy = artifacts / "action.npy"
+    trajectory_path = artifacts / "trajectory.yaml"
+    trajectory = yaml.safe_load(trajectory_path.read_text()) if trajectory_path.is_file() else {}
     text_kind = "missing"
     op_count = 0
     if actions_txt.is_file():
@@ -107,6 +109,11 @@ def inspect_case(
     explicitly_unsupported = any(
         item.get("project_genie_status") == "unsupported" for item in supplements
     )
+    registry = repo_root / 'experiments/tables_4_7/action_backends.yaml'
+    if trajectory and registry.is_file():
+        support = yaml.safe_load(registry.read_text()).get('trajectory_support', {}).get(
+            trajectory.get('trajectory_id'), {}).get('backends', {})
+        explicitly_unsupported |= support.get('project_genie', {}).get('status') == 'unsupported'
     if numeric is not None:
         unity_readiness = "native_numeric_ready"
     elif supplemental_numeric:

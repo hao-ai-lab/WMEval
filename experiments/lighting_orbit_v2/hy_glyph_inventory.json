@@ -1,0 +1,21 @@
+{
+  "repo_id": "AI-ModelScope/Glyph-SDXL-v2",
+  "revision": "4bfc170a902feb27c44009fd3ea0b6a9525dbb2f",
+  "files": [
+    {
+      "Path": "assets/color_idx.json",
+      "Sha256": "d52364d14204f0fb658575ac92f094210b485aeb6579ac9814097a0e8c4eb513",
+      "Size": 2366
+    },
+    {
+      "Path": "assets/multilingual_10-lang_idx.json",
+      "Sha256": "3753b9e132a4b4dac714e55ac90bd6f791874a83fa0f716b1f6f457a9c5a33a1",
+      "Size": 28098
+    },
+    {
+      "Path": "checkpoints/byt5_model.pt",
+      "Sha256": "ca8c97c89136f767d4534449bbf3f25296d390574e0af1cc16f09774a901d6db",
+      "Size": 877308845
+    }
+  ]
+}

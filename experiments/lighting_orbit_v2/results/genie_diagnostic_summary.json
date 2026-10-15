@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "case_id": "SunRisesAndSets/lighting_orbit_v2",
+  "status": "five_diagnostic_repeats_complete_timing_not_qualified",
+  "formal_protocol_coverage": "N/A",
+  "hosted_repeats": 5,
+  "numeric_generation_seeds": null,
+  "program": "../genie_controls_frozen.json",
+  "scoring_window": "first 10 native seconds at 12fps, zero_frame=0, no retiming or padding",
+  "means_diagnostic": {
+    "multi_object_sun_disagreement_deg": 58.622,
+    "scene_retention_rate_pct": 99.666,
+    "shadow_area_stability_pct": 40.208,
+    "shadow_detection_rate_pct": 54.696000000000005,
+    "shadow_direction_jitter_deg_per_frame": 10.622,
+    "shadow_shape_drift": 12.5419
+  },
+  "runs": [
+    {
+      "run": "run_01",
+      "hosted_run_id": "f7c65b768fc44d5ba819673da4769263",
+      "native_fps": 24.0,
+      "native_frames": 300,
+      "native_video_sha256": "2a1571a98a1a3793ff9fcabca92c4c1eb2fb7d57c558955fb4864f3fc6bed4f6",
+      "action_trace_sha256": "18235579e94b8607feeccc613f78ab2eb38e031b5579393a81c824daeed0bd6f",
+      "observed_frames_sha256": "6f1e8a79a8cc08caa9d98edb5fb5c260b9543f28f46aa33d97afa99d1415477c",
+      "actual_browser_input_end_sec": 12.968,
+      "input_start_sec": 0.047,
+      "timing_audit": {
+        "run": "run_01",
+        "status": "validated",
+        "metrics": {
+          "matched_sample_count": 5,
+          "maximum_local_speed_ratio": 0.7851685182580977,
+          "median_margin": 0.29651162790697677,
+          "median_match": 0.47547169811320755,
+          "minimum_local_speed_ratio": 0.7607406261282169,
+          "minimum_margin": 0.25679758308157097,
+          "minimum_match": 0.36253776435045315,
+          "native_observed_span_ratio": 0.7704258353708231,
+          "native_span_sec": 10.083333333333334,
+          "observed_span_sec": 13.088000000000001,
+          "sample_count": 5,
+          "strictly_increasing": true,
+          "timeline_intercept_sec": 0.16366941543236946,
+          "timeline_r_squared": 0.99996680360346,
+          "timeline_slope": 0.7686974871720254,
+          "useful_margin_sample_count": 5
+        },
+        "error": null
+      },
+      "metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 36.67,
+        "multi_object_sun_disagreement_deg": 65.21,
+        "shadow_direction_jitter_deg_per_frame": 13.05,
+        "shadow_area_stability_pct": 49.03,
+        "shadow_shape_drift": 14.7037
+      }
+    },
+    {
+      "run": "run_02",
+      "hosted_run_id": "881cec8148cc48e9820cdbac25b79737",
+      "native_fps": 24.0,
+      "native_frames": 296,
+      "native_video_sha256": "86e50543fb7415b51126bb85b9f2909d5b9b7dbe4d457333f926dcab18a86977",
+      "action_trace_sha256": "b351c37632cb76d2e8955106c8131c944e1a296ada058abe9e913996022c9c53",
+      "observed_frames_sha256": "0b1c49acaa17cd4b5e7beb1b0d3ec3185fd1e2130e95cf9f46e0dcceccb3fa30",
+      "actual_browser_input_end_sec": 13.025,
+      "input_start_sec": 0.103,
+      "timing_audit": {
+        "run": "run_02",
+        "status": "validated",
+        "metrics": {
+          "sample_count": 5,
+          "strictly_increasing": true,
+          "matched_sample_count": 5,
+          "useful_margin_sample_count": 4,
+          "minimum_match": 0.1625,
+          "median_match": 0.42857142857142855,
+          "minimum_margin": 0.0,
+          "median_margin": 0.2621951219512195,
+          "timeline_slope": 0.6941526753284302,
+          "timeline_intercept_sec": 0.356458066611373,
+          "timeline_r_squared": 0.988865746373314,
+          "minimum_local_speed_ratio": 0.4340277777777779,
+          "maximum_local_speed_ratio": 0.8305202807694368,
+          "native_span_sec": 8.958333333333334,
+          "observed_span_sec": 13.1175,
+          "native_observed_span_ratio": 0.6829299282129472
+        },
+        "error": null
+      },
+      "metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 73.33,
+        "multi_object_sun_disagreement_deg": 63.29,
+        "shadow_direction_jitter_deg_per_frame": 6.91,
+        "shadow_area_stability_pct": 42.05,
+        "shadow_shape_drift": 11.2531
+      }
+    },
+    {
+      "run": "run_03",
+      "hosted_run_id": "15a4e934465348369163914fcc657ae8",
+      "native_fps": 24.0,
+      "native_frames": 276,
+      "native_video_sha256": "f5f8f8d5888cf4da75995e6ab144f614a4af38ead21c3c9d17c8eb9e1163ba94",
+      "action_trace_sha256": "51d7dc689a5a90ae6f37968fed23438fe6aec3bc4324dccdf7959639d3fe68d9",
+      "observed_frames_sha256": "7f751263c932719fb7ada11327e585143a3acecedca01d00d8ac3a7340ed2591",
+      "actual_browser_input_end_sec": 12.96,
+      "input_start_sec": 0.038,
+      "timing_audit": {
+        "run": "run_03",
+        "status": "validated",
+        "metrics": {
+          "sample_count": 5,
+          "strictly_increasing": true,
+          "matched_sample_count": 5,
+          "useful_margin_sample_count": 5,
+          "minimum_match": 0.36752136752136755,
+          "median_match": 0.4759036144578313,
+          "minimum_margin": 0.264957264957265,
+          "median_margin": 0.30198019801980197,
+          "timeline_slope": 0.6750578464946974,
+          "timeline_intercept_sec": 0.10591239234227696,
+          "timeline_r_squared": 0.9899753287639061,
+          "minimum_local_speed_ratio": 0.5418795479176346,
+          "maximum_local_speed_ratio": 0.9027386981804538,
+          "native_span_sec": 9.25,
+          "observed_span_sec": 13.085,
+          "native_observed_span_ratio": 0.7069163163928162
+        },
+        "error": null
+      },
+      "metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 53.33,
+        "multi_object_sun_disagreement_deg": 46.51,
+        "shadow_direction_jitter_deg_per_frame": 12.8,
+        "shadow_area_stability_pct": 43.59,
+        "shadow_shape_drift": 12.1838
+      }
+    },
+    {
+      "run": "run_04",
+      "hosted_run_id": "fbf3752e046a4850914db295ca81da79",
+      "native_fps": 24.0,
+      "native_frames": 300,
+      "native_video_sha256": "187b5060a28544de90850d32f188dfaa892aba1782efd551d21e5a6630927cec",
+      "action_trace_sha256": "c34520434a6754f8c32ed54910ad6d104dc877bd53293a2a83f9dcc75280d6ac",
+      "observed_frames_sha256": "4af605ff9605faab0c1f1ad8aa44430c658b7f9d4376d280a54872c1349b0bf8",
+      "actual_browser_input_end_sec": 12.962,
+      "input_start_sec": 0.04,
+      "timing_audit": {
+        "run": "run_04",
+        "status": "validated",
+        "metrics": {
+          "sample_count": 5,
+          "strictly_increasing": true,
+          "matched_sample_count": 5,
+          "useful_margin_sample_count": 5,
+          "minimum_match": 0.4012158054711246,
+          "median_match": 0.49222797927461137,
+          "minimum_margin": 0.2917933130699088,
+          "median_margin": 0.34269662921348315,
+          "timeline_slope": 0.7636628816519042,
+          "timeline_intercept_sec": 0.2078992138497372,
+          "timeline_r_squared": 0.9998747915920514,
+          "minimum_local_speed_ratio": 0.7457424883392992,
+          "maximum_local_speed_ratio": 0.7887178038329336,
+          "native_span_sec": 10.0,
+          "observed_span_sec": 13.082999999999998,
+          "native_observed_span_ratio": 0.7643506840938623
+        },
+        "error": null
+      },
+      "metrics": {
+        "scene_retention_rate_pct": 98.33,
+        "shadow_detection_rate_pct": 59.32,
+        "multi_object_sun_disagreement_deg": 66.53,
+        "shadow_direction_jitter_deg_per_frame": 14.88,
+        "shadow_area_stability_pct": 38.53,
+        "shadow_shape_drift": 11.9064
+      }
+    },
+    {
+      "run": "run_05",
+      "hosted_run_id": "a5d89fa8ee724c54aee6a8180b0cd9ed",
+      "native_fps": 24.0,
+      "native_frames": 300,
+      "native_video_sha256": "a5fba0263eb71227ff71702bb26ed5eae8da52d636f6e303f7a8869ad24b0317",
+      "action_trace_sha256": "7b17464de6a09d16fd04ee8ed67cfa5aa713eb649a10e736e9809cc6b559efd2",
+      "observed_frames_sha256": "6c3e8b54c7a01d6c468f05f333d9c62d935f3d5a0768e6f935baa578757c993a",
+      "actual_browser_input_end_sec": 12.981,
+      "input_start_sec": 0.06,
+      "timing_audit": {
+        "run": "run_05",
+        "status": "validated",
+        "metrics": {
+          "sample_count": 5,
+          "strictly_increasing": true,
+          "matched_sample_count": 5,
+          "useful_margin_sample_count": 5,
+          "minimum_match": 0.37317784256559766,
+          "median_match": 0.5204081632653061,
+          "minimum_margin": 0.26822157434402333,
+          "median_margin": 0.41836734693877553,
+          "timeline_slope": 0.7735389322519372,
+          "timeline_intercept_sec": 0.12773351775452504,
+          "timeline_r_squared": 0.9998932992046458,
+          "minimum_local_speed_ratio": 0.7491217193635048,
+          "maximum_local_speed_ratio": 0.8099789405475457,
+          "native_span_sec": 10.166666666666666,
+          "observed_span_sec": 13.092500000000001,
+          "native_observed_span_ratio": 0.7765260008910952
+        },
+        "error": null
+      },
+      "metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 50.83,
+        "multi_object_sun_disagreement_deg": 51.57,
+        "shadow_direction_jitter_deg_per_frame": 5.47,
+        "shadow_area_stability_pct": 27.84,
+        "shadow_shape_drift": 12.6625
+      }
+    }
+  ],
+  "limitations": [
+    "Wall time and the visible media clock include waiting. Media currentTime and the remaining-time bar failed native-clock calibration.",
+    "Identical 40-cycle input replay mapped to 8.9583\u201310.1667 native seconds. Screenshot alignment confirms association, not exact trajectory adherence.",
+    "Generated views approach the tabletop; full 2m-radius camera closure is not established. Model geometry errors do not establish unsupported controls."
+  ],
+  "artifact_storage": "Native videos, controls and score outputs retained on Forrest-Dai-WMEval network volume /workspace/WMEval-lighting-orbit; verified local backups. Baseline media publication remains separate.",
+  "release_support": "unsupported",
+  "capability_evidence": "capability_audit.json"
+}

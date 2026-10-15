@@ -1,0 +1,28 @@
+{
+  "action_npy": "action.npy",
+  "action_npy_sha256": "58449a0ac721a3dbb1489921c31709ddf04e3fe6010196ba1aa83c9cd96baf80",
+  "action_npz": "action.npz",
+  "action_npz_sha256": "7888d0752e0d2c7f11352189a52bd305178a08f27291cdf62eddcd89470904f2",
+  "actions_txt": "actions.txt",
+  "actions_txt_sha256": "76bbdbd2d96ea7ba8e32ada4c63da678b4d8d1ef0e21eed740eb0ae35897c25f",
+  "alignment_status": "reconstructed",
+  "camera_pose_samples": "actions.jsonl",
+  "camera_pose_samples_sha256": "363cdb74bd333b673e7836877f4966f56ffa37a50a1c30c7760110c972512149",
+  "channel_names": [
+    "orbit_phase_rate_deg_s"
+  ],
+  "control_interval_convention": "half_open",
+  "coordinates": "right_handed_y_up_opencv_c2w",
+  "kind": "camera_look_at_orbit",
+  "pose_count": 601,
+  "pose_endpoint_included": true,
+  "poses": "poses.npy",
+  "poses_sha256": "b7ca2b4c561cae5617a6b3ce91ebf645a3eaacf831122b3a4f7502b43cf3d33d",
+  "project_genie_status": "not_compiled",
+  "schema_version": 1,
+  "semantic_sha256": "6649252e0317aaf1b696eee475748781f28714a59432a2fb0778272bcf2dc8e5",
+  "source": "../../../../../../tmp/wmeval-lighting-orbit/eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/trajectory.yaml",
+  "step_count": 600,
+  "target": "camera",
+  "trajectory_id": "lighting.camera.look_at_orbit_v2"
+}

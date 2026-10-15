@@ -1,0 +1,123 @@
+{
+  "by_model": {
+    "HY-WorldPlay": {
+      "multi_object_sun_disagreement_deg": {
+        "fresh_mean": 37.378,
+        "max_seed_abs_difference": 0.010000000000005116,
+        "mean_difference": 0.003999999999997783,
+        "original_mean": 37.374
+      },
+      "scene_retention_rate_pct": {
+        "fresh_mean": 100.0,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 100.0
+      },
+      "shadow_area_stability_pct": {
+        "fresh_mean": 5.598,
+        "max_seed_abs_difference": 0.010000000000000231,
+        "mean_difference": -0.0019999999999997797,
+        "original_mean": 5.6
+      },
+      "shadow_detection_rate_pct": {
+        "fresh_mean": 100.0,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 100.0
+      },
+      "shadow_direction_jitter_deg_per_frame": {
+        "fresh_mean": 0.43599999999999994,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 0.43599999999999994
+      },
+      "shadow_shape_drift": {
+        "fresh_mean": 3.0361800000000003,
+        "max_seed_abs_difference": 0.009599999999999831,
+        "mean_difference": -0.0024199999999994226,
+        "original_mean": 3.0385999999999997
+      }
+    },
+    "LingBot": {
+      "multi_object_sun_disagreement_deg": {
+        "fresh_mean": 52.8,
+        "max_seed_abs_difference": 0.03999999999999915,
+        "mean_difference": 0.003999999999990678,
+        "original_mean": 52.79600000000001
+      },
+      "scene_retention_rate_pct": {
+        "fresh_mean": 100.0,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 100.0
+      },
+      "shadow_area_stability_pct": {
+        "fresh_mean": 17.308,
+        "max_seed_abs_difference": 0.17999999999999972,
+        "mean_difference": -0.03400000000000247,
+        "original_mean": 17.342000000000002
+      },
+      "shadow_detection_rate_pct": {
+        "fresh_mean": 99.834,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 99.834
+      },
+      "shadow_direction_jitter_deg_per_frame": {
+        "fresh_mean": 4.308,
+        "max_seed_abs_difference": 0.16999999999999993,
+        "mean_difference": -0.034000000000000696,
+        "original_mean": 4.3420000000000005
+      },
+      "shadow_shape_drift": {
+        "fresh_mean": 7.77022,
+        "max_seed_abs_difference": 0.014800000000000146,
+        "mean_difference": -0.0030999999999998806,
+        "original_mean": 7.77332
+      }
+    },
+    "Matrix-Game3": {
+      "multi_object_sun_disagreement_deg": {
+        "fresh_mean": 67.29400000000001,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 67.29400000000001
+      },
+      "scene_retention_rate_pct": {
+        "fresh_mean": 100.0,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 100.0
+      },
+      "shadow_area_stability_pct": {
+        "fresh_mean": 25.078,
+        "max_seed_abs_difference": 0.00999999999999801,
+        "mean_difference": -0.0020000000000024443,
+        "original_mean": 25.080000000000002
+      },
+      "shadow_detection_rate_pct": {
+        "fresh_mean": 98.332,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 98.332
+      },
+      "shadow_direction_jitter_deg_per_frame": {
+        "fresh_mean": 11.064,
+        "max_seed_abs_difference": 0.0,
+        "mean_difference": 0.0,
+        "original_mean": 11.064
+      },
+      "shadow_shape_drift": {
+        "fresh_mean": 9.08986,
+        "max_seed_abs_difference": 0.005300000000000082,
+        "mean_difference": -0.0021599999999999397,
+        "original_mean": 9.09202
+      }
+    }
+  },
+  "changed_metrics": 21,
+  "compared_metrics": 90,
+  "identical_normalized_videos": 15,
+  "schema_version": 1,
+  "status": "strict_comparison_failed"
+}
