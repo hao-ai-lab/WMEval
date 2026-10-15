@@ -1,0 +1,22 @@
+{
+  "action_npy": "liquid_container_fluid_chirp_strafe.action.npy",
+  "action_npy_sha256": "51049947bc93ab45e28705538a2c7610bf93798eb7e5a29740838fea026ebd6a",
+  "action_npz": "liquid_container_fluid_chirp_strafe.action.npz",
+  "action_npz_sha256": "00bb639a89de3ef8d1b8dedde313046f86264984b2261c979b957eafceb474a8",
+  "actions_txt": "liquid_container_fluid_chirp_strafe.actions.txt",
+  "actions_txt_sha256": "67029dd4f327c4a6cf315717cd093b401866115ca6b1ce5c5580ac05a2865c2e",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "forward",
+    "right",
+    "up"
+  ],
+  "project_genie_actions": "liquid_container_fluid_chirp_strafe.actions.jsonl",
+  "project_genie_actions_sha256": "bace15fe7dfbf97640dbd09b2b74978337d8f57b4c2fce1fd2b1c7029c600be5",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "f10f581a1be3c8572c00af8c553d377ecd384c0a1de74680d2fc057369f457d5",
+  "source": "../trajectories/liquid_container_fluid_chirp_strafe.yaml",
+  "step_count": 240,
+  "trajectory_id": "wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1"
+}

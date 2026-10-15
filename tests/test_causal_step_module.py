@@ -360,3 +360,51 @@ def test_identical_candidate_forces_segment_windowing(tmp_path):
 
     assert out["wm_full_video"] is False
     assert "identical" in out["wm_full_video_reason"]
+
+
+class _SettingsJudge:
+    """Always-'A' judge that reports live settings, like `OpenAIJudge`."""
+
+    def __init__(self, **settings):
+        self._settings = {"model": "gpt-5.4", "num_frame_samples": 8,
+                          "prompt_version": "v1", "temperature": None, **settings}
+
+    def answer(self, request):
+        return "A"
+
+    def describe_settings(self):
+        return dict(self._settings)
+
+
+def test_recording_from_a_different_judge_config_is_refused(tmp_path, monkeypatch):
+    """The reference replays a K=8 recording; a candidate judged at K=4 must
+    not be silently paired with it."""
+    import pytest
+    from evaluation.modules import causal_step
+    from evaluation.modules._causal_step_recorded_judge import RecordedAnswersError
+
+    rec = _write_recording(
+        tmp_path / "judge_answers.json",
+        [{"1|descriptive": "A", "2|descriptive": "A", "2|causal": "A"}],
+    )
+    ctx = _causal_ctx(tmp_path, artifacts_extra={"causal_step_reference_answers": str(rec)})
+    monkeypatch.setattr(causal_step, "_build_judge", lambda context: _SettingsJudge(num_frame_samples=4))
+
+    with pytest.raises(RecordedAnswersError, match="num_frame_samples"):
+        causal_step.analyze_causal_step_from_context(context=ctx)
+
+
+def test_recording_from_the_same_judge_config_is_replayed(tmp_path, monkeypatch):
+    from evaluation.modules import causal_step
+
+    rec = _write_recording(
+        tmp_path / "judge_answers.json",
+        [{"1|descriptive": "B", "2|descriptive": "A", "2|causal": "A"}],
+    )
+    ctx = _causal_ctx(tmp_path, artifacts_extra={"causal_step_reference_answers": str(rec)})
+    monkeypatch.setattr(causal_step, "_build_judge", lambda context: _SettingsJudge())
+
+    out = causal_step.analyze_causal_step_from_context(context=ctx)
+
+    assert out["unity"]["csr"] == 0.0
+    assert out["wm"]["csr"] == 100.0

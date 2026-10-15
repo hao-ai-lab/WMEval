@@ -1,0 +1,21 @@
+{
+  "action_npy": "beam_domino_causal_glancing.action.npy",
+  "action_npy_sha256": "c577db10c093a6b191d3ea6a857025eb5006d82051484af6eef3a47811ce3a89",
+  "action_npz": "beam_domino_causal_glancing.action.npz",
+  "action_npz_sha256": "e5e44f627a42555762fb8f6c3f8bbb7de03df7ad6fd0f651a9c479305a0b515b",
+  "actions_txt": "beam_domino_causal_glancing.actions.txt",
+  "actions_txt_sha256": "e714d9efefa1707654235ce48472a72a60a888d6d4be7aeeb4e562ab90676a9e",
+  "alignment_status": "exact",
+  "channel_names": [
+    "z_force",
+    "x_force"
+  ],
+  "project_genie_actions": "beam_domino_causal_glancing.actions.jsonl",
+  "project_genie_actions_sha256": "1499e98f4b74fa8e55a20f9c17c3a381b1848a916fcab121f9581e44917964b0",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "af3639775d708f1b24e710bdae83760496f41761b0bcf995c765a301308c6ff5",
+  "source": "../trajectories/beam_domino_causal_glancing.yaml",
+  "step_count": 122,
+  "trajectory_id": "wmeval_lite.beam_domino.causal_glancing.ball_force_v1"
+}

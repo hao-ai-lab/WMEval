@@ -43,7 +43,7 @@ def test_production_readiness_report_surfaces_portability_gaps() -> None:
         "supplemental": 0,
         "other": 0,
     }
-    assert rows["fluid_mechanics"]["project_genie_executable_cases"] == 0
+    assert rows["fluid_mechanics"]["project_genie_executable_cases"] == 4
     assert rows['lighting_shading']['readiness'] == 'ready'
     assert rows['lighting_shading']['evaluator_lock_nonempty_case_counts']['dependency_versions'] == 1
     assert all(

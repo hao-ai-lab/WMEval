@@ -61,8 +61,7 @@ def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
             "supplemental_semantic_numeric_only": 1,
         },
         "project_genie_browser": {
-            "native_executable_ready": 23,
-            "not_machine_executable": 7,
+            "native_executable_ready": 30,
             "supplemental_executable_ready": 3,
             "unsupported_action_space": 1,
         },
@@ -76,4 +75,4 @@ def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
     ] == "supplemental_executable_ready"
     assert by_id["BeamDomino/causal"]["backend_readiness"][
         "project_genie_browser"
-    ] == "not_machine_executable"
+    ] == "native_executable_ready"

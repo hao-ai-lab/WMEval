@@ -23,10 +23,29 @@ def _cases() -> list[dict]:
     return yaml.safe_load((TABLE_ROOT / "cases.yaml").read_text(encoding="utf-8"))["cases"]
 
 
+RECONSTRUCTIONS = ROOT / "experiments/trajectory_reconstructions/trajectories"
+PHYSICS_TRAJECTORIES = sorted(
+    [*RECONSTRUCTIONS.glob("beam_domino_*.yaml"), *RECONSTRUCTIONS.glob("liquid_container_*.yaml")]
+)
+
+
 def test_every_canonical_trajectory_declares_exactly_one_action_target() -> None:
     declared = set(action_backends.registry()["action_targets"])
-    ids = {load_trajectory(path)["trajectory_id"] for path in TRAJECTORIES}
+    ids = {load_trajectory(path)["trajectory_id"] for path in [*TRAJECTORIES, *PHYSICS_TRAJECTORIES]}
     assert ids == declared
+
+
+def test_physics_trajectories_are_unity_and_genie_only() -> None:
+    assert len(PHYSICS_TRAJECTORIES) == 7
+    for path in PHYSICS_TRAJECTORIES:
+        trajectory = load_trajectory(path)
+        target = action_backends.action_target(trajectory)
+        assert target in {"rolling_ball", "liquid_container"}, path.name
+        assert trajectory["adapters"]["project_genie"]["status"] != "unsupported", path.name
+        assert action_backends.support_status("project_genie", target) is not None
+        for name in ("matrix_game_2", "matrix_game_3", "lingbot_world_cam"):
+            with pytest.raises(action_backends.UnsupportedAction):
+                action_backends.require_support(name, trajectory)
 
 
 def test_table4_actuates_scene_entities_and_table7_only_the_camera() -> None:

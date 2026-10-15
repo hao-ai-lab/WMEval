@@ -31,7 +31,11 @@ from ..context import EvaluationContext
 from ._causal_step_delta import DELTA_CONVENTION_STRING, compute_delta
 from ._causal_step_io import ensure_causalstep_importable
 from ._causal_step_judge import Judge, JudgeRequest
-from ._causal_step_recorded_judge import RecordedJudge, load_recorded_answers
+from ._causal_step_recorded_judge import (
+    RecordedJudge,
+    check_recording_matches_judge,
+    load_recorded_answers,
+)
 from ._causal_step_runner import run_causal_step_for_video
 
 logger = logging.getLogger(__name__)
@@ -240,6 +244,10 @@ def analyze_causal_step_from_context(
     recorded_path = arts.get("causal_step_reference_answers")
     if recorded_path:
         recorded = load_recorded_answers(recorded_path)
+        # Debug judges carry no settings; only a real judge can drift.
+        describe = getattr(judge, "describe_settings", None)
+        if describe is not None:
+            check_recording_matches_judge(recorded, describe())
 
     repeats = arts.get("causal_step_judge_repeats")
     if repeats is None:

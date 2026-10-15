@@ -19,6 +19,14 @@ action_targets:
   table7.camera.perturb_out_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_in_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_out_v1: {target: camera, frame: camera_yaw}
+  # Lite cases outside Tables 4/7 (experiments/trajectory_reconstructions).
+  wmeval_lite.beam_domino.causal.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_glancing.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_direct_strike.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.liquid_container.fluid_rest.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_impulse_decay.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1: {target: liquid_container, frame: container_body}
 
 backends:
   hy_worldplay:
@@ -34,6 +42,8 @@ backends:
       ego_vehicle: reference
       cue_ball: reference
       table_objects: reference
+      rolling_ball: reference
+      liquid_container: reference
 
   project_genie:
     interface: browser_keyboard
@@ -42,6 +52,8 @@ backends:
       camera: nominal_left_turn_calibrated
       ego_vehicle: nominal
       cue_ball: nominal
+      rolling_ball: nominal_binary_keys
+      liquid_container: nominal
     unsupported:
       table_objects: The hosted web interface has no placement, cue-angle, strength, spin, or execute controls.
     calibration:
@@ -60,6 +72,8 @@ backends:
       cue_ball: target_entity_validation_required
     unsupported:
       table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keyboard drives the first-person camera/agent; there is no ball-force channel.
+      liquid_container: Keyboard moves the camera, which breaks the fixed side camera the fluid metrics require.
     # Visual degrees per mouse unit per frame. Two independent short-probe
     # seeds at +/-0.3 mouse units gave gains near 10.1. Production-shaped
     # Garden validation reached -332.715 / +353.859 degrees from nominal
@@ -82,6 +96,8 @@ backends:
       ego_vehicle: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       cue_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
+      liquid_container: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
     # Response-side gains from clean Garden validation videos. Short
     # perturbations are linear; full turns accumulate a small direction-
     # dependent bias and use their own measured gains.
@@ -101,6 +117,8 @@ backends:
       ego_vehicle: Base Cam consumes camera extrinsics/intrinsics only; it cannot steer the car.
       cue_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
       table_objects: Base Cam consumes camera extrinsics/intrinsics only.
+      rolling_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot push the ball.
+      liquid_container: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the bottle.
     # Response is nonlinear and horizon-sensitive, so nominal Unity pose paths
     # are frozen without correction. Exact-horizon Garden run0 responses were
     # -17.72 / +41.37 degrees (perturbations) and +54.91 / +277.88 degrees
