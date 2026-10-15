@@ -24,7 +24,22 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_baseline(path: Path, *, verify_sources: bool = True) -> dict[str, Any]:
+def load_baseline(
+    path: Path,
+    *,
+    verify_sources: bool = True,
+    missing_sources: str = "error",
+    warn: Any = None,
+) -> dict[str, Any]:
+    """Load the paper baseline, checking its paper-source hashes.
+
+    The sources are the paper's LaTeX tables, which live in a sibling
+    checkout that public users do not have. ``missing_sources="warn"`` still
+    hash-checks every source that is present but only warns (via ``warn``,
+    default stderr) about absent ones; ``"error"`` (default) fails closed.
+    """
+    if missing_sources not in ("error", "warn"):
+        raise ValueError(f"missing_sources must be 'error' or 'warn', got {missing_sources!r}")
     baseline = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(baseline, dict) or baseline.get("schema_version") != 1:
         raise ComparisonError(f"{path}: unsupported baseline schema")
@@ -36,6 +51,18 @@ def load_baseline(path: Path, *, verify_sources: bool = True) -> dict[str, Any]:
         for label, source in baseline.get("sources", {}).items():
             source_path = (path.parent / source["path"]).resolve()
             if not source_path.is_file():
+                if missing_sources == "warn":
+                    message = (
+                        f"paper source {label} not present ({source['path']}); "
+                        "using the baseline's recorded values unverified"
+                    )
+                    if warn is None:
+                        import sys
+
+                        print(f"warning: {message}", file=sys.stderr)
+                    else:
+                        warn(message)
+                    continue
                 raise ComparisonError(f"paper source {label} does not exist: {source_path}")
             actual = sha256(source_path)
             if actual != source["sha256"]:

@@ -63,8 +63,11 @@ def export(
     model: str | None = None,
     seed_order: list[str] | None = None,
     cases_root: Path = CASES_ROOT,
+    missing_sources: str = "warn",
 ) -> dict[str, Any]:
-    output = result_template(load_baseline(baseline_path))
+    # Only the baseline's table shape is needed here; the paper LaTeX sources
+    # it pins live in a separate checkout most users do not have.
+    output = result_template(load_baseline(baseline_path, missing_sources=missing_sources))
     if model:
         output["model"] = model
     repeats = output["repeat_ids"]
@@ -102,10 +105,16 @@ def main() -> int:
     parser.add_argument("--model", help="display name written into the results file")
     parser.add_argument("--baseline", type=Path, default=DEFAULT_BASELINE)
     parser.add_argument("--seed-order", help="comma-separated seeds mapped to run0..run4 (default: run ids or sorted)")
+    parser.add_argument(
+        "--suite", type=Path, default=CASES_ROOT.parent,
+        help="suite root whose cases/<id>/reference/artifacts/table_cell.json map rows "
+        "to table cells, e.g. a downloaded dataset directory (default: %(default)s)",
+    )
     args = parser.parse_args()
     rows = [json.loads(line) for line in args.results.read_text(encoding="utf-8").splitlines() if line.strip()]
     result = export(rows, baseline_path=args.baseline, model=args.model,
-                    seed_order=args.seed_order.split(",") if args.seed_order else None)
+                    seed_order=args.seed_order.split(",") if args.seed_order else None,
+                    cases_root=args.suite / "cases")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(json.dumps({"output": str(args.output), "cells": result["provenance"]["cells"]}, indent=2))
