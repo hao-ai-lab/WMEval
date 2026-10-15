@@ -42,7 +42,7 @@ module_params:
     kin_plane_calibration_json: reference/artifacts/plane_calibration.json
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: 09592189c2c0e2cf128b249b8b36b6f9
+  evaluator_fingerprint: c3d008d0b149c69a06031ac62f8329b9
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}

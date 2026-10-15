@@ -50,7 +50,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
-  evaluator_fingerprint: cd71e18c0a81fc4bbfe3b259b77fbf19
+  evaluator_fingerprint: b0987e931bc86a3a27ebfa1910d13567
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions:
