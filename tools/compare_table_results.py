@@ -24,8 +24,20 @@ def main() -> int:
     parser.add_argument("--results", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--allow-incomplete", action="store_true")
+    parser.add_argument(
+        "--paper-sources",
+        choices=("if-present", "require"),
+        default="if-present",
+        help="The baseline pins the SHA-256 of the paper's LaTeX tables, which "
+        "live in a separate paper checkout. 'if-present' (default) verifies the "
+        "sources that exist and warns about absent ones, so the comparison runs "
+        "without the paper repo; 'require' fails when any source is missing.",
+    )
     args = parser.parse_args()
-    baseline = load_baseline(args.baseline.resolve())
+    baseline = load_baseline(
+        args.baseline.resolve(),
+        missing_sources="error" if args.paper_sources == "require" else "warn",
+    )
     if args.command == "template":
         output = (args.output or (REPO_ROOT / "experiments/tables_4_7/rerun_results.template.json")).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
