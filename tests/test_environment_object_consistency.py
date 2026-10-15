@@ -340,3 +340,19 @@ def test_analyze_environment_object_consistency_requires_candidate_video():
     result = analyze_environment_object_consistency_from_context(context)
     assert result["module"] == "environment_object_consistency"
     assert "error" in result
+
+
+def test_pairwise_distance_support_flags_thin_anchor_coverage() -> None:
+    import numpy as np
+
+    from evaluation.modules.environment_object_consistency import _pairwise_distance_support
+
+    track = {"frames": [{"frame": i} for i in range(10)]}
+    point = np.zeros(3)
+    full = {"a": [point] * 10, "b": [point] * 10}
+    support = _pairwise_distance_support(track, full, [("a", "b")])
+    assert support["measurable"] is True and support["paired_frame_coverage"] == 1.0
+    thin = {"a": [point] * 10, "b": [point] * 3}
+    assert _pairwise_distance_support(track, thin, [("a", "b")])["measurable"] is False
+    single = {"a": [point] * 10}
+    assert _pairwise_distance_support(track, single, [])["measurable"] is False

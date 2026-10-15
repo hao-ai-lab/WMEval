@@ -1453,5 +1453,38 @@ def analyze_environment_object_consistency_from_context(
         result["pairwise_distance_mae_pct"] = round(100.0 * float(np.mean(rel_errs)), 2)
     else:
         result["pairwise_distance_mae_pct"] = None
+    result["pairwise_distance_support"] = _pairwise_distance_support(track, cand_point3d, common_pairs)
 
     return result
+
+
+# Anchor-validity rule for pairwise_distance_mae_pct (diagnostic; the metric is
+# reported unchanged): at least two anchors with candidate 3D points, and the
+# least-covered compared pair paired on at least half the tracked frames.
+MIN_MEASURABLE_ANCHORS = 2
+MIN_PAIRED_FRAME_COVERAGE = 0.5
+
+
+def _pairwise_distance_support(
+    track: Dict[str, Any],
+    point3d: Dict[str, List[np.ndarray]],
+    common_pairs: Sequence[Tuple[str, str]],
+) -> Dict[str, Any]:
+    tracked_frames = len(track.get("frames") or []) or int(track.get("n_frames_total") or 0)
+    anchors = [label for label, points in point3d.items() if points]
+    paired = [min(len(point3d.get(a) or []), len(point3d.get(b) or [])) for a, b in common_pairs]
+    min_paired = min(paired) if paired else 0
+    coverage = (min_paired / tracked_frames) if tracked_frames else 0.0
+    return {
+        "anchors_with_points": len(anchors),
+        "pairs_compared": len(common_pairs),
+        "min_paired_frames": min_paired,
+        "tracked_frames": tracked_frames,
+        "paired_frame_coverage": round(coverage, 4),
+        "measurable": bool(
+            len(anchors) >= MIN_MEASURABLE_ANCHORS
+            and common_pairs
+            and coverage >= MIN_PAIRED_FRAME_COVERAGE
+        ),
+        "rule": f">={MIN_MEASURABLE_ANCHORS} anchors with 3D points and paired-frame coverage >= {MIN_PAIRED_FRAME_COVERAGE}",
+    }
