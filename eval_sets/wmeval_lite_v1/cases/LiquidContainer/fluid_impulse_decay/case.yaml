@@ -46,7 +46,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  evaluator_fingerprint: c87c8a32aad14c6d9cf78b0f85c16226
+  evaluator_fingerprint: 948c6e74476fb8a61176ab1476f5bd92
   module_config:
     liquid:
       normalization_fps: 16.0
@@ -61,3 +61,6 @@ evaluator_lock:
         min_mask_frac: 0.5
   artifact_schema_versions: {}
   dependency_versions: {}
+module_params:
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json
