@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use WMEval, please cite it using the metadata from this file."
+title: "WMEval"
+type: software
+# TODO(maintainers): replace the placeholder below with the real author list
+# (one entry per author: family-names, given-names, optional affiliation/orcid).
+authors:
+  - name: "TODO: author list to be provided by the maintainers"
+# TODO(maintainers): add version, date-released, license, repository-code and
+# a preferred-citation block for the paper once these are decided.
