@@ -169,6 +169,33 @@ backends:
       rolling_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
       liquid_container: Keys and mouse drive the first-person ego camera; there is no object channel.
 
+  # Hosted browser world models (not in the paper). Keys move the avatar/camera of
+  # the generated world; turn rates are uncalibrated, so camera support is nominal.
+  odyssey:
+    interface: browser_keyboard
+    note: tools/odyssey_agent.py; held keys over a wall-clock session.
+    supports:
+      camera: nominal_uncalibrated
+    unsupported:
+      ego_vehicle: Keys move the generated world's viewpoint; there is no vehicle channel.
+      cue_ball: Keys move the generated world's viewpoint; there is no object channel.
+      ball: Keys move the generated world's viewpoint; there is no object channel.
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
+      liquid_container: Keys move the viewpoint, which breaks the fixed side camera the fluid metrics require.
+  happy_oyster:
+    interface: browser_keyboard
+    note: Adventure mode; first/third-person view selectable; yaw calibration in progress.
+    supports:
+      camera: nominal_uncalibrated
+    unsupported:
+      ego_vehicle: Keys move the generated world's viewpoint; there is no vehicle channel.
+      cue_ball: Keys move the generated world's viewpoint; there is no object channel.
+      ball: Keys move the generated world's viewpoint; there is no object channel.
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
+      liquid_container: Keys move the viewpoint, which breaks the fixed side camera the fluid metrics require.
+
 # Full translation plus look-at is reviewed independently from Table 7 yaw.
 # Pending means incomplete work, never N/A or a model-quality rejection.
 trajectory_support:

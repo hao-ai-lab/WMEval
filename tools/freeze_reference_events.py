@@ -189,6 +189,7 @@ def freeze(
         "created_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "judge": {
             "provider": "openai",
+            **({"transport": os.environ["WMEVAL_JUDGE_TRANSPORT"]} if os.environ.get("WMEVAL_JUDGE_TRANSPORT") else {}),
             "model": artifacts["lpips_vlm_model"],
             "coarse_model": artifacts.get("lpips_vlm_coarse_model"),
             "side_model": artifacts.get("lpips_vlm_side_model"),
