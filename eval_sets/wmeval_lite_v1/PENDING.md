@@ -1,6 +1,6 @@
 # WMEval Lite release — pending work by evaluation dimension
 
-Updated 2026-10-09 · branch `lanxiang/release-cleanup` · paper: ready · project
+Updated 2026-10-15 (after #33–#36) · branch `lanxiang/release-cleanup` · paper: ready · project
 page preview: https://snyhlx.github.io/wmeval-blog
 
 **Release goal.** A new user downloads the dataset from Hugging Face, generates
@@ -9,24 +9,25 @@ frozen Unity references — without Unity, private repos, or maintainer help.
 GPUs, CV checkpoints and a hosted judge (OpenAI) may still be required; each
 must be declared, never hidden.
 
-**Where each dimension stands** (verified 2026-10-09):
+**Where each dimension stands** (verified 2026-10-15, after #33–#36):
 
-- **Actions.** Every dimension now runs through the Lite suite. The 14 Table 4/7
-  cells are Lite cases (`<Scene>/scene_<variant>` for Table 7,
-  `<Scene>/kinematics_<view>` for Table 4) carrying their conditioning frame,
-  compiled action trajectory and Unity ground truth (`tools/build_table_lite_cases.py`);
-  a camera trajectory is just an action trajectory whose target is `camera`.
-  Causality (target `rolling_ball`) and fluid (target `liquid_container`) carry the
-  same `trajectory.yaml` / `action.npz` / `actions.jsonl` / `table_cell.json`, sourced
-  from `experiments/trajectory_reconstructions/`. Lighting (per-model orbit file)
-  still lacks a standardized, target-aware action.
-- **Frozen references.** LPIPS re-judges Unity contact events per candidate;
-  prompt consistency does not store the Unity reference scores and judges with a
-  mutable hosted model. Causality's reference answers are already frozen.
-- **Normalization.** The 14 Table 4/7 cases use `match_reference` (resample to the
-  reference fps / resolution / frame count) and the 4 LiquidContainer cases their
-  locked liquid token; the other 15 cases (including `beamdomino_native`, an
-  identity token) still use the candidate as-is.
+- **Actions.** 30 of the 32 live cases carry a standardized, target-aware action
+  (`trajectory.yaml` / `action.npz` / `actions.jsonl`; target declared in
+  `action_backends.yaml`, and in `actions.json` where backends must be gated):
+  Table 4/7 cells (`camera`, `ego_vehicle`, `cue_ball`), lighting orbit (`camera`, #33),
+  causality (`rolling_ball`, exact) and fluid (`liquid_container`, reconstructed) (#34),
+  ball control (`ball`, #35), prompt left turn (`camera`, #36). Gaps: ChessBoard/walk_third
+  and WanderingGarden/scene_first (§1) have no executable action; prompt consistency's turn is
+  nominal, since generation still replays each model's original camera motion (§7).
+- **Frozen references.** Causality answers, prompt Unity scores (#36) and LPIPS contact
+  events for BallRoller / BeamDomino / MirrorRollingBall (#35) are frozen in the bundles.
+  LiquidContainer contact events are not.
+- **Normalization.** 14 Table 4/7 cases `match_reference`, 4 liquid and 1 lighting token,
+  3 `beamdomino_native` (identity). 10 cases use the candidate as-is: BallRoller/ctrl and
+  MirrorRollingBall/lpips_collision by decision (paper parity, §2), the 6 prompt cases (judge
+  input, low risk), and the 2 legacy §1 cases.
+- **Unsupported is reported, not scored.** Backends that cannot express a case's target
+  return `unsupported` with the registry reason; aggregates carry `num_unsupported`.
 
 ---
 
@@ -148,7 +149,8 @@ Key files: `cases/<Scene>/scene_*/` (`ref.png`, `reference.mp4`,
 | WanderingGarden scene_* × 4 | ✅ camera trajectories | ✅ GardenBridge orbit re-indexed on the commanded yaw (outward anchor reconstructed) | ✅ `match_reference` |
 | BilliardGame scene_* × 4 | ✅ | ✅ dedicated Unity captures | ✅ `match_reference` |
 | MirrorRollingBall scene_* × 4 | ✅ | ✅ Lite orbit re-indexed (photogrammetric depth caveat) | ✅ `match_reference` |
-| BallRoller/ctrl, RacingCar/prompt_third | ✅ | ✅ bundled | ❌ none |
+| BallRoller/ctrl | ✅ ball trajectory, target `ball` (§2) | ✅ bundled | ❌ none |
+| RacingCar/prompt_third | ⚠️ left-turn trajectory, target `camera` (§7; nominal) | ✅ bundled | ❌ none |
 | ChessBoard/walk_third, WanderingGarden/scene_first | ❌ comment-only / no action file | ✅ bundled | ❌ none |
 
 | Model | In paper | Status |
@@ -257,7 +259,7 @@ object_transforms.json, object_masses.json, plane_calibration.json}`),
 | --- | --- | --- | --- |
 | RacingCar/kinematics_third | ✅ drive trajectory | ✅ Unity capture, masses, plane calibration | ✅ `match_reference` |
 | BilliardGame/kinematics_first | ✅ ball-control trajectory | ✅ Unity capture, masses, plane calibration | ✅ `match_reference` |
-| BallRoller/ctrl | ✅ keys + `action.npy` | ✅ bundled | ❌ none |
+| BallRoller/ctrl | ✅ `controllability.ball_roller.collision_path_v1`, target `ball` (§2) | ✅ bundled | ❌ none |
 | Excluded: RacingCar first, BilliardGame third | — | — | — |
 
 | Model | In paper | Status |
@@ -403,7 +405,7 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
 
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
-| all 6 | ✅ 10 s camera rotation | ✅ rubrics and Unity reference scores frozen in the bundle; hosted `gpt-5.4` judge, snapshot recorded per call | — low risk |
+| all 6 | ⚠️ canonical 10 s left turn baked (`prompt.camera.left_turn_v1`, 40 °/s, target `camera`); generation inputs replay each model's original rollouts instead | ✅ rubrics and Unity reference scores frozen in the bundle; hosted `gpt-5.4` judge, snapshot recorded per call | — low risk |
 
 | Model | In paper | Status |
 | --- | --- | --- |
@@ -446,6 +448,12 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
   |Δ| is 0.023 (max 0.067) and the model ranking is unchanged
   (Unity 0.938 > Genie 0.905 > LingBot 0.891 > HY 0.792 > Matrix-Game 3.0 0.745);
   `tools/check_prompt_human_alignment.py` gives ρ 0.90 / 0.80, as in the paper.
+- [ ] **Generate from the canonical turn.** The baked trajectory is 40 °/s for 10 s, but
+  `prepare_prompt_case_inputs.py` reproduces the original rollouts (LingBot one turn in place
+  / two orbits; Matrix-Game 3.0 `j`, plus `d` in third person), so models still receive
+  different camera motion. Do: compile `prompt.camera.left_turn_v1` per backend (as §1 does
+  for Table 7) or record the per-model input as an explicit, documented deviation. Done when:
+  every backend's prompt inputs are derived from the baked trajectory or labeled as such.
 
 ## 8. Perceptual similarity — `lpips`
 
@@ -462,7 +470,7 @@ the candidate's event detection; the reference is no longer judged). Key files:
 | BallRoller/ctrl | ✅ (see §2) | ✅ frozen (5/5 passes agree on 1 collision) | `none` |
 | MirrorRollingBall/lpips_collision | ✅ (see §2) | ✅ frozen (judge found 2-6 events/pass; 1 kept by majority) | `none` |
 | BeamDomino/causal | ✅ (see §2) | ✅ frozen (2 events/pass at differing frames; 1 kept) | `beamdomino_native` |
-| LiquidContainer x 4 | ⚠️ bottle motion (§4) | ⚠️ not frozen (run the tool once §4 settles) | ✅ resampled |
+| LiquidContainer x 4 | ✅ `liquid_container` trajectory (§4) | ❌ not frozen (§4's action is settled; run `tools/freeze_reference_events.py`) | ✅ resampled |
 
 | Model | In paper | Status |
 | --- | --- | --- |
@@ -516,7 +524,7 @@ gave 0.615 before the freeze; re-checking it needs API credits.
 
 ## Release owner — cross-cutting items
 
-- [ ] **Scope and rights (P0-01).** Freeze the case roster (33 Lite case bundles, including the 14 Table 4/7
+- [ ] **Scope and rights (P0-01).** Freeze the case roster (32 live Lite case bundles, including the 14 Table 4/7
   cells) and repeat policy; clear redistribution of Unity renders, quantities and
   annotations; add LICENSE files, attribution, citation, dataset card; confirm HY-WorldPlay.
 - [ ] **HF package (P0-02).** Export → download → verify into a clean directory with
@@ -526,9 +534,10 @@ gave 0.615 before the freeze; re-checking it needs API credits.
   generation) driven by `action_backends.yaml`, a no-cost fixture backend, an expected-job
   export (case × repeat × seed) and receipts accepted by the Lite runner.
 - [ ] **Environment (P0-06).** Extend `experiments/tables_4_7/evaluator_assets.lock.json`
-  (GroundingDINO, Depth Anything, SAM 2.1, DINOv2 pinned) to RAFT, LPIPS/VGG, PTLFlow,
-  OpenPIV and indoor depth; fill the 19 empty case locks; add a preflight.
-- [ ] **Results (P0-07/09).** Per-metric status (`ok`, `unsupported`, `missing_candidate`,
+  (GroundingDINO, Depth Anything, SAM 2.1, DINOv2, RAFT, LPIPS/VGG pinned) to PTLFlow,
+  OpenPIV and indoor depth; fill the 31 empty case dependency locks (only lighting is
+  pinned); add a preflight.
+- [ ] **Results (P0-07/09).** `unsupported` rows and `num_unsupported` exist (#35). Per-metric status (`ok`, `unsupported`, `missing_candidate`,
   `invalid_candidate`, `not_applicable`, `unmeasurable`, `error`); a coverage gate; one
   repeat policy (LingBot's adaptive 5→30 vs. five runs elsewhere).
 - [ ] **Acceptance (P0-10).** Hermetic tests (no reads from `runs/` or the sibling paper
@@ -538,8 +547,8 @@ gave 0.615 before the freeze; re-checking it needs API credits.
 ## Release order
 
 1. Scope and rights; freeze schemas (`actions.json`, reference manifest, result status).
-2. Re-score one model through the Table 4/7 Lite cases (§1, §3); standardize the remaining actions (§2, §4–§6).
-3. Freeze reference judgments (§7, §8); lock normalization everywhere.
+2. Re-score one model through the Table 4/7 Lite cases (§1, §3); close the last action gaps (§1 legacy cases, §7 generation).
+3. Freeze LiquidContainer reference events (§8); lock normalization everywhere.
 4. Adapter template, environment lock, coverage gate.
 5. Clean-machine acceptance from the HF package; ship when every item above is closed.
 
