@@ -46,4 +46,14 @@ evaluator_lock:
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    cjm-byte-track: 0.0.6
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    torch: 2.14.1
+    transformers: 5.18.0
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    lock_source: tools/lock_case_dependencies.py

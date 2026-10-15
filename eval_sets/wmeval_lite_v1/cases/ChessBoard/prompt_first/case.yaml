@@ -27,4 +27,11 @@ evaluator_lock:
   evaluator_fingerprint: 8c500765b8988467ea3ad3e8d0ddd3d5
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pydantic: 2.13.5
+    requests: 2.34.2
+    lock_source: tools/lock_case_dependencies.py

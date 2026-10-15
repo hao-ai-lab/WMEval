@@ -34,7 +34,23 @@ evaluator_lock:
   evaluator_fingerprint: 127e49efcb1dd9ed71623d44c2ad99e2
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    pydantic: 2.13.5
+    requests: 2.34.2
+    sam2: 1.1.0
+    torch: 2.14.1
+    transformers: 5.18.0
+    asset:depth_anything_metric_indoor: e990eb82fbf11b05b7813261196a2b841bdcf5a05f64396724a8987fa90504a3
+    asset:depth_anything_metric_outdoor: ad065c77a7421ca55159a1f0db9433397a607690f2d76bb8a6fc54b1be7a3124
+    asset:dinov2: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    asset:sam2: 2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318
+    lock_source: tools/lock_case_dependencies.py
 module_params:
   shadow_consistency:
     shadow_text_prompt: car. tree.
