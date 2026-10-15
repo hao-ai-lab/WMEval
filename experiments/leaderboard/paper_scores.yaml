@@ -1,0 +1,85 @@
+# Per-cell headline values transcribed from the paper tables (arxiv-WorldModel-Eval,
+# with the prompt-driven causality/fluid rows dropped). Five-generation means.
+# direction: higher | lower. Cells a model lacks are omitted (N/A).
+schema_version: 1
+source: arxiv-WorldModel-Eval/table/*.tex (2026-10-15 checkout)
+models:
+  project_genie: {display: Project Genie}
+  lingbot_world: {display: LingBot-World, note: "Cam for consistency/prompt/lighting; Act for controllability/cLPIPS"}
+  matrix_game_2: {display: Matrix-Game 2.0}
+  matrix_game_3: {display: Matrix-Game 3.0}
+  hy_worldplay: {display: HY-WorldPlay}
+  waypoint15: {display: Waypoint-1.5}
+dimensions:
+  environment_object_consistency:
+    table: main-consistency (Table 7)
+    metrics: {depth: lower, dist: lower, char: higher}
+    cells:
+      # cell -> metric -> model -> value
+      garden/perturb_in:  {depth: {project_genie: 36.7, lingbot_world: 62.1, matrix_game_3: 58.8, matrix_game_2: 80.0}, dist: {project_genie: 70.1, lingbot_world: 75.5, matrix_game_3: 63.0, matrix_game_2: 74.9}}
+      garden/perturb_out: {depth: {project_genie: 169.9}, dist: {project_genie: 78.5}}
+      garden/360_in:      {depth: {project_genie: 163.1, lingbot_world: 47.0, matrix_game_3: 46.6, matrix_game_2: 79.0}, dist: {project_genie: 43.4, lingbot_world: 67.1, matrix_game_3: 79.3, matrix_game_2: 74.2}}
+      garden/360_out:     {depth: {project_genie: 117.5, lingbot_world: 55.1, matrix_game_3: 37.6, matrix_game_2: 33.1}, dist: {project_genie: 52.5, lingbot_world: 46.0, matrix_game_3: 61.4}}
+      billiard/perturb_in:  {depth: {project_genie: 17.1, lingbot_world: 39.2, matrix_game_3: 10.3, matrix_game_2: 13.2}, dist: {project_genie: 154.1, lingbot_world: 54.8, matrix_game_3: 4.3, matrix_game_2: 5.7}}
+      billiard/perturb_out: {depth: {project_genie: 14.9, lingbot_world: 25.4, matrix_game_3: 32.8, matrix_game_2: 25.2}, dist: {project_genie: 76.9, lingbot_world: 65.0, matrix_game_3: 26.8, matrix_game_2: 44.9}}
+      billiard/360_in:      {depth: {project_genie: 31.4, lingbot_world: 19.0, matrix_game_3: 50.1, matrix_game_2: 8.5}, dist: {project_genie: 100.0, lingbot_world: 40.9, matrix_game_3: 101.0, matrix_game_2: 9.4}}
+      billiard/360_out:     {depth: {project_genie: 11.5, lingbot_world: 16.6, matrix_game_3: 34.6, matrix_game_2: 23.9}, dist: {project_genie: 38.4, lingbot_world: 69.7, matrix_game_3: 20.9, matrix_game_2: 56.4}}
+      mirror/perturb_in:  {dist: {project_genie: 35.6, lingbot_world: 34.0, matrix_game_3: 93.0, matrix_game_2: 148.0}}
+      mirror/perturb_out: {dist: {project_genie: 36.9, lingbot_world: 29.7, matrix_game_3: 88.5, matrix_game_2: 65.3}}
+      mirror/360_in:      {dist: {project_genie: 25.6, lingbot_world: 14.3, matrix_game_3: 46.9, matrix_game_2: 127.0}}
+      mirror/360_out:     {dist: {project_genie: 29.1, lingbot_world: 44.4, matrix_game_3: 72.6, matrix_game_2: 78.3}}
+      billiard/perturb:   {char: {project_genie: 76.2, lingbot_world: 66.5, matrix_game_3: 91.2, matrix_game_2: 95.0}}
+      billiard/360:       {char: {project_genie: 29.8, lingbot_world: 88.1, matrix_game_3: 16.0, matrix_game_2: 14.7}}
+      mirror/perturb:     {char: {project_genie: 99.9, lingbot_world: 51.3, matrix_game_3: 14.8, matrix_game_2: 48.3}}
+      mirror/360:         {char: {project_genie: 84.9, lingbot_world: 65.0, matrix_game_3: 4.7, matrix_game_2: 6.7}}
+  kinematics_mechanics:
+    table: main-physical_laws (Table 4)
+    metrics: {dtw: lower, fde: lower, exact_match: higher, error_rate: lower}
+    cells:
+      racing_car/third:  {dtw: {project_genie: 2.19, matrix_game_2: 1.88}, fde: {project_genie: 3.49, matrix_game_2: 5.34}, exact_match: {project_genie: 13.3, matrix_game_2: 1.7}, error_rate: {project_genie: 4.73, matrix_game_2: 41.7}}
+      billiard/first:    {dtw: {project_genie: 0.81, matrix_game_2: 0.64}, fde: {project_genie: 0.83, matrix_game_2: 0.45}, exact_match: {project_genie: 1.7, matrix_game_2: 0.0}, error_rate: {project_genie: 2.07, matrix_game_2: 2.6}}
+  action_controllability:
+    table: main-raft_controllability (Table 3); headline relative EPE. Waypoint-1.5 omitted (camera-only; unsupported for ball targets under the Lite protocol).
+    metrics: {rel_epe: lower}
+    cells:
+      ball_roller:  {rel_epe: {project_genie: 0.55, lingbot_world: 0.16}}
+      beam_domino:  {rel_epe: {project_genie: 0.44, lingbot_world: 0.34}}
+      mirror_ball:  {rel_epe: {project_genie: 0.77, lingbot_world: 0.49}}
+  lpips:
+    table: holistic-lpips (causal LPIPS)
+    metrics: {clpips: lower}
+    cells:
+      ball_roller: {clpips: {project_genie: 0.56, lingbot_world: 0.38}}
+      beam_domino: {clpips: {project_genie: 0.60, lingbot_world: 0.61}}
+      mirror_ball: {clpips: {project_genie: 0.72, lingbot_world: 0.62}}
+  physical_causality:
+    table: main-physical_causality (CSR count / 15); only Project Genie remains after the drop
+    metrics: {csr: higher}
+    cells:
+      beam_domino: {csr: {project_genie: 3}}
+  fluid_mechanics:
+    table: main-liquid (pooled); cos (diagnostic) and L1 (not separating) excluded
+    metrics: {d_sigma_a: lower, d_a_dot: lower, d_theta: lower, lpips: lower}
+    cells:
+      pooled: {d_sigma_a: {project_genie: 0.171, hy_worldplay: 0.015}, d_a_dot: {project_genie: 0.017, hy_worldplay: 0.001}, d_theta: {project_genie: 8.87, hy_worldplay: 9.62}, lpips: {project_genie: 0.624, hy_worldplay: 0.300}}
+  lighting_shading:
+    table: main-lighting (paper-native protocol)
+    metrics: {scene_retention: higher, shadow_detection: higher, mosd: lower, sdj: lower, area_stability: lower, shape_drift: lower}
+    cells:
+      sun_rises_and_sets:
+        scene_retention: {project_genie: 96.48, lingbot_world: 100.0, matrix_game_2: 22.92, matrix_game_3: 14.41, hy_worldplay: 73.92, waypoint15: 100.0}
+        shadow_detection: {project_genie: 97.37, lingbot_world: 100.0, matrix_game_2: 100.0, matrix_game_3: 91.50, hy_worldplay: 99.78, waypoint15: 100.0}
+        mosd: {project_genie: 65.78, lingbot_world: 60.06, matrix_game_2: 65.26, matrix_game_3: 59.07, hy_worldplay: 77.29, waypoint15: 98.29}
+        sdj: {project_genie: 2.42, lingbot_world: 7.61, matrix_game_2: 4.12, matrix_game_3: 23.18, hy_worldplay: 6.60, waypoint15: 2.34}
+        area_stability: {project_genie: 13.95, lingbot_world: 17.97, matrix_game_2: 14.22, matrix_game_3: 62.43, hy_worldplay: 10.30, waypoint15: 12.29}
+        shape_drift: {project_genie: 6.78, lingbot_world: 6.66, matrix_game_2: 7.37, matrix_game_3: 11.43, hy_worldplay: 5.75, waypoint15: 4.55}
+  prompt_scene_consistency:
+    table: holistic-vlm_judge_consistency (overall score)
+    metrics: {overall: higher}
+    cells:
+      chessboard/first: {overall: {project_genie: 0.912, lingbot_world: 0.936, matrix_game_3: 0.840, hy_worldplay: 0.789, waypoint15: 0.933}}
+      mirror/first:     {overall: {project_genie: 0.980, lingbot_world: 0.920, matrix_game_3: 0.663, hy_worldplay: 0.740, waypoint15: 0.750}}
+      racing_car/first: {overall: {project_genie: 0.720, lingbot_world: 0.760, matrix_game_3: 0.627, hy_worldplay: 0.573, waypoint15: 0.667}}
+      chessboard/third: {overall: {project_genie: 0.936, lingbot_world: 0.992, matrix_game_3: 0.893, hy_worldplay: 0.837, waypoint15: 0.891}}
+      mirror/third:     {overall: {project_genie: 0.936, lingbot_world: 0.899, matrix_game_3: 0.752, hy_worldplay: 0.904, waypoint15: 0.763}}
+      racing_car/third: {overall: {project_genie: 0.856, lingbot_world: 0.832, matrix_game_3: 0.616, hy_worldplay: 0.824, waypoint15: 0.808}}
