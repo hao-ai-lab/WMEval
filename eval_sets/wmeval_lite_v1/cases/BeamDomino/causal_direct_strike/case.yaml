@@ -46,6 +46,6 @@ evaluator_lock:
     opencv-python-headless: 5.0.0.93
     pillow: 12.3.0
     lock_source: tools/lock_case_dependencies.py
-  evaluator_fingerprint: 143998087c9fab3ba3c374b6bba20d70
+  evaluator_fingerprint: 7bb0f50f2ed88cff3b69f362306713c6
   module_config: {}
   release_id: wmeval-lite-v1

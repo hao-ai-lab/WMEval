@@ -46,7 +46,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  evaluator_fingerprint: c129510d17c515c1a026d6eebb2514c9
+  evaluator_fingerprint: 4d3283a67e9b7e22fa16c2fbf3feb249
   module_config:
     liquid:
       normalization_fps: 16.0
@@ -77,3 +77,6 @@ evaluator_lock:
     asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
     asset:sam2_small: 6d1aa6f30de5c92224f8172114de081d104bbd23dd9dc5c58996f0cad5dc4d38
     lock_source: tools/lock_case_dependencies.py
+module_params:
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json

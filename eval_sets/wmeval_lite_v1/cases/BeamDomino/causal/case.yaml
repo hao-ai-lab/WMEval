@@ -56,6 +56,6 @@ evaluator_lock:
     asset:ptlflow_synthetic: 9397588204a48ad826ad168b9bd6961a78f09661
     asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
     lock_source: tools/lock_case_dependencies.py
-  evaluator_fingerprint: 399dbb0054b18d973958e041b623242f
+  evaluator_fingerprint: 53bfa54a8dd08bc54329cd7b77010714
   module_config: {}
   release_id: wmeval-lite-v1

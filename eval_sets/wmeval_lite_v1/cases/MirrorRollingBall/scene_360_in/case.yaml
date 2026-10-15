@@ -36,7 +36,7 @@ module_params:
     eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: 2be68fa8d7c68b060b2ded4fbec63d71
+  evaluator_fingerprint: 0ad4bcffff03d4a03278cd817560e8af
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}

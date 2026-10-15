@@ -41,7 +41,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: e48f75cf80ddd581148f085099913696480ec0c6
-  evaluator_fingerprint: de07011a69d0a30d9cdeb2d96ed8f458
+  evaluator_fingerprint: d2676b7f6d2ca69f480e6ee91f8fce2e
   module_config: &id001
     shadow_consistency:
       shadow_text_prompt: table. chair. lamp.
