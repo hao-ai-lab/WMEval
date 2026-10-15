@@ -31,7 +31,7 @@ tables are frozen; nothing below changes a published value unless it says so.
 | Causality reference answers | 5 judge passes on the Unity reference, after repairing four QA items (#34) | single protocol, original QA | Unity CSR 100 / 80 / 100 (Table 12: 100 / 60 / 100); Lite QA differs from the paper's |
 | Causality estimator | 5 judge passes over one rollout per candidate | five rollouts | Makes fractional CSR expressible; does not reproduce Table 12 exactly |
 | Prompt Unity scores | frozen, 5 passes on the shipped captures (mean 0.938) | earlier capture (0.917) | Unity row differs; model rows reproduce within mean abs. diff 0.023 |
-| LPIPS contact events | frozen majority events (BallRoller, BeamDomino, MirrorRollingBall); LiquidContainer frozen with 0 events (5/5 passes) | re-judged per run | LingBot (Act) BeamDomino 0.547 offline vs. 0.61 (event-timing drift); LiquidContainer uses the temporal fallback |
+| LPIPS contact events | frozen majority events (BallRoller, BeamDomino, MirrorRollingBall); LiquidContainer frozen with 0 consensus events (no candidate contact reached 3/5 passes) | re-judged per run | LingBot (Act) BeamDomino 0.547 offline vs. 0.61 (event-timing drift); LiquidContainer uses the temporal fallback |
 
 ## Evaluation behavior added after the paper
 
