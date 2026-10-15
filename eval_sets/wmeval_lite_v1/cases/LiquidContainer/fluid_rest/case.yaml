@@ -45,7 +45,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  evaluator_fingerprint: 8c3db06e2f623bed6fe887f150ee081d
+  evaluator_fingerprint: 477a1f439dc8189a2f715eb00369d076
   module_config:
     liquid:
       normalization_fps: 16.0

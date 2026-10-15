@@ -32,7 +32,7 @@ module_params:
     eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: 19e647b48c904492508853afdbdd79e6
+  evaluator_fingerprint: 3a4dc8b8861cee8723d89e23b46a8fb1
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}
