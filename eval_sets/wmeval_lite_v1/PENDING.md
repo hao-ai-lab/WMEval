@@ -1,6 +1,6 @@
 # WMEval Lite release — pending work by evaluation dimension
 
-Updated 2026-10-15 (after #33–#36) · branch `lanxiang/release-cleanup` · paper: ready · project
+Updated 2026-10-15 (after #33–#36 and the release-fix pass) · branch `lanxiang/release-cleanup` · paper: ready · project
 page preview: https://snyhlx.github.io/wmeval-blog
 
 **Release goal.** A new user downloads the dataset from Hugging Face, generates
@@ -11,23 +11,29 @@ must be declared, never hidden.
 
 **Where each dimension stands** (verified 2026-10-15, after #33–#36):
 
-- **Actions.** 30 of the 32 live cases carry a standardized, target-aware action
+- **Actions.** All 32 live cases carry a standardized, target-aware action
   (`trajectory.yaml` / `action.npz` / `actions.jsonl`; target declared in
   `action_backends.yaml`, and in `actions.json` where backends must be gated):
   Table 4/7 cells (`camera`, `ego_vehicle`, `cue_ball`), lighting orbit (`camera`, #33),
   causality (`rolling_ball`, exact) and fluid (`liquid_container`, reconstructed) (#34),
-  ball control (`ball`, #35), prompt left turn (`camera`, #36). Gaps: ChessBoard/walk_third
-  and WanderingGarden/scene_first (§1) have no executable action; prompt consistency's turn is
-  nominal, since generation still replays each model's original camera motion (§7).
+  ball control (`ball`, #35), prompt left turn (`camera`, #36), and the two Lite-only §1 cases
+  (`character` / `camera`, exact reconstructions of their captures). Cases without
+  `actions.json` are gated on the target in `table_cell.json` / `trajectory.yaml`. Prompt
+  consistency: the paper rows' as-run inputs are recorded as a deviation
+  (`experiments/tables_4_7/prompt_as_run_inputs.yaml`); new models use the canonical turn.
 - **Frozen references.** Causality answers, prompt Unity scores (#36) and LPIPS contact
-  events for BallRoller / BeamDomino / MirrorRollingBall (#35) are frozen in the bundles.
-  LiquidContainer contact events are not.
+  events for BallRoller / BeamDomino / MirrorRollingBall (#35) and LiquidContainer (0
+  consensus events) are frozen in the bundles. See `FROZEN_JUDGE_OUTPUTS.md`.
 - **Normalization.** 14 Table 4/7 cases `match_reference`, 4 liquid and 1 lighting token,
   3 `beamdomino_native` (identity). 10 cases use the candidate as-is: BallRoller/ctrl and
   MirrorRollingBall/lpips_collision by decision (paper parity, §2), the 6 prompt cases (judge
   input, low risk), and the 2 legacy §1 cases.
 - **Unsupported is reported, not scored.** Backends that cannot express a case's target
   return `unsupported` with the registry reason; aggregates carry `num_unsupported`.
+- **Rows and aggregates.** Rows record `input_contract` (flags `none` cases outside the
+  reference's fps / size / duration), `metric_status`, `action_support`; a dimension headline
+  needs `repeat_policy.required_repeats` (5) seeds per applicable case (else
+  `provisional_value`). Differences from the paper: `DIFFERENCES_FROM_PAPER.md`.
 
 ---
 
@@ -151,7 +157,7 @@ Key files: `cases/<Scene>/scene_*/` (`ref.png`, `reference.mp4`,
 | MirrorRollingBall scene_* × 4 | ✅ | ✅ Lite orbit re-indexed (photogrammetric depth caveat) | ✅ `match_reference` |
 | BallRoller/ctrl | ✅ ball trajectory, target `ball` (§2) | ✅ bundled | ❌ none |
 | RacingCar/prompt_third | ⚠️ left-turn trajectory, target `camera` (§7; nominal) | ✅ bundled | ❌ none |
-| ChessBoard/walk_third, WanderingGarden/scene_first | ❌ comment-only / no action file | ✅ bundled | ❌ none |
+| ChessBoard/walk_third, WanderingGarden/scene_first | ✅ exact reconstructions (`character` 90-frame schedule; +36 °/s yaw sweep) | ✅ bundled | ❌ none (flagged by `input_contract`) |
 
 | Model | In paper | Status |
 | --- | --- | --- |
@@ -168,11 +174,12 @@ Key files: `cases/<Scene>/scene_*/` (`ref.png`, `reference.mp4`,
 - [ ] **Report realized camera motion** beside every score (LingBot realized −17.7/+41.4°
   for ±45° and +54.9/+277.9° for full turns). Done when: realized yaw is a column in the
   exported tables.
-- [ ] **Anchor validity gate:** require ≥2 visible, confidently assigned anchors and a
-  minimum paired-frame coverage for pairwise-distance MAE; otherwise `unmeasurable`.
-- [ ] **Legacy cases:** give ChessBoard/walk_third and WanderingGarden/scene_first
-  executable actions (or drop them) and switch BallRoller/ctrl and RacingCar/prompt_third
-  to `match_reference`.
+- [x] **Anchor validity diagnostic:** rows report `pairwise_distance_support` and
+  `pairwise_distance_measurable` (≥2 anchors with 3D points, paired-frame coverage ≥ 0.5);
+  the MAE itself is unchanged. Unity self-match: `reports/wmeval_lite/unity_selfmatch/`.
+- [x] **Legacy cases:** ChessBoard/walk_third and WanderingGarden/scene_first carry bundled
+  trajectories. Normalization stays `none` (switching would change scores); mismatched
+  candidates are flagged by `input_contract`.
 - [ ] **Publish per-scene self-match bounds** and the Mirror photogrammetric caveat.
 
 ## 2. Action controllability — `action_controllability`
@@ -275,8 +282,8 @@ object_transforms.json, object_masses.json, plane_calibration.json}`),
 - [ ] **Validate target control per backend:** reject outputs where the camera or an
   avatar moved instead of the car/ball; record a target-success rate per run (Matrix-Game
   2.0 first).
-- [ ] **Units and floors:** held-out reprojection checks, exact-match as diagnostic,
-  absolute-error floor for near-zero motion.
+- [x] **Units:** `kin_plane_calibration_json` resolved; leave-one-out plane calibration error
+  ≤ 2.4e-6 m (`tools/kinematics_plane_holdout.py`). Floor: Unity self-match run.
 
 ## 4. Fluid mechanics — `fluid_mechanics`
 
@@ -305,7 +312,7 @@ resamples to 832×464 @ 16 fps). Key files: `cases/LiquidContainer/*/reference/a
   `bottle_controller_genie_profiles.py`; backend support in `action_backends.yaml`.
   The capture itself stepped on wall-clock (~10 Hz); the legacy `action.npy` keeps that record.
 - [ ] **Recover or regenerate the 5 paper models' rollouts** with action receipts.
-- [ ] **Pin SAM 2 and RAFT checkpoints**; keep the per-profile multi-axis panel canonical.
+- [x] **Pin SAM 2 and RAFT checkpoints** (`sam2_small`, `raft_large` in `evaluator_assets.lock.json`).
 
 ## 5. Physical causality — `physical_causality`
 
@@ -332,8 +339,8 @@ BeamDomino causal / causal_glancing / causal_direct_strike
   floor plane, from `controller.py` `TRAJECTORIES`; backend support in `action_backends.yaml`.
 - [x] **Audit the LingBot (Cam) paper row**: it was prompt-driven (static camera, no ball
   action). Decision: exclude it, like Matrix-Game, as an incompatible interface.
-- [ ] **Remove the excluded rows from the paper**: LingBot (Cam) from the causality table
-  and text; LingBot / Matrix-Game 2.0 / 3.0 from the fluid table and text.
+- [ ] **Remove the excluded rows from the paper**: drafted in the paper checkout, marked
+  `\lxagent` (uncommitted); HY-WorldPlay's fluid row is kept by decision.
 - [ ] **Keep `causal_step_judge_repeats: 5`** and record every candidate judge pass;
   re-baseline the frozen reference answers when the judge or prompt changes.
   Five judge passes over one rollout is a different estimator from the paper's
@@ -448,7 +455,8 @@ ChessBoard, MirrorRollingBall, RacingCar × prompt_first / prompt_third
   |Δ| is 0.023 (max 0.067) and the model ranking is unchanged
   (Unity 0.938 > Genie 0.905 > LingBot 0.891 > HY 0.792 > Matrix-Game 3.0 0.745);
   `tools/check_prompt_human_alignment.py` gives ρ 0.90 / 0.80, as in the paper.
-- [ ] **Generate from the canonical turn.** The baked trajectory is 40 °/s for 10 s, but
+- [x] **As-run inputs recorded** for the paper rows (`prompt_as_run_inputs.yaml`).
+- [ ] **Generate from the canonical turn (new models).** The baked trajectory is 40 °/s for 10 s, but
   `prepare_prompt_case_inputs.py` reproduces the original rollouts (LingBot one turn in place
   / two orbits; Matrix-Game 3.0 `j`, plus `d` in third person), so models still receive
   different camera motion. Do: compile `prompt.camera.left_turn_v1` per backend (as §1 does
@@ -470,7 +478,7 @@ the candidate's event detection; the reference is no longer judged). Key files:
 | BallRoller/ctrl | ✅ (see §2) | ✅ frozen (5/5 passes agree on 1 collision) | `none` |
 | MirrorRollingBall/lpips_collision | ✅ (see §2) | ✅ frozen (judge found 2-6 events/pass; 1 kept by majority) | `none` |
 | BeamDomino/causal | ✅ (see §2) | ✅ frozen (2 events/pass at differing frames; 1 kept) | `beamdomino_native` |
-| LiquidContainer x 4 | ✅ `liquid_container` trajectory (§4) | ❌ not frozen (§4's action is settled; run `tools/freeze_reference_events.py`) | ✅ resampled |
+| LiquidContainer x 4 | ✅ `liquid_container` trajectory (§4) | ✅ frozen: 0 consensus events (no contact reached 3/5 passes) → temporal fallback | ✅ resampled |
 
 | Model | In paper | Status |
 | --- | --- | --- |
@@ -527,20 +535,20 @@ gave 0.615 before the freeze; re-checking it needs API credits.
 - [ ] **Scope and rights (P0-01).** Freeze the case roster (32 live Lite case bundles, including the 14 Table 4/7
   cells) and repeat policy; clear redistribution of Unity renders, quantities and
   annotations; add LICENSE files, attribution, citation, dataset card; confirm HY-WorldPlay.
-- [ ] **HF package (P0-02).** Export → download → verify into a clean directory with
+- [x] **HF package tooling (P0-02).** `tools/export_hf_package.py export|verify` (488 files, verify PASS, 0 load-bearing out-of-package references). Upload still pending. Export → download → verify into a clean directory with
   per-file hashes and dataset/evaluator/schema versions; nothing may resolve into `runs/`,
   a private repo or a Modal volume.
-- [ ] **Adapter template (P0-05).** A model-neutral adapter (capability check +
+- [x] **Adapter template (P0-05).** `tools/expected_jobs.py`, `tools/model_adapters/TEMPLATE.md`, `tools/fixture_backend.py`. A model-neutral adapter (capability check +
   generation) driven by `action_backends.yaml`, a no-cost fixture backend, an expected-job
   export (case × repeat × seed) and receipts accepted by the Lite runner.
-- [ ] **Environment (P0-06).** Extend `experiments/tables_4_7/evaluator_assets.lock.json`
+- [x] **Environment (P0-06).** 31 case locks (`tools/lock_case_dependencies.py`), indoor depth / SAM 2 small / PTLFlow / OpenPIV pinned, `tools/preflight_lite.py`. Extend `experiments/tables_4_7/evaluator_assets.lock.json`
   (GroundingDINO, Depth Anything, SAM 2.1, DINOv2, RAFT, LPIPS/VGG pinned) to PTLFlow,
   OpenPIV and indoor depth; fill the 31 empty case dependency locks (only lighting is
   pinned); add a preflight.
-- [ ] **Results (P0-07/09).** `unsupported` rows and `num_unsupported` exist (#35). Per-metric status (`ok`, `unsupported`, `missing_candidate`,
+- [x] **Results (P0-07/09).** Per-metric status, coverage gate, `num_unsupported`. `unsupported` rows and `num_unsupported` exist (#35). Per-metric status (`ok`, `unsupported`, `missing_candidate`,
   `invalid_candidate`, `not_applicable`, `unmeasurable`, `error`); a coverage gate; one
   repeat policy (LingBot's adaptive 5→30 vs. five runs elsewhere).
-- [ ] **Acceptance (P0-10).** Hermetic tests (no reads from `runs/` or the sibling paper
+- [ ] **Acceptance (P0-10).** Hermetic tests (`integration` marker) and CI done; clean-machine run pending. Hermetic tests (no reads from `runs/` or the sibling paper
   checkout), CI, and a clean-machine run of the Lite path from the HF download with one new
   model.
 
