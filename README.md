@@ -2447,7 +2447,7 @@ closer to the reference at the sampled anchors.
 
 | Case | `lpips` | `action_controllability` | `prompt_scene_consistency` | `lighting_shading` | `environment_object_consistency` | `kinematics_mechanics` | `physical_causality` | `fluid_mechanics` |
 | --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| `BallRoller/ctrl` |  | ✓ |  |  | ✓ | ✓ |  |  |
+| `BallRoller/ctrl` | ✓ | ✓ |  |  | ✓ | ✓ |  |  |
 | `BeamDomino/causal` | ✓ | ✓ |  |  |  |  | ✓ |  |
 | `BeamDomino/causal_direct_strike` |  |  |  |  |  |  | ✓ |  |
 | `BeamDomino/causal_glancing` |  |  |  |  |  |  | ✓ |  |
@@ -2463,7 +2463,7 @@ closer to the reference at the sampled anchors.
 | `LiquidContainer/fluid_impulse_decay` | ✓ |  |  |  |  |  |  | ✓ |
 | `LiquidContainer/fluid_rest` | ✓ |  |  |  |  |  |  | ✓ |
 | `LiquidContainer/fluid_step_hold` | ✓ |  |  |  |  |  |  | ✓ |
-| `MirrorRollingBall/lpips_collision` | ✓ |  |  |  |  |  |  |  |
+| `MirrorRollingBall/lpips_collision` | ✓ | ✓ |  |  |  |  |  |  |
 | `MirrorRollingBall/prompt_first` |  |  | ✓ |  |  |  |  |  |
 | `MirrorRollingBall/prompt_third` |  |  | ✓ |  |  |  |  |  |
 | `MirrorRollingBall/scene_360_in` |  |  |  |  | ✓ |  |  |  |
@@ -2473,7 +2473,7 @@ closer to the reference at the sampled anchors.
 | `RacingCar/kinematics_third` |  |  |  |  |  | ✓ |  |  |
 | `RacingCar/prompt_first` |  |  | ✓ |  |  |  |  |  |
 | `RacingCar/prompt_third` |  |  | ✓ |  | ✓ |  |  |  |
-| `SunRisesAndSets/lighting` |  |  |  | ✓ |  |  |  |  |
+| `SunRisesAndSets/lighting_orbit_v2` |  |  |  | ✓ |  |  |  |  |
 | `WanderingGarden/scene_360_in` |  |  |  |  | ✓ |  |  |  |
 | `WanderingGarden/scene_360_out` |  |  |  |  | ✓ |  |  |  |
 | `WanderingGarden/scene_first` |  |  |  |  | ✓ |  |  |  |
