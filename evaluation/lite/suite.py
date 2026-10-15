@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .adapters.base import (
+    STATUS_COMPLETED,
     STATUS_DRY_RUN,
     STATUS_ERROR,
     STATUS_INVALID_CANDIDATE,
@@ -30,7 +31,7 @@ from .adapters.base import (
     CaseResult,
     DimensionEvaluator,
 )
-from .action_support import unsupported_reason
+from .action_support import support_record, unsupported_reason
 from evaluation import action_backends
 from .aggregate import (
     build_aggregate,
@@ -516,6 +517,18 @@ def run_suite(
         if input_fingerprints.get(key) is not None:
             row['candidate_input_fingerprint'] = input_fingerprints[key]
             row['required_repeats'] = 5
+        if result.input_contract is not None:
+            row['input_contract'] = result.input_contract
+        support = support_record(item.case.artifacts_dir, candidate.model)
+        if support is not None:
+            row['action_support'] = support
+        row['metric_status'] = metric_status(result.status, result.metrics)
+        none_metrics = [
+            name for name, value in (result.metrics or {}).items()
+            if value is None and result.status == STATUS_COMPLETED
+        ]
+        for name in none_metrics:
+            row['metric_status'][name] = "unmeasurable"
         append_row(results_path, row)
         emit(
             f"[wmeval-lite] {dimension.dimension_id}/{case.case_id}/"
@@ -568,7 +581,7 @@ def _evaluate_item(
     protocol = case.protocol
     candidate_fps_override = candidate.params.get("candidate_fps_override")
     try:
-        validate_candidate_video(
+        validated = validate_candidate_video(
             candidate.candidate_video,
             case.reference_video if dimension.requires_reference else None,
             min_duration_sec=float(protocol["min_duration_sec"]),
@@ -589,7 +602,7 @@ def _evaluate_item(
     )
 
     adapter = _resolve_adapter(dimension, adapters)
-    return adapter.evaluate(
+    result = adapter.evaluate(
         suite=suite,
         dimension=dimension,
         case=case,
@@ -597,3 +610,65 @@ def _evaluate_item(
         candidate_video=candidate_video,
         device=device,
     )
+    result.input_contract = input_contract(
+        validated, normalization=str(protocol.get("candidate_normalization") or "none")
+    )
+    return result
+
+
+# Tolerances for the input-contract report (scores are never altered by it).
+_FPS_TOLERANCE = 0.5
+_ASPECT_TOLERANCE = 0.01
+_DURATION_TOLERANCE = 0.05
+
+
+def input_contract(validated: Any, *, normalization: str) -> dict[str, Any]:
+    """Candidate vs. reference video properties for one scored row.
+
+    The case's reference video is the declared input spec. With
+    ``candidate_normalization: none`` the evaluator consumes the candidate as
+    supplied, so mismatches are flagged (``within_spec: false``) for the reader;
+    normalized cases report the raw candidate before resampling.
+    """
+    candidate = validated.candidate
+    reference = validated.reference
+
+    def props(meta: Any) -> dict[str, Any]:
+        return {
+            "fps": round(float(meta.fps), 4),
+            "width": int(meta.width),
+            "height": int(meta.height),
+            "frame_count": int(meta.frame_count),
+            "duration_sec": round(float(meta.duration_sec), 4),
+        }
+
+    report: dict[str, Any] = {"normalization": normalization, "candidate": props(candidate)}
+    if reference is None:
+        report["within_spec"] = None
+        return report
+    report["reference"] = props(reference)
+    flags = {
+        "fps_mismatch": abs(candidate.fps - reference.fps) > _FPS_TOLERANCE,
+        "resolution_mismatch": (candidate.width, candidate.height) != (reference.width, reference.height),
+        "aspect_mismatch": abs(candidate.width / candidate.height - reference.width / reference.height)
+        > _ASPECT_TOLERANCE * reference.width / reference.height,
+        "duration_mismatch": abs(candidate.duration_sec - reference.duration_sec)
+        > _DURATION_TOLERANCE * reference.duration_sec,
+    }
+    report["flags"] = flags
+    report["duration_ratio"] = round(candidate.duration_sec / reference.duration_sec, 4)
+    report["within_spec"] = (not any(flags.values())) if normalization == "none" else None
+    return report
+
+
+def metric_status(status: str, metrics: Mapping[str, Any] | None) -> dict[str, str]:
+    """Per-metric status: ``ok`` / ``unmeasurable`` for completed rows, else the row status."""
+    out: dict[str, str] = {}
+    for name, value in (metrics or {}).items():
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        if status != STATUS_COMPLETED:
+            out[name] = status
+        else:
+            out[name] = "ok" if value == value and value not in (float("inf"), float("-inf")) else "unmeasurable"
+    return out

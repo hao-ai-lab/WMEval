@@ -95,6 +95,9 @@ class Suite:
     description: str
     dimensions: Mapping[str, DimensionSpec]
     legacy_case_aliases: Mapping[str, Mapping[str, str]]
+    # Repeats per (model, case) a dimension headline requires (suite.yaml
+    # `repeat_policy.required_repeats`); None disables the coverage gate.
+    required_repeats: int | None = None
 
     @property
     def cases_root(self) -> Path:
@@ -247,6 +250,19 @@ def _parse_dimension(
     )
 
 
+def _required_repeats(raw: Mapping[str, Any]) -> int | None:
+    policy = raw.get("repeat_policy")
+    if policy is None:
+        return None
+    policy = _mapping_value(policy, "repeat_policy")
+    value = policy.get("required_repeats")
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise SuiteValidationError("repeat_policy.required_repeats must be a positive integer")
+    return value
+
+
 def load_suite(
     suite_root: str | Path,
     *,
@@ -328,6 +344,7 @@ def load_suite(
         description=description,
         dimensions=MappingProxyType(dimensions),
         legacy_case_aliases=MappingProxyType(aliases),
+        required_repeats=_required_repeats(raw),
     )
 
     if check_case_dirs:

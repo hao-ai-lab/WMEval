@@ -26,6 +26,8 @@ class CaseResult:
     metrics: dict[str, Any] = field(default_factory=dict)
     full_report: dict[str, Any] | None = None
     error: str | None = None
+    # Candidate-vs-reference video properties, recorded for every scored row.
+    input_contract: dict[str, Any] | None = None
 
 
 class DimensionEvaluator(Protocol):

@@ -641,6 +641,11 @@
 #   2026-09-18 — both are now live; see the dated banner at the top.)
 suite_name: WMEval Lite
 version: v1
+# Coverage gate: a dimension headline is reported only when every case has this
+# many distinct completed seeds for the model, or the model is `unsupported` for
+# it (N/A). Otherwise the aggregate keeps the number as `provisional_value`.
+repeat_policy:
+  required_repeats: 5
 description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
 dimensions:
   lpips:

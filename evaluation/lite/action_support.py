@@ -42,6 +42,20 @@ def declared_target(artifacts_dir: Path) -> str | None:
     return None
 
 
+def support_record(artifacts_dir: Path, model: str) -> dict[str, str | None] | None:
+    """Declared target and the backend's support status (None = unregistered/undeclared)."""
+    target = declared_target(artifacts_dir)
+    if target is None:
+        return None
+    try:
+        backend = action_backends.backend(model)
+    except KeyError:
+        return {"target": target, "status": None}
+    if backend.get("scope") == "trajectories_only":
+        return {"target": target, "status": "trajectory_scoped"}
+    return {"target": target, "status": action_backends.support_status(model, target)}
+
+
 def unsupported_reason(artifacts_dir: Path, model: str) -> str | None:
     """Why ``model`` cannot express the case's action target, or ``None`` if it can."""
     target = declared_target(artifacts_dir)

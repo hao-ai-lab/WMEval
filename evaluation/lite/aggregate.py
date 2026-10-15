@@ -407,6 +407,36 @@ def _two_level_stats(
     return stats
 
 
+def suite_coverage(
+    suite: Suite, dimension: Any, dimension_rows: Sequence[Mapping[str, Any]]
+) -> dict[str, Any] | None:
+    """Coverage of one model on one dimension under the suite's repeat policy.
+
+    A case is covered when it has ``required_repeats`` distinct completed seeds,
+    or when the model is ``unsupported`` for it (reported N/A, not missing).
+    Returns None when the suite declares no repeat policy.
+    """
+    required = getattr(suite, "required_repeats", None)
+    if not required:
+        return None
+    by_case: dict[str, dict[str, Any]] = {}
+    for case_id in dimension.cases:
+        rows = [row for row in dimension_rows if str(row.get("case_id")) == case_id]
+        completed = len({str(row.get("seed")) for row in rows if row.get("status") == "completed"})
+        unsupported = any(row.get("status") == "unsupported" for row in rows)
+        by_case[case_id] = {"completed": completed, "unsupported": unsupported}
+    missing = sorted(
+        case_id for case_id, info in by_case.items()
+        if not info["unsupported"] and info["completed"] < required
+    )
+    return {
+        "required_repeats": required,
+        "complete": not missing,
+        "cases_missing_repeats": missing,
+        "cases": by_case,
+    }
+
+
 def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     completed = [row for row in rows if row.get("status") == "completed"]
 
@@ -449,9 +479,32 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                 source = _get(row, "metrics", "lpips_primary_source")
                 if isinstance(source, str):
                     source_counts[source] = source_counts.get(source, 0) + 1
+            gate = suite_coverage(suite, dimension, dimension_rows)
+            if headline is not None and gate is not None and not gate["complete"]:
+                headline["provisional_value"] = headline["value"]
+                headline["value"] = None
+                headline["coverage_complete"] = False
+            metric_status_counts: dict[str, int] = {}
+            for row in dimension_rows:
+                for value in (row.get("metric_status") or {}).values():
+                    metric_status_counts[str(value)] = metric_status_counts.get(str(value), 0) + 1
+            unvalidated = sum(
+                1 for row in done
+                if "validation_required" in str((row.get("action_support") or {}).get("status") or "")
+            )
+            outside_spec = sum(
+                1 for row in done if (row.get("input_contract") or {}).get("within_spec") is False
+            )
             dimension_summaries[dimension_id] = {
                 "display_name": dimension.display_name,
                 **({"lpips_primary_source_counts": source_counts} if source_counts else {}),
+                **({"lpips_temporal_fallback_rate": round(
+                    source_counts.get("temporal_only", 0) / sum(source_counts.values()), 4)}
+                   if source_counts else {}),
+                **({"coverage": gate} if gate is not None else {}),
+                **({"metric_status_counts": metric_status_counts} if metric_status_counts else {}),
+                "num_target_unvalidated": unvalidated,
+                "num_outside_input_spec": outside_spec,
                 "num_rows": len(dimension_rows),
                 "num_cases": len({str(row.get("case_id")) for row in dimension_rows}),
                 "num_completed": len(done),
