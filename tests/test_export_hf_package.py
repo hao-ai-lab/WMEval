@@ -291,6 +291,8 @@ def test_git_ignored_files_are_not_exported(tmp_path: Path) -> None:
     assert manifest["excluded"]["git_ignored"] == [
         "cases/SceneA/one/reference/notes.scratch"
     ]
+    # nothing is committed in this throwaway repo, so every file is flagged
+    assert "cases/SceneA/one/case.yaml" in manifest["excluded"]["untracked_included"]
 
 
 @pytest.mark.skipif(not (REAL_SUITE / "suite.yaml").is_file(), reason="suite not present")

@@ -186,6 +186,16 @@ def git_head(repo: Path = REPO_ROOT) -> dict[str, Any]:
     }
 
 
+def git_untracked(directory: Path) -> set[Path]:
+    """Files under ``directory`` that git neither tracks nor ignores."""
+    out = _git(["ls-files", "-z", "--others", "--exclude-standard", "--full-name", "."], directory)
+    top = _git(["rev-parse", "--show-toplevel"], directory)
+    if not out or not top:
+        return set()
+    root = Path(top.strip())
+    return {(root / item).resolve() for item in out.split("\0") if item}
+
+
 def git_ignored(paths: list[Path], cwd: Path) -> set[Path]:
     """Subset of ``paths`` that git ignores (tracked files never count)."""
     if not paths or _git(["rev-parse", "--is-inside-work-tree"], cwd) is None:
@@ -401,6 +411,10 @@ def collect_export_files(
             if selected[rel] in ignored:
                 excluded["git_ignored"].append(rel)
                 del selected[rel]
+    untracked = git_untracked(suite_root)
+    excluded["untracked_included"] = sorted(
+        rel for rel, src in selected.items() if src.resolve() in untracked
+    )
     return selected, excluded
 
 
@@ -597,7 +611,8 @@ def _is_lfs_pointer(path: Path) -> bool:
 # --------------------------------------------------------------------------
 
 # (kind, regex). Order matters only for reporting.
-_ABS_PATH = re.compile(r"(?<![\w.:/~\\-])/(?:[A-Za-z0-9_.@+-]+/)+[A-Za-z0-9_.@+-]*")
+# Not after a word char, path char, or a ``<placeholder>`` such as <dataset_dir>/x.
+_ABS_PATH = re.compile(r"(?<![\w.:/~\\>-])/(?:[A-Za-z0-9_.@+-]+/)+[A-Za-z0-9_.@+-]*")
 _WIN_PATH = re.compile(r"(?<![\w])[A-Za-z]:\\[^\s\"']+")
 SCAN_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("absolute_path", _ABS_PATH),
@@ -1021,6 +1036,10 @@ def _cmd_export(args: argparse.Namespace) -> int:
         print("  skipped suite-root entries: " + ", ".join(excluded["suite_root_files"]))
     if excluded["git_ignored"]:
         print(f"  skipped {len(excluded['git_ignored'])} git-ignored file(s)")
+    if excluded.get("untracked_included"):
+        print(f"  WARNING: exported {len(excluded['untracked_included'])} file(s) git "
+              "does not track (commit them, or the evaluator revision does not "
+              "describe this package): " + ", ".join(excluded["untracked_included"][:10]))
     code = manifest["evaluator_code"]
     print(f"  evaluator code revision {code['revision']}"
           + (" (DIRTY working tree)" if code.get("dirty") else ""))
