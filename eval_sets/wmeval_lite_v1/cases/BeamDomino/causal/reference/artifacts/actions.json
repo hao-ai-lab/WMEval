@@ -1,18 +1,18 @@
 {
   "channels": [
-    "horizontal",
-    "vertical"
+    "z_force",
+    "x_force"
   ],
   "control_hz": 10,
-  "duration_sec": 12.1,
-  "frame": "ground_plane",
+  "duration_sec": 12.2,
+  "frame": "floor_plane",
   "lite_case_id": "BeamDomino/causal",
   "schema_version": 1,
   "sources": {
-    "action.npz": "74c1330fab61d5426e68aa616247bb4c45e8812f1340abcd9a8b848f919db1f8",
-    "actions.jsonl": "021e4a74667fd9b1cb3011413bc60b581fb7952270c028fa4c8653c0acfa7d26",
-    "trajectory.yaml": "29ac4da8a069976a996a9148562d79d771892ab7f00bbb268779e098c1b0018f"
+    "action.npz": "01f0334c84928a9ee6b146f3f051e5922b41ab2e934e7994db77cbfc41bbae2b",
+    "actions.jsonl": "a30450bee5067b6649e56eb85d4e09d19c0caf47beee6e948292e5c6fb5c9e1b",
+    "trajectory.yaml": "3aae6bbd53cdcd68e3a9ec00337da2e190e2499472593a668eaf6b75839957d6"
   },
-  "target": "ball",
-  "trajectory_id": "controllability.beam_domino.clean_strike_v1"
+  "target": "rolling_ball",
+  "trajectory_id": "wmeval_lite.beam_domino.causal.ball_force_v1"
 }

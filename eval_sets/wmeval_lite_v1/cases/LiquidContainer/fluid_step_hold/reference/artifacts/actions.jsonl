@@ -1,0 +1,3 @@
+{"ms": 2000, "op": "wait"}
+{"keys": ["KeyD"], "ms": 8000, "op": "hold"}
+{"ms": 10000, "op": "wait"}

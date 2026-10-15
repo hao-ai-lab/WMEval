@@ -1,10 +1,35 @@
 {
   "trajectory_id": "traj_tiny",
   "source": "unity_gt",
+  "trajectory_shape": "canonical",
   "events": [
-    {"index": 1, "name": "rolling", "start_sec": 0.0,  "end_sec": 0.50, "trigger": "start"},
-    {"index": 2, "name": "impact",  "start_sec": 0.50, "end_sec": 1.00, "trigger": "stack_hit_flag"},
-    {"index": 3, "name": "topple",  "start_sec": 1.00, "end_sec": 1.50, "trigger": "first_fallen_flag"},
-    {"index": 4, "name": "cascade", "start_sec": 1.50, "end_sec": 2.00, "trigger": "cascade_plateau"}
+    {
+      "index": 1,
+      "name": "rolling",
+      "start_sec": 0.2,
+      "end_sec": 0.5,
+      "trigger": "motion_onset"
+    },
+    {
+      "index": 2,
+      "name": "impact",
+      "start_sec": 0.5,
+      "end_sec": 0.8,
+      "trigger": "ball_impulse"
+    },
+    {
+      "index": 3,
+      "name": "topple",
+      "start_sec": 0.8,
+      "end_sec": 1.0,
+      "trigger": "platform_tilt"
+    },
+    {
+      "index": 4,
+      "name": "cascade",
+      "start_sec": 1.0,
+      "end_sec": 1.4,
+      "trigger": "first_fallen"
+    }
   ]
 }

@@ -1,0 +1,15 @@
+{
+  "all_reference_bytes_unchanged": true,
+  "completed_at_utc": "2026-10-12T04:03:16.124414+00:00",
+  "corrected_resume_hash_unchanged": true,
+  "corrected_resume_rows": 15,
+  "corrected_resume_sha256": "2acd6c84fe17b76ba9075b01e7c7ef81d6e5d7610cfbbeb3f7babb40f9b82b27",
+  "derived_and_corrected": "1cfce35ed9cf319bc17c0afbfc8921d6",
+  "metrics_unchanged": true,
+  "old_recorded": "074084a54f5d7b5a9b1e38a9fc55b689",
+  "original_rows_preserved": "full_release/combined/per_case_results.jsonl",
+  "schema_version": 1,
+  "scorer_sources_unchanged": true,
+  "source_case_without_lock_unchanged": true,
+  "status": "verified_stamp_correction"
+}

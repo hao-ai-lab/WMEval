@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "status": "diagnostic_only",
+  "primary_trajectory": "lighting.camera.look_at_orbit_v2",
+  "fallback_candidate": {
+    "backend": "waypoint15",
+    "run_id": "waypoint_probes_20261010_seed42",
+    "video": "yaw_only.mp4",
+    "kind": "short_yaw_only",
+    "nominal_control_duration_sec": 3,
+    "realized_angle_deg": null
+  },
+  "trials": [
+    {
+      "run_id": "lingbot_orbit360_20261010_seed42_v2",
+      "modal_app_id": "ap-iHQpEPJpVLFwm2bryVOsjU",
+      "volume": "WMEval-lite-candidates",
+      "path": "lighting_orbit_diagnostics/lingbot_orbit360_20261010_seed42_v2",
+      "nominal_parameters": {
+        "model": "lingbot_world",
+        "seed": 42,
+        "degrees": 360,
+        "control_duration_sec": 10,
+        "sampling_steps": 20
+      },
+      "receipt_sha256": "9038dba5c957c9fb3a87e98a03b7f5d90fe31bc64e8ee60f22071e6d72738e8a",
+      "videos": [
+        {
+          "sha256": "c0bba2b90abb216da53a19f82919c037a29dc8db0eaa56502f7c3538d6d9ec6a",
+          "fps": 16.0,
+          "frames": 161,
+          "width": 624,
+          "height": 624,
+          "duration_sec": 10.0625,
+          "file": "video.mp4"
+        }
+      ],
+      "controls_sha256": {}
+    },
+    {
+      "run_id": "waypoint_probes_20261010_seed42",
+      "modal_app_id": "ap-4riSAffPnMCgpxXX1897fE",
+      "volume": "WMEval-lite-candidates",
+      "path": "lighting_orbit_diagnostics/waypoint_probes_20261010_seed42",
+      "nominal_parameters": {
+        "model": "waypoint15",
+        "seed": 42,
+        "steps": 45,
+        "mode": "probes",
+        "strafe_duty": 1
+      },
+      "receipt_sha256": "9034b06cf855581b862e9b061bc1bc458a28ff7a3d3efe6c81b7dda362710eaa",
+      "videos": [
+        {
+          "sha256": "39721aa397ff2ccb9b767220c3d5fb8c6d0c0ed61fb246b25db43d36f1f2d3e9",
+          "fps": 60.0,
+          "frames": 184,
+          "width": 1280,
+          "height": 720,
+          "duration_sec": 3.066666666666667,
+          "file": "yaw_only.mp4"
+        },
+        {
+          "sha256": "e54f627ab0151752f4a0218966e7101bcaf19e8080fe60e3cfbef51f7761c9a3",
+          "fps": 60.0,
+          "frames": 184,
+          "width": 1280,
+          "height": 720,
+          "duration_sec": 3.066666666666667,
+          "file": "strafe_only.mp4"
+        },
+        {
+          "sha256": "d272ca108c494ea81834849b8005bec3f5c97d9c0d59eaff35ab3a2ca7f73a48",
+          "fps": 60.0,
+          "frames": 184,
+          "width": 1280,
+          "height": 720,
+          "duration_sec": 3.066666666666667,
+          "file": "strafe_yaw.mp4"
+        }
+      ],
+      "controls_sha256": {
+        "strafe_only.controls.json": "006ac6cc328a1c6aadb77d8a73a8bc126156a7832d5e1a288a31488d52ca6bd5",
+        "strafe_yaw.controls.json": "80dfb62f6cce408a3ff8113fd1955138e127284b69e1378f9d2b3f1b0c2bf7f0",
+        "yaw_only.controls.json": "22ed52940c9832acc69986ef7d87c3fd10b6449c7c550aba46b99ccdd7445801"
+      }
+    },
+    {
+      "run_id": "waypoint_workarounds_20261010_seed42",
+      "modal_app_id": "ap-ZQMNhxXQg0ytooaov7TDNB",
+      "volume": "WMEval-lite-candidates",
+      "path": "lighting_orbit_diagnostics/waypoint_workarounds_20261010_seed42",
+      "nominal_parameters": {
+        "model": "waypoint15",
+        "seed": 42,
+        "steps": 150,
+        "mode": "compare_fallbacks",
+        "mouse_x": -0.6,
+        "strafe_duty": 0.1
+      },
+      "receipt_sha256": "e2c7a38a90b511c7f68dd36111e5be22b449ff57d7fc119b2acaffeb4979d618",
+      "videos": [
+        {
+          "sha256": "e3c82ad0f20edffa61b398dd2340bbbb476b5acde35a295d414ec0dcf0642d37",
+          "fps": 60.0,
+          "frames": 604,
+          "width": 1280,
+          "height": 720,
+          "duration_sec": 10.066666666666666,
+          "file": "combined_duty.mp4"
+        },
+        {
+          "sha256": "12f8bb981a5e0e99e3a356b44dff67c15a0c541add350eb7fe4b6bea0972ab82",
+          "fps": 60.0,
+          "frames": 604,
+          "width": 1280,
+          "height": 720,
+          "duration_sec": 10.066666666666666,
+          "file": "yaw_sweep.mp4"
+        }
+      ],
+      "controls_sha256": {
+        "combined_duty.controls.json": "7bdbee4c88927c4d1f82474a25bb0907c221cac9ac67c452a7043f03cecbecdb",
+        "yaw_sweep.controls.json": "425178089b4d7da545c4e6d40bb907a50a724ef87c5342c0adefe13f0f0557c4"
+      }
+    },
+    {
+      "run_id": "waypoint_yaw_sweep_small_20261010_seed42",
+      "modal_app_id": "ap-f1JrhpO5xwg6yVCZFuetU2",
+      "volume": "WMEval-lite-candidates",
+      "path": "lighting_orbit_diagnostics/waypoint_yaw_sweep_small_20261010_seed42",
+      "nominal_parameters": {
+        "model": "waypoint15",
+        "seed": 42,
+        "steps": 150,
+        "mode": "yaw_sweep",
+        "mouse_x": -0.3
+      },
+      "receipt_sha256": "7a4333d514ed5cbd739f4e1cd2d774f60f9dba3f8b53ba23b2b68b1c10961dbb",
+      "videos": [
+        {
+          "sha256": "efd9ecf0e52f9713f24603ad064b71c033a5ee97b50c48a675b742a963e697a3",
+          "fps": 60.0,
+          "frames": 604,
+          "width": 1280,
+          "height": 720,
+          "duration_sec": 10.066666666666666,
+          "file": "yaw_sweep.mp4"
+        }
+      ],
+      "controls_sha256": {
+        "yaw_sweep.controls.json": "feb4fcdba66b1cd0eeb6ad28482324c43168a2793746cb0b9f703fb57c78b6c4"
+      }
+    }
+  ]
+}

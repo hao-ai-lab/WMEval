@@ -1,0 +1,22 @@
+{
+  "action_npy": "liquid_container_fluid_step_hold.action.npy",
+  "action_npy_sha256": "074658c14a95ec2d607c8f0fb826a90c526774d348a18d352a2a3154d15c80b4",
+  "action_npz": "liquid_container_fluid_step_hold.action.npz",
+  "action_npz_sha256": "190bb04d5c42a9a56fbc5c018c3b34ed71da5d6370b3c42dc086bc5fdfafe021",
+  "actions_txt": "liquid_container_fluid_step_hold.actions.txt",
+  "actions_txt_sha256": "974da2b5645d92af5d5b0d067ed4decf814d46facb6447ed0b8c4cf559ee56b4",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "forward",
+    "right",
+    "up"
+  ],
+  "project_genie_actions": "liquid_container_fluid_step_hold.actions.jsonl",
+  "project_genie_actions_sha256": "5d9b8f99d7afc71cba8a3ee5e06c3a547cf0ffaa1cc689831bc0c0c9998a2c5f",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "d98b58bcb5b92e2fab0296c575cb33cb03eec20f486bd3bb56c98f3cd9e5c80b",
+  "source": "../trajectories/liquid_container_fluid_step_hold.yaml",
+  "step_count": 240,
+  "trajectory_id": "wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1"
+}

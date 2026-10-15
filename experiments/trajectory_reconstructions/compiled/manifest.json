@@ -1,5 +1,5 @@
 {
-  "case_count": 2,
+  "case_count": 9,
   "cases": [
     {
       "case_id": "ChessBoard/walk_third",
@@ -53,6 +53,192 @@
       },
       "provenance": "exact_locked_browser_schedule_with_semantic_native_channel",
       "trajectory": "trajectories/sun_rises_and_sets_lighting.yaml"
+    },
+    {
+      "case_id": "BeamDomino/causal",
+      "compiled": {
+        "action_npy": "beam_domino_causal.action.npy",
+        "action_npy_sha256": "1734f93e7c3a38d5f8755f70a9ea2dc79522b001a2047adb514bc982bb7e855c",
+        "action_npz": "beam_domino_causal.action.npz",
+        "action_npz_sha256": "01f0334c84928a9ee6b146f3f051e5922b41ab2e934e7994db77cbfc41bbae2b",
+        "actions_txt": "beam_domino_causal.actions.txt",
+        "actions_txt_sha256": "82e5333580576cb144952776621f3fdfbcae7292e99f62533b8d73fb855911a8",
+        "alignment_status": "exact",
+        "channel_names": [
+          "z_force",
+          "x_force"
+        ],
+        "project_genie_actions": "beam_domino_causal.actions.jsonl",
+        "project_genie_actions_sha256": "a30450bee5067b6649e56eb85d4e09d19c0caf47beee6e948292e5c6fb5c9e1b",
+        "project_genie_status": "nominal",
+        "schema_version": 1,
+        "semantic_sha256": "3aae6bbd53cdcd68e3a9ec00337da2e190e2499472593a668eaf6b75839957d6",
+        "source": "../trajectories/beam_domino_causal.yaml",
+        "step_count": 122,
+        "trajectory_id": "wmeval_lite.beam_domino.causal.ball_force_v1"
+      },
+      "provenance": "exact_deterministic_controller_policy",
+      "trajectory": "trajectories/beam_domino_causal.yaml"
+    },
+    {
+      "case_id": "BeamDomino/causal_glancing",
+      "compiled": {
+        "action_npy": "beam_domino_causal_glancing.action.npy",
+        "action_npy_sha256": "c577db10c093a6b191d3ea6a857025eb5006d82051484af6eef3a47811ce3a89",
+        "action_npz": "beam_domino_causal_glancing.action.npz",
+        "action_npz_sha256": "e5e44f627a42555762fb8f6c3f8bbb7de03df7ad6fd0f651a9c479305a0b515b",
+        "actions_txt": "beam_domino_causal_glancing.actions.txt",
+        "actions_txt_sha256": "e714d9efefa1707654235ce48472a72a60a888d6d4be7aeeb4e562ab90676a9e",
+        "alignment_status": "exact",
+        "channel_names": [
+          "z_force",
+          "x_force"
+        ],
+        "project_genie_actions": "beam_domino_causal_glancing.actions.jsonl",
+        "project_genie_actions_sha256": "1499e98f4b74fa8e55a20f9c17c3a381b1848a916fcab121f9581e44917964b0",
+        "project_genie_status": "nominal",
+        "schema_version": 1,
+        "semantic_sha256": "af3639775d708f1b24e710bdae83760496f41761b0bcf995c765a301308c6ff5",
+        "source": "../trajectories/beam_domino_causal_glancing.yaml",
+        "step_count": 122,
+        "trajectory_id": "wmeval_lite.beam_domino.causal_glancing.ball_force_v1"
+      },
+      "provenance": "exact_deterministic_controller_policy",
+      "trajectory": "trajectories/beam_domino_causal_glancing.yaml"
+    },
+    {
+      "case_id": "BeamDomino/causal_direct_strike",
+      "compiled": {
+        "action_npy": "beam_domino_causal_direct_strike.action.npy",
+        "action_npy_sha256": "68137d5a1ee53cb394a4307c8661bc78a5c86788bcd2ba84fc3011c8f34e0966",
+        "action_npz": "beam_domino_causal_direct_strike.action.npz",
+        "action_npz_sha256": "5ee841c695de98c508ab6bf6457e5ae8ece96ba3ef12ff78bc3c4be46db15a0f",
+        "actions_txt": "beam_domino_causal_direct_strike.actions.txt",
+        "actions_txt_sha256": "8f6f58fc0f818148df479f12f9e910478e1b401cbcaca3dcf44a237e2dd30ded",
+        "alignment_status": "exact",
+        "channel_names": [
+          "z_force",
+          "x_force"
+        ],
+        "project_genie_actions": "beam_domino_causal_direct_strike.actions.jsonl",
+        "project_genie_actions_sha256": "0e2f240490c5ac4b6c4abe689820a28b2cba37f5a5f152a34a1efd7268a100f5",
+        "project_genie_status": "nominal",
+        "schema_version": 1,
+        "semantic_sha256": "456ce66ff292ba8077a681429903d609b11fa34b8d898b6abdef053012f2008d",
+        "source": "../trajectories/beam_domino_causal_direct_strike.yaml",
+        "step_count": 122,
+        "trajectory_id": "wmeval_lite.beam_domino.causal_direct_strike.ball_force_v1"
+      },
+      "provenance": "exact_deterministic_controller_policy",
+      "trajectory": "trajectories/beam_domino_causal_direct_strike.yaml"
+    },
+    {
+      "case_id": "LiquidContainer/fluid_rest",
+      "compiled": {
+        "action_npy": "liquid_container_fluid_rest.action.npy",
+        "action_npy_sha256": "3738b5c25ddfab208d0a94b8c266d7b5ed90b5238fe9d7d8c42b90e2e575186b",
+        "action_npz": "liquid_container_fluid_rest.action.npz",
+        "action_npz_sha256": "dc45ec4c8c57daacc4a49d9c1bd8ec0c1ea913a711cf274b5c2df95c7a98782c",
+        "actions_txt": "liquid_container_fluid_rest.actions.txt",
+        "actions_txt_sha256": "6d3f601be39b1bfc0cf6ba66c4d4c698bb4ce2cf0d31a3225d8b19777ce57ba0",
+        "alignment_status": "reconstructed",
+        "channel_names": [
+          "forward",
+          "right",
+          "up"
+        ],
+        "project_genie_actions": "liquid_container_fluid_rest.actions.jsonl",
+        "project_genie_actions_sha256": "107f0cc1748fbb27dce989b40689cf2bdef3264fd64566d6ec46669859b29c4b",
+        "project_genie_status": "nominal",
+        "schema_version": 1,
+        "semantic_sha256": "bfcab4fed1774e858685494ca9302e5b201cc52f5cf93e93827627ddc6e5e8e7",
+        "source": "../trajectories/liquid_container_fluid_rest.yaml",
+        "step_count": 240,
+        "trajectory_id": "wmeval_lite.liquid_container.fluid_rest.bottle_motion_v1"
+      },
+      "provenance": "nominal_controller_profile_of_wall_clock_capture",
+      "trajectory": "trajectories/liquid_container_fluid_rest.yaml"
+    },
+    {
+      "case_id": "LiquidContainer/fluid_impulse_decay",
+      "compiled": {
+        "action_npy": "liquid_container_fluid_impulse_decay.action.npy",
+        "action_npy_sha256": "808d7ee7f2b280e7bd88c5a53c631212579774ea842af1e1e9cc24f2ecf675f8",
+        "action_npz": "liquid_container_fluid_impulse_decay.action.npz",
+        "action_npz_sha256": "e4e28a8ca70a26d50eb48e71f0e54de52c8585c09baeded2a0253730be03363a",
+        "actions_txt": "liquid_container_fluid_impulse_decay.actions.txt",
+        "actions_txt_sha256": "3956beacc8b6c6e9f36e1ba1063b4a16c2ded07e50c9b0e48124a4a7f189f59e",
+        "alignment_status": "reconstructed",
+        "channel_names": [
+          "forward",
+          "right",
+          "up"
+        ],
+        "project_genie_actions": "liquid_container_fluid_impulse_decay.actions.jsonl",
+        "project_genie_actions_sha256": "0564a625a0ace13ff03e9bebedf83fcb850cd9fc051c8673b84e2c26161173d4",
+        "project_genie_status": "nominal",
+        "schema_version": 1,
+        "semantic_sha256": "bd1409608bf4c43608ff0e0a7a7d0a63de7b3b1130fe450ed17d8b8cc59b2e02",
+        "source": "../trajectories/liquid_container_fluid_impulse_decay.yaml",
+        "step_count": 240,
+        "trajectory_id": "wmeval_lite.liquid_container.fluid_impulse_decay.bottle_motion_v1"
+      },
+      "provenance": "nominal_controller_profile_of_wall_clock_capture",
+      "trajectory": "trajectories/liquid_container_fluid_impulse_decay.yaml"
+    },
+    {
+      "case_id": "LiquidContainer/fluid_chirp_strafe",
+      "compiled": {
+        "action_npy": "liquid_container_fluid_chirp_strafe.action.npy",
+        "action_npy_sha256": "51049947bc93ab45e28705538a2c7610bf93798eb7e5a29740838fea026ebd6a",
+        "action_npz": "liquid_container_fluid_chirp_strafe.action.npz",
+        "action_npz_sha256": "00bb639a89de3ef8d1b8dedde313046f86264984b2261c979b957eafceb474a8",
+        "actions_txt": "liquid_container_fluid_chirp_strafe.actions.txt",
+        "actions_txt_sha256": "67029dd4f327c4a6cf315717cd093b401866115ca6b1ce5c5580ac05a2865c2e",
+        "alignment_status": "reconstructed",
+        "channel_names": [
+          "forward",
+          "right",
+          "up"
+        ],
+        "project_genie_actions": "liquid_container_fluid_chirp_strafe.actions.jsonl",
+        "project_genie_actions_sha256": "bace15fe7dfbf97640dbd09b2b74978337d8f57b4c2fce1fd2b1c7029c600be5",
+        "project_genie_status": "nominal",
+        "schema_version": 1,
+        "semantic_sha256": "f10f581a1be3c8572c00af8c553d377ecd384c0a1de74680d2fc057369f457d5",
+        "source": "../trajectories/liquid_container_fluid_chirp_strafe.yaml",
+        "step_count": 240,
+        "trajectory_id": "wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1"
+      },
+      "provenance": "nominal_controller_profile_of_wall_clock_capture",
+      "trajectory": "trajectories/liquid_container_fluid_chirp_strafe.yaml"
+    },
+    {
+      "case_id": "LiquidContainer/fluid_step_hold",
+      "compiled": {
+        "action_npy": "liquid_container_fluid_step_hold.action.npy",
+        "action_npy_sha256": "074658c14a95ec2d607c8f0fb826a90c526774d348a18d352a2a3154d15c80b4",
+        "action_npz": "liquid_container_fluid_step_hold.action.npz",
+        "action_npz_sha256": "190bb04d5c42a9a56fbc5c018c3b34ed71da5d6370b3c42dc086bc5fdfafe021",
+        "actions_txt": "liquid_container_fluid_step_hold.actions.txt",
+        "actions_txt_sha256": "974da2b5645d92af5d5b0d067ed4decf814d46facb6447ed0b8c4cf559ee56b4",
+        "alignment_status": "reconstructed",
+        "channel_names": [
+          "forward",
+          "right",
+          "up"
+        ],
+        "project_genie_actions": "liquid_container_fluid_step_hold.actions.jsonl",
+        "project_genie_actions_sha256": "5d9b8f99d7afc71cba8a3ee5e06c3a547cf0ffaa1cc689831bc0c0c9998a2c5f",
+        "project_genie_status": "nominal",
+        "schema_version": 1,
+        "semantic_sha256": "d98b58bcb5b92e2fab0296c575cb33cb03eec20f486bd3bb56c98f3cd9e5c80b",
+        "source": "../trajectories/liquid_container_fluid_step_hold.yaml",
+        "step_count": 240,
+        "trajectory_id": "wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1"
+      },
+      "provenance": "nominal_controller_profile_of_wall_clock_capture",
+      "trajectory": "trajectories/liquid_container_fluid_step_hold.yaml"
     }
   ],
   "schema_version": 1,

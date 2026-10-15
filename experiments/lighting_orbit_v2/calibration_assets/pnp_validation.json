@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "method": "Known Unity orbit, fixed seed mesh, forward/backward LK plus PnP; no known poses supplied to estimator",
+  "analyzer_sha256": "f2ef7495e52f5d5c6dcd1cfd796172b8fb7e5b4d90933a42ef8491e68c1b0b48",
+  "reference_video_sha256": "a8766eb32e271df40be6d6ddab9103304f54c71e9464b27abee3891c33370015",
+  "reference_poses_sha256": "b7ca2b4c561cae5617a6b3ce91ebf645a3eaacf831122b3a4f7502b43cf3d33d",
+  "valid_frames": 12,
+  "last_valid_time_sec": 0.9166666666666666,
+  "median_camera_position_error_m": 0.00522337636510966,
+  "max_camera_position_error_m": 0.030165327183157616,
+  "scope": "Early visible mesh subset validates metric scale. Newly occluded surfaces are not reacquired; later pose fits remain unresolved."
+}

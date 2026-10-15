@@ -358,6 +358,7 @@ def _metric_names(rows: Sequence[Mapping[str, Any]]) -> list[str]:
 
 def _two_level_stats(
     completed_rows: Sequence[Mapping[str, Any]],
+    required_repeats: Mapping[str, int] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Two-level statistics: seeds within a case, then cases within the dimension.
 
@@ -376,13 +377,16 @@ def _two_level_stats(
     for metric_name in _metric_names(completed_rows):
         case_means: dict[str, float] = {}
         seed_std_by_case: dict[str, float | None] = {}
+        valid_repeats_by_case: dict[str, int] = {}
         for case_id in sorted(by_case):
             values = [
                 value
                 for row in by_case[case_id]
                 if (value := _numeric(_get(row, "metrics", metric_name))) is not None
             ]
-            if not values:
+            valid_repeats_by_case[case_id] = len(values)
+            required = (required_repeats or {}).get(case_id)
+            if not values or (required is not None and len(values) != required):
                 continue
             case_means[case_id] = sum(values) / len(values)
             seed_std_by_case[case_id] = _sample_std(values)
@@ -396,6 +400,10 @@ def _two_level_stats(
             "case_means": case_means,
             "seed_std_by_case": seed_std_by_case,
         }
+        if required_repeats:
+            stats[metric_name]['valid_repeats_by_case'] = valid_repeats_by_case
+            if any(valid_repeats_by_case.get(case_id,0) != count for case_id,count in required_repeats.items()):
+                stats[metric_name]['mean'] = None
     return stats
 
 
@@ -417,7 +425,15 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
             unsupported = [
                 row for row in dimension_rows if row.get("status") == "unsupported"
             ]
-            stats = _two_level_stats(done)
+            required_repeats = {str(row['case_id']): int(row['required_repeats'])
+                                for row in dimension_rows if row.get('required_repeats')}
+            coverage = {case_id: {'required': count,
+                         'completed': len({str(row['seed']) for row in done if row['case_id']==case_id})}
+                        for case_id,count in required_repeats.items()}
+            stats = _two_level_stats(done, required_repeats=required_repeats)
+            if any(c['completed'] != c['required'] for c in coverage.values()):
+                for payload in stats.values():
+                    payload['mean'] = None
             means = {metric: payload["mean"] for metric, payload in stats.items()}
             headline: dict[str, Any] | None = None
             if dimension.aggregate is not None:
@@ -454,6 +470,10 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                     for row in dimension_rows
                 ],
             }
+            if coverage:
+                dimension_summaries[dimension_id]['repeat_coverage'] = coverage
+                dimension_summaries[dimension_id]['coverage_status'] = (
+                    'complete' if all(c['completed'] == c['required'] for c in coverage.values()) else 'incomplete')
         models[model_name] = {"dimensions": dimension_summaries}
 
     return {

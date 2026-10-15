@@ -17,13 +17,26 @@ action_targets:
   table4.billiard_game.center_ball_shot_v1: {target: table_objects, frame: table_plane}
   controllability.ball_roller.collision_path_v1: {target: ball, frame: ground_plane}
   controllability.mirror_rolling_ball.axis_cycle_v1: {target: ball, frame: ground_plane}
-  controllability.beam_domino.clean_strike_v1: {target: ball, frame: ground_plane}
   table7.camera.perturb_in_v1: {target: camera, frame: camera_yaw}
   table7.camera.perturb_out_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_in_v1: {target: camera, frame: camera_yaw}
   table7.camera.360_out_v1: {target: camera, frame: camera_yaw}
+  # Lite cases outside Tables 4/7 (experiments/trajectory_reconstructions).
+  wmeval_lite.beam_domino.causal.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_glancing.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_direct_strike.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.liquid_container.fluid_rest.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_impulse_decay.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1: {target: liquid_container, frame: container_body}
 
 backends:
+  hy_worldplay:
+    scope: trajectories_only
+    interface: pending_source_audit
+  waypoint:
+    scope: trajectories_only
+    interface: keyboard_mouse
   unity:
     interface: unity_runtime_args
     supports:
@@ -32,6 +45,8 @@ backends:
       cue_ball: reference
       ball: reference
       table_objects: reference
+      rolling_ball: reference
+      liquid_container: reference
 
   project_genie:
     interface: browser_keyboard
@@ -41,6 +56,8 @@ backends:
       ego_vehicle: nominal
       cue_ball: nominal
       ball: nominal
+      rolling_ball: nominal_binary_keys
+      liquid_container: nominal
     unsupported:
       table_objects: The hosted web interface has no placement, cue-angle, strength, spin, or execute controls.
     calibration:
@@ -60,6 +77,8 @@ backends:
       ball: target_entity_validation_required
     unsupported:
       table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keyboard drives the first-person camera/agent; there is no ball-force channel.
+      liquid_container: Keyboard moves the camera, which breaks the fixed side camera the fluid metrics require.
     # Visual degrees per mouse unit per frame. Two independent short-probe
     # seeds at +/-0.3 mouse units gave gains near 10.1. Production-shaped
     # Garden validation reached -332.715 / +353.859 degrees from nominal
@@ -83,6 +102,8 @@ backends:
       cue_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
+      liquid_container: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
     # Response-side gains from clean Garden validation videos. Short
     # perturbations are linear; full turns accumulate a small direction-
     # dependent bias and use their own measured gains.
@@ -103,6 +124,8 @@ backends:
       cue_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
       ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
       table_objects: Base Cam consumes camera extrinsics/intrinsics only.
+      rolling_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot push the ball.
+      liquid_container: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the bottle.
     # Response is nonlinear and horizon-sensitive, so nominal Unity pose paths
     # are frozen without correction. Exact-horizon Garden run0 responses were
     # -17.72 / +41.37 degrees (perturbations) and +54.91 / +277.88 degrees
@@ -119,11 +142,13 @@ backends:
     container_fps: 16.0
     supports:
       ball: nominal
+      rolling_ball: nominal
     unsupported:
       camera: The Act variant is evaluated on object-control scenes; camera cases use lingbot_world_cam.
       ego_vehicle: No Act adapter for vehicle control.
       cue_ball: No Act adapter for cue-ball control.
       table_objects: No object-placement or cue-shot controls.
+      liquid_container: No Act adapter for bottle motion.
 
   # Waypoint-1.5 is a first-person keys + mouse model: W/A/S/D translate and the
   # mouse rotates the ego camera. It has no channel for an object, so asking it
@@ -140,3 +165,56 @@ backends:
       cue_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
       ball: Keys and mouse drive the first-person ego camera; there is no object channel.
       table_objects: Keys and mouse drive the first-person ego camera; there is no object channel.
+      rolling_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      liquid_container: Keys and mouse drive the first-person ego camera; there is no object channel.
+
+# Full translation plus look-at is reviewed independently from Table 7 yaw.
+# Pending means incomplete work, never N/A or a model-quality rejection.
+trajectory_support:
+  lighting.camera.look_at_orbit_v2:
+    target: camera
+    backends:
+      unity:
+        status: supported
+        reason: Deterministic 121-frame capture verifies the complete orbit, fixed sun and static objects against analytic
+          C2W; endpoint and pixel closure evidence are in the case bundle.
+        source_revision: 84a06a422ae0a0d04153596e881c85be8d4ff3f1
+        evidence: eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/unity_qa.json
+      lingbot_world_cam:
+        status: supported
+        reason: Pinned Cam source accepts per-frame C2W and intrinsics; all five formal seeds accepted the 161-pose complete
+          orbit and completed Lite scoring. Generation distortion remains measured model behavior.
+        source_revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
+      matrix_game_2:
+        status: unsupported
+        reason: Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre
+          conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict
+          trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.
+        evidence: experiments/lighting_orbit_v2/results/capability_audit.json
+      matrix_game_3:
+        status: supported
+        reason: The pinned native pose path receives the full analytic C2W orbit with a fixed basis and intrinsics conversion;
+          auxiliary keys use the audited native units. All five formal seeds and Lite scoring completed without response correction.
+        source_revision: 756776d516233027631008761d4d40ddaea3e23a
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
+      waypoint:
+        status: unsupported
+        reason: Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre
+          conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict
+          trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.
+        source_revision: b3f1e725b222679a517632918cc78bba0c9fa433
+        evidence: experiments/lighting_orbit_v2/results/capability_audit.json
+      hy_worldplay:
+        status: supported
+        reason: Pinned native pose_to_input consumed 64 analytic C2W poses and K for 253 frames at 24 fps; all five formal
+          seeds and Lite scoring completed. Full action state loaded strictly, native four-step AR/torch_causal attention
+          and BF16 retained, endpoint held after 10 seconds.
+        source_revision: 1588e1336e842b03b0a7860c654ebd7c46bb065e
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
+      project_genie:
+        status: unsupported
+        reason: Pinned hosted UI exposes wall-clock keys, not native-frame actions or a metric camera/target path. Five identical
+          input replays span 8.9583-10.1667 native seconds, and visible clocks include waiting. Strict frame-indexed metric
+          look-at orbit is N/A; all diagnostic exports/scores remain retained. Generated appearance is not an exclusion criterion.
+        evidence: experiments/lighting_orbit_v2/results/capability_audit.json

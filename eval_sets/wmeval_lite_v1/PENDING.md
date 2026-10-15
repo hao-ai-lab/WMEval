@@ -16,8 +16,10 @@ must be declared, never hidden.
   `<Scene>/kinematics_<view>` for Table 4) carrying their conditioning frame,
   compiled action trajectory and Unity ground truth (`tools/build_table_lite_cases.py`);
   a camera trajectory is just an action trajectory whose target is `camera`.
-  Causality (ball strike), fluid (bottle motion) and lighting (per-model orbit
-  file) still lack a standardized, target-aware action.
+  Causality (target `rolling_ball`) and fluid (target `liquid_container`) carry the
+  same `trajectory.yaml` / `action.npz` / `actions.jsonl` / `table_cell.json`, sourced
+  from `experiments/trajectory_reconstructions/`. Lighting (per-model orbit file)
+  still lacks a standardized, target-aware action.
 - **Frozen references.** LPIPS re-judges Unity contact events per candidate;
   prompt consistency does not store the Unity reference scores and judges with a
   mutable hosted model. Causality's reference answers are already frozen.
@@ -185,7 +187,7 @@ files: `cases/<Scene>/<variant>/reference/artifacts/` (`trajectory.yaml`, `actio
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
 | BallRoller/ctrl | ✅ `controllability.ball_roller.collision_path_v1`, target `ball` | ✅ video; flow computed at eval time | `none` (kept, see below) |
-| BeamDomino/causal | ✅ `controllability.beam_domino.clean_strike_v1`, target `ball` (shared with §5) | ✅ video (726-frame, replaced in #32) | `beamdomino_native` (identity) |
+| BeamDomino/causal | ✅ `wmeval_lite.beam_domino.causal.ball_force_v1`, target `rolling_ball` (the §5 trajectory, exact to `action.npy`) | ✅ video (726-frame, replaced in #32) | `beamdomino_native` (identity) |
 | MirrorRollingBall/lpips_collision | ✅ `controllability.mirror_rolling_ball.axis_cycle_v1`, target `ball` | ✅ video | `none` |
 
 | Model | In paper | Status |
@@ -200,8 +202,10 @@ files: `cases/<Scene>/<variant>/reference/artifacts/` (`trajectory.yaml`, `actio
   recorded reason and empty metrics; aggregates carry `num_unsupported`, the CSV prints
   `unsupported`.
 - [x] **BeamDomino adapter or explicit `unsupported`** per backend in `action_backends.yaml`
-  (new `ball` target classified for every backend). Evidence: `2220da2`. The BeamDomino
-  trajectory equals the case's `action.npy` on all 121 shared steps; §5 can reuse it.
+  (new `ball` target classified for every backend). Evidence: `2220da2`. BeamDomino/causal
+  uses the §5 trajectory (`ball_force_v1`, target `rolling_ball`, 122 steps, bit-for-bit
+  equal to `action.npy`) rather than a second controllability copy; LingBot (Act) supports
+  `rolling_ball`, Waypoint-1.5 reports it `unsupported`.
 - [x] **Bake the reference flow** (decided against) / **vendor PTLFlow** (done). RAFT's checkpoint is now
   pinned (explicit weights enum + SHA-256 in `evaluator_assets.lock.json`, tested). Still open:
   - [x] Synthetic RAFT (Table 3 "Mean Flow Cosine" / "Pixel EPE"): `synthetic_flow.py` and
@@ -285,15 +289,19 @@ resamples to 832×464 @ 16 fps). Key files: `cases/LiquidContainer/*/reference/a
 
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
-| all 4 | ⚠️ bottle motion; no key/browser adapter | ✅ masks + pooled flow baked | ✅ resampled |
+| all 4 | ✅ `liquid_container` trajectory (nominal 12 Hz profile, `reconstructed`) + Genie key program | ✅ masks + pooled flow baked | ✅ resampled |
 
 | Model | In paper | Status |
 | --- | --- | --- |
-| Project Genie, LingBot-World, Matrix-Game 2.0, Matrix-Game 3.0, HY-WorldPlay | ✅ | ❌ no bottle adapter in this branch; paper rollouts produced elsewhere |
+| Project Genie | ✅ | ⚠️ supported (`nominal` keys); paper rollouts produced elsewhere, rerun with `actions.jsonl` |
+| LingBot-World, Matrix-Game 2.0, Matrix-Game 3.0 | ✅ | ❌ `unsupported` → excluded (incompatible interface, per the experiment setup); drop the prompt-driven paper rows |
+| HY-WorldPlay | ✅ | ❌ not registered in `action_backends.yaml` |
 | Waypoint-1.5 | — | not run |
 
-- [ ] **Define the bottle action target** (`bottle`, m/s², world frame) in `actions.json`
-  and each backend's support in `action_backends.yaml`.
+- [x] **Define the bottle action target**: `liquid_container`, normalized
+  forward/right/up in the container frame, sampled from
+  `bottle_controller_genie_profiles.py`; backend support in `action_backends.yaml`.
+  The capture itself stepped on wall-clock (~10 Hz); the legacy `action.npy` keeps that record.
 - [ ] **Recover or regenerate the 5 paper models' rollouts** with action receipts.
 - [ ] **Pin SAM 2 and RAFT checkpoints**; keep the per-profile multi-axis panel canonical.
 
@@ -310,42 +318,78 @@ BeamDomino causal / causal_glancing / causal_direct_strike
 
 | Case | Actions | Reference | Normalization |
 | --- | --- | --- | --- |
-| all 3 | ⚠️ 2-channel ball force; no key/browser program | ✅ frozen QA + `judge_answers.json` (5 passes) | ❌ identity (`beamdomino_native`) |
+| all 3 | ✅ `rolling_ball` trajectory, `exact` (compiles bit-for-bit to the legacy `action.npy`) + Genie key program | ✅ frozen QA + `judge_answers.json` (5 passes) | ❌ identity (`beamdomino_native`) |
 
 | Model | In paper | Status |
 | --- | --- | --- |
-| Project Genie | ✅ | ⚠️ force action not expressible from this branch |
-| LingBot-World (Cam) | ✅ | ⚠️ camera-only interface cannot strike the ball — confirm the executed condition |
+| Project Genie | ✅ | ⚠️ supported via binary keys: `glancing` 0.4 lateral and `direct_strike` 0.6 forward are held as full presses |
+| LingBot-World (Cam) | ✅ | ❌ `unsupported` → excluded (incompatible interface, per the experiment setup); drop the prompt-driven paper row |
 | Waypoint-1.5 | — | not run |
 
-- [ ] **Define the strike action** (target `ball`, force units) and backend support.
-- [ ] **Audit the LingBot (Cam) paper row** and label it if it used a different protocol.
+- [x] **Define the strike action**: target `rolling_ball`, normalized z/x force on the
+  floor plane, from `controller.py` `TRAJECTORIES`; backend support in `action_backends.yaml`.
+- [x] **Audit the LingBot (Cam) paper row**: it was prompt-driven (static camera, no ball
+  action). Decision: exclude it, like Matrix-Game, as an incompatible interface.
+- [ ] **Remove the excluded rows from the paper**: LingBot (Cam) from the causality table
+  and text; LingBot / Matrix-Game 2.0 / 3.0 from the fluid table and text.
 - [ ] **Keep `causal_step_judge_repeats: 5`** and record every candidate judge pass;
   re-baseline the frozen reference answers when the judge or prompt changes.
+  Five judge passes over one rollout is a different estimator from the paper's
+  five rollouts: it makes fractional CSR expressible but does not reproduce
+  Table 12. gpt-5.4 sends no temperature, so passes are sampled.
+- [x] **Refuse mismatched recordings.** `causal_step` now rejects a
+  `judge_answers.json` recorded with a different judge model, frame count or
+  prompt version (fef83e8).
+- [x] **Repair the four reference-side descriptive misses** (`direct_strike` seg1
+  stale distractor; `causal` seg2; `glancing` seg1 and seg2), checked against the
+  Unity logs and the judge's K=8 frames. Re-recorded and re-locked: `csr_unity`
+  80/20/0 → 100/80/100 (Table 12: 100/60/100); only `glancing` seg1 is below 5/5
+  (4/5). The Lite QA now differs from the paper's; see the suite.yaml banner (e4e1c9f).
 
 ## 6. Lighting & shading — `lighting_shading`
 
-**Owner:** _TBD_ · **Paper:** SunRisesAndSets table · **Lite cases:**
-SunRisesAndSets/lighting (first person, fixed sun, walking orbit; reference-free)
+**Owner:** Forrest Dai · **Active case:** SunRisesAndSets/lighting_orbit_v2.
 
-**Run it for a new model:** the single path with `--dimensions lighting_shading`. Key files:
-`cases/SunRisesAndSets/lighting/reference/` (`ref.png`, `actions.txt`,
-`actions_per_model.json`), `evaluation/modules/shadow_consistency.py`,
-`tools/analytic_lighting_floor.py`.
+The case ships a complete ten-second, two-metre camera orbit, explicit tabletop
+look-at target and fixed sun, with trajectory.yaml, action.npz, actions.jsonl,
+table_cell.json and verified Unity poses/closure. Native videos are timestamp
+sampled into exactly 120 frames at 12fps without padding or retiming.
 
-| Case | Actions | Reference | Normalization |
-| --- | --- | --- | --- |
-| SunRisesAndSets/lighting | ⚠️ per-model file; orbit reconstructed | — reference-free (analytic floor) | ❌ none (jitter is per frame) |
+LingBot, Matrix-Game3 and HY-WorldPlay are supported and each ships five first
+valid native rollouts (42,1,2,3,4), original generation receipts and relative
+candidate paths in baselines/lighting_orbit_v2. MG2/Waypoint lack a documented
+metric input conversion; Genie's hosted UI lacks native-frame action submission.
+These interfaces are explicitly N/A for the strict protocol, with source/timing
+evidence in experiments/lighting_orbit_v2/results/capability_audit.json.
+Generated appearance is not a support criterion. Five executed Genie exports
+and scores remain diagnostic and never enter the formal five-seed aggregate.
 
-| Model | In paper | Status |
-| --- | --- | --- |
-| Project Genie, LingBot-World, Matrix-Game 3.0, HY-WorldPlay, Waypoint-1.5 | ✅ | ✅ reproduces the paper (rollouts on a Modal volume) |
-| Matrix-Game 2.0 | ✅ | ⚠️ reproduces the paper except Scene Retention |
+2026-10-11 acceptance: on the pinned RTX PRO 6000/CUDA12.8 environment, all 15
+candidates recomputed through run_wmeval_lite.py, all 90 metric values exactly
+matched the original scores at 1e-6, and actual --resume preserved row hashes.
+Two independent LingBot/42 scores also matched the original. Correcting a stale
+derived lock stamp changed no evaluator input or score; the corrected stamp also
+passed actual resume. Reports: experiments/lighting_orbit_v2/results/same_gpu_verification/.
+The separate PRO 4500 audit records 21/90 small numerical differences and remains
+visible; exact cross-GPU equality is not claimed. Use the pinned hardware for
+strict fresh verification, or the bundled cached scores for portable exact replay.
 
-- [ ] **One semantic orbit trajectory** compiled per backend, replacing `actions_per_model.json`.
-- [ ] **Normalize fps** (or report jitter per second).
-- [ ] **Bundle or pin the six rollouts** in the HF baseline set.
-- [ ] After release (optional): `ChessBoard/lighting`, moving-sun `lighting_sunsweep`.
+The portable archive contains the full case, fifteen videos, public scorer,
+relative candidate manifest, immutable asset/source/dependency locks and explicit
+fifteen expected jobs plus three N/A entries. Its builder runs from the public
+release_sources.json with no private scratch directory or old Pod. The source
+fingerprint and cached input hashes invalidate changed cases/videos/parameters.
+
+Historical SunRisesAndSets/lighting and its 30 native-paper results remain
+separate. Run the old case with --suite eval_sets/wmeval_lite_v1/lighting_paper_native;
+baselines/lighting_paper_native.json retains native metadata and all 180 metric
+values. Hosted historical Genie runs have no recorded numeric generation seeds.
+HF publication remains a separate action, not a release acceptance blocker here.
+
+- [x] **Standardized action:** one semantic metric look-at trajectory with explicit camera target; native pose compilers and audited N/A interfaces.
+- [x] **Common fps:** exactly ten native seconds / 120 timestamp-sampled frames at 12fps; no padded or retimed video.
+- [x] **Five-seed reproduction:**15/15 supported runs,90/90 strict pinned-GPU metrics, unchanged actual resume, portable data/scorer archive and source/asset/version pins.
+- [ ] Optional after release: ChessBoard/lighting and a separately defined moving-sun lighting_sunsweep case.
 
 ## 7. Prompt-scene consistency — `prompt_scene_consistency`
 

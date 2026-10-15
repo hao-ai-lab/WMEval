@@ -1,35 +1,32 @@
 schema_version: 1
-trajectory_id: controllability.beam_domino.clean_strike_v1
+trajectory_id: wmeval_lite.beam_domino.causal.ball_force_v1
 description: >-
-  Force-input control of the blue ball: a brief pause, then a straight forward
-  roll into the nearest front-right pillar, then no steering while the structure
-  collapses. Also the commanded action of BeamDomino/causal for physical
-  causality. Spans the 12.1 s Unity reference.
-duration_sec: 12.1
+  Straight forward (W) from 2.0 s to 7.0 s into the nearest pillar; full four-
+  stage chain. Sampled from the deterministic policy TRAJECTORIES['clean'] in
+  WorldModelBenchScenePrivate/GameScenes/BeamDomino/controller.py, which is a pure
+  function of simulation time and drove the Unity ML-Agents reference capture at
+  DECISIONS_PER_SECOND = 10. The 122 compiled steps equal the bundle's legacy
+  action.npy bit-for-bit.
+duration_sec: 12.2
 control_hz: 10
 channels:
-  horizontal: {kind: continuous, min: -1.0, max: 1.0, unit: normalized_force_input}
-  vertical: {kind: continuous, min: -1.0, max: 1.0, unit: normalized_force_input}
+  z_force: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
+  x_force: {kind: continuous, min: -1.0, max: 1.0, unit: normalized}
 segments:
-  - {start_sec: 0.0, end_sec: 2.0, values: {horizontal: 0.0, vertical: 0.0}}
-  - {start_sec: 2.0, end_sec: 7.0, values: {horizontal: 0.0, vertical: 1.0}}
-  - {start_sec: 7.0, end_sec: 12.1, values: {horizontal: 0.0, vertical: 0.0}}
+  - {start_sec: 0.0, end_sec: 2.0, values: {z_force: 0.0, x_force: 0.0}}
+  - {start_sec: 2.0, end_sec: 7.0, values: {z_force: 1.0, x_force: 0.0}}
+  - {start_sec: 7.0, end_sec: 12.2, values: {z_force: 0.0, x_force: 0.0}}
 paper_alignment:
-  status: reconstructed
-  matched: [scene, third_person_view, controlled_ball_motion, five_generations, metrics]
-  missing: The paper does not publish its numeric action timeline.
-  source: cases/BeamDomino/causal/reference/artifacts/actions.txt
-  repository_context: >-
-    Reproduces the deterministic 'clean' policy that drove the Unity capture
-    (10 Hz decisions over 12.1 s): vertical is the z force (W/S) and horizontal
-    the x force (D/A) of the same BallAgent-style two-axis force schema used by
-    the other ball-control trajectories. The case's action.npy holds the same
-    timeline as (z_force, x_force) rows.
+  status: exact
+  matched: [reference_capture_duration, control_rate, ball_force_vectors, segment_timing]
+  missing: none
+  source: ../../../eval_sets/wmeval_lite_v1/cases/BeamDomino/causal/reference/artifacts/actions.txt
 adapters:
-  unity: {status: ready, control_mode: ball_agent, channels: [horizontal, vertical]}
+  unity:
+    status: exact
+    channels: [z_force, x_force]
   project_genie:
     status: nominal
-    note: The W/A/S/D mapping is browser-expressible; the generated world's key-to-force gain is not calibrated.
     key_rules:
-      - {channel: horizontal, threshold: 0.25, positive_key: KeyD, negative_key: KeyA}
-      - {channel: vertical, threshold: 0.25, positive_key: KeyW, negative_key: KeyS}
+      - {channel: z_force, threshold: 0.25, positive_key: KeyW, negative_key: KeyS}
+      - {channel: x_force, threshold: 0.25, positive_key: KeyD, negative_key: KeyA}

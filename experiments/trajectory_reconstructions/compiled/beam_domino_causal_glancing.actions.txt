@@ -1,0 +1,12 @@
+# wmeval_lite.beam_domino.causal_glancing.ball_force_v1 -- generated action trajectory.
+# Provenance: beam_domino_causal_glancing.yaml (semantic SHA-256: af3639775d708f1b24e710bdae83760496f41761b0bcf995c765a301308c6ff5)
+# Alignment: exact; 122 steps; channels: z_force, x_force
+# start_s end_s z_force x_force
+0.0 2.0 0.0 0.0
+2.0 7.0 1.0 -0.4
+7.0 12.2 0.0 0.0
+
+# Project Genie browser actions:
+{"ms": 2000, "op": "wait"}
+{"keys": ["KeyA", "KeyW"], "ms": 5000, "op": "hold"}
+{"ms": 5200, "op": "wait"}

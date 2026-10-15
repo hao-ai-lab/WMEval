@@ -27,6 +27,12 @@ class RecordedAnswersError(ValueError):
     """Raised when a recording is malformed or does not cover a request."""
 
 
+# Settings the dimension pins and that change what the judge answers. The
+# temperature is left out: it is not configurable from the suite, and for the
+# gpt-5 family none is sent at all.
+PINNED_JUDGE_FIELDS: Tuple[str, ...] = ("model", "num_frame_samples", "prompt_version")
+
+
 _AnswerKey = Tuple[int, str]
 
 
@@ -167,6 +173,30 @@ def write_recorded_answers(
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2) + "\n")
+
+
+def check_recording_matches_judge(
+    recorded: RecordedAnswers, live_settings: Mapping[str, Any]
+) -> None:
+    """Refuse to pair a recording with a live judge configured differently.
+
+    The reference side replays the recording while the candidate side runs the
+    live judge, so any pinned setting that differs (model, frame count, prompt)
+    makes the two sides answer under different protocols and the delta
+    measures the config change instead of the world model.
+    """
+    mismatched = [
+        f"{name}: recorded {recorded.judge_settings.get(name)!r}, "
+        f"live {live_settings.get(name)!r}"
+        for name in PINNED_JUDGE_FIELDS
+        if recorded.judge_settings.get(name) != live_settings.get(name)
+    ]
+    if mismatched:
+        raise RecordedAnswersError(
+            f"the recording for {recorded.video_id!r} was made with a different "
+            f"judge configuration ({'; '.join(mismatched)}). Re-record it with "
+            "tools/record_causal_reference_answers.py, or restore the settings."
+        )
 
 
 class RecordedJudge:

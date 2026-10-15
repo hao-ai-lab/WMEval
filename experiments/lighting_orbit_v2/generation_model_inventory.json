@@ -1,0 +1,253 @@
+[
+  {
+    "repo_id": "robbyant/lingbot-world-base-cam",
+    "revision": "6fc824ffc338d64c97c77e2eb8c0f4cfc24d82bd",
+    "gated": false,
+    "total_repo_bytes": 160251925404,
+    "files": [
+      {
+        "path": ".gitattributes",
+        "bytes": 1803,
+        "sha256": null
+      },
+      {
+        "path": "README.md",
+        "bytes": 7841,
+        "sha256": null
+      },
+      {
+        "path": "Wan2.1_VAE.pth",
+        "bytes": 507609880,
+        "sha256": "38071ab59bd94681c686fa51d75a1968f64e470262043be31f7a094e442fd981"
+      },
+      {
+        "path": "assets/teaser.png",
+        "bytes": 5445854,
+        "sha256": "5a5534584d6b2c42ce445930787b6a6784cf9c2d6ed4d1a78c7be3d8e15bed73"
+      },
+      {
+        "path": "configuration.json",
+        "bytes": 47,
+        "sha256": null
+      },
+      {
+        "path": "examples/i2v_input.JPG",
+        "bytes": 250628,
+        "sha256": "077e3d965090c9028c69c00931675f42e1acc815c6eb450ab291b3b72d211a8e"
+      },
+      {
+        "path": "google/umt5-xxl/special_tokens_map.json",
+        "bytes": 6623,
+        "sha256": null
+      },
+      {
+        "path": "google/umt5-xxl/spiece.model",
+        "bytes": 4548313,
+        "sha256": "e3909a67b780650b35cf529ac782ad2b6b26e6d1f849d3fbb6a872905f452458"
+      },
+      {
+        "path": "google/umt5-xxl/tokenizer.json",
+        "bytes": 16837417,
+        "sha256": "6e197b4d3dbd71da14b4eb255f4fa91c9c1f2068b20a2de2472967ca3d22602b"
+      },
+      {
+        "path": "google/umt5-xxl/tokenizer_config.json",
+        "bytes": 61728,
+        "sha256": null
+      },
+      {
+        "path": "high_noise_model/config.json",
+        "bytes": 250,
+        "sha256": null
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00001-of-00008.safetensors",
+        "bytes": 9312046483,
+        "sha256": "0744de948bd3e6e342a0026597a65a29f5ea048cdb3ae855175ba4fd303b3166"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00002-of-00008.safetensors",
+        "bytes": 9691794835,
+        "sha256": "9033d64a17636425f00c4d53cac65b43826748b0622f6623b47d5177d5e73d60"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00003-of-00008.safetensors",
+        "bytes": 9335244395,
+        "sha256": "a292079cbe56414abf0153b2f91ef6609536d3ee6366d81164cc1fc1a10632f4"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00004-of-00008.safetensors",
+        "bytes": 9335346804,
+        "sha256": "ae1204d744564210813f859d2b7908c836f8ec9e81ccb26a3017f71f5ae3885b"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00005-of-00008.safetensors",
+        "bytes": 9440081514,
+        "sha256": "c14ab8ce8b38a6e126b042d1b46a57fe6a59240d521dfb9a998240223a975ec0"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00006-of-00008.safetensors",
+        "bytes": 9230407270,
+        "sha256": "04fde20fbbedc6d7dd22ac47b681934060b0979fbe4d65f855a58006a0c9af5a"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00007-of-00008.safetensors",
+        "bytes": 9440081531,
+        "sha256": "4a4787f4adb6b059971fb951605755b5c7fe68fba3ee1a0f09259063ebf0baa8"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model-00008-of-00008.safetensors",
+        "bytes": 8392486660,
+        "sha256": "b0ad49c6f74d03136d8075efb260178ecc765a03cffbae0bde6a3e24b81e772b"
+      },
+      {
+        "path": "high_noise_model/diffusion_pytorch_model.safetensors.index.json",
+        "bytes": 127684,
+        "sha256": null
+      },
+      {
+        "path": "low_noise_model/config.json",
+        "bytes": 250,
+        "sha256": null
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00001-of-00008.safetensors",
+        "bytes": 9312046483,
+        "sha256": "24efbd628da83f0de8ca67341040b8bf0f99701608833a76c81cbdc20cb70112"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00002-of-00008.safetensors",
+        "bytes": 9691794835,
+        "sha256": "64bf51f90cef333885761d342c3bd72c9ac230b78178206b35333e9adc2f90f1"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00003-of-00008.safetensors",
+        "bytes": 9335244395,
+        "sha256": "8e16ec321bfcf3e46bed7a6bc8b2fbfc266f5eef730c8405fc906c66a98b1beb"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00004-of-00008.safetensors",
+        "bytes": 9335346804,
+        "sha256": "8352c8ab975f05d2abfb5c9d543446556f2d123641141d55a6f93b8deb2beb02"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00005-of-00008.safetensors",
+        "bytes": 9440081514,
+        "sha256": "155f4882d2543a3890b53f51f6fab7f8126e9ff64b22cde68d62a7d6de08c2f0"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00006-of-00008.safetensors",
+        "bytes": 9230407270,
+        "sha256": "f5de24800c92d8ebf03ef69c0afaaf607afeba30724371124e4a780eca7902fb"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00007-of-00008.safetensors",
+        "bytes": 9440081531,
+        "sha256": "2ec6a4bb1fe394d75104495ea765a1fbc9ac72d2091da8d21ea06aeeb3448dd2"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model-00008-of-00008.safetensors",
+        "bytes": 8392486660,
+        "sha256": "3f703d62efcb7d4afc2a080173ecc3bdcd867e02711fffb7a859ec6505d84d25"
+      },
+      {
+        "path": "low_noise_model/diffusion_pytorch_model.safetensors.index.json",
+        "bytes": 127684,
+        "sha256": null
+      },
+      {
+        "path": "models_t5_umt5-xxl-enc-bf16.pth",
+        "bytes": 11361920418,
+        "sha256": "7cace0da2b446bbbbc57d031ab6cf163a3d59b366da94e5afe36745b746fd81d"
+      }
+    ]
+  },
+  {
+    "repo_id": "Skywork/Matrix-Game-3.0",
+    "revision": "382aa382a03cec057360755aa72c7735025770bb",
+    "gated": false,
+    "total_repo_bytes": 56602599084,
+    "files": [
+      {
+        "path": ".gitattributes",
+        "bytes": 1696,
+        "sha256": null
+      },
+      {
+        "path": "MG-LightVAE.pth",
+        "bytes": 2737394866,
+        "sha256": "29ab0c0c7ac3d59c013566af57c5abb0e1729d2864ff12a1afb45061b0faccd5"
+      },
+      {
+        "path": "MG-LightVAE_v2.pth",
+        "bytes": 841275442,
+        "sha256": "d47a9e7899af41f1a2c762f902d48c2b3221121473d0367bc0d9356b536810d1"
+      },
+      {
+        "path": "README.md",
+        "bytes": 5464,
+        "sha256": null
+      },
+      {
+        "path": "Wan2.2_VAE.pth",
+        "bytes": 2818839170,
+        "sha256": "20eb789667fa5e60e7516bf509512f6cb61f01b0aa0695eadaea930c13892b36"
+      },
+      {
+        "path": "base_distilled_model/config.json",
+        "bytes": 1057,
+        "sha256": null
+      },
+      {
+        "path": "base_distilled_model/diffusion_pytorch_model.safetensors",
+        "bytes": 25879807104,
+        "sha256": "437acb9b90304907ccdf8a173471e58858f925ee817e21c03a4220658a05c1e4"
+      },
+      {
+        "path": "base_model/config.json",
+        "bytes": 1058,
+        "sha256": null
+      },
+      {
+        "path": "base_model/diffusion_pytorch_model.safetensors",
+        "bytes": 12939976240,
+        "sha256": "92ca38c750b5464253f8a5ee86ed78d2d9e5d7837c89bbaef1400019ae19f0d5"
+      },
+      {
+        "path": "framework.png",
+        "bytes": 1922442,
+        "sha256": "ce1db4ca6ed7417cf7aa571efa7dc8f6e3f2a612a6a08dc62c71a476340dd770"
+      },
+      {
+        "path": "google/umt5-xxl/special_tokens_map.json",
+        "bytes": 6623,
+        "sha256": null
+      },
+      {
+        "path": "google/umt5-xxl/spiece.model",
+        "bytes": 4548313,
+        "sha256": "e3909a67b780650b35cf529ac782ad2b6b26e6d1f849d3fbb6a872905f452458"
+      },
+      {
+        "path": "google/umt5-xxl/tokenizer.json",
+        "bytes": 16837417,
+        "sha256": "6e197b4d3dbd71da14b4eb255f4fa91c9c1f2068b20a2de2472967ca3d22602b"
+      },
+      {
+        "path": "google/umt5-xxl/tokenizer_config.json",
+        "bytes": 61728,
+        "sha256": null
+      },
+      {
+        "path": "model_index.json",
+        "bytes": 46,
+        "sha256": null
+      },
+      {
+        "path": "models_t5_umt5-xxl-enc-bf16.pth",
+        "bytes": 11361920418,
+        "sha256": "7cace0da2b446bbbbc57d031ab6cf163a3d59b366da94e5afe36745b746fd81d"
+      }
+    ]
+  }
+]

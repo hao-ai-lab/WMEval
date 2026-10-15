@@ -12,6 +12,8 @@ needs PyYAML.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import time
 import traceback
 from collections.abc import Mapping, Sequence
@@ -78,7 +80,23 @@ NORMALIZATION_TOKENS: dict[str, str | None] = {
     # Resample to the case's reference video (fps, resolution, frame count);
     # used by the Table 4/7 cells so frame k aligns with Unity ground truth k.
     "match_reference": "reference",
+    "lighting_fps12": "lighting",
+    "lighting_orbit_10s_fps12": "lighting_orbit",
 }
+
+
+def _lighting_input_fingerprint(item: WorkItem) -> str | None:
+    if item.case.protocol.get('candidate_normalization') != 'lighting_orbit_10s_fps12':
+        return None
+    video = item.candidate.candidate_video
+    digest = None
+    if video.is_file():
+        with video.open('rb') as handle:
+            digest = hashlib.file_digest(handle, 'sha256').hexdigest()
+    payload = {'candidate_sha256': digest, 'params': dict(item.candidate.params),
+               'dimension_metric_config': dict(item.dimension.metric_config),
+               'modules': item.dimension.modules}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 MODEL_PARAMS_FILENAME = "model.yaml"
 
@@ -212,9 +230,17 @@ def _normalize_candidate(
     if kind is None:
         return candidate.candidate_video
 
-    from .normalization import normalize_liquid_video, normalize_to_reference
+    from .normalization import normalize_liquid_video, normalize_to_reference, normalize_lighting_video, normalize_lighting_window
 
     destination = _default_normalized_path(output_root, candidate)
+    if kind == "lighting_orbit":
+        mapping = candidate.params.get("lighting_time_mapping")
+        if not isinstance(mapping, Mapping):
+            raise SuiteRunError(f"{case.case_id}: candidate requires receipt-derived lighting_time_mapping")
+        # This small artifact must be verified/rebuilt for changed receipt/input,
+        # even when a previous candidate occupied the same output path.
+        normalize_lighting_window(candidate.candidate_video, destination, time_mapping=dict(mapping))
+        return destination
     if not destination.is_file():
         if kind == "reference":
             if case.reference_video is None:
@@ -222,6 +248,8 @@ def _normalize_candidate(
             normalize_to_reference(
                 candidate.candidate_video, destination, reference=case.reference_video
             )
+        elif kind == "lighting":
+            normalize_lighting_video(candidate.candidate_video, destination)
         else:
             normalize_liquid_video(candidate.candidate_video, destination)
     return destination
@@ -340,6 +368,12 @@ def run_suite(
     output_root = Path(output_dir).expanduser().resolve()
     results_path = output_root / PER_CASE_RESULTS_FILENAME
 
+    input_fingerprints = {
+        (item.dimension.dimension_id, item.candidate.case_id,
+         item.candidate.model, item.candidate.seed): _lighting_input_fingerprint(item)
+        for item in work_items
+    } if not dry_run else {}
+
     done_keys = set()
     if resume and not dry_run:
         existing_rows = read_rows(results_path)
@@ -358,7 +392,9 @@ def run_suite(
                 else None
             )
             current_fingerprint = case.evaluator_lock.get("evaluator_fingerprint")
-            if recorded_fingerprint == current_fingerprint:
+            expected_input = input_fingerprints.get(row_key(row))
+            input_matches = expected_input is None or row.get('candidate_input_fingerprint') == expected_input
+            if recorded_fingerprint == current_fingerprint and input_matches:
                 # An interrupted or temporarily misconfigured run can leave an
                 # error row behind.  Treating that row as done makes --resume
                 # skip the item forever, so remove it before constructing the
@@ -374,7 +410,7 @@ def run_suite(
             if stale_count:
                 emit(
                     f"[wmeval-lite] removed {stale_count} stale result row(s) "
-                    "whose evaluator fingerprint changed"
+                    "whose evaluator or lighting candidate input fingerprint changed"
                 )
             if retryable_count:
                 emit(
@@ -477,6 +513,9 @@ def run_suite(
             error=result.error,
             timing_sec=round(timing, 3),
         )
+        if input_fingerprints.get(key) is not None:
+            row['candidate_input_fingerprint'] = input_fingerprints[key]
+            row['required_repeats'] = 5
         append_row(results_path, row)
         emit(
             f"[wmeval-lite] {dimension.dimension_id}/{case.case_id}/"

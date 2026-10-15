@@ -11,11 +11,50 @@ from evaluation.project_genie_alignment import (
     load_semantic_endpoint,
     ordered_coarse_path,
     ordered_sparse_path,
+    select_observed_rows,
     sha256,
     update_receipt_with_alignment,
     validate_alignment,
 )
 import numpy as np
+
+
+def _observations(tmp_path: Path, times: list[float]) -> Path:
+    rows = []
+    for index, time in enumerate(times):
+        image = tmp_path / f"frame_{index}.png"
+        image.write_bytes(b"capture")
+        rows.append({"index": index, "path": str(image), "elapsed_sec": time})
+    manifest = tmp_path / "observed.json"
+    manifest.write_text(json.dumps({"frames": rows}))
+    return manifest
+
+
+def test_sparse_capture_selects_distinct_ordered_endpoints(tmp_path: Path) -> None:
+    # Independent nearest-neighbour selection repeats the 4-second image.
+    manifest = _observations(tmp_path, [0, .1, .2, .3, 4, 10])
+    rows = select_observed_rows(manifest, 10, 5)
+    indices = [row["index"] for row in rows]
+    assert len(set(indices)) == 5
+    assert indices == sorted(indices)
+    assert rows[0]["elapsed_sec"] == 0
+    assert rows[-1]["elapsed_sec"] == 10
+
+
+def test_feature_eligibility_preserves_original_capture(tmp_path: Path) -> None:
+    manifest = _observations(tmp_path, [0, 2, 4, 6, 8, 10])
+    original = manifest.read_bytes()
+    rows = select_observed_rows(manifest, 10, 5,
+                                eligible_indices={0, 1, 3, 4, 5})
+    assert [row["index"] for row in rows] == [0, 1, 3, 4, 5]
+    assert manifest.read_bytes() == original
+
+
+def test_feature_eligibility_cannot_remove_trajectory_endpoint(tmp_path: Path) -> None:
+    manifest = _observations(tmp_path, [0, 2, 4, 6, 8, 10])
+    with pytest.raises(NativeAlignmentError, match="does not span"):
+        select_observed_rows(manifest, 10, 5,
+                             eligible_indices={0, 1, 2, 3, 4})
 
 
 def test_semantic_endpoint_prefers_explicit_global_time(tmp_path: Path) -> None:

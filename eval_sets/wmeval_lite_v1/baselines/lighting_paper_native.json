@@ -1,0 +1,871 @@
+{
+  "schema_version": 1,
+  "volume": "WMEval-lighting-repro",
+  "manifest_sha256": "e78757d1c7046ba307a9fd8175b1e16cfe408e1963df368b102ba5d256f349d2",
+  "verification": "all 30 video bytes match the original volume MANIFEST.json",
+  "videos": [
+    {
+      "model": "lingbot",
+      "seed": 42,
+      "video": "rollouts/lighting/lingbot_seed42.mp4",
+      "metrics": "eval/metrics/lingbot_seed42__metrics.json",
+      "track": "eval/tracks/lingbot_seed42__wm_track.json",
+      "action_spec": "inputs/actions/lingbot_world.json",
+      "sha256": "3ca8a6352ff81ea81baa69aed6a14c5bdd8eb07c6c37d8664b5646e308e619cc",
+      "bytes": 4024049,
+      "fps": 16.0,
+      "frames": 161,
+      "width": 624,
+      "height": 624,
+      "duration_sec": 10.0625,
+      "suite_model": "lingbot_world",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 47.91,
+        "shadow_direction_jitter_deg_per_frame": 2.5,
+        "shadow_area_stability_pct": 13.18,
+        "shadow_shape_drift": 5.8504
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "lingbot",
+      "seed": 1,
+      "video": "rollouts/lighting/lingbot_seed1.mp4",
+      "metrics": "eval/metrics/lingbot_seed1__metrics.json",
+      "track": "eval/tracks/lingbot_seed1__wm_track.json",
+      "action_spec": "inputs/actions/lingbot_world.json",
+      "sha256": "9e65e0980ac17ede743d9eaedd95ea54147e4e4054f34b11b54c1ee4c117b89a",
+      "bytes": 4137431,
+      "fps": 16.0,
+      "frames": 161,
+      "width": 624,
+      "height": 624,
+      "duration_sec": 10.0625,
+      "suite_model": "lingbot_world",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 49.81,
+        "shadow_direction_jitter_deg_per_frame": 1.15,
+        "shadow_area_stability_pct": 8.65,
+        "shadow_shape_drift": 5.4161
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "lingbot",
+      "seed": 2,
+      "video": "rollouts/lighting/lingbot_seed2.mp4",
+      "metrics": "eval/metrics/lingbot_seed2__metrics.json",
+      "track": "eval/tracks/lingbot_seed2__wm_track.json",
+      "action_spec": "inputs/actions/lingbot_world.json",
+      "sha256": "7a66c41f64f6dac9d13c5f119523acd1b1ce8894497c359905a25c25b7294cbb",
+      "bytes": 5051390,
+      "fps": 16.0,
+      "frames": 161,
+      "width": 624,
+      "height": 624,
+      "duration_sec": 10.0625,
+      "suite_model": "lingbot_world",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 74.52,
+        "shadow_direction_jitter_deg_per_frame": 4.92,
+        "shadow_area_stability_pct": 17.72,
+        "shadow_shape_drift": 8.4959
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "lingbot",
+      "seed": 3,
+      "video": "rollouts/lighting/lingbot_seed3.mp4",
+      "metrics": "eval/metrics/lingbot_seed3__metrics.json",
+      "track": "eval/tracks/lingbot_seed3__wm_track.json",
+      "action_spec": "inputs/actions/lingbot_world.json",
+      "sha256": "5d0ee64862ae1434642c0e42feb3df0c5c9648990a37e2db22e62b14c049d262",
+      "bytes": 6326369,
+      "fps": 16.0,
+      "frames": 161,
+      "width": 624,
+      "height": 624,
+      "duration_sec": 10.0625,
+      "suite_model": "lingbot_world",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 76.54,
+        "shadow_direction_jitter_deg_per_frame": 27.47,
+        "shadow_area_stability_pct": 35.29,
+        "shadow_shape_drift": 7.9297
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "lingbot",
+      "seed": 4,
+      "video": "rollouts/lighting/lingbot_seed4.mp4",
+      "metrics": "eval/metrics/lingbot_seed4__metrics.json",
+      "track": "eval/tracks/lingbot_seed4__wm_track.json",
+      "action_spec": "inputs/actions/lingbot_world.json",
+      "sha256": "f9313aa39054b9187879da1134fa03b1a19718d566732036e6afc14ce9e2c774",
+      "bytes": 4414451,
+      "fps": 16.0,
+      "frames": 161,
+      "width": 624,
+      "height": 624,
+      "duration_sec": 10.0625,
+      "suite_model": "lingbot_world",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 51.51,
+        "shadow_direction_jitter_deg_per_frame": 2.0,
+        "shadow_area_stability_pct": 15.03,
+        "shadow_shape_drift": 5.5992
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "hy",
+      "seed": 42,
+      "video": "rollouts/lighting/hy_seed42.mp4",
+      "metrics": "eval/metrics/hy_seed42__metrics.json",
+      "track": "eval/tracks/hy_seed42__wm_track.json",
+      "action_spec": "inputs/actions/hy_worldplay.json",
+      "sha256": "1b064bf655bc6995aff8c5f2ce18eb45e9ce7a3ef0ab0e7d8e9a1f45971c369a",
+      "bytes": 321112,
+      "fps": 24.0,
+      "frames": 125,
+      "width": 640,
+      "height": 640,
+      "duration_sec": 5.208333,
+      "suite_model": "hy_worldplay",
+      "native_metrics": {
+        "scene_retention_rate_pct": 76.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 71.8,
+        "shadow_direction_jitter_deg_per_frame": 7.42,
+        "shadow_area_stability_pct": 11.21,
+        "shadow_shape_drift": 5.7832
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "hy",
+      "seed": 1,
+      "video": "rollouts/lighting/hy_seed1.mp4",
+      "metrics": "eval/metrics/hy_seed1__metrics.json",
+      "track": "eval/tracks/hy_seed1__wm_track.json",
+      "action_spec": "inputs/actions/hy_worldplay.json",
+      "sha256": "e7477484d87cac6beb278e48664ed3981ca726d0637d8757c65dd6eae23ec8a4",
+      "bytes": 352477,
+      "fps": 24.0,
+      "frames": 125,
+      "width": 640,
+      "height": 640,
+      "duration_sec": 5.208333,
+      "suite_model": "hy_worldplay",
+      "native_metrics": {
+        "scene_retention_rate_pct": 71.2,
+        "shadow_detection_rate_pct": 98.88,
+        "multi_object_sun_disagreement_deg": 77.03,
+        "shadow_direction_jitter_deg_per_frame": 9.2,
+        "shadow_area_stability_pct": 10.99,
+        "shadow_shape_drift": 6.0757
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "hy",
+      "seed": 2,
+      "video": "rollouts/lighting/hy_seed2.mp4",
+      "metrics": "eval/metrics/hy_seed2__metrics.json",
+      "track": "eval/tracks/hy_seed2__wm_track.json",
+      "action_spec": "inputs/actions/hy_worldplay.json",
+      "sha256": "6dcf216f4e6ab8ea9c241559e27c94684d165c8dd44d4af3158b0162cf975271",
+      "bytes": 366722,
+      "fps": 24.0,
+      "frames": 125,
+      "width": 640,
+      "height": 640,
+      "duration_sec": 5.208333,
+      "suite_model": "hy_worldplay",
+      "native_metrics": {
+        "scene_retention_rate_pct": 72.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 85.24,
+        "shadow_direction_jitter_deg_per_frame": 4.1,
+        "shadow_area_stability_pct": 11.04,
+        "shadow_shape_drift": 5.307
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "hy",
+      "seed": 3,
+      "video": "rollouts/lighting/hy_seed3.mp4",
+      "metrics": "eval/metrics/hy_seed3__metrics.json",
+      "track": "eval/tracks/hy_seed3__wm_track.json",
+      "action_spec": "inputs/actions/hy_worldplay.json",
+      "sha256": "162efd19fe68128541a85dc944f5cdfaafa03084781a58a754ab6e9f2cea4ad4",
+      "bytes": 414905,
+      "fps": 24.0,
+      "frames": 125,
+      "width": 640,
+      "height": 640,
+      "duration_sec": 5.208333,
+      "suite_model": "hy_worldplay",
+      "native_metrics": {
+        "scene_retention_rate_pct": 76.8,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 72.32,
+        "shadow_direction_jitter_deg_per_frame": 6.8,
+        "shadow_area_stability_pct": 8.48,
+        "shadow_shape_drift": 6.6052
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "hy",
+      "seed": 4,
+      "video": "rollouts/lighting/hy_seed4.mp4",
+      "metrics": "eval/metrics/hy_seed4__metrics.json",
+      "track": "eval/tracks/hy_seed4__wm_track.json",
+      "action_spec": "inputs/actions/hy_worldplay.json",
+      "sha256": "7231a2d8eb2dca202d22d3179afae6659d5861c4317af6fdb5a535e1eeffe961",
+      "bytes": 343993,
+      "fps": 24.0,
+      "frames": 125,
+      "width": 640,
+      "height": 640,
+      "duration_sec": 5.208333,
+      "suite_model": "hy_worldplay",
+      "native_metrics": {
+        "scene_retention_rate_pct": 73.6,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 80.08,
+        "shadow_direction_jitter_deg_per_frame": 5.46,
+        "shadow_area_stability_pct": 9.76,
+        "shadow_shape_drift": 4.9992
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg2",
+      "seed": 42,
+      "video": "rollouts/lighting/mg2_seed42.mp4",
+      "metrics": "eval/metrics/mg2_universal_seed42__metrics.json",
+      "track": "eval/tracks/mg2_universal_seed42__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_2.json",
+      "sha256": "aae957d2ba1faed8d24c9415b6c2136239e965d92bfff6ede1a782b74d9a6326",
+      "bytes": 3170160,
+      "fps": 12.0,
+      "frames": 597,
+      "width": 640,
+      "height": 352,
+      "duration_sec": 49.75,
+      "suite_model": "matrix_game_2",
+      "native_metrics": {
+        "scene_retention_rate_pct": 20.77,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 50.16,
+        "shadow_direction_jitter_deg_per_frame": 2.74,
+        "shadow_area_stability_pct": 13.34,
+        "shadow_shape_drift": 8.2347
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg2",
+      "seed": 1,
+      "video": "rollouts/lighting/mg2_seed1.mp4",
+      "metrics": "eval/metrics/mg2_universal_seed1__metrics.json",
+      "track": "eval/tracks/mg2_universal_seed1__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_2.json",
+      "sha256": "aea65dd288107a2f905447ad5cdf9b8062172e0fa64140969e443f54ea695083",
+      "bytes": 2719501,
+      "fps": 12.0,
+      "frames": 597,
+      "width": 640,
+      "height": 352,
+      "duration_sec": 49.75,
+      "suite_model": "matrix_game_2",
+      "native_metrics": {
+        "scene_retention_rate_pct": 21.94,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 65.73,
+        "shadow_direction_jitter_deg_per_frame": 5.52,
+        "shadow_area_stability_pct": 15.16,
+        "shadow_shape_drift": 8.0236
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg2",
+      "seed": 2,
+      "video": "rollouts/lighting/mg2_seed2.mp4",
+      "metrics": "eval/metrics/mg2_universal_seed2__metrics.json",
+      "track": "eval/tracks/mg2_universal_seed2__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_2.json",
+      "sha256": "354fef6b19a31362591b83951b675baa612c89b0bf70137e1168e968c7398757",
+      "bytes": 2926408,
+      "fps": 12.0,
+      "frames": 597,
+      "width": 640,
+      "height": 352,
+      "duration_sec": 49.75,
+      "suite_model": "matrix_game_2",
+      "native_metrics": {
+        "scene_retention_rate_pct": 49.92,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 64.46,
+        "shadow_direction_jitter_deg_per_frame": 1.02,
+        "shadow_area_stability_pct": 11.36,
+        "shadow_shape_drift": 5.9401
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg2",
+      "seed": 3,
+      "video": "rollouts/lighting/mg2_seed3.mp4",
+      "metrics": "eval/metrics/mg2_universal_seed3__metrics.json",
+      "track": "eval/tracks/mg2_universal_seed3__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_2.json",
+      "sha256": "f6982935e0cdd19a6f8c46e3e5d81e38c55474a8d640d2baed908fe3f1b18add",
+      "bytes": 3625482,
+      "fps": 12.0,
+      "frames": 597,
+      "width": 640,
+      "height": 352,
+      "duration_sec": 49.75,
+      "suite_model": "matrix_game_2",
+      "native_metrics": {
+        "scene_retention_rate_pct": 15.08,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 69.85,
+        "shadow_direction_jitter_deg_per_frame": 1.24,
+        "shadow_area_stability_pct": 13.42,
+        "shadow_shape_drift": 6.2357
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg2",
+      "seed": 4,
+      "video": "rollouts/lighting/mg2_seed4.mp4",
+      "metrics": "eval/metrics/mg2_universal_seed4__metrics.json",
+      "track": "eval/tracks/mg2_universal_seed4__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_2.json",
+      "sha256": "44c6615c0bf193d43362c1bffda5c0e082ec2b1e8bcdd816fc83da916d52f1ef",
+      "bytes": 4563011,
+      "fps": 12.0,
+      "frames": 597,
+      "width": 640,
+      "height": 352,
+      "duration_sec": 49.75,
+      "suite_model": "matrix_game_2",
+      "native_metrics": {
+        "scene_retention_rate_pct": 6.87,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 76.09,
+        "shadow_direction_jitter_deg_per_frame": 10.08,
+        "shadow_area_stability_pct": 17.82,
+        "shadow_shape_drift": 8.4154
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg3",
+      "seed": 42,
+      "video": "rollouts/lighting/mg3_seed42.mp4",
+      "metrics": "eval/metrics/mg3_seed42__metrics.json",
+      "track": "eval/tracks/mg3_seed42__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_3.json",
+      "sha256": "3a0b309bfb8b46ea02d9dc5087e26110935bb8605f70fdd67c1910b3d326dd3c",
+      "bytes": 2483116,
+      "fps": 17.0,
+      "frames": 497,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 29.235294,
+      "suite_model": "matrix_game_3",
+      "native_metrics": {
+        "scene_retention_rate_pct": 11.87,
+        "shadow_detection_rate_pct": 91.53,
+        "multi_object_sun_disagreement_deg": 57.32,
+        "shadow_direction_jitter_deg_per_frame": 9.04,
+        "shadow_area_stability_pct": 41.58,
+        "shadow_shape_drift": 9.2462
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg3",
+      "seed": 1,
+      "video": "rollouts/lighting/mg3_seed1.mp4",
+      "metrics": "eval/metrics/mg3_seed1__metrics.json",
+      "track": "eval/tracks/mg3_seed1__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_3.json",
+      "sha256": "4f09826d2108e6ef376a8fe5570f1dc4b6f124f2794c59c27bb57a3a89f46971",
+      "bytes": 3074386,
+      "fps": 17.0,
+      "frames": 497,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 29.235294,
+      "suite_model": "matrix_game_3",
+      "native_metrics": {
+        "scene_retention_rate_pct": 25.96,
+        "shadow_detection_rate_pct": 96.9,
+        "multi_object_sun_disagreement_deg": 67.36,
+        "shadow_direction_jitter_deg_per_frame": 23.79,
+        "shadow_area_stability_pct": 61.08,
+        "shadow_shape_drift": 10.4764
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg3",
+      "seed": 2,
+      "video": "rollouts/lighting/mg3_seed2.mp4",
+      "metrics": "eval/metrics/mg3_seed2__metrics.json",
+      "track": "eval/tracks/mg3_seed2__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_3.json",
+      "sha256": "478fb8b744357566ffc9b35b6f59daa0fae05da5317aafc6d2949f159763bd9e",
+      "bytes": 2709455,
+      "fps": 17.0,
+      "frames": 497,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 29.235294,
+      "suite_model": "matrix_game_3",
+      "native_metrics": {
+        "scene_retention_rate_pct": 15.49,
+        "shadow_detection_rate_pct": 75.32,
+        "multi_object_sun_disagreement_deg": 37.66,
+        "shadow_direction_jitter_deg_per_frame": 11.11,
+        "shadow_area_stability_pct": 57.37,
+        "shadow_shape_drift": 13.625
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg3",
+      "seed": 3,
+      "video": "rollouts/lighting/mg3_seed3.mp4",
+      "metrics": "eval/metrics/mg3_seed3__metrics.json",
+      "track": "eval/tracks/mg3_seed3__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_3.json",
+      "sha256": "c699f3b81dc79db5a6292d46679b5c1a73e77826fe99392827f7e825f0db7e42",
+      "bytes": 2832424,
+      "fps": 17.0,
+      "frames": 497,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 29.235294,
+      "suite_model": "matrix_game_3",
+      "native_metrics": {
+        "scene_retention_rate_pct": 11.27,
+        "shadow_detection_rate_pct": 96.43,
+        "multi_object_sun_disagreement_deg": 58.72,
+        "shadow_direction_jitter_deg_per_frame": 16.19,
+        "shadow_area_stability_pct": 114.17,
+        "shadow_shape_drift": 13.2084
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "mg3",
+      "seed": 4,
+      "video": "rollouts/lighting/mg3_seed4.mp4",
+      "metrics": "eval/metrics/mg3_seed4__metrics.json",
+      "track": "eval/tracks/mg3_seed4__wm_track.json",
+      "action_spec": "inputs/actions/matrix_game_3.json",
+      "sha256": "2946aeac68110517a80e4db1ca59e9aea8f7be63fe26e74e2617c8b0e62d361f",
+      "bytes": 2360544,
+      "fps": 17.0,
+      "frames": 497,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 29.235294,
+      "suite_model": "matrix_game_3",
+      "native_metrics": {
+        "scene_retention_rate_pct": 7.44,
+        "shadow_detection_rate_pct": 97.3,
+        "multi_object_sun_disagreement_deg": 74.31,
+        "shadow_direction_jitter_deg_per_frame": 55.78,
+        "shadow_area_stability_pct": 37.95,
+        "shadow_shape_drift": 10.5878
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "waypoint15",
+      "seed": 42,
+      "video": "rollouts/lighting/waypoint15_seed42.mp4",
+      "metrics": "eval/metrics/waypoint15_seed42__metrics.json",
+      "track": "eval/tracks/waypoint15_seed42__wm_track.json",
+      "action_spec": "inputs/actions/waypoint15.json",
+      "sha256": "c8a61f0a5382a6bbdfc9498315a3cb72b94b6cdcd5755ab3851fc53c7f487718",
+      "bytes": 2283590,
+      "fps": 60.0,
+      "frames": 364,
+      "width": 1280,
+      "height": 720,
+      "duration_sec": 6.066667,
+      "suite_model": "waypoint15",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 100.18,
+        "shadow_direction_jitter_deg_per_frame": 3.61,
+        "shadow_area_stability_pct": 10.01,
+        "shadow_shape_drift": 4.413
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "waypoint15",
+      "seed": 1,
+      "video": "rollouts/lighting/waypoint15_seed1.mp4",
+      "metrics": "eval/metrics/waypoint15_seed1__metrics.json",
+      "track": "eval/tracks/waypoint15_seed1__wm_track.json",
+      "action_spec": "inputs/actions/waypoint15.json",
+      "sha256": "04f7eb2658c58718cd8d025d91bf62f90945f970134846a81d3da1dd137f2f0d",
+      "bytes": 2142161,
+      "fps": 60.0,
+      "frames": 364,
+      "width": 1280,
+      "height": 720,
+      "duration_sec": 6.066667,
+      "suite_model": "waypoint15",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 94.85,
+        "shadow_direction_jitter_deg_per_frame": 1.83,
+        "shadow_area_stability_pct": 10.62,
+        "shadow_shape_drift": 4.3417
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "waypoint15",
+      "seed": 2,
+      "video": "rollouts/lighting/waypoint15_seed2.mp4",
+      "metrics": "eval/metrics/waypoint15_seed2__metrics.json",
+      "track": "eval/tracks/waypoint15_seed2__wm_track.json",
+      "action_spec": "inputs/actions/waypoint15.json",
+      "sha256": "efb76fb23ca3c78b3e51bd38e67497638e1dd665551f855140fc650e1a33a1a4",
+      "bytes": 2418918,
+      "fps": 60.0,
+      "frames": 364,
+      "width": 1280,
+      "height": 720,
+      "duration_sec": 6.066667,
+      "suite_model": "waypoint15",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 99.88,
+        "shadow_direction_jitter_deg_per_frame": 2.4,
+        "shadow_area_stability_pct": 16.03,
+        "shadow_shape_drift": 5.2304
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "waypoint15",
+      "seed": 3,
+      "video": "rollouts/lighting/waypoint15_seed3.mp4",
+      "metrics": "eval/metrics/waypoint15_seed3__metrics.json",
+      "track": "eval/tracks/waypoint15_seed3__wm_track.json",
+      "action_spec": "inputs/actions/waypoint15.json",
+      "sha256": "d0456d97c702bef5085ca2bf169def355720b5df1a9ca016f3bd7de85856d67d",
+      "bytes": 2336603,
+      "fps": 60.0,
+      "frames": 364,
+      "width": 1280,
+      "height": 720,
+      "duration_sec": 6.066667,
+      "suite_model": "waypoint15",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 100.14,
+        "shadow_direction_jitter_deg_per_frame": 1.9,
+        "shadow_area_stability_pct": 11.4,
+        "shadow_shape_drift": 3.7856
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "waypoint15",
+      "seed": 4,
+      "video": "rollouts/lighting/waypoint15_seed4.mp4",
+      "metrics": "eval/metrics/waypoint15_seed4__metrics.json",
+      "track": "eval/tracks/waypoint15_seed4__wm_track.json",
+      "action_spec": "inputs/actions/waypoint15.json",
+      "sha256": "fdce090767f54388e7ffed4a2cdb8b0209a0fd488bdf1a7f649a15bec17fd9be",
+      "bytes": 3245997,
+      "fps": 60.0,
+      "frames": 364,
+      "width": 1280,
+      "height": 720,
+      "duration_sec": 6.066667,
+      "suite_model": "waypoint15",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 96.41,
+        "shadow_direction_jitter_deg_per_frame": 1.95,
+        "shadow_area_stability_pct": 13.39,
+        "shadow_shape_drift": 4.9807
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "genie",
+      "seed": null,
+      "run_index": 1,
+      "video": "rollouts/lighting/genie_s1.mp4",
+      "metrics": "eval/metrics/genie_s1__metrics.json",
+      "track": "eval/tracks/genie_s1__wm_track.json",
+      "action_spec": "inputs/actions/project_genie.json",
+      "note": "manual hosted generation: 5 independent runs, no numeric seeds; clipped to the first 40 s",
+      "sha256": "9608608058b2e22cdb65390dea78861687dde3cf33d6301c2518e8baab78bc9f",
+      "bytes": 14684541,
+      "fps": 20.0,
+      "frames": 802,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 40.1,
+      "suite_model": "project_genie",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 94.26,
+        "multi_object_sun_disagreement_deg": 60.87,
+        "shadow_direction_jitter_deg_per_frame": 5.91,
+        "shadow_area_stability_pct": 22.06,
+        "shadow_shape_drift": 8.4662
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "genie",
+      "seed": null,
+      "run_index": 2,
+      "video": "rollouts/lighting/genie_s2.mp4",
+      "metrics": "eval/metrics/genie_s2__metrics.json",
+      "track": "eval/tracks/genie_s2__wm_track.json",
+      "action_spec": "inputs/actions/project_genie.json",
+      "note": "manual hosted generation: 5 independent runs, no numeric seeds; clipped to the first 40 s",
+      "sha256": "b4fe91ab27dcaa1a77eab7182ad86aa92833fdc24d3d25ed4f88439c9a949020",
+      "bytes": 18860612,
+      "fps": 20.0,
+      "frames": 802,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 40.1,
+      "suite_model": "project_genie",
+      "native_metrics": {
+        "scene_retention_rate_pct": 82.42,
+        "shadow_detection_rate_pct": 98.18,
+        "multi_object_sun_disagreement_deg": 75.45,
+        "shadow_direction_jitter_deg_per_frame": 0.59,
+        "shadow_area_stability_pct": 9.26,
+        "shadow_shape_drift": 6.4472
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "genie",
+      "seed": null,
+      "run_index": 3,
+      "video": "rollouts/lighting/genie_s3.mp4",
+      "metrics": "eval/metrics/genie_s3__metrics.json",
+      "track": "eval/tracks/genie_s3__wm_track.json",
+      "action_spec": "inputs/actions/project_genie.json",
+      "note": "manual hosted generation: 5 independent runs, no numeric seeds; clipped to the first 40 s",
+      "sha256": "f3460406cd15c87deaa8fc066c0827471c83789c8d6cfc060f0969979fc3a30a",
+      "bytes": 17124168,
+      "fps": 20.0,
+      "frames": 802,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 40.1,
+      "suite_model": "project_genie",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 65.69,
+        "shadow_direction_jitter_deg_per_frame": 1.89,
+        "shadow_area_stability_pct": 12.99,
+        "shadow_shape_drift": 5.8514
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "genie",
+      "seed": null,
+      "run_index": 4,
+      "video": "rollouts/lighting/genie_s4.mp4",
+      "metrics": "eval/metrics/genie_s4__metrics.json",
+      "track": "eval/tracks/genie_s4__wm_track.json",
+      "action_spec": "inputs/actions/project_genie.json",
+      "note": "manual hosted generation: 5 independent runs, no numeric seeds; clipped to the first 40 s",
+      "sha256": "2ddae236c131d90ea3dcca33717cfab60e5ec17ea7de90f8cc80da9400fd3cf4",
+      "bytes": 16384328,
+      "fps": 20.0,
+      "frames": 802,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 40.1,
+      "suite_model": "project_genie",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 94.39,
+        "multi_object_sun_disagreement_deg": 72.41,
+        "shadow_direction_jitter_deg_per_frame": 2.23,
+        "shadow_area_stability_pct": 11.71,
+        "shadow_shape_drift": 6.997
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    },
+    {
+      "model": "genie",
+      "seed": null,
+      "run_index": 5,
+      "video": "rollouts/lighting/genie_s5.mp4",
+      "metrics": "eval/metrics/genie_s5__metrics.json",
+      "track": "eval/tracks/genie_s5__wm_track.json",
+      "action_spec": "inputs/actions/project_genie.json",
+      "note": "manual hosted generation: 5 independent runs, no numeric seeds; clipped to the first 40 s",
+      "sha256": "aee3420062fc4104468004c9aa1fc36a189456b0d7976afad5cd9c5b5ef00b86",
+      "bytes": 21229132,
+      "fps": 20.0,
+      "frames": 802,
+      "width": 1280,
+      "height": 704,
+      "duration_sec": 40.1,
+      "suite_model": "project_genie",
+      "native_metrics": {
+        "scene_retention_rate_pct": 100.0,
+        "shadow_detection_rate_pct": 100.0,
+        "multi_object_sun_disagreement_deg": 54.46,
+        "shadow_direction_jitter_deg_per_frame": 1.47,
+        "shadow_area_stability_pct": 13.75,
+        "shadow_shape_drift": 6.1616
+      },
+      "evaluator_lock": {
+        "release_id": "wmeval-lite-v1",
+        "evaluator_fingerprint": "62698fc36d0c647ff10ed55b9357fded"
+      }
+    }
+  ],
+  "protocol": "historical_paper_native_fps",
+  "candidate_normalization": "none",
+  "score_source": {
+    "run_id": "lite-lighting-release-cleanup-20261009",
+    "jsonl_sha256": "9dca4e3e5db70bca780cacd881feb8154a2e7ce43420dda5666fa2de3ab540dc",
+    "volume": "WMEval-lite-candidates",
+    "path": "eval/lite_runs/lite-lighting-release-cleanup-20261009/per_case_results.jsonl"
+  },
+  "limitations": [
+    "These historical runs have different actions and durations; they are not a matched-orbit baseline.",
+    "Genie has five independent hosted runs; its numeric generation seeds are unavailable.",
+    "FPS-normalized and new-action scores require separate baselines."
+  ]
+}
