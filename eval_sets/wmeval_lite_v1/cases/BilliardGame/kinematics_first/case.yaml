@@ -42,8 +42,18 @@ module_params:
     kin_plane_calibration_json: reference/artifacts/plane_calibration.json
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: 09592189c2c0e2cf128b249b8b36b6f9
+  evaluator_fingerprint: c3d008d0b149c69a06031ac62f8329b9
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    cjm-byte-track: 0.0.6
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    torch: 2.14.1
+    transformers: 5.18.0
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    lock_source: tools/lock_case_dependencies.py

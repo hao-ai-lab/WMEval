@@ -29,10 +29,17 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
-  evaluator_fingerprint: 48892736b9c90def119533a92f19d743
+  evaluator_fingerprint: dfedf1d1b1ea21a85bcd8498f424cb5c
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pydantic: 2.13.5
+    requests: 2.34.2
+    lock_source: tools/lock_case_dependencies.py
 module_params:
   shadow_consistency:
     shadow_text_prompt: sphere. ball.
