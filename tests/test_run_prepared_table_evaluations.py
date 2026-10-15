@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 import tools.run_prepared_table_evaluations as module
 from tools.run_prepared_table_evaluations import BLOCKED, EXCLUDED, PLANS, _result_errors
 
@@ -14,6 +16,7 @@ def test_automation_plan_covers_all_table_cells_once() -> None:
     assert len(set(case_ids)) == 16
 
 
+@pytest.mark.integration("table_runs")
 def test_racing_third_uses_matched_dynamic_unity_ground_truth() -> None:
     plan = next(item for item in PLANS if item.case_id == "table4/RacingCar/third")
     assert plan.preparation == "racing_unity_capture"
@@ -30,6 +33,7 @@ def test_racing_third_uses_matched_dynamic_unity_ground_truth() -> None:
     assert masses == {"car": 1000.0}
 
 
+@pytest.mark.integration("table_runs")
 def test_billiard_table7_uses_matching_unity_capture_artifacts() -> None:
     plan = next(
         item for item in PLANS if item.case_id == "table7/BilliardGame/perturb_in"
@@ -44,6 +48,7 @@ def test_billiard_table7_uses_matching_unity_capture_artifacts() -> None:
     assert params["eoc_character_prompt"] == "white ball."
 
 
+@pytest.mark.integration("table_runs")
 def test_billiard_table4_keeps_first_person_ball_control_only() -> None:
     plan = next(
         item for item in PLANS if item.case_id == "table4/BilliardGame/first"

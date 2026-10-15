@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from tools.build_table7_rerun_results import build_results
 from evaluation.table_comparison import sha256
 
@@ -10,6 +12,7 @@ from evaluation.table_comparison import sha256
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.integration("paper_checkout")
 def test_build_results_maps_five_lite_rows_and_preserves_missing_distance(tmp_path: Path) -> None:
     runs = []
     rows = []
@@ -72,6 +75,7 @@ def test_build_results_maps_five_lite_rows_and_preserves_missing_distance(tmp_pa
     assert result["provenance"]["evaluation_settings"]["device"] == "cpu"
 
 
+@pytest.mark.integration("paper_checkout")
 def test_build_results_maps_mirror_character_consistency(tmp_path: Path) -> None:
     runs = []
     rows = []
@@ -125,6 +129,7 @@ def test_build_results_maps_mirror_character_consistency(tmp_path: Path) -> None
     assert all(value is None for value in target["dist_mae_pct"].values())
 
 
+@pytest.mark.integration("paper_checkout")
 def test_build_results_rejects_mixed_evaluator_locks(tmp_path: Path) -> None:
     runs = []
     rows = []

@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 
 SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "audit_table4_action_coverage.py"
 SPEC = importlib.util.spec_from_file_location("audit_table4_action_coverage", SCRIPT)
@@ -15,6 +17,7 @@ sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
 
+@pytest.mark.integration("table_runs")
 def test_table4_action_audit_covers_active_views_and_reference_timelines() -> None:
     report = MODULE.build()
 

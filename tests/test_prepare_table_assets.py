@@ -65,6 +65,7 @@ def test_orientation_validation_accepts_opposing_forward_axes(tmp_path: Path) ->
     assert result["horizontal_forward_dot"] == -1.0
 
 
+@pytest.mark.integration("table_runs")
 def test_prepare_materializes_all_cases_and_fail_closes_missing_views(tmp_path: Path) -> None:
     report = MODULE.prepare(MODULE.TABLE_ROOT, tmp_path)
     assert report["case_count"] == 16

@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hermetic:
+    name: validate + hermetic tests (py3.11, CPU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          # torch pins live in this file, so it is part of the cache key too.
+          cache-dependency-path: |
+            requirements-ci.txt
+            .github/workflows/ci.yml
+
+      # Used by the video normalization / fixture-backend tests (they skip without it).
+      - name: Install ffmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+
+      # evaluation/__init__.py imports every metric module, so torch is needed
+      # even for loader tests; use the CPU-only wheels (no CUDA download).
+      - name: Install CPU-only torch
+        run: >-
+          python -m pip install
+          --index-url https://download.pytorch.org/whl/cpu
+          torch==2.14.1 torchvision==0.29.1
+
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-ci.txt
+
+      - name: Validate Lite suite bundles
+        run: python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
+
+      # Tests needing git-ignored runs/ outputs or the sibling paper checkout are
+      # marked `integration` (see tests/conftest.py) and are deselected here.
+      - name: Hermetic tests
+        run: python -m pytest -q -m "not integration" tests

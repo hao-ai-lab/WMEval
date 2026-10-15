@@ -106,6 +106,7 @@ def test_match_reference_resamples_to_reference_geometry_and_timeline(tmp_path: 
     assert abs(result["fps"] - 15.0) < 1e-3
 
 
+@pytest.mark.integration("paper_checkout")
 def test_lite_rows_export_into_the_paper_comparison_schema() -> None:
     from tools.export_lite_table_results import export
 
