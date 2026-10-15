@@ -236,7 +236,18 @@ def _extract_environment_object_consistency(result: Mapping[str, Any]) -> dict[s
         "pairwise_distance_mae_pct": _numeric(result.get("pairwise_distance_mae_pct")),
         "object_permanence_pct": _numeric(result.get("object_permanence_pct")),
         "character_consistency_pct": _numeric(result.get("character_consistency_pct")),
+        # Anchor-validity diagnostic (1 = pairwise distance measurable under the rule).
+        "pairwise_distance_measurable": _measurable(result.get("pairwise_distance_support")),
+        "pairwise_paired_frame_coverage": _numeric(
+            (result.get("pairwise_distance_support") or {}).get("paired_frame_coverage")
+        ),
     }
+
+
+def _measurable(support: Any) -> float | None:
+    if not isinstance(support, Mapping) or "measurable" not in support:
+        return None
+    return 1.0 if support["measurable"] else 0.0
 
 
 def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
