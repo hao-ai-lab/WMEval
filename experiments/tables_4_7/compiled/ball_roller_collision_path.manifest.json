@@ -1,0 +1,21 @@
+{
+  "action_npy": "ball_roller_collision_path.action.npy",
+  "action_npy_sha256": "35626512377f9da8274b644bb22a069c6b4d6737322ba82e1d4b9494b6baa43b",
+  "action_npz": "ball_roller_collision_path.action.npz",
+  "action_npz_sha256": "8783de656ce20386092fed138dee06c8b58395574c89c9a6cbdb77f23a6b61be",
+  "actions_txt": "ball_roller_collision_path.actions.txt",
+  "actions_txt_sha256": "f12cf4b62a9bf40b86c6e6ae043c4bed341b76ffabd32be6593882005e9b4111",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "horizontal",
+    "vertical"
+  ],
+  "project_genie_actions": "ball_roller_collision_path.actions.jsonl",
+  "project_genie_actions_sha256": "8b4e6b9ba8611db8c37a07d5255a385092f79296aaf781cce4193f5156a3d570",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "b87726bc63bfb3d0a624e8187956512061c1ab5b47c22f5229fc7fea0e34d95b",
+  "source": "../trajectories/ball_roller_collision_path.yaml",
+  "step_count": 577,
+  "trajectory_id": "controllability.ball_roller.collision_path_v1"
+}

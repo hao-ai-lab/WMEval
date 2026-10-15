@@ -1,0 +1,21 @@
+{
+  "action_npy": "mirror_rolling_ball_axis_cycle.action.npy",
+  "action_npy_sha256": "0e6f940f192388a8dad1fc87258fab5d64298b35c1e5477c865f41b8219d455f",
+  "action_npz": "mirror_rolling_ball_axis_cycle.action.npz",
+  "action_npz_sha256": "6387a4d54e9171a1531627d478532e236404e850db65c6048dd0107f936d59e4",
+  "actions_txt": "mirror_rolling_ball_axis_cycle.actions.txt",
+  "actions_txt_sha256": "376dac5b144ceab24c444e90017ae81c04c7993580799b56c8190860abd1354e",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "horizontal",
+    "vertical"
+  ],
+  "project_genie_actions": "mirror_rolling_ball_axis_cycle.actions.jsonl",
+  "project_genie_actions_sha256": "a90446a40fa41d7b774c8844ae24f136196fdc5547774f61833f293dbe083063",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "d0a4aa4a75661c12d5bd8c8163833aabb0bbba8d8997297f5daae272d1bdce68",
+  "source": "../trajectories/mirror_rolling_ball_axis_cycle.yaml",
+  "step_count": 827,
+  "trajectory_id": "controllability.mirror_rolling_ball.axis_cycle_v1"
+}

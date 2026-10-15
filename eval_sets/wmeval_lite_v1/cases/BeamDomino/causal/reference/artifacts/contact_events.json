@@ -1,0 +1,839 @@
+{
+  "case_id": "BeamDomino/causal",
+  "consensus": {
+    "cluster_gap_frames": 12,
+    "clusters": [
+      {
+        "frame": 170,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 185,
+        "kept": false,
+        "side": "right",
+        "support": 2
+      },
+      {
+        "frame": 201,
+        "kept": false,
+        "side": "right",
+        "support": 1
+      },
+      {
+        "frame": 231,
+        "kept": true,
+        "side": "front",
+        "support": 3
+      },
+      {
+        "frame": 231,
+        "kept": false,
+        "side": "right",
+        "support": 1
+      },
+      {
+        "frame": 247,
+        "kept": false,
+        "side": "right",
+        "support": 1
+      },
+      {
+        "frame": 324,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      }
+    ],
+    "min_support": 3,
+    "passes": 5,
+    "rule": "events supported by at least min_support distinct passes (frame-proximity clusters per side)"
+  },
+  "created_utc": "2026-10-10T01:36:47+00:00",
+  "judge": {
+    "coarse_model": "gpt-5.4-mini",
+    "max_grid_frames": 48,
+    "model": "gpt-5.4",
+    "prompt_version": "causal_collision_v2",
+    "provider": "openai",
+    "sampling_strategy": "single_grid",
+    "side_model": null
+  },
+  "passes": [
+    {
+      "grid_frame_indices": [
+        0,
+        15,
+        31,
+        46,
+        62,
+        77,
+        93,
+        108,
+        123,
+        139,
+        154,
+        170,
+        185,
+        201,
+        216,
+        231,
+        247,
+        262,
+        278,
+        293,
+        309,
+        324,
+        339,
+        355,
+        370,
+        386,
+        401,
+        416,
+        432,
+        447,
+        463,
+        478,
+        494,
+        509,
+        524,
+        540,
+        555,
+        571,
+        586,
+        602,
+        617,
+        632,
+        648,
+        663,
+        679,
+        694,
+        710,
+        725
+      ],
+      "num_events": 2,
+      "pass": 1,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.96,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              125,
+              169,
+              180,
+              191,
+              202,
+              224
+            ],
+            "evidence_summary": "The blue sphere approaches from the lower-right toward the white table's right edge, makes sustained contact at that right underside/edge around 180-191 while the table tilts, then departs to the right. This is a side-on image-space collision with the table's right side.",
+            "frame": 185,
+            "side": "right",
+            "side_confidence": 0.99,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.72,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              215,
+              226,
+              237,
+              248
+            ],
+            "evidence_summary": "The blue sphere approaches the right-side cluster from the table side, meets the leading domino before passing it, and is clearly beyond that block afterward. The obstacle is primarily ahead along the sphere's travel path, so this contact is best described as a depth/front interaction.",
+            "frame": 231,
+            "side": "front",
+            "side_confidence": 0.68,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the blue sphere; the clearly relevant nearby obstacles are the white table/platform and later a domino-like upright block in the right-side cluster.",
+          "Scanning in time order, the first distinct contact episode is the blue sphere reaching and pushing into the white table/platform, after which the tabletop visibly tilts.",
+          "After a visible separation from the table area, a second distinct contact episode occurs when the blue sphere reaches the right-side domino cluster and touches the first upright block.",
+          "These are kept separate because the ball leaves the table contact zone before later arriving at the domino cluster.",
+          "Only allowed frame indices are cited."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 14.558,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 125, 136, 147, and 169, the blue sphere moves from the lower-right area toward the white table's right edge, with its path shifting leftward/upward in image space rather than heading straight into a front face in depth.",
+                "By frame 180, the blue sphere is visibly pressed into the table's right underside/edge; at frame 191 it is still engaged at that same right-side boundary while the tabletop is tilting.",
+                "After contact, frames 202, 213, and 224 show the blue sphere separating away on the right/upper-right side of the table, indicating the interaction occurred with the table's right lateral side rather than after passing behind it.",
+                "Because the approach, sustained contact, and departure all center on the table's right image-space edge, this contact episode is best classified as a lateral right-side collision."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 26.776,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 215 and 226, the blue sphere moves away from the table toward the right-side domino row, and the first upright block of that row remains in the sphere's forward path rather than behind it.",
+                "Around the contact moment (between 226 and 237, with the event anchored at 231), the sphere closes directly into the leading block of the cluster; this is the first encountered obstacle in that row.",
+                "By frame 248, the blue sphere is already past the contacted block, with the row now behind/below it in the image, so the contact is not a rearward or after-passing interaction.",
+                "Although the approach is slightly diagonal in image space, the temporal sequence supports an obstacle-ahead impact more than a pure side swipe, so the geometry is best classified as depth/front."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        15,
+        31,
+        46,
+        62,
+        77,
+        93,
+        108,
+        123,
+        139,
+        154,
+        170,
+        185,
+        201,
+        216,
+        231,
+        247,
+        262,
+        278,
+        293,
+        309,
+        324,
+        339,
+        355,
+        370,
+        386,
+        401,
+        416,
+        432,
+        447,
+        463,
+        478,
+        494,
+        509,
+        524,
+        540,
+        555,
+        571,
+        586,
+        602,
+        617,
+        632,
+        648,
+        663,
+        679,
+        694,
+        710,
+        725
+      ],
+      "num_events": 2,
+      "pass": 2,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.88,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              109,
+              131,
+              153,
+              164,
+              175,
+              186,
+              197,
+              208
+            ],
+            "evidence_summary": "The blue ball approaches from the near lower-right side toward the table, reaches the table's right underside/edge at contact, tilts the tabletop, and then appears beyond/up by later frames. This supports a front/depth contact with the obstacle ahead, not a side-swipe or rearward contact.",
+            "frame": 170,
+            "side": "front",
+            "side_confidence": 0.8,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.78,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              204,
+              215,
+              226,
+              237,
+              248,
+              259
+            ],
+            "evidence_summary": "The blue ball moves from the table toward the upper-right cluster, reaches the near end of the inner row, is flush with the nearest block around frame 237, and then appears beyond that row by frames 248-259. The obstacle is encountered ahead of the ball's forward motion, so the contact is best classified as depth with the front side.",
+            "frame": 231,
+            "side": "front",
+            "side_confidence": 0.75,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the blue ball; the nearby objects it can contact are the white table/ramp and later the upper-right rows of upright black/red blocks.",
+          "Scanning frames in time order, the first distinct contact is the blue ball meeting the white table at its right underside/edge region, after which the table visibly tilts.",
+          "After a visible separation from the table, the blue ball later reaches the upper-right obstacle cluster and appears to make a separate brief contact with the nearest upright block there.",
+          "Later frames show the blue ball traveling alone with no further clearly supported contacts."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 22.864,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 109, 131, and 153, the blue ball starts below/right of the table and steadily closes the gap toward the table itself; it is not already past the obstacle.",
+                "Around frames 164 and 175, the blue ball is pressed into the table's right underside/edge region, and the tabletop begins to tilt, confirming this is the contact phase.",
+                "After contact, in frames 186, 197, and 208, the blue ball appears beyond/up alongside the tabletop rather than remaining on the original near side, so the table was ahead in its travel path before contact.",
+                "Because the approach is into the obstacle ahead, with contact occurring before the ball gets past it, the geometry is better described as head-on/depth interaction rather than lateral or rearward, even though the impact point is on the table's right edge area."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 29.182,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 204 to 226, the blue ball departs the table and travels generally upward and to the right toward the inner upper-right obstacle row.",
+                "At frame 226, the nearest block in that row lies ahead of the ball along its forward path, rather than behind it; the ball has not yet passed the row.",
+                "By frame 237, the ball is flush with the nearest upright block at the near end of that row, consistent with the contact moment.",
+                "By frames 248 and 259, the ball is clearly beyond the row, with the contacted row now below/behind it in the image, so this is not a rearward or after-passing touch.",
+                "Because the ball meets an obstacle that is ahead in its motion path and then continues past it, the interaction is best described as depth/front rather than a primarily side-on lateral brush."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        15,
+        31,
+        46,
+        62,
+        77,
+        93,
+        108,
+        123,
+        139,
+        154,
+        170,
+        185,
+        201,
+        216,
+        231,
+        247,
+        262,
+        278,
+        293,
+        309,
+        324,
+        339,
+        355,
+        370,
+        386,
+        401,
+        416,
+        432,
+        447,
+        463,
+        478,
+        494,
+        509,
+        524,
+        540,
+        555,
+        571,
+        586,
+        602,
+        617,
+        632,
+        648,
+        663,
+        679,
+        694,
+        710,
+        725
+      ],
+      "num_events": 2,
+      "pass": 3,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.87,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              150,
+              162,
+              174,
+              187,
+              199,
+              212
+            ],
+            "evidence_summary": "The blue ball approaches from below-right, reaches and compresses against the white table's right underside/right edge during frames 174-199, and then separates by 212 to the upper-right. This supports a side-on impact with the table's right side region, not a rearward contact.",
+            "frame": 201,
+            "side": "right",
+            "side_confidence": 0.93,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.78,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              230,
+              241,
+              252,
+              263
+            ],
+            "evidence_summary": "The blue ball approaches the row with the nearest tile off to its forward-right, is side-adjacent to that tile at 241, and then continues past it with a reopened gap by 252-263. The motion looks like a lateral graze on the ball's right side.",
+            "frame": 247,
+            "side": "right",
+            "side_confidence": 0.73,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the blue ball; nearby objects it visibly reaches are the white table/platform and later an upper-right domino row with a red-faced front tile.",
+          "Scanning in time order, the first clear contact episode is the blue ball meeting the right side/underside of the white table as the table begins to tilt.",
+          "After the ball separates from the table, a later distinct episode occurs when the blue ball reaches the upper-right domino row and appears to touch the nearest upright tile.",
+          "Frames after that show the ball traveling away into open space with no further clearly supported contacts.",
+          "Only allowed frame indices are cited, and separated episodes are not merged."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 19.564,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 150, 162, and 174, the blue ball approaches the table from the lower-right side of the image and closes in on the table's right underside/right edge region.",
+                "At frames 187 and 199, the blue ball is visibly pressed against that same right-edge/underside area while the tabletop tilts, so the contact location is lateralized to the table's right side in image space.",
+                "By frame 212, the blue ball has separated and is now above/right of the table, indicating it contacted before passing the table and then deflected away; this does not look like a rearward after-passing contact.",
+                "Because the contact is concentrated on the table's image-right edge rather than a centered obstacle face directly ahead, the interaction is better described as lateral than depth/front."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 32.191,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "At 230 the blue ball is approaching the upper-right row from the lower-left, and the nearest upright tile sits offset to the ball's forward-right rather than squarely centered ahead.",
+                "At 241 the ball is pressed against the near-end tile of that row, with the contact appearing on the ball's right-hand side in image space.",
+                "By 252 and 263 the ball has moved past that tile and the gap is open again, while its path continues upward after losing most of its rightward component.",
+                "That before/after pattern is most consistent with a glancing side contact against an obstacle on the ball's right, not a rearward brush and not a primarily head-on depth collision."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        15,
+        31,
+        46,
+        62,
+        77,
+        93,
+        108,
+        123,
+        139,
+        154,
+        170,
+        185,
+        201,
+        216,
+        231,
+        247,
+        262,
+        278,
+        293,
+        309,
+        324,
+        339,
+        355,
+        370,
+        386,
+        401,
+        416,
+        432,
+        447,
+        463,
+        478,
+        494,
+        509,
+        524,
+        540,
+        555,
+        571,
+        586,
+        602,
+        617,
+        632,
+        648,
+        663,
+        679,
+        694,
+        710,
+        725
+      ],
+      "num_events": 2,
+      "pass": 4,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.92,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              125,
+              147,
+              158,
+              169,
+              180,
+              191,
+              202
+            ],
+            "evidence_summary": "The blue ball approaches from the image's lower-right toward the table's right underside, is visibly pressed into the right edge around 169-180, and then reappears on the right as the table tips by 191-202. This supports a primarily lateral collision on the table's right side.",
+            "frame": 185,
+            "side": "right",
+            "side_confidence": 0.96,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.88,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              204,
+              215,
+              226,
+              237,
+              248,
+              259
+            ],
+            "evidence_summary": "The blue ball approaches the inner-right block row from in front of it (204-226), is visibly up against the first/front upright at 237, and is past that row by 248-259, indicating a brief head-on/depth contact with the obstacle ahead.",
+            "frame": 231,
+            "side": "front",
+            "side_confidence": 0.84,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the blue ball; nearby objects it can contact are the white table/ramp and later the upright domino-like blocks on the right side.",
+          "Scanning in time order, the first clearly supported contact episode is the blue ball striking the white table at its right side/underside as the table begins to tip.",
+          "After the ball separates from the table and moves into the upper-right area, there is one later brief contact episode with a right-side upright block row; no additional clear impacts are visible after that.",
+          "Frames cited use only the allowed indices, and I keep the table interaction as one episode because the ball remains in continuous interaction without a clear reopened gap."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 11.881,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 125, 136, 147, and 158, the blue ball approaches the table from the lower-right side of the image, moving leftward and slightly upward toward the table's right underside rather than straight into its front face.",
+                "By frames 169 and 180, the first clear overlap/compression is localized at the table's right underside/right edge; the contact region is on the table's side in image space.",
+                "After the anchor, in frames 191 and 202, the table has tipped/rotated while the blue ball emerges along the same right edge, consistent with a side hit that lifts/rotates the table rather than a head-on depth collision.",
+                "The before/after path does not show the ball already passing the table and then striking from behind, so rear/back contact is less supported than a lateral right-side impact."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 20.79,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 204, 215, and 226, the blue ball leaves the table and travels upward/back into the scene toward the inner-right row of uprights, rather than merely sliding alongside that row.",
+                "By frame 237, the ball is flush with the first/front upright of that row, with no clear gap visible at the encounter point.",
+                "After that, in frames 248 and 259, the ball is already beyond the row on the far/upstage side, showing it contacted an obstacle ahead in its path and then continued past it.",
+                "Because the approach is into the row and the departure is beyond it, the interaction is best described as a depth-aligned front contact rather than a purely left/right side swipe or a rearward after-passing touch."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        15,
+        31,
+        46,
+        62,
+        77,
+        93,
+        108,
+        123,
+        139,
+        154,
+        170,
+        185,
+        201,
+        216,
+        231,
+        247,
+        262,
+        278,
+        293,
+        309,
+        324,
+        339,
+        355,
+        370,
+        386,
+        401,
+        416,
+        432,
+        447,
+        463,
+        478,
+        494,
+        509,
+        524,
+        540,
+        555,
+        571,
+        586,
+        602,
+        617,
+        632,
+        648,
+        663,
+        679,
+        694,
+        710,
+        725
+      ],
+      "num_events": 2,
+      "pass": 5,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.92,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              156,
+              168,
+              181,
+              193,
+              205,
+              218
+            ],
+            "evidence_summary": "The blue ball closes in from the image-right, engages the platform at the right underside/edge with visible occlusion and platform tilt, then emerges and separates to the upper-right. The geometry is side-on in image space, so this is a lateral contact on the platform's right side.",
+            "frame": 231,
+            "side": "right",
+            "side_confidence": 0.97,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.75,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              264,
+              275,
+              286,
+              297
+            ],
+            "evidence_summary": "Before contact, the ball is approaching the right-middle mixed red/black upright cluster from behind/above it in the image; shortly after, that cluster is no longer visible while the ball remains, indicating the ball made contact with an obstacle ahead and then passed it. This supports a front/depth collision.",
+            "frame": 324,
+            "side": "front",
+            "side_confidence": 0.7,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "The blue ball is the main moving object; the yellow ball stays on/near the white platform and is not clearly struck in these keyframes.",
+          "Scanning chronologically, the first clear contact episode is the blue ball reaching and pushing into the white platform/ramp area, visible as overlap/occlusion and platform tipping.",
+          "After the blue ball separates from the platform and moves rightward, a later distinct contact occurs with a right-side upright domino/block in the mixed red/black cluster.",
+          "No additional clearly supported contacts are visible after the ball leaves that cluster; later frames show the blue ball alone with no obstacle contact."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 25.923,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 156 and 168, the blue ball approaches from the image-right toward the platform, with the ball positioned lower than the platform top and closing on the right underside/edge.",
+                "In frames 181 and 193, the blue ball becomes partially occluded by the platform at its right edge/underside, and the platform starts to tilt, showing active contact at that side rather than a distant depth-only alignment.",
+                "After contact, in frames 205 and 218, the blue ball has emerged above/right of the platform and is moving away while the platform remains tilted, consistent with a side-on interaction that redirected/lifted it rather than a rearward brush after passing.",
+                "Because the approach is from the image-right into the platform's side/underside and the departure is back out to the right/upward, the interaction is best classified as lateral with the contacted side being the right side."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 29.747,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 264 and 275, the mixed red/black upright row is still visible below and slightly to the right of the blue ball, so the obstacle is positioned ahead along the ball's travel corridor rather than clearly behind it.",
+                "By frame 286 the obstacle row has dropped mostly out of view while the ball remains in view, and by 297 onward the ball is alone, which is consistent with the ball having reached and then gone past that row.",
+                "Using the before/after sequence around the anchor episode, the motion reads as approach into an obstacle in front and then continuation beyond it, which fits a depth-aligned contact better than a side swipe or rearward brush."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    }
+  ],
+  "reference_video_sha256": "bfdffd34bc20efcc4a3fa1f4cbf01b6ce1a3a98b08b015873935f6ad09a9db6c",
+  "schema_version": 1,
+  "selected": {
+    "grid_frame_indices": [
+      0,
+      15,
+      31,
+      46,
+      62,
+      77,
+      93,
+      108,
+      123,
+      139,
+      154,
+      170,
+      185,
+      201,
+      216,
+      231,
+      247,
+      262,
+      278,
+      293,
+      309,
+      324,
+      339,
+      355,
+      370,
+      386,
+      401,
+      416,
+      432,
+      447,
+      463,
+      478,
+      494,
+      509,
+      524,
+      540,
+      555,
+      571,
+      586,
+      602,
+      617,
+      632,
+      648,
+      663,
+      679,
+      694,
+      710,
+      725
+    ],
+    "payload": {
+      "events": [
+        {
+          "confidence": 0.88,
+          "contact_class": "depth",
+          "evidence_frame_indices": [
+            204,
+            215,
+            226,
+            237,
+            248,
+            259
+          ],
+          "evidence_summary": "The blue ball approaches the inner-right block row from in front of it (204-226), is visibly up against the first/front upright at 237, and is past that row by 248-259, indicating a brief head-on/depth contact with the obstacle ahead.",
+          "frame": 231,
+          "side": "front",
+          "side_confidence": 0.84,
+          "type": "collision"
+        }
+      ],
+      "reasoning_steps": [
+        "Main moving object is the blue ball; nearby objects it can contact are the white table/ramp and later the upright domino-like blocks on the right side.",
+        "Scanning in time order, the first clearly supported contact episode is the blue ball striking the white table at its right side/underside as the table begins to tip.",
+        "After the ball separates from the table and moves into the upper-right area, there is one later brief contact episode with a right-side upright block row; no additional clear impacts are visible after that.",
+        "Frames cited use only the allowed indices, and I keep the table interaction as one episode because the ball remains in continuous interaction without a clear reopened gap."
+      ],
+      "side_relabel": {
+        "enabled": true,
+        "logs": [
+          {
+            "contact_class": "lateral",
+            "elapsed_sec": 11.881,
+            "event_index": 0,
+            "original_side": "unknown",
+            "reasoning_steps": [
+              "From frames 125, 136, 147, and 158, the blue ball approaches the table from the lower-right side of the image, moving leftward and slightly upward toward the table's right underside rather than straight into its front face.",
+              "By frames 169 and 180, the first clear overlap/compression is localized at the table's right underside/right edge; the contact region is on the table's side in image space.",
+              "After the anchor, in frames 191 and 202, the table has tipped/rotated while the blue ball emerges along the same right edge, consistent with a side hit that lifts/rotates the table rather than a head-on depth collision.",
+              "The before/after path does not show the ball already passing the table and then striking from behind, so rear/back contact is less supported than a lateral right-side impact."
+            ],
+            "relabeled_side": "right",
+            "status": "ok"
+          },
+          {
+            "contact_class": "depth",
+            "elapsed_sec": 20.79,
+            "event_index": 1,
+            "original_side": "unknown",
+            "reasoning_steps": [
+              "From frames 204, 215, and 226, the blue ball leaves the table and travels upward/back into the scene toward the inner-right row of uprights, rather than merely sliding alongside that row.",
+              "By frame 237, the ball is flush with the first/front upright of that row, with no clear gap visible at the encounter point.",
+              "After that, in frames 248 and 259, the ball is already beyond the row on the far/upstage side, showing it contacted an obstacle ahead in its path and then continued past it.",
+              "Because the approach is into the row and the departure is beyond it, the interaction is best described as a depth-aligned front contact rather than a purely left/right side swipe or a rearward after-passing touch."
+            ],
+            "relabeled_side": "front",
+            "status": "ok"
+          }
+        ],
+        "model": "gpt-5.4"
+      }
+    }
+  }
+}

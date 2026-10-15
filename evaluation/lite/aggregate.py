@@ -119,9 +119,12 @@ def _extract_control_motion(result: Mapping[str, Any]) -> dict[str, Any]:
                 _get(stats, "summary", "mean")
             )
     synthetic = result.get("synthetic_vs_candidate")
-    if isinstance(synthetic, Mapping):
-        metrics["synthetic_epe_mean"] = _numeric(
-            _get(synthetic, "epe_summary", "mean")
+    if isinstance(synthetic, Mapping) and synthetic.get("enabled"):
+        metrics["synthetic_mean_flow_cosine"] = _numeric(
+            _get(synthetic, "temporal_summary", "mf_cosine_mean")
+        )
+        metrics["synthetic_pixel_epe_mean"] = _numeric(
+            _get(synthetic, "temporal_summary", "pixel_epe_mean_mean")
         )
     return metrics
 
@@ -419,6 +422,9 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
             if not dimension_rows:
                 continue
             done = [row for row in dimension_rows if row.get("status") == "completed"]
+            unsupported = [
+                row for row in dimension_rows if row.get("status") == "unsupported"
+            ]
             required_repeats = {str(row['case_id']): int(row['required_repeats'])
                                 for row in dimension_rows if row.get('required_repeats')}
             coverage = {case_id: {'required': count,
@@ -438,11 +444,18 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                     "std_across_cases": headline_stats.get("std_across_cases"),
                     "direction": dimension.aggregate.direction,
                 }
+            source_counts: dict[str, int] = {}
+            for row in done:
+                source = _get(row, "metrics", "lpips_primary_source")
+                if isinstance(source, str):
+                    source_counts[source] = source_counts.get(source, 0) + 1
             dimension_summaries[dimension_id] = {
                 "display_name": dimension.display_name,
+                **({"lpips_primary_source_counts": source_counts} if source_counts else {}),
                 "num_rows": len(dimension_rows),
                 "num_cases": len({str(row.get("case_id")) for row in dimension_rows}),
                 "num_completed": len(done),
+                "num_unsupported": len(unsupported),
                 "headline": headline,
                 "means": means,
                 "stats": stats,
@@ -520,15 +533,20 @@ def write_summary_csv(
             for dimension_id in dimension_ids:
                 summary = dimensions.get(dimension_id) or {}
                 headline = summary.get("headline") or {}
-                row.append(headline.get("value"))
-                row.append(headline.get("std_across_cases"))
                 dimension = suite.dimensions[dimension_id]
                 headline_name = (
                     dimension.aggregate.headline
                     if dimension.aggregate is not None
                     else "n/a"
                 )
+                extras = _extra_mean_names(dimension, headline_name)
+                # A dimension the backend cannot express is N/A, not blank.
+                if summary.get("num_completed") == 0 and summary.get("num_unsupported"):
+                    row.extend(["unsupported", None] + ["unsupported"] * len(extras))
+                    continue
+                row.append(headline.get("value"))
+                row.append(headline.get("std_across_cases"))
                 means = summary.get("means") or {}
-                for extra in _extra_mean_names(dimension, headline_name):
+                for extra in extras:
                     row.append(means.get(extra))
             writer.writerow(row)

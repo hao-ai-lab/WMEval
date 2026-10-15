@@ -24,6 +24,8 @@ modules:
 module_params:
   causal_step:
     causal_step_video_id: BeamDomino_causal
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json
 reference:
   artifacts:
     qa_dataset: reference/artifacts/qa_dataset.json
@@ -41,6 +43,6 @@ evaluator_lock:
   artifact_schema_versions: {}
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
   dependency_versions: {}
-  evaluator_fingerprint: eea8d69ea82a105e654638959c6c24c8
+  evaluator_fingerprint: e8a31caa0c4269b99e7f21203429c635
   module_config: {}
   release_id: wmeval-lite-v1

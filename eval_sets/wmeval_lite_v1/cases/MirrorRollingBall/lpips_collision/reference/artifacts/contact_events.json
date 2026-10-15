@@ -1,0 +1,1192 @@
+{
+  "case_id": "MirrorRollingBall/lpips_collision",
+  "consensus": {
+    "cluster_gap_frames": 12,
+    "clusters": [
+      {
+        "frame": 0,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 63,
+        "kept": false,
+        "side": "front",
+        "support": 2
+      },
+      {
+        "frame": 84,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 105,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 126,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 158,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 190,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 190,
+        "kept": false,
+        "side": "right",
+        "support": 1
+      },
+      {
+        "frame": 263,
+        "kept": false,
+        "side": "right",
+        "support": 1
+      },
+      {
+        "frame": 274,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 337,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 348,
+        "kept": false,
+        "side": "right",
+        "support": 1
+      },
+      {
+        "frame": 390,
+        "kept": false,
+        "side": "right",
+        "support": 1
+      },
+      {
+        "frame": 400,
+        "kept": false,
+        "side": "front",
+        "support": 1
+      },
+      {
+        "frame": 474,
+        "kept": true,
+        "side": "right",
+        "support": 5
+      }
+    ],
+    "min_support": 3,
+    "passes": 5,
+    "rule": "events supported by at least min_support distinct passes (frame-proximity clusters per side)"
+  },
+  "created_utc": "2026-10-10T01:37:48+00:00",
+  "judge": {
+    "coarse_model": "gpt-5.4-mini",
+    "max_grid_frames": 48,
+    "model": "gpt-5.4",
+    "prompt_version": "causal_collision_v2",
+    "provider": "openai",
+    "sampling_strategy": "single_grid",
+    "side_model": null
+  },
+  "passes": [
+    {
+      "grid_frame_indices": [
+        0,
+        11,
+        21,
+        32,
+        42,
+        53,
+        63,
+        74,
+        84,
+        95,
+        105,
+        116,
+        126,
+        137,
+        147,
+        158,
+        169,
+        179,
+        190,
+        200,
+        211,
+        221,
+        232,
+        242,
+        253,
+        263,
+        274,
+        284,
+        295,
+        305,
+        316,
+        326,
+        337,
+        348,
+        358,
+        369,
+        379,
+        390,
+        400,
+        411,
+        421,
+        432,
+        442,
+        453,
+        463,
+        474,
+        484,
+        495
+      ],
+      "num_events": 2,
+      "pass": 1,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.72,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              50,
+              100,
+              111,
+              131,
+              161
+            ],
+            "evidence_summary": "The gray sphere approaches the upper-middle cluster from a more open lower-left position and closes into a tight pocket by the anchor interval. The closest compression is with the balls lying ahead along its approach into the group, and afterward it remains trapped/deflected near that same pocket rather than contacting from after-passing.",
+            "frame": 105,
+            "side": "front",
+            "side_confidence": 0.66,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.98,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              418,
+              446,
+              460,
+              474,
+              488,
+              495
+            ],
+            "evidence_summary": "The gray sphere approaches the right boundary from the left with a shrinking visible gap (418 to 446), becomes flush with the wall by 460 and at the anchor 474, and remains along that same right wall afterward (488, 495). This supports a side-on lateral contact with the right boundary.",
+            "frame": 474,
+            "side": "right",
+            "side_confidence": 0.99,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the small gray/silver sphere; nearby contact targets are the yellow spheres arranged in rows and later the right container wall.",
+          "The earliest clearly supported contact episode is when the gray sphere becomes visibly wedged/tangent within the upper-middle yellow-sphere cluster around frames 95-116; I treat the later movement through that same packed area as one continuous episode because no clear reopened gap is visible in the sampled keyframes.",
+          "After the gray sphere fully separates from the yellow array, a later distinct episode occurs when it reaches and contacts the right wall around frames 463-484.",
+          "All cited frames are from the allowed index list."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 29.489,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 50 to 100, the gray sphere advances from a slightly more open spot into the denser upper-middle yellow cluster, moving diagonally toward the balls in front of its path rather than emerging from beyond them.",
+                "Around the contact window (frames 100 and 111, bracketing anchor 105), the gray sphere is visibly wedged with compressed spacing to the neighboring yellow balls ahead/around it, consistent with driving into a pocket.",
+                "From frames 111 to 161, the gray sphere does not appear to have already cleared a yellow ball and then brush it from behind; instead it stays constrained near the same cluster and is only slightly deflected.",
+                "This favors a head-on / into-the-cluster interpretation over a pure side swipe, so the contact is best classified as depth/front rather than rear."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 10.139,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "At frame 418, the gray sphere is inside the arena with a visible horizontal gap to the right boundary.",
+                "Across frames 425, 432, 439, and 446, that right-side gap steadily decreases while the sphere's motion is predominantly rightward in image space.",
+                "By frames 460 and 474, the sphere is flush against the right wall, marking the contact state at the event anchor.",
+                "After contact, frames 481, 488, and 495 still show the sphere riding or remaining pinned to the same right boundary rather than having passed beyond it.",
+                "Because the approach is from left-to-right into a vertical wall in image space, the interaction is best described as lateral, not rearward and not depth/front-aligned."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        11,
+        21,
+        32,
+        42,
+        53,
+        63,
+        74,
+        84,
+        95,
+        105,
+        116,
+        126,
+        137,
+        147,
+        158,
+        169,
+        179,
+        190,
+        200,
+        211,
+        221,
+        232,
+        242,
+        253,
+        263,
+        274,
+        284,
+        295,
+        305,
+        316,
+        326,
+        337,
+        348,
+        358,
+        369,
+        379,
+        390,
+        400,
+        411,
+        421,
+        432,
+        442,
+        453,
+        463,
+        474,
+        484,
+        495
+      ],
+      "num_events": 4,
+      "pass": 2,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.75,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              62,
+              73,
+              85,
+              96,
+              107
+            ],
+            "evidence_summary": "The gray sphere approaches a yellow sphere that sits mostly ahead/up-image in frames 62-73, is in direct contact by frame 85, and is already past to that sphere's left by frames 96-107. This supports a primarily front/depth encounter rather than side-only or rearward contact.",
+            "frame": 84,
+            "side": "front",
+            "side_confidence": 0.72,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.79,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              157,
+              168,
+              179,
+              190,
+              201,
+              212
+            ],
+            "evidence_summary": "The gray sphere approaches a yellow sphere from the left, becomes flush with it around 179-190, and is clearly beyond it on the right by 201-212. This left-to-right pass indicates a side-on lateral contact rather than a head-on front/depth collision.",
+            "frame": 190,
+            "side": "right",
+            "side_confidence": 0.88,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.81,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              304,
+              315,
+              326,
+              338,
+              349,
+              360
+            ],
+            "evidence_summary": "The gray sphere advances rightward toward a right-side yellow sphere, is in contact around 326-338, and then appears clearly to that yellow sphere's right afterward. This indicates the yellow sphere was in front of the gray sphere along its motion path, supporting a depth/front classification.",
+            "frame": 337,
+            "side": "front",
+            "side_confidence": 0.77,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.98,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              418,
+              446,
+              453,
+              460,
+              481,
+              488
+            ],
+            "evidence_summary": "The gray sphere approaches from the left toward the container's right wall, closes the lateral gap by about frames 453-460, and remains pressed against that right boundary around the anchor and after it.",
+            "frame": 484,
+            "side": "right",
+            "side_confidence": 0.99,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main mover is the small gray sphere/disc; nearby contact targets are the yellow spheres arranged in rows and the container\u2019s right wall.",
+          "I scanned frames in order and only marked episodes where the gray object visibly closes to zero gap against a target, with later separated re-contacts counted as new events.",
+          "The clearest supported episodes are an early yellow-sphere contact in the upper-middle cluster, another farther right in the cluster, a later contact near the right-side yellow spheres, and a final impact with the right wall."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 29.553,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In pre-contact frames 62 and 73, the gray sphere is still below the relevant yellow sphere in the upper-middle cluster, with the yellow positioned mostly ahead/up-image rather than purely beside it.",
+                "At frame 85, the gray sphere is directly against that yellow sphere at the contact moment.",
+                "In post-contact frames 96 and 107, the gray sphere has already moved to the left of the same yellow sphere, showing it passed by after approaching it from below/forward.",
+                "Because the obstacle is encountered ahead along the gray sphere's advance into the cluster, this is better described as a depth/front contact than a rear contact.",
+                "There is some lateral offset during the pass, but the temporal approach pattern is primarily toward a sphere in front, so 'depth' is preferred over 'lateral'."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 24.046,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 157 and 168, the gray sphere closes in on a yellow sphere that sits immediately to its right in image space; the approach is dominated by rightward motion with only minor depth/vertical shift.",
+                "At frames 179 and 190, the gray and yellow spheres appear flush side-by-side, indicating the contact moment.",
+                "By frames 201 and 212, the gray sphere has already moved to the right of that same yellow sphere, so it has passed alongside it rather than stopping against an obstacle directly ahead.",
+                "Because the pre-contact and post-contact positions switch from left of the yellow sphere to right of it, the interaction is best described as a lateral side contact on the gray sphere's right side."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 23.195,
+              "event_index": 2,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 304 and 315, the gray sphere is approaching a specific yellow sphere near the right side of the formation from the left, with a consistent rightward drift.",
+                "By frame 326, the gray sphere is directly adjacent to that yellow sphere with essentially no visible gap, matching the contact timing near the anchor frame 337.",
+                "In frames 338 and 349, the gray sphere has moved to the right of the same yellow sphere and continues farther right in 360, so the yellow sphere was ahead along the gray sphere's travel path before contact.",
+                "Because the gray sphere approaches the obstacle, meets it, and then emerges on the far side, this is better described as a forward/head-on interaction than a side swipe or rearward/after-passing contact."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 8.227,
+              "event_index": 3,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 418 through 446, the gray sphere steadily shifts rightward in image space toward the container's right wall while staying at roughly the same depth band.",
+                "By frames 453 and 460, the sphere reaches and begins pressing against the right boundary; the gap visible earlier is gone.",
+                "In the anchor-neighboring frames 481 and 488, the sphere remains flush with the same right wall rather than passing beyond it or contacting something behind it.",
+                "Because the approach is sideways across the image into the container's right boundary, the interaction is best described as lateral rather than head-on depth contact or rearward after-passing contact."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        11,
+        21,
+        32,
+        42,
+        53,
+        63,
+        74,
+        84,
+        95,
+        105,
+        116,
+        126,
+        137,
+        147,
+        158,
+        169,
+        179,
+        190,
+        200,
+        211,
+        221,
+        232,
+        242,
+        253,
+        263,
+        274,
+        284,
+        295,
+        305,
+        316,
+        326,
+        337,
+        348,
+        358,
+        369,
+        379,
+        390,
+        400,
+        411,
+        421,
+        432,
+        442,
+        453,
+        463,
+        474,
+        484,
+        495
+      ],
+      "num_events": 5,
+      "pass": 3,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.63,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              39,
+              49,
+              59,
+              69,
+              79
+            ],
+            "evidence_summary": "The gray sphere closes a visible pre-contact gap to a yellow sphere by frames 39-49, reaches contact near the anchor (between 49 and 59), and is beyond that same spot by 69-79. This temporal pattern matches a forward/depth approach into an obstacle ahead, not a rearward or primarily side-on contact.",
+            "frame": 53,
+            "side": "front",
+            "side_confidence": 0.7,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.82,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              125,
+              136,
+              147,
+              159,
+              170,
+              181
+            ],
+            "evidence_summary": "Pre-contact frames 125 and 136 show the gray sphere closing on a yellow sphere positioned ahead on its up-right trajectory. Frames 147 and 159 show the two spheres in contact. Frames 170 and 181 show the gray sphere past that point, supporting a head-on/depth-aligned front contact rather than a lateral or rearward one.",
+            "frame": 158,
+            "side": "front",
+            "side_confidence": 0.79,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.84,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              241,
+              252,
+              263,
+              274,
+              285,
+              296
+            ],
+            "evidence_summary": "The gray sphere approaches a yellow sphere that lies ahead on its rightward path (241-263), reaches clearest contact at 274, and is beyond that same sphere by 285-296. This temporal pattern indicates a forward/depth encounter with an obstacle in front, not a rear or side-only brush.",
+            "frame": 274,
+            "side": "front",
+            "side_confidence": 0.8,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.89,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              346,
+              357,
+              368,
+              379,
+              390,
+              401,
+              412
+            ],
+            "evidence_summary": "The gray sphere approaches the array's rightmost yellow sphere from the left/inboard side over 346-379, appears to meet it around 390, and then continues into open space on the right by 401-412. This supports a side-on lateral contact on the right, not a depth/front or rear/back interaction.",
+            "frame": 390,
+            "side": "right",
+            "side_confidence": 0.86,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.96,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              429,
+              441,
+              447,
+              453,
+              495
+            ],
+            "evidence_summary": "The gray sphere approaches from left to right toward the arena's right boundary, reducing the lateral gap until it touches and is pressed against that wall by frame 495. The contact is therefore side-on in image space, with the obstacle on the object's right.",
+            "frame": 495,
+            "side": "right",
+            "side_confidence": 0.99,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the small gray sphere; the contact targets are the yellow spheres arranged in rows, plus the right wall at the end.",
+          "I scanned the keyframes in order and marked only clearly visible contact moments where the gray sphere closes the gap and meets a target, using a new event when it later reaches a different target after moving on.",
+          "The clearest separate episodes are an early central hit, a later upper-middle hit, an upper-right-middle hit, a contact with the outer right yellow sphere, and the final wall impact."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 48.455,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "In frames 39 and 49, the gray sphere is still approaching the same yellow sphere in the central-upper cluster, with the gap shrinking before contact.",
+                "Around the contact window (between 49 and 59, with anchor 53), the gray and yellow spheres meet/overlap rather than the gray first clearly passing beyond the yellow and then clipping it from behind.",
+                "By frames 69 and 79, the gray sphere has moved beyond the contact position, which supports a forward approach into an obstacle ahead rather than a rearward/after-passing contact.",
+                "The approach is not a clean left-right side swipe across a large lateral offset; the yellow sphere is primarily in the gray sphere's forward path, so the geometry is better described as depth/front than lateral."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 26.245,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From 125 to 136, the gray sphere moves diagonally up-right toward one specific yellow sphere in the upper-middle cluster; that yellow sphere lies ahead along the incoming path rather than already beside or behind the gray sphere.",
+                "At 147 and 159, the gray sphere is flush against that yellow sphere at the encounter point, matching a direct reach into an obstacle in front.",
+                "By 170 and then 181, the gray sphere is already beyond the same contact point on the up-right side, so the sequence is approach -> contact -> pass beyond, not pass-first then rearward touch.",
+                "This temporal pattern fits a primarily depth/front interaction better than a side-on lateral swipe."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 15.712,
+              "event_index": 2,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 241, 252, and 263, the gray sphere advances steadily rightward through the upper-right-middle cluster toward one specific yellow sphere that stays ahead of it along its path.",
+                "At frame 274, the clearest overlap/contact is between the gray sphere and that forward yellow sphere; the contact point is not just a side brush with a ball already alongside or behind.",
+                "By frames 285 and 296, the gray sphere has moved to the far/right side of the contacted yellow sphere, showing a before-contact approach and after-contact passage past an obstacle that was in front of it.",
+                "Because the yellow sphere is encountered ahead along the gray sphere's travel direction, this is best classified as a depth/front contact rather than a purely lateral or rearward interaction."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 31.19,
+              "event_index": 3,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 346, 357, 368, and 379, the gray sphere advances mainly rightward along the image plane toward the array's outer right edge; its separation from the rightmost yellow sphere decreases over these frames.",
+                "At about frame 390, the gray sphere reaches near-tangency/overlap with that outermost yellow sphere at the right boundary of the cluster.",
+                "By frames 401 and 412, the gray sphere is clearly on the open-space side to the right of the yellow array, showing it contacted while moving outward/rightward rather than after already passing and reaching back.",
+                "The dominant approach and departure are lateral in image space, not along camera depth, so this is best labeled a lateral side contact.",
+                "Since the obstacle is on the gray sphere's right during approach, the lateral side is right."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 14.82,
+              "event_index": 4,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 429 to 447, the gray sphere moves steadily toward the right boundary, and the visible gap between the sphere and the right wall shrinks frame by frame.",
+                "The obstacle stays on the sphere's right side throughout the approach; the motion is dominated by rightward image-plane translation, with only small vertical drift.",
+                "By frames 453 and later, the sphere is contacting the right wall, and by frame 495 it is visibly pressed against that boundary rather than contacting something ahead in depth.",
+                "There is no sign that the sphere already passed the wall and then hit it from behind, so a rear/back interpretation is not supported.",
+                "This makes the episode best described as a side-on wall contact in image space: lateral contact on the right side."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        11,
+        21,
+        32,
+        42,
+        53,
+        63,
+        74,
+        84,
+        95,
+        105,
+        116,
+        126,
+        137,
+        147,
+        158,
+        169,
+        179,
+        190,
+        200,
+        211,
+        221,
+        232,
+        242,
+        253,
+        263,
+        274,
+        284,
+        295,
+        305,
+        316,
+        326,
+        337,
+        348,
+        358,
+        369,
+        379,
+        390,
+        400,
+        411,
+        421,
+        432,
+        442,
+        453,
+        463,
+        474,
+        484,
+        495
+      ],
+      "num_events": 6,
+      "pass": 4,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.82,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              38,
+              48,
+              58,
+              69,
+              79,
+              89
+            ],
+            "evidence_summary": "Across 48, 58, 69, and 79, the gray sphere approaches a yellow sphere from the up-left, reaches it on its forward trajectory, and then emerges on the down-right far side, supporting a head-on/depth-style front contact.",
+            "frame": 63,
+            "side": "front",
+            "side_confidence": 0.8,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.68,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              101,
+              111,
+              121,
+              132,
+              142
+            ],
+            "evidence_summary": "The gray sphere approaches one yellow sphere from the lower-left/near side in 101-121, then is seen on the far side by 132-142. This supports an obstacle-ahead, front/depth contact rather than a rear or purely lateral interaction.",
+            "frame": 126,
+            "side": "front",
+            "side_confidence": 0.64,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.81,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              164,
+              174,
+              184,
+              195,
+              205,
+              215
+            ],
+            "evidence_summary": "The gray sphere approaches a yellow sphere from the left/lower-left across 164-184, is flush with it around 195, and is clearly beyond it by 205-215. That temporal pattern indicates contact with an obstacle ahead in its travel direction, so the geometry is depth/front.",
+            "frame": 190,
+            "side": "front",
+            "side_confidence": 0.77,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.82,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              238,
+              248,
+              258,
+              269,
+              279
+            ],
+            "evidence_summary": "The gray sphere closes the gap while approaching from the left of the target yellow sphere, is nearly touching at 258, and is clearly to the right of it by 269 and farther separated by 279. This supports a lateral interaction, specifically contact with the obstacle on the gray sphere's right side.",
+            "frame": 263,
+            "side": "right",
+            "side_confidence": 0.87,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.85,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              322,
+              332,
+              342,
+              353,
+              363
+            ],
+            "evidence_summary": "The gray sphere travels predominantly left-to-right near the top-right of the yellow array. Before the event it closes the gap to a yellow sphere positioned on its right (322-342), and after the event it appears on that sphere's right with separation increasing (353-363). This supports a side-on, right-side contact.",
+            "frame": 348,
+            "side": "right",
+            "side_confidence": 0.89,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.98,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              418,
+              446,
+              460,
+              467,
+              474,
+              481,
+              495
+            ],
+            "evidence_summary": "The gray sphere approaches from the left toward the scene's right boundary, becomes flush/pressed against that wall by 460-474, and remains adjacent just after contact before beginning slight leftward separation. The obstacle is clearly on the object's image-space right side.",
+            "frame": 474,
+            "side": "right",
+            "side_confidence": 0.99,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the small gray/silver sphere; nearby contact targets are the yellow spheres in the array and later the right wall.",
+          "Scanning chronologically, the gray sphere shows several separated touch episodes with yellow spheres as it travels rightward through the upper part of the array.",
+          "I kept episodes separate only when a visible gap reappears before the next apparent touch, then marked the next renewed contact once.",
+          "All cited frames are from the allowed index list."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 26.778,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From 38 to 58, the gray sphere moves diagonally down-right toward one yellow sphere in the upper-middle cluster, with that yellow positioned on the gray sphere's forward path rather than merely off to one side.",
+                "Between 58 and 69, the gray sphere transitions from the near/up-left side of that yellow sphere to the far/down-right side, which is consistent with a direct pass-through contact geometry.",
+                "By 79 and 89, the gray sphere is clearly beyond the same yellow and continues away down-right, so the contact is not best described as rearward or as a simple side scrape."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 37.081,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From 101 to 121, the gray sphere moves diagonally toward a particular yellow sphere, with the gap closing from the gray sphere's lower-left/frontward side.",
+                "Between 121 and 132, the gray sphere is no longer on the approach side and appears just beyond the same yellow sphere, so the contact happens as it reaches that obstacle rather than after it had already passed it.",
+                "Because the yellow sphere sits along the gray sphere's travel path and the gray transitions from approach to beyond across the contact interval, the interaction is better described as a front/depth contact than a purely side-on brush."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 24.101,
+              "event_index": 2,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From 164 to 184, the gray sphere moves through the upper-right cluster toward one yellow sphere that is positioned ahead of its path, and the separation steadily shrinks.",
+                "Between 184 and 195, the gray sphere appears flush with that yellow sphere, indicating the actual contact phase rather than just nearby travel.",
+                "By 205 and 215, the gray sphere has already crossed to the far side of the same yellow sphere, leaving that yellow behind it after the interaction.",
+                "Because the motion shows an approach into an obstacle ahead and then a pass-through to the far side, the episode is best described as a forward/depth-aligned contact, not a rearward touch or a mainly side-on brush."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 28.101,
+              "event_index": 3,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "Across frames 238, 248, and 258, the gray sphere moves steadily rightward through the upper-middle/right portion of the array toward a specific yellow sphere that sits to its right in image space.",
+                "At 258 the gray sphere is immediately to the left of that yellow sphere with almost no visible gap, indicating the closest approach occurs from the yellow sphere's left side rather than from straight ahead in depth.",
+                "By 269 and 279, the gray sphere has moved to the right of the same yellow sphere and the separation increases, showing a pass-by after side contact rather than a rearward catch or a head-on stop.",
+                "The before/after pattern is therefore left-to-right side contact in image space, with the contacted obstacle on the gray sphere's right during approach."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 18.112,
+              "event_index": 4,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 322, 332, and 342, the gray sphere approaches a specific yellow sphere from its left side while moving mainly rightward across the image near the top-right portion of the array.",
+                "At frame 342 there is only a very small gap to the yellow sphere on the gray sphere's right, consistent with imminent side contact between 342 and 353.",
+                "By frames 353 and 363, the gray sphere is already to the right of that same yellow sphere and separating from it, so the interaction reads as a pass-by hit rather than a contact with something behind it.",
+                "Because the obstacle is located to the moving sphere's right in image space during approach, the geometry is best described as lateral with right-side contact, not rearward and not a depth/front impact."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 12.433,
+              "event_index": 5,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 418 to 446, the gray sphere translates steadily toward the image-space right boundary, with the horizontal gap to the wall shrinking frame by frame.",
+                "By frames 453, 460, and 467, the sphere is at or nearly flush with the right wall, indicating the contact is with that side boundary rather than with an obstacle deeper into the scene.",
+                "At the anchor frame 474, the sphere is visibly pressed against the right wall, matching a side-on wall impact.",
+                "In post-contact frames 481, 488, and 495, the sphere remains adjacent to the same right boundary and begins to separate slightly leftward/downward, consistent with rebound or sliding off a right-side wall.",
+                "Because the approach and contact are organized around closing lateral distance to the image-space right wall, this episode is best classified as a lateral contact on the right side, not a front/depth or rearward interaction."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    },
+    {
+      "grid_frame_indices": [
+        0,
+        11,
+        21,
+        32,
+        42,
+        53,
+        63,
+        74,
+        84,
+        95,
+        105,
+        116,
+        126,
+        137,
+        147,
+        158,
+        169,
+        179,
+        190,
+        200,
+        211,
+        221,
+        232,
+        242,
+        253,
+        263,
+        274,
+        284,
+        295,
+        305,
+        316,
+        326,
+        337,
+        348,
+        358,
+        369,
+        379,
+        390,
+        400,
+        411,
+        421,
+        432,
+        442,
+        453,
+        463,
+        474,
+        484,
+        495
+      ],
+      "num_events": 3,
+      "pass": 5,
+      "payload": {
+        "events": [
+          {
+            "confidence": 0.68,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              0,
+              18,
+              42,
+              66
+            ],
+            "evidence_summary": "Across frames 0, 18, 42, and 66, the gray object stays embedded within the central yellow-ball pack while adjacent balls remain in contact and shift around it. The contact looks like continued penetration into balls ahead, not a lateral brush along the pack edge and not a rearward contact after passing.",
+            "frame": 0,
+            "side": "front",
+            "side_confidence": 0.61,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.77,
+            "contact_class": "depth",
+            "evidence_frame_indices": [
+              385,
+              395,
+              406,
+              416
+            ],
+            "evidence_summary": "The gray object approaches the isolated right-side yellow ball from the left/rightward-travel direction before frame 400, reaches contact near the anchor, and is clearly past the ball by 406 with increasing separation by 416. This indicates a forward, ahead-of-motion contact rather than a rearward or merely side-following one.",
+            "frame": 400,
+            "side": "front",
+            "side_confidence": 0.8,
+            "type": "collision"
+          },
+          {
+            "confidence": 0.97,
+            "contact_class": "lateral",
+            "evidence_frame_indices": [
+              429,
+              447,
+              477,
+              483,
+              489,
+              495
+            ],
+            "evidence_summary": "Across the pre-contact frames the gray object moves rightward and steadily closes the gap to the tray's right wall; at and after the contact window it sits flush against that wall. This supports a side-on impact with the right boundary, i.e. a lateral-right contact.",
+            "frame": 484,
+            "side": "right",
+            "side_confidence": 0.99,
+            "type": "collision"
+          }
+        ],
+        "reasoning_steps": [
+          "Main moving object is the small gray puck/ball-like object (possibly a tight pair in later frames) traveling through a field of yellow balls inside a walled tray.",
+          "Scanning in time order, the clearest supported contacts are: an initial embedded contact within the central yellow-ball cluster, a later separate contact with an isolated yellow ball on the right side of the cluster, and a final impact with the tray wall.",
+          "I merged the many early packed-ball interactions into one episode because the sampled frames do not show a clear open gap between successive touches while the gray object remains inside the cluster.",
+          "I only cite allowed frame indices."
+        ],
+        "side_relabel": {
+          "enabled": true,
+          "logs": [
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 39.325,
+              "event_index": 0,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "At frame 0 the gray object is already embedded in the upper-central interior of the yellow pack, with yellow balls contacting it on multiple sides; this looks like penetration into the pack rather than a post-pass rear touch.",
+                "From frames 18 and 42, the gray object remains within essentially the same central cluster while nearby yellow balls compress and rearrange around it, which is more consistent with continuing forward intrusion through obstacles ahead than with a clean side scrape along an outside edge.",
+                "By frame 66 the gray object is still among the balls rather than having clearly passed them and then contacted from behind, so a rearward/after-passing interpretation is not supported.",
+                "Because the visible episode shows sustained embedding into the pack interior and no strong evidence of a dominant image-plane side impact, the best classification is depth-aligned contact with the obstacle ahead; side is front rather than left/right."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "depth",
+              "elapsed_sec": 20.689,
+              "event_index": 1,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 385 and 395, the gray object is moving rightward toward the more isolated yellow ball on the right side of the formation, with the gap shrinking along its travel direction.",
+                "Around the anchor (between 395 and 406), the gray object reaches tangency/overlap with that yellow ball; the ball is positioned ahead of the gray object's motion rather than behind it.",
+                "By frames 406 and 416, the gray object is already to the right of the same yellow ball and continues separating, so this episode is not a rearward or after-passing contact.",
+                "Because the approach is into an obstacle directly ahead on the object's path, the interaction is best described as depth/front rather than a purely side-on lateral brush."
+              ],
+              "relabeled_side": "front",
+              "status": "ok"
+            },
+            {
+              "contact_class": "lateral",
+              "elapsed_sec": 11.124,
+              "event_index": 2,
+              "original_side": "unknown",
+              "reasoning_steps": [
+                "From frames 429, 435, 441, and 447, the gray object is inside the tray and translates steadily toward the right boundary; the visible horizontal gap to the right wall shrinks frame to frame.",
+                "By frames 477 and 483, the object is nearly at the wall, with the remaining separation reduced to a minimal sliver, consistent with continued rightward approach rather than moving past the wall.",
+                "Around the anchor/contact time (between 483 and 489), the object closes that last gap and becomes flush with the right tray wall.",
+                "In frames 489 and 495, the object remains pressed against that same right boundary rather than appearing beyond it or contacting something behind it, so this is not a rear/after-passing interaction.",
+                "Because the obstacle is the tray's right side wall in image space and the approach is primarily sideways toward that wall, the contact geometry is best described as lateral, specifically on the right side."
+              ],
+              "relabeled_side": "right",
+              "status": "ok"
+            }
+          ],
+          "model": "gpt-5.4"
+        }
+      }
+    }
+  ],
+  "reference_video_sha256": "e3b44c57d5c30f5fb99a585af161802381f4667be6b0e1c094ad00c768460d40",
+  "schema_version": 1,
+  "selected": {
+    "grid_frame_indices": [
+      0,
+      11,
+      21,
+      32,
+      42,
+      53,
+      63,
+      74,
+      84,
+      95,
+      105,
+      116,
+      126,
+      137,
+      147,
+      158,
+      169,
+      179,
+      190,
+      200,
+      211,
+      221,
+      232,
+      242,
+      253,
+      263,
+      274,
+      284,
+      295,
+      305,
+      316,
+      326,
+      337,
+      348,
+      358,
+      369,
+      379,
+      390,
+      400,
+      411,
+      421,
+      432,
+      442,
+      453,
+      463,
+      474,
+      484,
+      495
+    ],
+    "payload": {
+      "events": [
+        {
+          "confidence": 0.98,
+          "contact_class": "lateral",
+          "evidence_frame_indices": [
+            418,
+            446,
+            460,
+            474,
+            488,
+            495
+          ],
+          "evidence_summary": "The gray sphere approaches the right boundary from the left with a shrinking visible gap (418 to 446), becomes flush with the wall by 460 and at the anchor 474, and remains along that same right wall afterward (488, 495). This supports a side-on lateral contact with the right boundary.",
+          "frame": 474,
+          "side": "right",
+          "side_confidence": 0.99,
+          "type": "collision"
+        }
+      ],
+      "reasoning_steps": [
+        "Main moving object is the small gray/silver sphere; nearby contact targets are the yellow spheres arranged in rows and later the right container wall.",
+        "The earliest clearly supported contact episode is when the gray sphere becomes visibly wedged/tangent within the upper-middle yellow-sphere cluster around frames 95-116; I treat the later movement through that same packed area as one continuous episode because no clear reopened gap is visible in the sampled keyframes.",
+        "After the gray sphere fully separates from the yellow array, a later distinct episode occurs when it reaches and contacts the right wall around frames 463-484.",
+        "All cited frames are from the allowed index list."
+      ],
+      "side_relabel": {
+        "enabled": true,
+        "logs": [
+          {
+            "contact_class": "depth",
+            "elapsed_sec": 29.489,
+            "event_index": 0,
+            "original_side": "unknown",
+            "reasoning_steps": [
+              "From frames 50 to 100, the gray sphere advances from a slightly more open spot into the denser upper-middle yellow cluster, moving diagonally toward the balls in front of its path rather than emerging from beyond them.",
+              "Around the contact window (frames 100 and 111, bracketing anchor 105), the gray sphere is visibly wedged with compressed spacing to the neighboring yellow balls ahead/around it, consistent with driving into a pocket.",
+              "From frames 111 to 161, the gray sphere does not appear to have already cleared a yellow ball and then brush it from behind; instead it stays constrained near the same cluster and is only slightly deflected.",
+              "This favors a head-on / into-the-cluster interpretation over a pure side swipe, so the contact is best classified as depth/front rather than rear."
+            ],
+            "relabeled_side": "front",
+            "status": "ok"
+          },
+          {
+            "contact_class": "lateral",
+            "elapsed_sec": 10.139,
+            "event_index": 1,
+            "original_side": "unknown",
+            "reasoning_steps": [
+              "At frame 418, the gray sphere is inside the arena with a visible horizontal gap to the right boundary.",
+              "Across frames 425, 432, 439, and 446, that right-side gap steadily decreases while the sphere's motion is predominantly rightward in image space.",
+              "By frames 460 and 474, the sphere is flush against the right wall, marking the contact state at the event anchor.",
+              "After contact, frames 481, 488, and 495 still show the sphere riding or remaining pinned to the same right boundary rather than having passed beyond it.",
+              "Because the approach is from left-to-right into a vertical wall in image space, the interaction is best described as lateral, not rearward and not depth/front-aligned."
+            ],
+            "relabeled_side": "right",
+            "status": "ok"
+          }
+        ],
+        "model": "gpt-5.4"
+      }
+    }
+  }
+}

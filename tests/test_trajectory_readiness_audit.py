@@ -73,6 +73,8 @@ def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
     assert by_id["WanderingGarden/scene_first"]["backend_readiness"][
         "project_genie_browser"
     ] == "supplemental_executable_ready"
+    # BeamDomino's ball-force action is a compiled trajectory with a W-key
+    # browser program (it was the known not_machine_executable gap).
     assert by_id["BeamDomino/causal"]["backend_readiness"][
         "project_genie_browser"
     ] == "native_executable_ready"

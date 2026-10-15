@@ -58,8 +58,14 @@ def flow_raft(
     return flow.astype(np.float32)
 
 
+# Explicit rather than ``Raft_Large_Weights.DEFAULT``, an alias torchvision may
+# repoint; recorded with the checkpoint hash in
+# experiments/tables_4_7/evaluator_assets.lock.json.
+RAFT_WEIGHTS_NAME = "C_T_SKHT_V2"
+
+
 def load_raft_model(device: torch.device) -> Tuple[torch.nn.Module, Any]:
-    weights = Raft_Large_Weights.DEFAULT
+    weights = Raft_Large_Weights[RAFT_WEIGHTS_NAME]
     transform = weights.transforms()
     model = raft_large(weights=weights, progress=False).to(device).eval()
     return model, transform

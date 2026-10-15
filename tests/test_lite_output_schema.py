@@ -244,7 +244,10 @@ def test_extract_metrics_control_motion() -> None:
                     "3px": {"summary": {"mean": 0.1}},
                 },
             },
-            "synthetic_vs_candidate": {"epe_summary": {"mean": 4.0}},
+            "synthetic_vs_candidate": {
+                "enabled": True,
+                "temporal_summary": {"mf_cosine_mean": 0.9, "pixel_epe_mean_mean": 4.0},
+            },
         }
     }
 
@@ -258,7 +261,8 @@ def test_extract_metrics_control_motion() -> None:
     # bad-pixel rates come from the compensated section when present
     assert metrics["bad_pixel_rate_1px_mean"] == 0.4
     assert metrics["bad_pixel_rate_3px_mean"] == 0.1
-    assert metrics["synthetic_epe_mean"] == 4.0
+    assert metrics["synthetic_mean_flow_cosine"] == 0.9
+    assert metrics["synthetic_pixel_epe_mean"] == 4.0
 
 
 def test_extract_metrics_causal_step_families() -> None:

@@ -140,7 +140,7 @@ def test_load_case_resolves_module_params_gt_artifact_paths(tmp_path: Path) -> N
         "case_id: TestScene/variant\n"
         "scene: TestScene\n"
         "display_name: Test Scene\n"
-        "modules: [kinematics_mechanics]\n"
+        "modules: [kinematics_mechanics, lpips]\n"
         "reference:\n"
         "  video: reference/unity_groundtruth.mp4\n"
         "  checksums: reference/checksums.sha256\n"
@@ -159,11 +159,15 @@ def test_load_case_resolves_module_params_gt_artifact_paths(tmp_path: Path) -> N
         "module_params:\n"
         "  kinematics_mechanics:\n"
         "    kin_text_prompt: ball.\n"
-        "    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json\n",
+        "    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json\n"
+        "  lpips:\n"
+        "    lpips_reference_events_json: reference/artifacts/contact_events.json\n",
         encoding="utf-8",
     )
 
     case = load_case(case_dir)
+    frozen = case.module_params["lpips"]["lpips_reference_events_json"]
+    assert Path(frozen) == (artifacts / "contact_events.json").resolve()
 
     resolved = case.module_params["kinematics_mechanics"]["kin_unity_object_transforms_json"]
     assert Path(resolved).is_absolute()
