@@ -715,7 +715,7 @@ dimensions:
       - bad_pixel_rate_3px_mean
   prompt_scene_consistency:
     display_name: Prompt-Scene Consistency
-    description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only).
+    description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only). New models compile the baked 10 s / 40 deg/s left turn (prompt.camera.left_turn_v1); the paper's rows used per-model as-run camera inputs recorded in experiments/tables_4_7/prompt_as_run_inputs.yaml.
     evaluator: vlm_consistency
     requires_reference: false
     vlm:
