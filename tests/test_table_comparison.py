@@ -10,6 +10,7 @@ from evaluation.table_comparison import ComparisonError, compare_results, load_b
 BASELINE = Path(__file__).resolve().parents[1] / "experiments/tables_4_7/paper_baseline.yaml"
 
 
+@pytest.mark.integration("paper_checkout")
 def test_paper_baseline_sources_and_table_shape_are_locked() -> None:
     baseline = load_baseline(BASELINE)
     assert set(baseline["tables"][4]["cases"]) == {
@@ -23,7 +24,9 @@ def test_paper_baseline_sources_and_table_shape_are_locked() -> None:
 
 
 def test_comparison_uses_five_runs_and_sample_standard_deviation() -> None:
-    baseline = load_baseline(BASELINE)
+    # Comparison arithmetic only; the pinned paper sources are checked by the
+    # integration test above, so this stays hermetic.
+    baseline = load_baseline(BASELINE, verify_sources=False)
     rerun = result_template(baseline)
     for metrics in rerun["results"].values():
         for values in metrics.values():
@@ -36,7 +39,7 @@ def test_comparison_uses_five_runs_and_sample_standard_deviation() -> None:
 
 
 def test_incomplete_results_fail_closed() -> None:
-    baseline = load_baseline(BASELINE)
+    baseline = load_baseline(BASELINE, verify_sources=False)
     rerun = result_template(baseline)
     with pytest.raises(ComparisonError, match="missing five numeric runs"):
         compare_results(baseline, rerun)

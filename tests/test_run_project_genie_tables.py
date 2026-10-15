@@ -18,6 +18,7 @@ sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
 
+@pytest.mark.integration("table_runs")
 def test_full_plan_has_five_runs_per_table_cell(tmp_path: Path) -> None:
     tasks = MODULE.task_plan(MODULE.TABLE_ROOT, tmp_path, set())
     assert len(tasks) == 70
@@ -48,6 +49,7 @@ def test_plan_filters_single_repeat(tmp_path: Path) -> None:
     assert tasks[0]["repeat_id"] == "run2"
 
 
+@pytest.mark.integration("table_runs")
 def test_default_plan_uses_reconstructed_billiard_orientation_frames(
     tmp_path: Path,
 ) -> None:
@@ -124,6 +126,7 @@ def test_yaw_case_stays_blocked_without_calibration(tmp_path: Path) -> None:
     assert {task["status"] for task in tasks} == {"blocked_uncalibrated_adapter"}
 
 
+@pytest.mark.integration("table_runs")
 def test_explicit_nominal_adapter_opt_in_unlocks_reconstructed_timing(tmp_path: Path) -> None:
     tasks = MODULE.task_plan(
         MODULE.TABLE_ROOT,
