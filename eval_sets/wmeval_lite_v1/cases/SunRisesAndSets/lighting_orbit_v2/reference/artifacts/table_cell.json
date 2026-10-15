@@ -1,0 +1,44 @@
+{
+  "claim_scope": "explicit_nominal_camera_input_not_guaranteed_model_response",
+  "dimension": "lighting_shading",
+  "duration_sec": 10,
+  "geometry": {
+    "eye_height_m": 1.6,
+    "initial_phase_deg": 0.0,
+    "look_at_m": [
+      0,
+      1.2735698223114014,
+      0
+    ],
+    "origin_m": [
+      0,
+      0,
+      0
+    ],
+    "radius_m": 2.0,
+    "vertical_fov_deg": 60.0
+  },
+  "lite_case_id": "SunRisesAndSets/lighting_orbit_v2",
+  "preparation": "unity_editor_fixed_sun_look_at_orbit",
+  "schema_version": 1,
+  "sources": {
+    "reference/artifacts/action.npy": "58449a0ac721a3dbb1489921c31709ddf04e3fe6010196ba1aa83c9cd96baf80",
+    "reference/artifacts/action.npz": "7888d0752e0d2c7f11352189a52bd305178a08f27291cdf62eddcd89470904f2",
+    "reference/artifacts/actions.jsonl": "363cdb74bd333b673e7836877f4966f56ffa37a50a1c30c7760110c972512149",
+    "reference/artifacts/actions.txt": "76bbdbd2d96ea7ba8e32ada4c63da678b4d8d1ef0e21eed740eb0ae35897c25f",
+    "reference/artifacts/calibration.json": "a6b1c115db28eb560a4a97912989b32b55cb0e27dede2265f6b75fce944907d0",
+    "reference/artifacts/compile_manifest.json": "05000d7341528bd0ed81a50c4cc492f811056d9f8b6d506266fb77001571d40a",
+    "reference/artifacts/evaluator_assets.lock.json": "20b833c7c0b000f2c97a0270d810e27eb38ba5c8cdc3b1be828e89ae7790170f",
+    "reference/artifacts/frames.jsonl": "9863596b07da04d6ae28ad29424684aa31a12cf20a2a8c7429b5e5e32bd2d704",
+    "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
+    "reference/artifacts/poses.npy": "b7ca2b4c561cae5617a6b3ce91ebf645a3eaacf831122b3a4f7502b43cf3d33d",
+    "reference/artifacts/scene_dependencies.json": "fb56899f069b842af553094450f59bb593fadaf7aa0ac5980d4191508413c60a",
+    "reference/artifacts/trajectory.yaml": "6649252e0317aaf1b696eee475748781f28714a59432a2fb0778272bcf2dc8e5",
+    "reference/artifacts/unity_qa.json": "7bff759c2b1fe0b86f560165796771ad767fd44bc0080151452b7c000e79de05",
+    "reference/ref.png": "2128a19a4b8c63c39831ab1614e8dac05c5563beda4bde60624c8b2fbd57bdfa",
+    "reference/unity_orbit.mp4": "a8766eb32e271df40be6d6ddab9103304f54c71e9464b27abee3891c33370015"
+  },
+  "table_cell": "lighting_shading/SunRisesAndSets/lighting_orbit_v2",
+  "target": "camera",
+  "trajectory_id": "lighting.camera.look_at_orbit_v2"
+}

@@ -158,7 +158,11 @@ def merge_metric_config(
         if params:
             merged.update(dict(params))
     if candidate.params:
-        merged.update(dict(candidate.params))
+        candidate_params = dict(candidate.params)
+        if case.protocol.get('candidate_normalization') == 'lighting_orbit_10s_fps12':
+            # Receipt metadata is consumed by normalization, not a runner kwarg.
+            candidate_params.pop('lighting_time_mapping', None)
+        merged.update(candidate_params)
 
     unknown = sorted(set(merged) - METRIC_CONFIG_KEYS)
     if unknown:

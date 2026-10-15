@@ -1,3 +1,5 @@
+# 2026-10-11: lighting_shading uses the verified lighting_orbit_v2 baseline.
+# Historical native-paper lighting has its own lighting_paper_native/ suite.
 # WMEval Lite suite manifest — hand-maintained single source of truth.
 # (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
 #
@@ -460,7 +462,7 @@
 #   MirrorRollingBall -> lpips, prompt_scene_consistency
 #   WanderingGarden   -> scene_character_consistency                     (data pending),
 #                        environment_object_consistency (live, scoped, see below)
-#   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting, 2026-09-15)
+#   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting_orbit_v2, 2026-10-11)
 #   LiquidContainer   -> fluid_mechanics (LIVE, all 4 action profiles, 2026-09)
 #   BeamDomino        -> physical_causality (LIVE, all 3 trajectory shapes, 2026-09)
 #   BilliardGame      -> per paper Table 10 + Sec 4.2 results narrative, its REAL
@@ -736,18 +738,18 @@ dimensions:
       - obj_score
   lighting_shading:
     display_name: Lighting & Shading
-    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD) under the paper''s first-person, fixed-sun, walking-orbit regime. Live on its paper-target scene SunRisesAndSets/lighting since 2026-09-15 (see the dated banner above for provenance and the analytic geometry floor); ChessBoard/lighting is still pending a team decision (PENDING.md).'
+    description: 'Fixed-sun full camera look-at orbit: explicit two-metre radius, ten native seconds, exactly 120 timestamp-sampled frames at 12fps. Three supported pose backends with five seeds each; other strict interfaces are N/A. Historical native-paper scoring is retained in lighting_paper_native/. Strict numerical reproduction is verified on the pinned RTX PRO 6000 environment.'
     evaluator: registry
     requires_reference: false
     modules:
     - shadow_consistency
     metric_config:
-      eval_fps: 24.0
+      eval_fps: 12.0
       max_pairs: 0
     # first-person (the paper's lighting regime). Per-candidate
     # shadow_hud_preset comes from model.yaml / manifest params, not the case.
     cases:
-    - SunRisesAndSets/lighting
+    - SunRisesAndSets/lighting_orbit_v2
     aggregate:
       headline: shadow_direction_jitter_deg_per_frame
       direction: lower

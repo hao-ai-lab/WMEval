@@ -1,0 +1,127 @@
+{
+  "jobs": [
+    {
+      "backend": "hy_worldplay",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "HY-WorldPlay",
+      "seed": 1,
+      "status": "completed"
+    },
+    {
+      "backend": "hy_worldplay",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "HY-WorldPlay",
+      "seed": 2,
+      "status": "completed"
+    },
+    {
+      "backend": "hy_worldplay",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "HY-WorldPlay",
+      "seed": 3,
+      "status": "completed"
+    },
+    {
+      "backend": "hy_worldplay",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "HY-WorldPlay",
+      "seed": 4,
+      "status": "completed"
+    },
+    {
+      "backend": "hy_worldplay",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "HY-WorldPlay",
+      "seed": 42,
+      "status": "completed"
+    },
+    {
+      "backend": "lingbot_world_cam",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "LingBot",
+      "seed": 1,
+      "status": "completed"
+    },
+    {
+      "backend": "lingbot_world_cam",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "LingBot",
+      "seed": 2,
+      "status": "completed"
+    },
+    {
+      "backend": "lingbot_world_cam",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "LingBot",
+      "seed": 3,
+      "status": "completed"
+    },
+    {
+      "backend": "lingbot_world_cam",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "LingBot",
+      "seed": 4,
+      "status": "completed"
+    },
+    {
+      "backend": "lingbot_world_cam",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "LingBot",
+      "seed": 42,
+      "status": "completed"
+    },
+    {
+      "backend": "matrix_game_3",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "Matrix-Game3",
+      "seed": 1,
+      "status": "completed"
+    },
+    {
+      "backend": "matrix_game_3",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "Matrix-Game3",
+      "seed": 2,
+      "status": "completed"
+    },
+    {
+      "backend": "matrix_game_3",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "Matrix-Game3",
+      "seed": 3,
+      "status": "completed"
+    },
+    {
+      "backend": "matrix_game_3",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "Matrix-Game3",
+      "seed": 4,
+      "status": "completed"
+    },
+    {
+      "backend": "matrix_game_3",
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "model": "Matrix-Game3",
+      "seed": 42,
+      "status": "completed"
+    }
+  ],
+  "not_applicable": [
+    {
+      "backend": "matrix_game_2",
+      "reason": "Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.",
+      "status": "unsupported"
+    },
+    {
+      "backend": "waypoint",
+      "reason": "Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.",
+      "status": "unsupported"
+    },
+    {
+      "backend": "project_genie",
+      "reason": "Pinned hosted UI exposes wall-clock keys, not native-frame actions or a metric camera/target path. Five identical input replays span 8.9583-10.1667 native seconds, and visible clocks include waiting. Strict frame-indexed metric look-at orbit is N/A; all diagnostic exports/scores remain retained. Generated appearance is not an exclusion criterion.",
+      "status": "unsupported"
+    }
+  ],
+  "schema_version": 1
+}

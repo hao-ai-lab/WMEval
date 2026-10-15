@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "case_id": "SunRisesAndSets/lighting_orbit_v2",
+  "seed_sha256": "2128a19a4b8c63c39831ab1614e8dac05c5563beda4bde60624c8b2fbd57bdfa",
+  "scene_calibration_sha256": "a6b1c115db28eb560a4a97912989b32b55cb0e27dede2265f6b75fce944907d0",
+  "source_sha256": "0cba8ae40902803d74ad27e33be8ab305e7367ed7ed3a77f7ccfbeb9a67bdcef",
+  "geometry_sha256": "82f31ede62ffb46ff394de66eadf783ab3bb3205af060bd09b6951d6170d4614",
+  "seed_render_mae_255": 0.0,
+  "projection_max_error_px": 0.002515109228653932,
+  "point_count": 276,
+  "purpose": "Independent native key/mouse response calibration; not formal scoring or output correction"
+}

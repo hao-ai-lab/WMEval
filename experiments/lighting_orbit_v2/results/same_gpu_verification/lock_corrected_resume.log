@@ -1,0 +1,629 @@
+[wmeval-lite] 15 work item(s) across 1 dimension(s), 15 candidate row(s)
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/HY-WorldPlay/1
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/HY-WorldPlay/2
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/HY-WorldPlay/3
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/HY-WorldPlay/4
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/HY-WorldPlay/42
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/LingBot/1
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/LingBot/2
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/LingBot/3
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/LingBot/4
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/LingBot/42
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/Matrix-Game3/1
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/Matrix-Game3/2
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/Matrix-Game3/3
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/Matrix-Game3/4
+[wmeval-lite] skip (resume): lighting_shading/SunRisesAndSets/lighting_orbit_v2/Matrix-Game3/42
+[wmeval-lite] wrote /workspace/WMEval-lighting-orbit/same-gpu-repro-v1/lock_corrected_results/per_case_results.jsonl
+{
+  "suite_name": "WMEval lighting orbit release",
+  "version": "lighting-orbit-v2",
+  "aggregation": "mean_over_cases_of_mean_over_seeds",
+  "num_rows": 15,
+  "num_completed": 15,
+  "models": {
+    "HY-WorldPlay": {
+      "dimensions": {
+        "lighting_shading": {
+          "display_name": "Lighting & Shading",
+          "num_rows": 5,
+          "num_cases": 1,
+          "num_completed": 5,
+          "headline": {
+            "metric": "shadow_direction_jitter_deg_per_frame",
+            "value": 0.43599999999999994,
+            "std_across_cases": null,
+            "direction": "lower"
+          },
+          "means": {
+            "multi_object_sun_disagreement_deg": 37.374,
+            "scene_retention_rate_pct": 100.0,
+            "shadow_area_stability_pct": 5.6,
+            "shadow_detection_rate_pct": 100.0,
+            "shadow_direction_jitter_deg_per_frame": 0.43599999999999994,
+            "shadow_shape_drift": 3.0385999999999997
+          },
+          "stats": {
+            "multi_object_sun_disagreement_deg": {
+              "mean": 37.374,
+              "std_across_cases": null,
+              "min_case_mean": 37.374,
+              "max_case_mean": 37.374,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 37.374
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 19.00278479591873
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "scene_retention_rate_pct": {
+              "mean": 100.0,
+              "std_across_cases": null,
+              "min_case_mean": 100.0,
+              "max_case_mean": 100.0,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 100.0
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.0
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_area_stability_pct": {
+              "mean": 5.6,
+              "std_across_cases": null,
+              "min_case_mean": 5.6,
+              "max_case_mean": 5.6,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 5.6
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1.7357563193029144
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_detection_rate_pct": {
+              "mean": 100.0,
+              "std_across_cases": null,
+              "min_case_mean": 100.0,
+              "max_case_mean": 100.0,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 100.0
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.0
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_direction_jitter_deg_per_frame": {
+              "mean": 0.43599999999999994,
+              "std_across_cases": null,
+              "min_case_mean": 0.43599999999999994,
+              "max_case_mean": 0.43599999999999994,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.43599999999999994
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.340925211740053
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_shape_drift": {
+              "mean": 3.0385999999999997,
+              "std_across_cases": null,
+              "min_case_mean": 3.0385999999999997,
+              "max_case_mean": 3.0385999999999997,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 3.0385999999999997
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.7061145551537654
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            }
+          },
+          "per_case": [
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "1",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 27.88,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 5.21,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 0.15,
+                "shadow_shape_drift": 2.4227
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "2",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 58.45,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 5.31,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 0.62,
+                "shadow_shape_drift": 3.3557
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "3",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 19.17,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 3.58,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 0.32,
+                "shadow_shape_drift": 3.4048
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "4",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 24.0,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 5.52,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 0.15,
+                "shadow_shape_drift": 2.1748
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "42",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 57.37,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 8.38,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 0.94,
+                "shadow_shape_drift": 3.835
+              }
+            }
+          ],
+          "repeat_coverage": {
+            "SunRisesAndSets/lighting_orbit_v2": {
+              "required": 5,
+              "completed": 5
+            }
+          },
+          "coverage_status": "complete"
+        }
+      }
+    },
+    "LingBot": {
+      "dimensions": {
+        "lighting_shading": {
+          "display_name": "Lighting & Shading",
+          "num_rows": 5,
+          "num_cases": 1,
+          "num_completed": 5,
+          "headline": {
+            "metric": "shadow_direction_jitter_deg_per_frame",
+            "value": 4.3420000000000005,
+            "std_across_cases": null,
+            "direction": "lower"
+          },
+          "means": {
+            "multi_object_sun_disagreement_deg": 52.79600000000001,
+            "scene_retention_rate_pct": 100.0,
+            "shadow_area_stability_pct": 17.342000000000002,
+            "shadow_detection_rate_pct": 99.834,
+            "shadow_direction_jitter_deg_per_frame": 4.3420000000000005,
+            "shadow_shape_drift": 7.77332
+          },
+          "stats": {
+            "multi_object_sun_disagreement_deg": {
+              "mean": 52.79600000000001,
+              "std_across_cases": null,
+              "min_case_mean": 52.79600000000001,
+              "max_case_mean": 52.79600000000001,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 52.79600000000001
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 10.112787943984584
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "scene_retention_rate_pct": {
+              "mean": 100.0,
+              "std_across_cases": null,
+              "min_case_mean": 100.0,
+              "max_case_mean": 100.0,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 100.0
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.0
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_area_stability_pct": {
+              "mean": 17.342000000000002,
+              "std_across_cases": null,
+              "min_case_mean": 17.342000000000002,
+              "max_case_mean": 17.342000000000002,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 17.342000000000002
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 4.312971133684991
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_detection_rate_pct": {
+              "mean": 99.834,
+              "std_across_cases": null,
+              "min_case_mean": 99.834,
+              "max_case_mean": 99.834,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 99.834
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.37118728426496433
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_direction_jitter_deg_per_frame": {
+              "mean": 4.3420000000000005,
+              "std_across_cases": null,
+              "min_case_mean": 4.3420000000000005,
+              "max_case_mean": 4.3420000000000005,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 4.3420000000000005
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 2.0855862485162295
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_shape_drift": {
+              "mean": 7.77332,
+              "std_across_cases": null,
+              "min_case_mean": 7.77332,
+              "max_case_mean": 7.77332,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 7.77332
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1.83468910091056
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            }
+          },
+          "per_case": [
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "1",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 69.35,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 24.21,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 7.81,
+                "shadow_shape_drift": 9.6214
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "2",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 52.69,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 16.1,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 4.4,
+                "shadow_shape_drift": 7.683
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "3",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 44.89,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 18.16,
+                "shadow_detection_rate_pct": 99.17,
+                "shadow_direction_jitter_deg_per_frame": 2.93,
+                "shadow_shape_drift": 9.5398
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "4",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 52.77,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 12.66,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 4.04,
+                "shadow_shape_drift": 5.4153
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "42",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 44.28,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 15.58,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 2.53,
+                "shadow_shape_drift": 6.6071
+              }
+            }
+          ],
+          "repeat_coverage": {
+            "SunRisesAndSets/lighting_orbit_v2": {
+              "required": 5,
+              "completed": 5
+            }
+          },
+          "coverage_status": "complete"
+        }
+      }
+    },
+    "Matrix-Game3": {
+      "dimensions": {
+        "lighting_shading": {
+          "display_name": "Lighting & Shading",
+          "num_rows": 5,
+          "num_cases": 1,
+          "num_completed": 5,
+          "headline": {
+            "metric": "shadow_direction_jitter_deg_per_frame",
+            "value": 11.064,
+            "std_across_cases": null,
+            "direction": "lower"
+          },
+          "means": {
+            "multi_object_sun_disagreement_deg": 67.29400000000001,
+            "scene_retention_rate_pct": 100.0,
+            "shadow_area_stability_pct": 25.080000000000002,
+            "shadow_detection_rate_pct": 98.332,
+            "shadow_direction_jitter_deg_per_frame": 11.064,
+            "shadow_shape_drift": 9.09202
+          },
+          "stats": {
+            "multi_object_sun_disagreement_deg": {
+              "mean": 67.29400000000001,
+              "std_across_cases": null,
+              "min_case_mean": 67.29400000000001,
+              "max_case_mean": 67.29400000000001,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 67.29400000000001
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 9.586145210667322
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "scene_retention_rate_pct": {
+              "mean": 100.0,
+              "std_across_cases": null,
+              "min_case_mean": 100.0,
+              "max_case_mean": 100.0,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 100.0
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.0
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_area_stability_pct": {
+              "mean": 25.080000000000002,
+              "std_across_cases": null,
+              "min_case_mean": 25.080000000000002,
+              "max_case_mean": 25.080000000000002,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 25.080000000000002
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1.382967823197633
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_detection_rate_pct": {
+              "mean": 98.332,
+              "std_across_cases": null,
+              "min_case_mean": 98.332,
+              "max_case_mean": 98.332,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 98.332
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1.768946013873799
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_direction_jitter_deg_per_frame": {
+              "mean": 11.064,
+              "std_across_cases": null,
+              "min_case_mean": 11.064,
+              "max_case_mean": 11.064,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 11.064
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1.9988321590368714
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            },
+            "shadow_shape_drift": {
+              "mean": 9.09202,
+              "std_across_cases": null,
+              "min_case_mean": 9.09202,
+              "max_case_mean": 9.09202,
+              "n_cases": 1,
+              "case_means": {
+                "SunRisesAndSets/lighting_orbit_v2": 9.09202
+              },
+              "seed_std_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 0.7073785881690227
+              },
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 5
+              }
+            }
+          },
+          "per_case": [
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "1",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 56.16,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 24.39,
+                "shadow_detection_rate_pct": 95.83,
+                "shadow_direction_jitter_deg_per_frame": 9.3,
+                "shadow_shape_drift": 8.1917
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "2",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 71.2,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 26.83,
+                "shadow_detection_rate_pct": 97.5,
+                "shadow_direction_jitter_deg_per_frame": 10.08,
+                "shadow_shape_drift": 8.9164
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "3",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 81.51,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 23.83,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 10.94,
+                "shadow_shape_drift": 9.0885
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "4",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 62.84,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 26.3,
+                "shadow_detection_rate_pct": 100.0,
+                "shadow_direction_jitter_deg_per_frame": 10.53,
+                "shadow_shape_drift": 10.1691
+              }
+            },
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "42",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "multi_object_sun_disagreement_deg": 64.76,
+                "scene_retention_rate_pct": 100.0,
+                "shadow_area_stability_pct": 24.05,
+                "shadow_detection_rate_pct": 98.33,
+                "shadow_direction_jitter_deg_per_frame": 14.47,
+                "shadow_shape_drift": 9.0944
+              }
+            }
+          ],
+          "repeat_coverage": {
+            "SunRisesAndSets/lighting_orbit_v2": {
+              "required": 5,
+              "completed": 5
+            }
+          },
+          "coverage_status": "complete"
+        }
+      }
+    }
+  }
+}

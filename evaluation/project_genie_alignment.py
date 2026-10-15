@@ -132,7 +132,8 @@ def load_action_trace_endpoint(action_trace: Path) -> float:
 
 
 def select_observed_rows(
-    manifest: Path, semantic_endpoint_sec: float, sample_count: int
+    manifest: Path, semantic_endpoint_sec: float, sample_count: int,
+    *, eligible_indices: set[int] | None = None,
 ) -> list[dict[str, Any]]:
     if sample_count < 5:
         raise ValueError("sample_count must be at least five")
@@ -147,7 +148,11 @@ def select_observed_rows(
         path = Path(str(row["path"])).expanduser().resolve()
         if not path.is_file():
             raise FileNotFoundError(path)
-        usable.append({**row, "path": str(path), "elapsed_sec": float(row["elapsed_sec"])})
+        if eligible_indices is None or index in eligible_indices:
+            usable.append({**row, "index": row.get("index", index),
+                           "path": str(path), "elapsed_sec": float(row["elapsed_sec"])})
+    if len(usable) < sample_count:
+        raise NativeAlignmentError(f"{manifest}: insufficient eligible observed frames")
     elapsed = np.asarray([row["elapsed_sec"] for row in usable], dtype=np.float64)
     if np.any(np.diff(elapsed) <= 0):
         raise NativeAlignmentError(f"{manifest}: frame times are not strictly increasing")
@@ -157,9 +162,25 @@ def select_observed_rows(
             f"{semantic_endpoint_sec:.6f}s"
         )
     targets = np.linspace(0.0, semantic_endpoint_sec, sample_count)
-    indices = [int(np.argmin(np.abs(elapsed - target))) for target in targets]
-    if len(set(indices)) != sample_count:
-        raise NativeAlignmentError(f"{manifest}: samples collapse onto duplicate frames")
+    # Select distinct ordered checkpoints even when the capture is sparse.
+    # Independent nearest neighbours can select the same frame twice.
+    costs = np.full((sample_count, len(usable)), np.inf)
+    backs = np.full(costs.shape, -1, dtype=int)
+    costs[0, elapsed <= .05] = np.abs(elapsed[elapsed <= .05])
+    for sample in range(1, sample_count):
+        for index in range(sample, len(usable)):
+            if sample == sample_count - 1 and elapsed[index] + .05 < semantic_endpoint_sec:
+                continue
+            previous = int(np.argmin(costs[sample - 1, :index]))
+            costs[sample, index] = costs[sample - 1, previous] + abs(elapsed[index] - targets[sample])
+            backs[sample, index] = previous
+    last = int(np.argmin(costs[-1]))
+    if not np.isfinite(costs[-1, last]):
+        raise NativeAlignmentError(f"{manifest}: no distinct checkpoints spanning the endpoint")
+    indices = [last]
+    for sample in range(sample_count - 1, 0, -1):
+        indices.append(int(backs[sample, indices[-1]]))
+    indices.reverse()
     return [usable[index] for index in indices]
 
 
@@ -511,6 +532,7 @@ def align_native_video(
     sample_count: int = 9,
     native_sample_fps: float = 4.0,
     endpoint_mode: str = "closed_loop_visual_return",
+    allow_feature_sparse_capture: bool = False,
 ) -> dict[str, Any]:
     import cv2
 
@@ -531,11 +553,31 @@ def align_native_video(
         claim_scope = "native_video_corresponds_to_fixed_or_calibrated_browser_trajectory"
     else:
         raise ValueError(f"unsupported endpoint_mode: {endpoint_mode}")
-    observed_rows = select_observed_rows(
-        observed_manifest, semantic_endpoint, sample_count
-    )
     sift = cv2.SIFT_create(nfeatures=1200)
     matcher = cv2.BFMatcher()
+    eligibility = []
+    eligible_indices = None
+    if allow_feature_sparse_capture:
+        # Eligibility depends only on the observed image's feature count,
+        # never on how well it matches the generated video. Keep the original
+        # manifest unchanged, report every exclusion, and retain all existing
+        # correspondence/chronology/margin requirements and both endpoints.
+        payload = json.loads(observed_manifest.read_text(encoding="utf-8"))
+        eligible_indices = set()
+        for index, row in enumerate(payload["frames"]):
+            image = cv2.imread(str(row["path"]), cv2.IMREAD_GRAYSCALE)
+            if image is None:
+                raise NativeAlignmentError(f"cannot read observed frame: {row['path']}")
+            descriptors = _describe(sift, image, observed=True)
+            count = 0 if descriptors is None else len(descriptors)
+            eligibility.append({"index": index, "feature_count": count,
+                                "eligible": count >= 100})
+            if count >= 100:
+                eligible_indices.add(index)
+    observed_rows = select_observed_rows(
+        observed_manifest, semantic_endpoint, sample_count,
+        eligible_indices=eligible_indices,
+    )
     queries: list[Any] = []
     for row in observed_rows:
         image = cv2.imread(str(row["path"]), cv2.IMREAD_GRAYSCALE)
@@ -634,6 +676,7 @@ def align_native_video(
         "semantic_endpoint_sec": semantic_endpoint,
         "metrics": metrics,
         "matches": matches,
+        "observed_feature_eligibility": eligibility,
     }
     report_path = output_dir / "native_alignment.json"
     output_dir.mkdir(parents=True, exist_ok=True)

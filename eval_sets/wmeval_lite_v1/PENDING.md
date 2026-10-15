@@ -312,27 +312,48 @@ BeamDomino causal / causal_glancing / causal_direct_strike
 
 ## 6. Lighting & shading — `lighting_shading`
 
-**Owner:** _TBD_ · **Paper:** SunRisesAndSets table · **Lite cases:**
-SunRisesAndSets/lighting (first person, fixed sun, walking orbit; reference-free)
+**Owner:** Forrest Dai · **Active case:** SunRisesAndSets/lighting_orbit_v2.
 
-**Run it for a new model:** the single path with `--dimensions lighting_shading`. Key files:
-`cases/SunRisesAndSets/lighting/reference/` (`ref.png`, `actions.txt`,
-`actions_per_model.json`), `evaluation/modules/shadow_consistency.py`,
-`tools/analytic_lighting_floor.py`.
+The case ships a complete ten-second, two-metre camera orbit, explicit tabletop
+look-at target and fixed sun, with trajectory.yaml, action.npz, actions.jsonl,
+table_cell.json and verified Unity poses/closure. Native videos are timestamp
+sampled into exactly 120 frames at 12fps without padding or retiming.
 
-| Case | Actions | Reference | Normalization |
-| --- | --- | --- | --- |
-| SunRisesAndSets/lighting | ⚠️ per-model file; orbit reconstructed | — reference-free (analytic floor) | ❌ none (jitter is per frame) |
+LingBot, Matrix-Game3 and HY-WorldPlay are supported and each ships five first
+valid native rollouts (42,1,2,3,4), original generation receipts and relative
+candidate paths in baselines/lighting_orbit_v2. MG2/Waypoint lack a documented
+metric input conversion; Genie's hosted UI lacks native-frame action submission.
+These interfaces are explicitly N/A for the strict protocol, with source/timing
+evidence in experiments/lighting_orbit_v2/results/capability_audit.json.
+Generated appearance is not a support criterion. Five executed Genie exports
+and scores remain diagnostic and never enter the formal five-seed aggregate.
 
-| Model | In paper | Status |
-| --- | --- | --- |
-| Project Genie, LingBot-World, Matrix-Game 3.0, HY-WorldPlay, Waypoint-1.5 | ✅ | ✅ reproduces the paper (rollouts on a Modal volume) |
-| Matrix-Game 2.0 | ✅ | ⚠️ reproduces the paper except Scene Retention |
+2026-10-11 acceptance: on the pinned RTX PRO 6000/CUDA12.8 environment, all 15
+candidates recomputed through run_wmeval_lite.py, all 90 metric values exactly
+matched the original scores at 1e-6, and actual --resume preserved row hashes.
+Two independent LingBot/42 scores also matched the original. Correcting a stale
+derived lock stamp changed no evaluator input or score; the corrected stamp also
+passed actual resume. Reports: experiments/lighting_orbit_v2/results/same_gpu_verification/.
+The separate PRO 4500 audit records 21/90 small numerical differences and remains
+visible; exact cross-GPU equality is not claimed. Use the pinned hardware for
+strict fresh verification, or the bundled cached scores for portable exact replay.
 
-- [ ] **One semantic orbit trajectory** compiled per backend, replacing `actions_per_model.json`.
-- [ ] **Normalize fps** (or report jitter per second).
-- [ ] **Bundle or pin the six rollouts** in the HF baseline set.
-- [ ] After release (optional): `ChessBoard/lighting`, moving-sun `lighting_sunsweep`.
+The portable archive contains the full case, fifteen videos, public scorer,
+relative candidate manifest, immutable asset/source/dependency locks and explicit
+fifteen expected jobs plus three N/A entries. Its builder runs from the public
+release_sources.json with no private scratch directory or old Pod. The source
+fingerprint and cached input hashes invalidate changed cases/videos/parameters.
+
+Historical SunRisesAndSets/lighting and its 30 native-paper results remain
+separate. Run the old case with --suite eval_sets/wmeval_lite_v1/lighting_paper_native;
+baselines/lighting_paper_native.json retains native metadata and all 180 metric
+values. Hosted historical Genie runs have no recorded numeric generation seeds.
+HF publication remains a separate action, not a release acceptance blocker here.
+
+- [x] **Standardized action:** one semantic metric look-at trajectory with explicit camera target; native pose compilers and audited N/A interfaces.
+- [x] **Common fps:** exactly ten native seconds / 120 timestamp-sampled frames at 12fps; no padded or retimed video.
+- [x] **Five-seed reproduction:**15/15 supported runs,90/90 strict pinned-GPU metrics, unchanged actual resume, portable data/scorer archive and source/asset/version pins.
+- [ ] Optional after release: ChessBoard/lighting and a separately defined moving-sun lighting_sunsweep case.
 
 ## 7. Prompt-scene consistency — `prompt_scene_consistency`
 

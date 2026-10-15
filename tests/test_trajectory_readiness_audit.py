@@ -15,7 +15,7 @@ SPEC.loader.exec_module(MODULE)
 
 def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
     result = MODULE.inventory(MODULE.DEFAULT_CASES)
-    assert result["case_count"] == 33
+    assert result["case_count"] == 34
     by_id = {row["case_id"]: row for row in result["cases"]}
     assert by_id["RacingCar/prompt_third"]["status"] == "ready"
     # Table 4/7 cells are first-class Lite cases with compiled trajectories
@@ -45,19 +45,25 @@ def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
         by_id["SunRisesAndSets/lighting"]["effective_status"]
         == "supplemental_reconstruction_ready"
     )
+    assert by_id['SunRisesAndSets/lighting']['dimensions'] == []
+    orbit = by_id['SunRisesAndSets/lighting_orbit_v2']
+    assert orbit['dimensions'] == ['lighting_shading']
+    assert orbit['effective_status'] == 'native_machine_readable_ready'
+    assert orbit['backend_readiness']['project_genie_browser'] == 'unsupported_action_space'
     assert result["effective_status_counts"] == {
-        "native_machine_readable_ready": 29,
+        "native_machine_readable_ready": 30,
         "supplemental_reconstruction_ready": 4,
     }
     assert result["backend_readiness_counts"] == {
         "unity_or_numeric_evaluator": {
-            "native_numeric_ready": 29,
+            "native_numeric_ready": 30,
             "supplemental_numeric_ready": 3,
             "supplemental_semantic_numeric_only": 1,
         },
         "project_genie_browser": {
             "native_executable_ready": 30,
             "supplemental_executable_ready": 3,
+            "unsupported_action_space": 1,
         },
     }
     assert by_id["BilliardGame/prompt_first"]["backend_readiness"] == {

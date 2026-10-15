@@ -34,6 +34,9 @@ class CompiledTrajectory:
     alignment_status: str
     project_genie_ops: tuple[dict[str, Any], ...]
     project_genie_status: str
+    kind: str = "piecewise_constant"
+    pose_timestamps_sec: np.ndarray | None = None
+    camera_to_world: np.ndarray | None = None
 
 
 def _sha256(path: Path) -> str:
@@ -55,6 +58,8 @@ def load_trajectory(path: str | Path) -> dict[str, Any]:
 def _number(value: Any, label: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise TrajectoryError(f"{label} must be numeric")
+    if not np.isfinite(value):
+        raise TrajectoryError(f"{label} must be finite")
     return float(value)
 
 
@@ -64,6 +69,9 @@ def validate_trajectory(raw: Mapping[str, Any], *, source: str = "trajectory") -
     trajectory_id = raw.get("trajectory_id")
     if not isinstance(trajectory_id, str) or not trajectory_id:
         raise TrajectoryError(f"{source}: trajectory_id is required")
+    kind = raw.get("kind", "piecewise_constant")
+    if kind not in {"piecewise_constant", "camera_look_at_orbit"}:
+        raise TrajectoryError(f"{source}: unknown trajectory kind {kind!r}")
 
     duration = _number(raw.get("duration_sec"), f"{source}: duration_sec")
     control_hz = _number(raw.get("control_hz"), f"{source}: control_hz")
@@ -128,6 +136,12 @@ def validate_trajectory(raw: Mapping[str, Any], *, source: str = "trajectory") -
         raise TrajectoryError(
             f"{source}: paper_alignment.status must be exact, reconstructed, or unresolved"
         )
+    if kind == "camera_look_at_orbit":
+        from .camera_orbit import validate_orbit
+        try:
+            validate_orbit(raw)
+        except (TypeError, ValueError) as exc:
+            raise TrajectoryError(f"{source}: {exc}") from exc
 
 
 def _compress_keyboard_steps(
@@ -214,7 +228,16 @@ def compile_trajectory(path: str | Path) -> CompiledTrajectory:
             if float(segment["start_sec"]) <= timestamp < float(segment["end_sec"])
         )
         values[index] = [float(segment["values"][name]) for name in channel_names]
-    ops, genie_status = _project_genie_ops(raw, channel_names, values)
+    kind = str(raw.get("kind", "piecewise_constant"))
+    pose_times, poses = None, None
+    if kind == "camera_look_at_orbit":
+        from .camera_orbit import orbit_poses
+        pose_times = np.arange(step_count + 1, dtype=np.float64) / control_hz
+        poses = orbit_poses(raw, pose_times)
+        # Browser commands require a separate frozen translation/yaw adapter.
+        ops, genie_status = (), "not_compiled"
+    else:
+        ops, genie_status = _project_genie_ops(raw, channel_names, values)
     return CompiledTrajectory(
         trajectory_id=str(raw["trajectory_id"]),
         channel_names=channel_names,
@@ -224,6 +247,9 @@ def compile_trajectory(path: str | Path) -> CompiledTrajectory:
         alignment_status=str(raw["paper_alignment"]["status"]),
         project_genie_ops=ops,
         project_genie_status=genie_status,
+        kind=kind,
+        pose_timestamps_sec=pose_times,
+        camera_to_world=poses,
     )
 
 
@@ -254,6 +280,13 @@ def write_compiled_trajectory(path: str | Path, output_dir: str | Path) -> dict[
         "channel_names": np.asarray(compiled.channel_names),
         "metadata_json": np.asarray(json.dumps(metadata, sort_keys=True)),
     }
+    if compiled.camera_to_world is not None:
+        metadata.update(kind=compiled.kind, target="camera", coordinates="right_handed_y_up_opencv_c2w",
+                        control_interval_convention="half_open", pose_endpoint_included=True,
+                        pose_count=len(compiled.pose_timestamps_sec))
+        arrays.update(pose_timestamps_sec=compiled.pose_timestamps_sec,
+                      camera_to_world=compiled.camera_to_world,
+                      metadata_json=np.asarray(json.dumps(metadata, sort_keys=True)))
     # Keep the same plain float32 matrix convention as existing WMEval
     # reference/artifacts/action.npy files. The NPZ below carries the richer
     # timestamps/channel metadata.
@@ -270,10 +303,17 @@ def write_compiled_trajectory(path: str | Path, output_dir: str | Path) -> dict[
             member.compress_type = zipfile.ZIP_DEFLATED
             member.external_attr = 0o600 << 16
             archive.writestr(member, buffer.getvalue(), compress_type=zipfile.ZIP_DEFLATED, compresslevel=9)
-    actions_path.write_text(
-        "".join(json.dumps(op, sort_keys=True) + "\n" for op in compiled.project_genie_ops),
-        encoding="utf-8",
-    )
+    if compiled.camera_to_world is not None:
+        records = ({"schema_version": 1, "record_type": "camera_pose", "timestamp_sec": float(t),
+                    "c2w": pose.tolist(), "coordinates": "right_handed_y_up_opencv_c2w",
+                    "position_units": "metres", "semantic_sha256": compiled.semantic_sha256}
+                   for t, pose in zip(compiled.pose_timestamps_sec, compiled.camera_to_world))
+        poses_path = output / f"{stem}.poses.npy"
+        np.save(poses_path, compiled.camera_to_world, allow_pickle=False)
+        metadata.update(poses=poses_path.name, poses_sha256=_sha256(poses_path))
+    else:
+        records = compiled.project_genie_ops
+    actions_path.write_text("".join(json.dumps(op, sort_keys=True) + "\n" for op in records), encoding="utf-8")
     raw = load_trajectory(source_path)
     summary_lines = [
         f"# {compiled.trajectory_id} -- generated action trajectory.",
@@ -288,6 +328,8 @@ def write_compiled_trajectory(path: str | Path, output_dir: str | Path) -> dict[
     if compiled.project_genie_ops:
         summary_lines.extend(["", "# Project Genie browser actions:"])
         summary_lines.extend(json.dumps(op, sort_keys=True) for op in compiled.project_genie_ops)
+    elif compiled.camera_to_world is not None:
+        summary_lines.extend(["", "# Project Genie browser adapter: not compiled; camera pose records are not browser actions."])
     else:
         summary_lines.extend(["", "# Project Genie browser actions: unsupported for this action space."])
     summary_path.write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
@@ -297,8 +339,9 @@ def write_compiled_trajectory(path: str | Path, output_dir: str | Path) -> dict[
     metadata["action_npz_sha256"] = _sha256(npz_path)
     metadata["actions_txt"] = summary_path.name
     metadata["actions_txt_sha256"] = _sha256(summary_path)
-    metadata["project_genie_actions"] = actions_path.name
-    metadata["project_genie_actions_sha256"] = _sha256(actions_path)
+    record_key = "camera_pose_samples" if compiled.camera_to_world is not None else "project_genie_actions"
+    metadata[record_key] = actions_path.name
+    metadata[record_key + "_sha256"] = _sha256(actions_path)
     manifest_path.write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return metadata
 
