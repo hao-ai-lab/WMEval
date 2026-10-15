@@ -11,8 +11,8 @@ def test_production_readiness_manifest_covers_live_suite() -> None:
     assert report["summary"]["native_trajectory_case_count"] == 32
     assert report["summary"]["supplemental_trajectory_case_count"] == 2
     assert report["summary"]["open_priority_counts"] == {
-        "P0": 11,
-        "P1": 13,
+        "P0": 4,
+        "P1": 7,
         "P2": 5,
     }
     assert {row["dimension"] for row in report["dimensions"]} == {
