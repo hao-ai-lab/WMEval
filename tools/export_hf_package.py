@@ -25,7 +25,8 @@ What ``export`` copies (all discovered, nothing hard-coded per case):
 * ``human_alignment/`` and ``baselines/`` (frozen scores and rollouts that
   ship with the suite; ``--no-baselines`` drops the latter);
 * ``DATASET_CARD.md``, renamed to ``README.md`` (the Hub reads the card from
-  ``README.md``).
+  ``README.md``), and the notes it links to (``DIFFERENCES_FROM_PAPER.md``,
+  ``FROZEN_JUDGE_OUTPUTS.md``).
 
 Case directories present on disk but not listed by any suite, and other
 suite-root files (``PENDING.md`` etc.), are reported and left out. Every path
@@ -86,6 +87,8 @@ MANIFEST_FORMAT_VERSION = 1
 # not name them by path. ``baselines`` is optional (--no-baselines).
 EXTRA_DIRS = ("human_alignment", "baselines")
 DATASET_CARD = "DATASET_CARD.md"
+# User-facing notes the dataset card links to; shipped as-is.
+RELEASE_DOCS = ("DIFFERENCES_FROM_PAPER.md", "FROZEN_JUDGE_OUTPUTS.md")
 
 # Never exported, never counted as "extra" by verify.
 CACHE_DIR_NAMES = frozenset(
@@ -396,6 +399,8 @@ def collect_export_files(
             add_tree(child, PurePosixPath(name))
         elif child.is_file() and name == DATASET_CARD:
             selected["README.md"] = child
+        elif child.is_file() and name in RELEASE_DOCS:
+            selected[name] = child
         elif name in CACHE_FILE_NAMES or name in CACHE_DIR_NAMES:
             excluded["cache_files"] += 1
         else:
