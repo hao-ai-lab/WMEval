@@ -28,7 +28,6 @@ WMEval evaluates interactive world models against Unity-based physical simulatio
 - [Action Trajectories](#action-trajectories)
   - [Synthetic Trajectory Suite (test_full)](#synthetic-trajectory-suite-test_full)
 - [Evaluation Dimensions](#evaluation-dimensions)
-  - [Case × Dimension Matrix](#case--dimension-matrix)
 - [Additional Evaluators](#additional-evaluators)
 - [Citation](#citation)
 
@@ -196,45 +195,6 @@ Rows report `metric_status`, `action_support` and `input_contract`; a dimension 
 Rows carry `input_contract`, `metric_status` and `action_support`; a dimension
 headline needs `repeat_policy.required_repeats` (5) seeds per applicable case,
 otherwise the aggregate keeps it as `provisional_value`.
-
-### Case × Dimension Matrix
-
-| Case | `lpips` | `action_controllability` | `prompt_scene_consistency` | `lighting_shading` | `environment_object_consistency` | `kinematics_mechanics` | `physical_causality` | `fluid_mechanics` |
-| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
-| `BallRoller/ctrl` | ✓ | ✓ |  |  | ✓ | ✓ |  |  |
-| `BeamDomino/causal` | ✓ | ✓ |  |  |  |  | ✓ |  |
-| `BeamDomino/causal_direct_strike` |  |  |  |  |  |  | ✓ |  |
-| `BeamDomino/causal_glancing` |  |  |  |  |  |  | ✓ |  |
-| `BilliardGame/kinematics_first` |  |  |  |  |  | ✓ |  |  |
-| `BilliardGame/scene_360_in` |  |  |  |  | ✓ |  |  |  |
-| `BilliardGame/scene_360_out` |  |  |  |  | ✓ |  |  |  |
-| `BilliardGame/scene_perturb_in` |  |  |  |  | ✓ |  |  |  |
-| `BilliardGame/scene_perturb_out` |  |  |  |  | ✓ |  |  |  |
-| `ChessBoard/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `ChessBoard/prompt_third` |  |  | ✓ |  |  |  |  |  |
-| `ChessBoard/walk_third` |  |  |  |  | ✓ |  |  |  |
-| `LiquidContainer/fluid_chirp_strafe` | ✓ |  |  |  |  |  |  | ✓ |
-| `LiquidContainer/fluid_impulse_decay` | ✓ |  |  |  |  |  |  | ✓ |
-| `LiquidContainer/fluid_rest` | ✓ |  |  |  |  |  |  | ✓ |
-| `LiquidContainer/fluid_step_hold` | ✓ |  |  |  |  |  |  | ✓ |
-| `MirrorRollingBall/lpips_collision` | ✓ | ✓ |  |  |  |  |  |  |
-| `MirrorRollingBall/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `MirrorRollingBall/prompt_third` |  |  | ✓ |  |  |  |  |  |
-| `MirrorRollingBall/scene_360_in` |  |  |  |  | ✓ |  |  |  |
-| `MirrorRollingBall/scene_360_out` |  |  |  |  | ✓ |  |  |  |
-| `MirrorRollingBall/scene_perturb_in` |  |  |  |  | ✓ |  |  |  |
-| `MirrorRollingBall/scene_perturb_out` |  |  |  |  | ✓ |  |  |  |
-| `RacingCar/kinematics_third` |  |  |  |  |  | ✓ |  |  |
-| `RacingCar/prompt_first` |  |  | ✓ |  |  |  |  |  |
-| `RacingCar/prompt_third` |  |  | ✓ |  | ✓ |  |  |  |
-| `SunRisesAndSets/lighting_orbit_v2` |  |  |  | ✓ |  |  |  |  |
-| `WanderingGarden/scene_360_in` |  |  |  |  | ✓ |  |  |  |
-| `WanderingGarden/scene_360_out` |  |  |  |  | ✓ |  |  |  |
-| `WanderingGarden/scene_first` |  |  |  |  | ✓ |  |  |  |
-| `WanderingGarden/scene_perturb_in` |  |  |  |  | ✓ |  |  |  |
-| `WanderingGarden/scene_perturb_out` |  |  |  |  | ✓ |  |  |  |
-
-A case is one atomic setup (one prompt + one reference rollout + one action protocol) owned by the dimension its variant names; other dimensions may **borrow** the same rollout (e.g. `RacingCar/prompt_third` is owned by `prompt_scene_consistency` and borrowed by `environment_object_consistency` and `kinematics_mechanics`). Variant names follow `<dimension-tag>[_<perspective>][_<setting>]`, e.g. `MirrorRollingBall/lpips_collision`, `LiquidContainer/fluid_rest`. `python tools/run_wmeval_lite.py list-cases` prints this matrix from `suite.yaml`.
 
 ## Additional Evaluators
 
