@@ -33,7 +33,7 @@ recorded SHA-256.
 
 ## 2. Bootstrap the CUDA environment
 
-Prerequisites: Linux x86_64, Python 3.10, `uv`, `git`, `ffmpeg`, an NVIDIA
+Prerequisites: Linux x86_64, Python 3.11, `uv`, `git`, `ffmpeg`, an NVIDIA
 driver compatible with CUDA 12.4, sufficient model-cache storage, and network
 access for the first checkpoint download (or a pre-populated cache).
 
