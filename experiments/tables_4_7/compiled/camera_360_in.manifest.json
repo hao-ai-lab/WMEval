@@ -1,0 +1,20 @@
+{
+  "action_npy": "camera_360_in.action.npy",
+  "action_npy_sha256": "98a9c58f1d9d6b92c42641d7e6b875244f5461f298f67cdde4caa738721a424e",
+  "action_npz": "camera_360_in.action.npz",
+  "action_npz_sha256": "fc89715ec9b6cb4eec65ccd52831d625a90b5bd64a4f66859cfeb5cd8085cc4c",
+  "actions_txt": "camera_360_in.actions.txt",
+  "actions_txt_sha256": "cd7ae0afab76799bff60f9015bfb07d5d90077fa4daefb9a46c4b82a1d630ce9",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "yaw_rate_deg_s"
+  ],
+  "project_genie_actions": "camera_360_in.actions.jsonl",
+  "project_genie_actions_sha256": "475464fc6c6588c87a99495e3ddd9c49846b6d07b471871f796f794e3f6546e5",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "16008bd3e1bd2b5497b424eab147eda7a7858572ce3d1afb5ccb62d509e9d6c4",
+  "source": "../trajectories/camera_360_in.yaml",
+  "step_count": 200,
+  "trajectory_id": "table7.camera.360_in_v1"
+}

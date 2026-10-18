@@ -80,8 +80,10 @@ class DimensionSpec:
     requires_reference: bool
     cases: tuple[str, ...]
     modules: tuple[str, ...] = ()
-    metric_config: Mapping[str, Any] = field(default=_EMPTY_MAPPING)
-    vlm: Mapping[str, Any] = field(default=_EMPTY_MAPPING)
+    metric_config: Mapping[str, Any] = field(
+        default_factory=lambda: _EMPTY_MAPPING
+    )
+    vlm: Mapping[str, Any] = field(default_factory=lambda: _EMPTY_MAPPING)
     aggregate: AggregateSpec | None = None
 
 
@@ -93,10 +95,16 @@ class Suite:
     description: str
     dimensions: Mapping[str, DimensionSpec]
     legacy_case_aliases: Mapping[str, Mapping[str, str]]
+    # Repeats per (model, case) a dimension headline requires (suite.yaml
+    # `repeat_policy.required_repeats`); None disables the coverage gate.
+    required_repeats: int | None = None
+    # Case directory relative to the suite root (suite.yaml `cases_root`); lets a
+    # companion suite reuse the main suite's case bundles (e.g. "../cases").
+    cases_dir: str = "cases"
 
     @property
     def cases_root(self) -> Path:
-        return self.root / "cases"
+        return self.root / self.cases_dir
 
     def all_case_ids(self) -> frozenset[str]:
         return frozenset(
@@ -245,6 +253,26 @@ def _parse_dimension(
     )
 
 
+def _cases_dir(raw: Mapping[str, Any]) -> str:
+    value = raw.get("cases_root", "cases")
+    if not isinstance(value, str) or not value.strip() or Path(value).is_absolute():
+        raise SuiteValidationError("cases_root must be a relative directory path")
+    return value.strip()
+
+
+def _required_repeats(raw: Mapping[str, Any]) -> int | None:
+    policy = raw.get("repeat_policy")
+    if policy is None:
+        return None
+    policy = _mapping_value(policy, "repeat_policy")
+    value = policy.get("required_repeats")
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise SuiteValidationError("repeat_policy.required_repeats must be a positive integer")
+    return value
+
+
 def load_suite(
     suite_root: str | Path,
     *,
@@ -326,6 +354,8 @@ def load_suite(
         description=description,
         dimensions=MappingProxyType(dimensions),
         legacy_case_aliases=MappingProxyType(aliases),
+        required_repeats=_required_repeats(raw),
+        cases_dir=_cases_dir(raw),
     )
 
     if check_case_dirs:

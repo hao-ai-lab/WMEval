@@ -1,0 +1,147 @@
+schema_version: 1
+scope:
+  active_cells: 14
+  generation_repeats: 5
+  active_table4_cells: 2
+  active_table7_cells: 12
+  excluded_table4_cells:
+    - table4/RacingCar/first
+    - table4/BilliardGame/third
+  note: >-
+    The supplied reference package covers the active 14-cell protocol. Restoring
+    the two excluded Table 4 cells is a separate scope change and requires their
+    missing reference assets and a protocol decision.
+
+models:
+  lingbot_world_cam:
+    display_name: LingBot-World (Base Cam)
+    upstream: https://github.com/robbyant/lingbot-world
+    revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6
+    checkpoint: robbyant/lingbot-world-base-cam
+    checkpoint_revision: 6fc824ffc338d64c97c77e2eb8c0f4cfc24d82bd
+    runtime_status: official_source_checkpoint_and_isolated_environment_ready
+    requested_tables: [7]
+    generation_groups: 12
+    generations: 60
+    capabilities:
+      native_camera_poses: true
+      keyboard_movement: false
+      target_object_actions: false
+    table4_status: unsupported_wrong_action_target
+    table4_reason: >-
+      Base Cam consumes camera extrinsics and intrinsics. It cannot express the
+      RacingCar steering/throttle/brake or BilliardGame ball-control contract;
+      use a target-aware action model or publish these rows as unsupported.
+    table7_status: native_inputs_prepared_exact_horizon_response_validation_complete_production_pending
+    calibration:
+      fixed_side: prepared
+      response_side: signed_short_horizon_sweep_and_exact_horizon_validation_complete
+      acceptance: >-
+        Nominal native pose paths frozen because response is nonlinear and
+        horizon-sensitive. Exact-horizon Garden run0 responses were -17.72 and
+        +41.37 degrees for perturbations and +54.91 and +277.88 degrees for the
+        signed full turns; these residuals are retained as model behavior.
+
+  matrix_game_2:
+    display_name: Matrix-Game 2.0
+    upstream: https://github.com/SkyworkAI/Matrix-Game/tree/main/Matrix-Game-2
+    revision: 756776d516233027631008761d4d40ddaea3e23a
+    checkpoint_revision: 08c42d1a99e57e79df60a964bb815618cdf460f8
+    runtime_status: official_source_checkpoint_and_isolated_environment_ready
+    requested_tables: [4, 7]
+    generation_groups: 14
+    generations: 70
+    capabilities:
+      native_camera_poses: false
+      keyboard_movement: true
+      mouse_camera: true
+      target_object_actions: unverified
+    table4_status: production_shaped_target_motion_smoke_passed_five_run_generation_complete_evaluation_pending
+    table7_status: deterministic_schedule_adapter_response_calibrated_generation_in_progress
+    calibration:
+      fixed_side: complete
+      response_side: signed_repeat_validated_gain_10.1_deg_per_mouse_unit_per_frame
+      acceptance: >-
+        Perturbation endpoints -44.13/+44.96 degrees with hold drift below
+        0.4 degrees. Nominal full turns measured -332.72/+353.86 degrees. A
+        direction-specific one-step correction worsened the negative response
+        to -309.72 degrees, demonstrating saturation; the pooled 10.1 gain is
+        frozen and the rejected correction artifacts are retained.
+
+  matrix_game_3:
+    display_name: Matrix-Game 3.0
+    upstream: https://github.com/SkyworkAI/Matrix-Game/tree/main/Matrix-Game-3
+    revision: 756776d516233027631008761d4d40ddaea3e23a
+    checkpoint_revision: 382aa382a03cec057360755aa72c7735025770bb
+    runtime_status: official_source_checkpoint_and_isolated_environment_ready_sdpa_fallback
+    requested_tables: [7]
+    generation_groups: 12
+    generations: 60
+    capabilities:
+      native_camera_poses: false
+      keyboard_movement: true
+      camera_actions: true
+      target_object_actions: unverified
+    table7_status: deterministic_chunk_schedule_adapter_response_calibrated
+    calibration:
+      fixed_side: complete
+      response_side: direction_and_regime_specific_gains_frozen
+      acceptance: >-
+        Final production-shaped Garden run0 endpoints are -45.04/+44.86
+        degrees for perturbations and -361.55/+364.38 degrees for full turns,
+        with negligible post-turn drift; cross-scene Billiard validation is
+        coherent and HUD-free.
+
+launch_totals:
+  claimable_generation_groups: 38
+  claimable_generations: 190
+  table4_primary_metric_entries_per_model: 6
+  table4_legacy_exact_match_diagnostics_per_model: 2
+  table4_literal_paper_entries_per_model: 8
+  table7_applicable_metric_entries_per_model: 32
+  note: >-
+    The total excludes LingBot Base Cam Table 4 because its action target is
+    incompatible. If a target-aware LingBot variant is explicitly substituted,
+    add 2 groups and 10 generations after calibration. The current evaluator
+    protocol reports DTW, FDE, and Error Rate; the baseline/template also
+    require legacy Exact Match, so a literal paper-shaped export has two more
+    diagnostic entries per Table 4 model.
+
+runtime_safety:
+  do_not_stop_or_reconfigure_existing_services: true
+  observed_2026_10_03:
+    gpu_count: 8
+    gpu_type: NVIDIA A100-SXM4-80GB
+    existing_vllm_tensor_parallel_workers: 8
+    free_memory_mib_gpus_0_to_6: 22116
+    free_memory_mib_gpu_7: 5770
+  observed_2026_10_04:
+    gpu_count: 8
+    gpu_type: NVIDIA A100-SXM4-80GB
+    prelaunch_state: all_eight_gpus_idle
+    policy_result: no_preexisting_process_was_stopped_paused_or_reconfigured
+  launch_policy: >-
+    Recheck process ownership and free memory immediately before every launch.
+    Never kill, pause, migrate, or reconfigure the existing vLLM service.
+    Wait for an operator-approved GPU window when a backend cannot fit in the
+    unallocated memory. These values are only the final 2026-10-03 snapshot,
+    not a reservation.
+
+calibration_contract:
+  repeats_per_probe: 5
+  camera_probe_degrees: [-45, 45, -360, 360]
+  horizon_sec: 10.0
+  fit:
+    - accepted_action_to_first_motion_latency
+    - signed_yaw_gain
+    - endpoint_error
+    - hold_drift
+    - repeat_variance
+  acceptance_to_freeze:
+    target_entity_success_rate: pending_multi_model_threshold
+    yaw_endpoint_tolerance_deg: pending_multi_model_threshold
+    latency_tolerance_sec: pending_multi_model_threshold
+    repeat_variance_tolerance: pending_multi_model_threshold
+  rule: >-
+    Fit on calibration probes, validate on a held-out mixed trajectory, then
+    freeze the gain/timing band before producing any scored generation.

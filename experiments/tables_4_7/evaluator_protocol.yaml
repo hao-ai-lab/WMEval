@@ -1,0 +1,90 @@
+schema_version: 1
+claim_scope: paper_protocol_reconstruction_not_exact_paper_parity
+global:
+  repetitions: 5
+  repeat_ids: [run0, run1, run2, run3, run4]
+  aggregation: {center: arithmetic_mean, spread: sample_standard_deviation, ddof: 1}
+  candidate_timeline:
+    duration_sec: 10.0
+    policy: resample_complete_semantic_action_to_reference_frame_count
+    interpolation: nearest_frame_no_optical_flow
+  missing_metric_policy: null_with_machine_readable_reason
+  comparison_policy: require_all_five_numeric_values_for_applicable_metric
+table4:
+  dimension: kinematics_mechanics
+  metrics:
+    dtw: {implementation: dtw_m_mean, direction: lower, unit: meter, paper_unit_match: reconstructed_scene_scale}
+    fde: {implementation: fde_m_mean, direction: lower, unit: meter, paper_unit_match: reconstructed_scene_scale}
+    error_rate_pct: {implementation: error_rate_pct, direction: lower, unit: percent}
+  required_inputs: [candidate_video, unity_object_transforms, unity_camera_poses, unity_camera_intrinsics, unity_plane_calibration]
+  mechanics_contract:
+    estimator: aligned_peak_finite_difference
+    event_alignment_tolerance_frames: 5
+    persistence_min_neighbor_ratio: 0.5
+    reporting: error_rate_only
+  plane_calibration_contract:
+    source: static_visual_features_from_unity_conditioning_frame
+    moving_object_exclusion: required
+    tracking: forward_backward_pyramidal_lk_camera_divergence_qa
+    transform: timestamp_matched_unity_camera_ray_intersection_with_calibrated_horizontal_plane
+    minimum_correspondences: 4
+    unit: meter
+    dtw_normalization: minimum_total_cost_path_divided_by_path_length
+    parity_status: reconstructed_because_paper_scale_transform_and_normalization_are_unpublished
+  quality_gates:
+    - every_required_label_is_reported_or_row_is_incomplete
+    - candidate_is_normalized_to_reference_fps_resolution_and_duration
+    - mechanical_quantities_require_metric_depth_and_nontrivial_ground_truth_motion
+    - mechanics_uses_bounded_event_aligned_finite_difference
+table7:
+  dimension: environment_object_consistency
+  metrics:
+    depth_absrel_pct: {direction: lower, unit: percent}
+    dist_mae_pct: {implementation: pairwise_distance_mae_pct, direction: lower, unit: percent}
+    object_permanence_pct: {direction: higher, unit: percent}
+    character_consistency_pct: {direction: higher, unit: percent}
+  required_inputs: [candidate_video, unity_object_transforms, unity_camera_poses, unity_camera_intrinsics]
+  fixed_anchor_contract:
+    detector_prompt: generic_semantic_classes
+    identity_assignment: one_to_one_nearest_visible_unity_projection_within_semantic_class
+    minimum_visible_correspondences_for_distance: 2
+    invalid_generation_action: diagnose_projection_and_detection_geometry_before_regeneration
+  camera_intrinsics_contract:
+    pixel_aspect: square
+    required_relation: fx_equals_fy
+    derivation: vertical_fov_to_focal_length_in_pixels
+    validation: fail_capture_export_if_violated
+  orientation_contract:
+    inward: orientation_specific_unity_frame_zero
+    outward: orientation_specific_unity_half_turn_frame
+    status: reconstructed_until_published_orientation_anchors_are_recovered
+scene_overrides:
+  MirrorRollingBall:
+    anchors: [yellow sphere left foreground, yellow sphere right foreground]
+    unity_objects: [YellowBall (30), YellowBall (32)]
+    separation_m: 4.0
+    detector_prompt: yellow sphere.
+    depth_method: known_diameter_apparent_size
+  WanderingGarden:
+    detector_prompt: tree. stone lantern. rock.
+    detector_threshold: 0.30
+    detector_threshold_status: wmeval_lite_default
+    depth_model: depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf
+    depth_model_policy: explicit_same_checkpoint_for_all_repeats
+    inward_anchors: [Main tree, left lamp post, right lamp post, foreground rockery ornament, background rockery ornament]
+    outward_policy: require_two_visible_configured_anchors_under_validated_square_pixel_projection
+    resolved_invalid_repeats:
+      - table7/WanderingGarden/perturb_out/run1
+      - table7/WanderingGarden/perturb_out/run2
+    resolved_root_cause: Unity capture incorrectly multiplied horizontal focal_length_px by image aspect, projecting the visible left stone lantern outside the image
+    corrected_projection_check:
+      frame: 75
+      visible_anchors: [left lamp post, background rockery ornament]
+      left_lamp_post_u_px: 209.55
+      background_rockery_u_px: 707.67
+    resolved_validation: all_five_repeats_report_numeric_distance_depth_and_permanence_metrics
+    current_invalid_repeat: null
+    current_invalid_action: none
+  BilliardGame:
+    view_source: reconstructed_unity_camera
+    published_view_conflict: table_claims_first_and_third_appendix_claims_fixed_overhead

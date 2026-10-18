@@ -1,0 +1,59 @@
+schema_version: 2
+case_id: BilliardGame/kinematics_first
+scene: BilliardGame
+display_name: BilliardGame table4 first
+prompt: A first-person ball-level view across a carom-billiard table with a white
+  controllable cue ball, a yellow ball, and a red ball. WASD directly controls the
+  white ball; keep the camera following the ball and preserve collisions with the
+  other balls and rails.
+perspective: first_person
+modules:
+- kinematics_mechanics
+reference:
+  first_frame: reference/ref.png
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: match_reference
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+module_params:
+  kinematics_mechanics:
+    text_prompt: A first-person ball-level view across a carom-billiard table with
+      a white controllable cue ball, a yellow ball, and a red ball. WASD directly
+      controls the white ball; the camera follows that ball while collisions with
+      the other balls and rails are preserved.
+    kin_text_prompt: yellow ball.
+    kin_track_thresh: 0.3
+    kin_color_filter: true
+    kin_track_point: bbox_bottom_center
+    kin_depth_lift: false
+    kin_mechanics_estimator: aligned_peak_finite_difference
+    kin_event_alignment_tolerance_frames: 5
+    kin_event_min_neighbor_ratio: 0.5
+    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/poses.npy
+    kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    kin_unity_object_masses_json: reference/artifacts/object_masses.json
+    kin_plane_calibration_json: reference/artifacts/plane_calibration.json
+evaluator_lock:
+  code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
+  evaluator_fingerprint: 887522d114462f6da67bdce784c4378e
+  release_id: wmeval-lite-v1
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    cjm-byte-track: 0.0.6
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    torch: 2.14.1
+    transformers: 5.18.0
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    lock_source: tools/lock_case_dependencies.py

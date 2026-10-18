@@ -38,7 +38,14 @@ protocol:
 evaluator_lock:
   artifact_schema_versions: {}
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  dependency_versions: {}
-  evaluator_fingerprint: dded4fbe4f1891cdb4ea37bcfd77cd54
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    openai: 3.22.1
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    lock_source: tools/lock_case_dependencies.py
+  evaluator_fingerprint: 7bb0f50f2ed88cff3b69f362306713c6
   module_config: {}
   release_id: wmeval-lite-v1

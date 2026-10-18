@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "dimension": "prompt_scene_consistency",
+  "description": "Blinded human study behind the paper's judge-human alignment. 126 videos: per case, the Unity reference (1 video) and 4 generative models (5 generations each). Each video is aggregated exactly like the judge (rubric-weighted item mean / 3, env and obj combined with alpha = 0.6; env only when the rubric has no object items) with the v0 rubrics; the human value is the mean of 3 raters. Values are per-case means over a model's videos; a model's score is the mean over the 6 cases.",
+  "num_raters": 3,
+  "num_videos": 126,
+  "reference_model": "Unity",
+  "models": {
+    "Unity": "Unity Reference",
+    "Genie": "Project Genie",
+    "LingBot": "LingBot-World (Cam)",
+    "MatrixGame3": "Matrix Game 3.0",
+    "HY": "HY-WorldPlay"
+  },
+  "human_overall": {
+    "ChessBoard/prompt_first": {
+      "Unity": 0.866667,
+      "Genie": 0.643556,
+      "LingBot": 0.748444,
+      "MatrixGame3": 0.239111,
+      "HY": 0.199111
+    },
+    "MirrorRollingBall/prompt_first": {
+      "Unity": 0.955556,
+      "Genie": 0.744444,
+      "LingBot": 0.92,
+      "MatrixGame3": 0.512222,
+      "HY": 0.575556
+    },
+    "RacingCar/prompt_first": {
+      "Unity": 0.666667,
+      "Genie": 0.622222,
+      "LingBot": 0.884444,
+      "MatrixGame3": 0.644444,
+      "HY": 0.524444
+    },
+    "ChessBoard/prompt_third": {
+      "Unity": 1.0,
+      "Genie": 0.857778,
+      "LingBot": 0.838222,
+      "MatrixGame3": 0.478222,
+      "HY": 0.412444
+    },
+    "MirrorRollingBall/prompt_third": {
+      "Unity": 0.986667,
+      "Genie": 0.878222,
+      "LingBot": 0.876444,
+      "MatrixGame3": 0.562667,
+      "HY": 0.707556
+    },
+    "RacingCar/prompt_third": {
+      "Unity": 0.946667,
+      "Genie": 0.936,
+      "LingBot": 0.788741,
+      "MatrixGame3": 0.595259,
+      "HY": 0.711704
+    }
+  },
+  "paper_judge": "openai gpt-5.4, prompt_version v0 (the paper's prompt-consistency table)",
+  "paper_judge_overall": {
+    "ChessBoard/prompt_first": {
+      "Unity": 1.0,
+      "Genie": 0.912,
+      "LingBot": 0.93598,
+      "MatrixGame3": 0.84,
+      "HY": 0.78934
+    },
+    "MirrorRollingBall/prompt_first": {
+      "Unity": 0.9333,
+      "Genie": 0.98,
+      "LingBot": 0.91998,
+      "MatrixGame3": 0.6633,
+      "HY": 0.74
+    },
+    "RacingCar/prompt_first": {
+      "Unity": 0.8,
+      "Genie": 0.71998,
+      "LingBot": 0.76,
+      "MatrixGame3": 0.62666,
+      "HY": 0.57336
+    },
+    "ChessBoard/prompt_third": {
+      "Unity": 1.0,
+      "Genie": 0.936,
+      "LingBot": 0.992,
+      "MatrixGame3": 0.89334,
+      "HY": 0.83734
+    },
+    "MirrorRollingBall/prompt_third": {
+      "Unity": 0.9733,
+      "Genie": 0.93598,
+      "LingBot": 0.89866,
+      "MatrixGame3": 0.75202,
+      "HY": 0.90398
+    },
+    "RacingCar/prompt_third": {
+      "Unity": 0.7955,
+      "Genie": 0.856,
+      "LingBot": 0.832,
+      "MatrixGame3": 0.61602,
+      "HY": 0.824
+    }
+  },
+  "expected": {
+    "all_models": {
+      "spearman_rho": 0.9,
+      "kendall_tau_b": 0.8
+    },
+    "generative_models": {
+      "spearman_rho": 0.8,
+      "kendall_tau_b": 0.6667
+    }
+  }
+}

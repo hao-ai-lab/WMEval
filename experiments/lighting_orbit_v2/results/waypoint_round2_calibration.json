@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "unresolved",
+  "model": "Waypoint",
+  "calibration_seeds": [
+    1001,
+    1002
+  ],
+  "translation_m_per_key_frame": null,
+  "yaw_deg_per_mouse_unit": null,
+  "measurements": {
+    "strafe_1001": {
+      "status": "unresolved",
+      "gain": 0.000661787958544134,
+      "fit_r2": 0.5225095942566906,
+      "residual_rms_m": 0.0043400135588643465,
+      "valid_frames": 25,
+      "last_valid_frame": 24,
+      "observed_response_span": 0.02675390293043256,
+      "intercept": -0.0014047352393040309
+    },
+    "yaw_1001": {
+      "status": "measured",
+      "gain": 0.925433873137585,
+      "fit_r2": 0.9924515930056799,
+      "residual_rms_deg": 0.2882399008823374,
+      "valid_frames": 124,
+      "last_valid_frame": 123,
+      "observed_response_span": 11.01463492304536,
+      "intercept": -0.6288112953899853
+    },
+    "strafe_1002": {
+      "status": "measured",
+      "gain": 0.020392688004518295,
+      "fit_r2": 0.9213601381040594,
+      "residual_rms_m": 0.03183906004682224,
+      "valid_frames": 20,
+      "last_valid_frame": 19,
+      "observed_response_span": 0.34996455838075763,
+      "intercept": -0.032364803377244324
+    },
+    "yaw_1002": {
+      "status": "measured",
+      "gain": 1.11427550884338,
+      "fit_r2": 0.9836875818477562,
+      "residual_rms_deg": 0.5124587157968201,
+      "valid_frames": 124,
+      "last_valid_frame": 123,
+      "observed_response_span": 12.624586463630646,
+      "intercept": -1.1906977158769374
+    }
+  },
+  "measurement_sha256": {
+    "strafe_1001": "bcae289a3f348d278728d59edb6f6b35a056f0d3b650a458cdeb293bff599c49",
+    "yaw_1001": "322d50e8c4748b75ab6f47bfa8300f0b0739216f24b2ced0ab8cc3be7582be09",
+    "strafe_1002": "606f12bb8062d9908f04e5001e9ff08af7dc12d5bce18462079721e2034f53ff",
+    "yaw_1002": "e266264e84546e93f108abd677b90a9212b10710718a72f5886e928ba301f568"
+  },
+  "consistency": {},
+  "method": "Independent mesh-anchored camera response regression; R2>=0.9, translation RMS<=0.04m, yaw RMS<=2deg, seed relative range<=25%.",
+  "unresolved_semantics": "Pending calibration, not interface unsupported and not a zero score."
+}

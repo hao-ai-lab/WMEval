@@ -1,0 +1,31 @@
+schema_version: 1
+trajectory_id: table4.billiard_game.center_ball_shot_v1
+description: Three-ball placement followed by a deterministic center-ball cue strike.
+duration_sec: 2.5
+control_hz: 60
+channels:
+  ball0_x: {kind: continuous, min: -1.0, max: 1.0, unit: table_half_width}
+  ball0_z: {kind: continuous, min: -1.0, max: 1.0, unit: table_half_length}
+  ball1_x: {kind: continuous, min: -1.0, max: 1.0, unit: table_half_width}
+  ball1_z: {kind: continuous, min: -1.0, max: 1.0, unit: table_half_length}
+  ball2_x: {kind: continuous, min: -1.0, max: 1.0, unit: table_half_width}
+  ball2_z: {kind: continuous, min: -1.0, max: 1.0, unit: table_half_length}
+  cue_angle: {kind: continuous, min: -1.0, max: 1.0, unit: normalized_full_turn}
+  strength: {kind: continuous, min: 0.0, max: 1.0, unit: normalized}
+  hit_x: {kind: continuous, min: -1.0, max: 1.0, unit: cue_face_radius}
+  hit_y: {kind: continuous, min: -1.0, max: 1.0, unit: cue_face_radius}
+  execute: {kind: discrete, min: 0, max: 1, unit: boolean}
+  force_end: {kind: discrete, min: 0, max: 1, unit: boolean}
+segments:
+  - {start_sec: 0.0, end_sec: 0.016666666666666666, values: {ball0_x: 0.0, ball0_z: 0.0, ball1_x: 0.25, ball1_z: 0.5, ball2_x: -0.25, ball2_z: -0.5, cue_angle: -0.8524163823, strength: 1.0, hit_x: 0.0, hit_y: 0.0, execute: 1, force_end: 0}}
+  - {start_sec: 0.016666666666666666, end_sec: 2.5, values: {ball0_x: 0.0, ball0_z: 0.0, ball1_x: 0.25, ball1_z: 0.5, ball2_x: -0.25, ball2_z: -0.5, cue_angle: -0.8524163823, strength: 1.0, hit_x: 0.0, hit_y: 0.0, execute: 0, force_end: 0}}
+paper_alignment:
+  status: reconstructed
+  matched: [scene, mixed_action_space, deterministic_three_ball_collision, metrics]
+  missing: The paper does not publish numeric shot parameters and its first/third-person table headings conflict with the fixed-overhead camera stated in the scene appendix.
+  source: ../../../../_arxiv__WorldModel_Eval/text/7_appendix_scenes.tex
+adapters:
+  unity: {status: ready, channels: [ball0_x, ball0_z, ball1_x, ball1_z, ball2_x, ball2_z, cue_angle, strength, hit_x, hit_y, execute, force_end]}
+  project_genie:
+    status: unsupported
+    note: The hosted web interface has no object-placement, cue-angle, strength, spin, or execute controls.

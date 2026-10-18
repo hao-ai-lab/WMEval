@@ -1,0 +1,137 @@
+[wmeval-lite] 1 work item(s) across 1 dimension(s), 1 candidate row(s)
+/workspace/WMEval-lighting-orbit/envs/lighting-py312-torch280/lib/python3.12/site-packages/transformers/models/grounding_dino/processing_grounding_dino.py:95: FutureWarning: The key `labels` is will return integer ids in `GroundingDinoProcessor.post_process_grounded_object_detection` output since v4.51.0. Use `text_labels` instead to retrieve string object names.
+  warnings.warn(self.message, FutureWarning)
+frame loading (JPEG):   0%|          | 0/120 [00:00<?, ?it/s]frame loading (JPEG):   4%|▍         | 5/120 [00:00<00:02, 38.68it/s]frame loading (JPEG):   8%|▊         | 10/120 [00:00<00:02, 42.13it/s]frame loading (JPEG):  12%|█▎        | 15/120 [00:00<00:02, 42.41it/s]frame loading (JPEG):  17%|█▋        | 20/120 [00:00<00:02, 38.46it/s]frame loading (JPEG):  20%|██        | 24/120 [00:00<00:02, 37.31it/s]frame loading (JPEG):  23%|██▎       | 28/120 [00:00<00:02, 37.83it/s]frame loading (JPEG):  27%|██▋       | 32/120 [00:00<00:02, 38.42it/s]frame loading (JPEG):  30%|███       | 36/120 [00:00<00:02, 38.52it/s]frame loading (JPEG):  33%|███▎      | 40/120 [00:01<00:02, 37.46it/s]frame loading (JPEG):  38%|███▊      | 45/120 [00:01<00:01, 40.39it/s]frame loading (JPEG):  42%|████▏     | 50/120 [00:01<00:01, 40.36it/s]frame loading (JPEG):  46%|████▌     | 55/120 [00:01<00:01, 38.74it/s]frame loading (JPEG):  50%|█████     | 60/120 [00:01<00:01, 39.63it/s]frame loading (JPEG):  54%|█████▍    | 65/120 [00:01<00:01, 40.34it/s]frame loading (JPEG):  58%|█████▊    | 70/120 [00:01<00:01, 41.03it/s]frame loading (JPEG):  62%|██████▎   | 75/120 [00:01<00:01, 38.89it/s]frame loading (JPEG):  66%|██████▌   | 79/120 [00:02<00:01, 39.02it/s]frame loading (JPEG):  70%|███████   | 84/120 [00:02<00:00, 39.79it/s]frame loading (JPEG):  73%|███████▎  | 88/120 [00:02<00:00, 39.67it/s]frame loading (JPEG):  78%|███████▊  | 93/120 [00:02<00:00, 40.40it/s]frame loading (JPEG):  82%|████████▏ | 98/120 [00:02<00:00, 40.43it/s]frame loading (JPEG):  86%|████████▌ | 103/120 [00:02<00:00, 39.34it/s]frame loading (JPEG):  90%|█████████ | 108/120 [00:02<00:00, 40.09it/s]frame loading (JPEG):  94%|█████████▍| 113/120 [00:02<00:00, 39.78it/s]frame loading (JPEG):  98%|█████████▊| 118/120 [00:02<00:00, 38.33it/s]frame loading (JPEG): 100%|██████████| 120/120 [00:03<00:00, 39.42it/s]
+propagate in video:   0%|          | 0/120 [00:00<?, ?it/s]propagate in video:   2%|▎         | 3/120 [00:00<00:07, 15.95it/s]propagate in video:   4%|▍         | 5/120 [00:00<00:09, 11.97it/s]propagate in video:   6%|▌         | 7/120 [00:00<00:11, 10.24it/s]propagate in video:   8%|▊         | 9/120 [00:00<00:12,  9.20it/s]propagate in video:   8%|▊         | 10/120 [00:01<00:12,  8.87it/s]propagate in video:   9%|▉         | 11/120 [00:01<00:12,  8.61it/s]propagate in video:  10%|█         | 12/120 [00:01<00:12,  8.41it/s]propagate in video:  11%|█         | 13/120 [00:01<00:12,  8.25it/s]propagate in video:  12%|█▏        | 14/120 [00:01<00:13,  8.13it/s]propagate in video:  12%|█▎        | 15/120 [00:01<00:13,  8.04it/s]propagate in video:  13%|█▎        | 16/120 [00:01<00:13,  7.98it/s]propagate in video:  14%|█▍        | 17/120 [00:01<00:12,  7.94it/s]propagate in video:  15%|█▌        | 18/120 [00:02<00:12,  7.91it/s]propagate in video:  16%|█▌        | 19/120 [00:02<00:12,  7.88it/s]propagate in video:  17%|█▋        | 20/120 [00:02<00:12,  7.87it/s]propagate in video:  18%|█▊        | 21/120 [00:02<00:12,  7.86it/s]propagate in video:  18%|█▊        | 22/120 [00:02<00:12,  7.85it/s]propagate in video:  19%|█▉        | 23/120 [00:02<00:12,  7.84it/s]propagate in video:  20%|██        | 24/120 [00:02<00:12,  7.84it/s]propagate in video:  21%|██        | 25/120 [00:02<00:12,  7.84it/s]propagate in video:  22%|██▏       | 26/120 [00:03<00:11,  7.84it/s]propagate in video:  22%|██▎       | 27/120 [00:03<00:11,  7.83it/s]propagate in video:  23%|██▎       | 28/120 [00:03<00:11,  7.83it/s]propagate in video:  24%|██▍       | 29/120 [00:03<00:11,  7.83it/s]propagate in video:  25%|██▌       | 30/120 [00:03<00:11,  7.83it/s]propagate in video:  26%|██▌       | 31/120 [00:03<00:11,  7.83it/s]propagate in video:  27%|██▋       | 32/120 [00:03<00:11,  7.83it/s]propagate in video:  28%|██▊       | 33/120 [00:03<00:11,  7.83it/s]propagate in video:  28%|██▊       | 34/120 [00:04<00:10,  7.83it/s]propagate in video:  29%|██▉       | 35/120 [00:04<00:10,  7.83it/s]propagate in video:  30%|███       | 36/120 [00:04<00:10,  7.83it/s]propagate in video:  31%|███       | 37/120 [00:04<00:10,  7.83it/s]propagate in video:  32%|███▏      | 38/120 [00:04<00:10,  7.83it/s]propagate in video:  32%|███▎      | 39/120 [00:04<00:10,  7.83it/s]propagate in video:  33%|███▎      | 40/120 [00:04<00:10,  7.83it/s]propagate in video:  34%|███▍      | 41/120 [00:04<00:10,  7.83it/s]propagate in video:  35%|███▌      | 42/120 [00:05<00:09,  7.83it/s]propagate in video:  36%|███▌      | 43/120 [00:05<00:09,  7.82it/s]propagate in video:  37%|███▋      | 44/120 [00:05<00:09,  7.83it/s]propagate in video:  38%|███▊      | 45/120 [00:05<00:09,  7.83it/s]propagate in video:  38%|███▊      | 46/120 [00:05<00:09,  7.83it/s]propagate in video:  39%|███▉      | 47/120 [00:05<00:09,  7.83it/s]propagate in video:  40%|████      | 48/120 [00:05<00:09,  7.83it/s]propagate in video:  41%|████      | 49/120 [00:05<00:09,  7.83it/s]propagate in video:  42%|████▏     | 50/120 [00:06<00:08,  7.83it/s]propagate in video:  42%|████▎     | 51/120 [00:06<00:08,  7.83it/s]propagate in video:  43%|████▎     | 52/120 [00:06<00:08,  7.83it/s]propagate in video:  44%|████▍     | 53/120 [00:06<00:08,  7.83it/s]propagate in video:  45%|████▌     | 54/120 [00:06<00:08,  7.83it/s]propagate in video:  46%|████▌     | 55/120 [00:06<00:08,  7.83it/s]propagate in video:  47%|████▋     | 56/120 [00:06<00:08,  7.83it/s]propagate in video:  48%|████▊     | 57/120 [00:07<00:08,  7.83it/s]propagate in video:  48%|████▊     | 58/120 [00:07<00:07,  7.83it/s]propagate in video:  49%|████▉     | 59/120 [00:07<00:07,  7.83it/s]propagate in video:  50%|█████     | 60/120 [00:07<00:07,  7.83it/s]propagate in video:  51%|█████     | 61/120 [00:07<00:07,  7.83it/s]propagate in video:  52%|█████▏    | 62/120 [00:07<00:07,  7.83it/s]propagate in video:  52%|█████▎    | 63/120 [00:07<00:07,  7.83it/s]propagate in video:  53%|█████▎    | 64/120 [00:07<00:07,  7.83it/s]propagate in video:  54%|█████▍    | 65/120 [00:08<00:07,  7.83it/s]propagate in video:  55%|█████▌    | 66/120 [00:08<00:06,  7.83it/s]propagate in video:  56%|█████▌    | 67/120 [00:08<00:06,  7.83it/s]propagate in video:  57%|█████▋    | 68/120 [00:08<00:06,  7.83it/s]propagate in video:  57%|█████▊    | 69/120 [00:08<00:06,  7.82it/s]propagate in video:  58%|█████▊    | 70/120 [00:08<00:06,  7.83it/s]propagate in video:  59%|█████▉    | 71/120 [00:08<00:06,  7.82it/s]propagate in video:  60%|██████    | 72/120 [00:08<00:06,  7.83it/s]propagate in video:  61%|██████    | 73/120 [00:09<00:06,  7.83it/s]propagate in video:  62%|██████▏   | 74/120 [00:09<00:05,  7.83it/s]propagate in video:  62%|██████▎   | 75/120 [00:09<00:05,  7.83it/s]propagate in video:  63%|██████▎   | 76/120 [00:09<00:05,  7.83it/s]propagate in video:  64%|██████▍   | 77/120 [00:09<00:05,  7.83it/s]propagate in video:  65%|██████▌   | 78/120 [00:09<00:05,  7.83it/s]propagate in video:  66%|██████▌   | 79/120 [00:09<00:05,  7.83it/s]propagate in video:  67%|██████▋   | 80/120 [00:09<00:05,  7.83it/s]propagate in video:  68%|██████▊   | 81/120 [00:10<00:04,  7.83it/s]propagate in video:  68%|██████▊   | 82/120 [00:10<00:04,  7.83it/s]propagate in video:  69%|██████▉   | 83/120 [00:10<00:04,  7.83it/s]propagate in video:  70%|███████   | 84/120 [00:10<00:04,  7.83it/s]propagate in video:  71%|███████   | 85/120 [00:10<00:04,  7.83it/s]propagate in video:  72%|███████▏  | 86/120 [00:10<00:04,  7.83it/s]propagate in video:  72%|███████▎  | 87/120 [00:10<00:04,  7.83it/s]propagate in video:  73%|███████▎  | 88/120 [00:10<00:04,  7.83it/s]propagate in video:  74%|███████▍  | 89/120 [00:11<00:03,  7.83it/s]propagate in video:  75%|███████▌  | 90/120 [00:11<00:03,  7.83it/s]propagate in video:  76%|███████▌  | 91/120 [00:11<00:03,  7.83it/s]propagate in video:  77%|███████▋  | 92/120 [00:11<00:03,  7.83it/s]propagate in video:  78%|███████▊  | 93/120 [00:11<00:03,  7.83it/s]propagate in video:  78%|███████▊  | 94/120 [00:11<00:03,  7.83it/s]propagate in video:  79%|███████▉  | 95/120 [00:11<00:03,  7.83it/s]propagate in video:  80%|████████  | 96/120 [00:12<00:03,  7.83it/s]propagate in video:  81%|████████  | 97/120 [00:12<00:02,  7.83it/s]propagate in video:  82%|████████▏ | 98/120 [00:12<00:02,  7.83it/s]propagate in video:  82%|████████▎ | 99/120 [00:12<00:02,  7.82it/s]propagate in video:  83%|████████▎ | 100/120 [00:12<00:02,  7.83it/s]propagate in video:  84%|████████▍ | 101/120 [00:12<00:02,  7.83it/s]propagate in video:  85%|████████▌ | 102/120 [00:12<00:02,  7.83it/s]propagate in video:  86%|████████▌ | 103/120 [00:12<00:02,  7.83it/s]propagate in video:  87%|████████▋ | 104/120 [00:13<00:02,  7.83it/s]propagate in video:  88%|████████▊ | 105/120 [00:13<00:01,  7.83it/s]propagate in video:  88%|████████▊ | 106/120 [00:13<00:01,  7.83it/s]propagate in video:  89%|████████▉ | 107/120 [00:13<00:01,  7.83it/s]propagate in video:  90%|█████████ | 108/120 [00:13<00:01,  7.83it/s]propagate in video:  91%|█████████ | 109/120 [00:13<00:01,  7.83it/s]propagate in video:  92%|█████████▏| 110/120 [00:13<00:01,  7.83it/s]propagate in video:  92%|█████████▎| 111/120 [00:13<00:01,  7.82it/s]propagate in video:  93%|█████████▎| 112/120 [00:14<00:01,  7.83it/s]propagate in video:  94%|█████████▍| 113/120 [00:14<00:00,  7.83it/s]propagate in video:  95%|█████████▌| 114/120 [00:14<00:00,  7.83it/s]propagate in video:  96%|█████████▌| 115/120 [00:14<00:00,  7.82it/s]propagate in video:  97%|█████████▋| 116/120 [00:14<00:00,  7.82it/s]propagate in video:  98%|█████████▊| 117/120 [00:14<00:00,  7.83it/s]propagate in video:  98%|█████████▊| 118/120 [00:14<00:00,  7.83it/s]propagate in video:  99%|█████████▉| 119/120 [00:14<00:00,  7.82it/s]propagate in video: 100%|██████████| 120/120 [00:15<00:00,  7.83it/s]propagate in video: 100%|██████████| 120/120 [00:15<00:00,  7.96it/s]
+[wmeval-lite] lighting_shading/SunRisesAndSets/lighting_orbit_v2/LingBot/42: completed
+[wmeval-lite] wrote /workspace/WMEval-lighting-orbit/same-gpu-repro-v1/original_2/per_case_results.jsonl
+{
+  "suite_name": "WMEval lighting orbit release",
+  "version": "lighting-orbit-v2",
+  "aggregation": "mean_over_cases_of_mean_over_seeds",
+  "num_rows": 1,
+  "num_completed": 1,
+  "models": {
+    "LingBot": {
+      "dimensions": {
+        "lighting_shading": {
+          "display_name": "Lighting & Shading",
+          "num_rows": 1,
+          "num_cases": 1,
+          "num_completed": 1,
+          "headline": {
+            "metric": "shadow_direction_jitter_deg_per_frame",
+            "value": null,
+            "std_across_cases": null,
+            "direction": "lower"
+          },
+          "means": {
+            "multi_object_sun_disagreement_deg": null,
+            "scene_retention_rate_pct": null,
+            "shadow_area_stability_pct": null,
+            "shadow_detection_rate_pct": null,
+            "shadow_direction_jitter_deg_per_frame": null,
+            "shadow_shape_drift": null
+          },
+          "stats": {
+            "multi_object_sun_disagreement_deg": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "scene_retention_rate_pct": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_area_stability_pct": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_detection_rate_pct": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_direction_jitter_deg_per_frame": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            },
+            "shadow_shape_drift": {
+              "mean": null,
+              "std_across_cases": null,
+              "min_case_mean": null,
+              "max_case_mean": null,
+              "n_cases": 0,
+              "case_means": {},
+              "seed_std_by_case": {},
+              "valid_repeats_by_case": {
+                "SunRisesAndSets/lighting_orbit_v2": 1
+              }
+            }
+          },
+          "per_case": [
+            {
+              "case_id": "SunRisesAndSets/lighting_orbit_v2",
+              "seed": "42",
+              "status": "completed",
+              "error": null,
+              "metrics": {
+                "scene_retention_rate_pct": 100.0,
+                "shadow_detection_rate_pct": 100.0,
+                "multi_object_sun_disagreement_deg": 44.28,
+                "shadow_direction_jitter_deg_per_frame": 2.53,
+                "shadow_area_stability_pct": 15.58,
+                "shadow_shape_drift": 6.6071
+              }
+            }
+          ],
+          "repeat_coverage": {
+            "SunRisesAndSets/lighting_orbit_v2": {
+              "required": 5,
+              "completed": 1
+            }
+          },
+          "coverage_status": "incomplete"
+        }
+      }
+    }
+  }
+}

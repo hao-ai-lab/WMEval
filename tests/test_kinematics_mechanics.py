@@ -19,17 +19,50 @@ def test_kinematics_mechanics_registered():
 
 
 def test_fde_and_dtw():
-    from evaluation.modules.kinematics_mechanics import _dtw, _fde
+    from evaluation.modules.kinematics_mechanics import _dtw, _dtw_mean, _fde
 
     traj_hat = np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]])
     traj_ref = np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 3.0]])
 
     assert _fde(traj_hat, traj_ref) == pytest.approx(1.0)
     assert _dtw(traj_hat, traj_ref) == pytest.approx(1.0)
+    assert _dtw_mean(traj_hat, traj_ref) == pytest.approx(1.0 / 3.0)
 
     # Identical trajectories: zero error.
     assert _fde(traj_hat, traj_hat) == pytest.approx(0.0)
     assert _dtw(traj_hat, traj_hat) == pytest.approx(0.0)
+
+
+def test_map_pixels_to_metric_plane():
+    from evaluation.modules.kinematics_mechanics import _map_pixels_to_plane
+
+    # x = 0.01 u, z = 0.02 v
+    homography = np.array([[0.01, 0.0, 0.0], [0.0, 0.02, 0.0], [0.0, 0.0, 1.0]])
+    mapped = _map_pixels_to_plane(
+        {0: np.array([100.0, 50.0]), 1: np.array([200.0, 25.0])},
+        {0: homography, 1: homography},
+    )
+
+    assert mapped[0] == pytest.approx([1.0, 1.0])
+    assert mapped[1] == pytest.approx([2.0, 0.5])
+
+
+def test_map_pixels_to_unity_plane_by_pose():
+    from evaluation.modules.kinematics_mechanics import _map_pixels_to_unity_plane_by_pose
+
+    # Camera at (0, 1, 0), CV axes right/down/forward. Pixel (50, 150)
+    # produces ray (0, 1, 1), intersecting y=0 at world (0, 0, 1).
+    pose = np.eye(4)
+    pose[1, 1] = -1.0
+    pose[1, 3] = 1.0
+    mapped = _map_pixels_to_unity_plane_by_pose(
+        {0: np.array([50.0, 150.0])},
+        np.stack([pose]),
+        np.array([[100.0, 100.0, 50.0, 50.0]]),
+        0.0,
+    )
+
+    assert mapped[0] == pytest.approx([0.0, 1.0])
 
 
 def test_project_unity_trajectory_to_pixels():
@@ -135,6 +168,55 @@ def test_linear_velocity_fit_smooths_noise_better_than_two_point_diff():
     assert fit_error < two_point_error
 
 
+def test_select_sustained_peak_step_rejects_isolated_tracking_spike():
+    from evaluation.modules.kinematics_mechanics import _select_sustained_peak_step
+
+    points = {
+        0: np.array([0.0, 0.0]),
+        1: np.array([1.0, 0.0]),
+        2: np.array([2.0, 0.0]),
+        3: np.array([102.0, 0.0]),  # isolated detector jump
+        4: np.array([3.0, 0.0]),
+        5: np.array([4.0, 0.0]),
+    }
+
+    peak = _select_sustained_peak_step(points, fps=1.0, min_neighbor_ratio=0.5)
+
+    assert peak is not None
+    assert peak["speed_m_s"] == pytest.approx(1.0)
+    assert peak["frame"] == 1
+
+
+def test_aligned_peak_event_handles_small_physical_event_offset():
+    from evaluation.modules.kinematics_mechanics import _aligned_peak_event_stage
+
+    # Same three-frame 2 m/s event, with the candidate occurring four frames
+    # earlier. Shared-frame windowing would mix candidate motion with Unity
+    # rest, while bounded event alignment compares the corresponding event.
+    ground_truth = {frame: np.array([0.0, 0.0]) for frame in range(20)}
+    candidate = {frame: np.array([0.0, 0.0]) for frame in range(20)}
+    for frame in range(11, 20):
+        ground_truth[frame] = np.array([2.0 * (frame - 10), 0.0])
+    for frame in range(7, 20):
+        candidate[frame] = np.array([2.0 * (frame - 6), 0.0])
+
+    stage = _aligned_peak_event_stage(
+        "ball",
+        1.0,
+        candidate,
+        ground_truth,
+        1.0,
+        tolerance_frames=5,
+        min_neighbor_ratio=0.5,
+    )
+
+    assert stage is not None
+    assert stage["estimator"] == "aligned_peak_finite_difference"
+    assert stage["temporal_offset_frames"] == -4
+    assert stage["momentum_kg_m_s"]["error_rate_pct"] == 0.0
+    assert stage["kinetic_energy_j"]["error_rate_pct"] == 0.0
+
+
 def test_mechanical_quantities_exact_match_paper_formula_explodes_near_zero():
     from evaluation.modules.kinematics_mechanics import _mechanical_quantities_exact_match
 
@@ -175,6 +257,60 @@ def test_mechanical_quantities_exact_match_reference_scale_denominator():
         {"ball": 0.02}, {"ball": 0.0001}, denominator={"ball": 1.0}
     )
     assert error_rate_pct == pytest.approx(1.99, abs=0.01)
+
+
+def test_metric_plane_mechanics_and_table_summary_use_peak_motion():
+    from evaluation.modules.kinematics_mechanics import (
+        _mechanics_values_from_points,
+        _summarize_mechanical_quantities,
+    )
+
+    frames = [8, 9, 10]
+    gt = np.asarray([[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]])
+    estimated = gt.copy()
+    stage = _mechanics_values_from_points(
+        "car", 1000.0, frames, estimated, gt, 1.0,
+        ref_momentum=1000.0, ref_energy=500.0, peak_speed=1.0,
+    )
+    summary = _summarize_mechanical_quantities(
+        {
+            "car": {
+                "stages": {"terminal": stage, "peak_motion": stage},
+            }
+        }
+    )
+    assert summary is not None
+    assert summary["selected_stage_by_label"] == {"car": "peak_motion"}
+    assert summary["quantity_count"] == 2
+    assert summary["exact_match_pct"] == 100.0
+    assert summary["error_rate_pct"] == 0.0
+
+
+def test_table_summary_prefers_aligned_peak_event():
+    from evaluation.modules.kinematics_mechanics import (
+        _mechanics_values_from_points,
+        _summarize_mechanical_quantities,
+    )
+
+    frames = [0, 1]
+    gt = np.asarray([[0.0, 0.0], [1.0, 0.0]])
+    bad = np.asarray([[0.0, 0.0], [2.0, 0.0]])
+    legacy = _mechanics_values_from_points(
+        "car", 1.0, frames, bad, gt, 1.0,
+        ref_momentum=1.0, ref_energy=0.5, peak_speed=1.0,
+    )
+    aligned = _mechanics_values_from_points(
+        "car", 1.0, frames, gt, gt, 1.0,
+        ref_momentum=1.0, ref_energy=0.5, peak_speed=1.0,
+    )
+    aligned["estimator"] = "aligned_peak_finite_difference"
+    summary = _summarize_mechanical_quantities(
+        {"car": {"stages": {"peak_motion": legacy, "aligned_peak_event": aligned}}}
+    )
+
+    assert summary is not None
+    assert summary["selected_stage_by_label"] == {"car": "aligned_peak_event"}
+    assert summary["error_rate_pct"] == 0.0
 
 
 def test_analyze_kinematics_mechanics_requires_candidate_video():

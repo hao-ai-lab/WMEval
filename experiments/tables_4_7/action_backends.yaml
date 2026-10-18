@@ -1,0 +1,259 @@
+schema_version: 1
+description: >-
+  Single source for how each backend receives the canonical Table 4/7 semantic
+  trajectories (experiments/tables_4_7/trajectories/*.yaml). The trajectory
+  YAMLs stay authoritative and hash-locked; this file adds what they cannot
+  express without changing their hashes: the entity each trajectory controls,
+  each backend's native timeline, which action targets it can express, and the
+  frozen response-side calibration used to compile camera motion.
+
+# What each semantic trajectory actuates. A backend may only receive a
+# trajectory whose target it declares under `supports`; anything else is
+# reported as unsupported, never silently substituted (e.g. moving the camera
+# instead of the car).
+action_targets:
+  table4.racing_car.drive_v1: {target: ego_vehicle, frame: vehicle_body}
+  table4.billiard_game.first_person_ball_wasd_v1: {target: cue_ball, frame: table_plane}
+  table4.billiard_game.center_ball_shot_v1: {target: table_objects, frame: table_plane}
+  controllability.ball_roller.collision_path_v1: {target: ball, frame: ground_plane}
+  controllability.mirror_rolling_ball.axis_cycle_v1: {target: ball, frame: ground_plane}
+  table7.camera.perturb_in_v1: {target: camera, frame: camera_yaw}
+  table7.camera.perturb_out_v1: {target: camera, frame: camera_yaw}
+  table7.camera.360_in_v1: {target: camera, frame: camera_yaw}
+  table7.camera.360_out_v1: {target: camera, frame: camera_yaw}
+  prompt.camera.left_turn_v1: {target: camera, frame: camera_yaw}
+  # Lite cases outside Tables 4/7 (experiments/trajectory_reconstructions).
+  wmeval_lite.beam_domino.causal.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_glancing.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_direct_strike.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.liquid_container.fluid_rest.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_impulse_decay.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.chess_board.walk_third.capture_v1: {target: character, frame: character_body}
+  wmeval_lite.wandering_garden.scene_first.yaw_sweep_v1: {target: camera, frame: camera_yaw}
+
+backends:
+  hy_worldplay:
+    scope: trajectories_only
+    interface: pending_source_audit
+  waypoint:
+    scope: trajectories_only
+    interface: keyboard_mouse
+  unity:
+    interface: unity_runtime_args
+    supports:
+      character: reference
+      camera: reference
+      ego_vehicle: reference
+      cue_ball: reference
+      ball: reference
+      table_objects: reference
+      rolling_ball: reference
+      liquid_container: reference
+
+  project_genie:
+    interface: browser_keyboard
+    note: Key rules live in each trajectory's `adapters.project_genie` block.
+    supports:
+      character: nominal
+      camera: nominal_left_turn_calibrated
+      ego_vehicle: nominal
+      cue_ball: nominal
+      ball: nominal
+      rolling_ball: nominal_binary_keys
+      liquid_container: nominal
+    unsupported:
+      table_objects: The hosted web interface has no placement, cue-angle, strength, spin, or execute controls.
+    calibration:
+      left_turn_deg_per_s: 51.4735
+      right_turn: no reliable full-yaw correlation peak; not frozen
+
+  matrix_game_2:
+    interface: keyboard_mouse
+    frames: 129
+    fps: 12.0
+    latent_frames: 33
+    keyboard_width: 4
+    supports:
+      character: target_entity_validation_required
+      camera: response_calibrated_repeat_validated
+      ego_vehicle: target_entity_validation_required
+      cue_ball: target_entity_validation_required
+      ball: target_entity_validation_required
+    unsupported:
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keyboard drives the first-person camera/agent; there is no ball-force channel.
+      liquid_container: Keyboard moves the camera, which breaks the fixed side camera the fluid metrics require.
+    # Visual degrees per mouse unit per frame. Two independent short-probe
+    # seeds at +/-0.3 mouse units gave gains near 10.1. Production-shaped
+    # Garden validation reached -332.715 / +353.859 degrees from nominal
+    # +/-360-degree schedules; a direction-specific one-step correction made
+    # the negative response worse (-309.723), i.e. saturation, so the pooled
+    # gain is frozen for every regime and residual error is model behaviour.
+    camera_gain_deg_per_mouse_unit:
+      pooled_bidirectional: 10.1
+
+  matrix_game_3:
+    interface: keyboard_mouse
+    frames: 177
+    fps: 17.0
+    iterations: 4
+    keyboard_width: 6
+    upstream_geometric_deg_per_mouse_unit: 15.0
+    supports:
+      camera: response_calibrated_repeat_validated
+    unsupported:
+      character: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      ego_vehicle: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      cue_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
+      liquid_container: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
+    # Response-side gains from clean Garden validation videos. Short
+    # perturbations are linear; full turns accumulate a small direction-
+    # dependent bias and use their own measured gains.
+    camera_gain_deg_per_mouse_unit:
+      perturb_negative: 11.175
+      perturb_positive: 11.234
+      full_turn_negative: 10.511
+      full_turn_positive: 11.434
+
+  lingbot_world_cam:
+    interface: camera_pose
+    frames: 161
+    fps: 16.0
+    supports:
+      camera: nominal_pose_no_response_correction
+    unsupported:
+      character: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the character.
+      ego_vehicle: Base Cam consumes camera extrinsics/intrinsics only; it cannot steer the car.
+      cue_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
+      ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
+      table_objects: Base Cam consumes camera extrinsics/intrinsics only.
+      rolling_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot push the ball.
+      liquid_container: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the bottle.
+    # Response is nonlinear and horizon-sensitive, so nominal Unity pose paths
+    # are frozen without correction. Exact-horizon Garden run0 responses were
+    # -17.72 / +41.37 degrees (perturbations) and +54.91 / +277.88 degrees
+    # (signed full turns); report realized yaw alongside consistency metrics.
+
+  # Action-conditioned LingBot-World. One frame per 100 ms action tick, so the
+  # real frame rate is 10 fps even though the mp4 container is tagged 16 fps
+  # (see candidate_fps_override). Evaluated on object-control scenes only; the
+  # camera cases use lingbot_world_cam.
+  lingbot_world_act:
+    interface: action_conditioned
+    action_tick_ms: 100
+    real_fps: 10.0
+    container_fps: 16.0
+    supports:
+      ball: nominal
+      rolling_ball: nominal
+    unsupported:
+      character: No Act adapter for third-person avatar control.
+      camera: The Act variant is evaluated on object-control scenes; camera cases use lingbot_world_cam.
+      ego_vehicle: No Act adapter for vehicle control.
+      cue_ball: No Act adapter for cue-ball control.
+      table_objects: No object-placement or cue-shot controls.
+      liquid_container: No Act adapter for bottle motion.
+
+  # Waypoint-1.5 is a first-person keys + mouse model: W/A/S/D translate and the
+  # mouse rotates the ego camera. It has no channel for an object, so asking it
+  # to steer one would silently move the camera instead -- recorded as
+  # unsupported rather than scored.
+  waypoint15:
+    interface: keyboard_mouse
+    fps: 60.0
+    frames_per_control_step: 4
+    supports:
+      camera: nominal
+    unsupported:
+      character: Keys and mouse drive the first-person ego camera; there is no third-person avatar.
+      ego_vehicle: Keys and mouse drive the first-person ego camera; there is no vehicle channel.
+      cue_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      table_objects: Keys and mouse drive the first-person ego camera; there is no object channel.
+      rolling_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      liquid_container: Keys and mouse drive the first-person ego camera; there is no object channel.
+
+  # Hosted browser world models (not in the paper). Keys move the avatar/camera of
+  # the generated world; turn rates are uncalibrated, so camera support is nominal.
+  odyssey:
+    interface: browser_keyboard
+    note: tools/odyssey_agent.py; held keys over a wall-clock session.
+    supports:
+      character: nominal_uncalibrated
+      camera: nominal_uncalibrated
+    unsupported:
+      ego_vehicle: Keys move the generated world's viewpoint; there is no vehicle channel.
+      cue_ball: Keys move the generated world's viewpoint; there is no object channel.
+      ball: Keys move the generated world's viewpoint; there is no object channel.
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
+      liquid_container: Keys move the viewpoint, which breaks the fixed side camera the fluid metrics require.
+  happy_oyster:
+    interface: browser_keyboard
+    note: Adventure mode; first/third-person view selectable; yaw calibration in progress.
+    supports:
+      character: nominal_uncalibrated
+      camera: nominal_uncalibrated
+    unsupported:
+      ego_vehicle: Keys move the generated world's viewpoint; there is no vehicle channel.
+      cue_ball: Keys move the generated world's viewpoint; there is no object channel.
+      ball: Keys move the generated world's viewpoint; there is no object channel.
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
+      liquid_container: Keys move the viewpoint, which breaks the fixed side camera the fluid metrics require.
+
+# Full translation plus look-at is reviewed independently from Table 7 yaw.
+# Pending means incomplete work, never N/A or a model-quality rejection.
+trajectory_support:
+  lighting.camera.look_at_orbit_v2:
+    target: camera
+    backends:
+      unity:
+        status: supported
+        reason: Deterministic 121-frame capture verifies the complete orbit, fixed sun and static objects against analytic
+          C2W; endpoint and pixel closure evidence are in the case bundle.
+        source_revision: 84a06a422ae0a0d04153596e881c85be8d4ff3f1
+        evidence: eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/unity_qa.json
+      lingbot_world_cam:
+        status: supported
+        reason: Pinned Cam source accepts per-frame C2W and intrinsics; all five formal seeds accepted the 161-pose complete
+          orbit and completed Lite scoring. Generation distortion remains measured model behavior.
+        source_revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
+      matrix_game_2:
+        status: unsupported
+        reason: Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre
+          conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict
+          trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.
+        evidence: experiments/lighting_orbit_v2/results/capability_audit.json
+      matrix_game_3:
+        status: supported
+        reason: The pinned native pose path receives the full analytic C2W orbit with a fixed basis and intrinsics conversion;
+          auxiliary keys use the audited native units. All five formal seeds and Lite scoring completed without response correction.
+        source_revision: 756776d516233027631008761d4d40ddaea3e23a
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
+      waypoint:
+        status: unsupported
+        reason: Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre
+          conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict
+          trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.
+        source_revision: b3f1e725b222679a517632918cc78bba0c9fa433
+        evidence: experiments/lighting_orbit_v2/results/capability_audit.json
+      hy_worldplay:
+        status: supported
+        reason: Pinned native pose_to_input consumed 64 analytic C2W poses and K for 253 frames at 24 fps; all five formal
+          seeds and Lite scoring completed. Full action state loaded strictly, native four-step AR/torch_causal attention
+          and BF16 retained, endpoint held after 10 seconds.
+        source_revision: 1588e1336e842b03b0a7860c654ebd7c46bb065e
+        evidence: experiments/lighting_orbit_v2/results/run_summary.json
+      project_genie:
+        status: unsupported
+        reason: Pinned hosted UI exposes wall-clock keys, not native-frame actions or a metric camera/target path. Five identical
+          input replays span 8.9583-10.1667 native seconds, and visible clocks include waiting. Strict frame-indexed metric
+          look-at orbit is N/A; all diagnostic exports/scores remain retained. Generated appearance is not an exclusion criterion.
+        evidence: experiments/lighting_orbit_v2/results/capability_audit.json

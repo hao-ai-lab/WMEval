@@ -67,6 +67,7 @@ def test_detect_segments_produces_four_canonical_events():
 
     assert out["trajectory_id"] == expected["trajectory_id"]
     assert out["source"] == "unity_gt"
+    assert out["trajectory_shape"] == expected["trajectory_shape"]
     assert len(out["events"]) == 4
     for got, want in zip(out["events"], expected["events"]):
         assert got["index"] == want["index"]
@@ -82,8 +83,9 @@ def test_detect_segments_raises_when_no_ball_impact():
     log = {
         "trajectory_id": "no_hit",
         "frames": [
+            # Only a startup settling contact, before the default 0.1 s cutoff.
             _frame(0, 0.0),
-            _frame(1, 0.5, collisions=[_collision("FloorBall", "Pillar", 0.0)]),
+            _frame(1, 0.02, collisions=[_collision("FloorBall", "Pillar", 0.0)]),
             _frame(2, 1.0),
         ],
     }
@@ -113,3 +115,60 @@ def test_detect_segments_raises_when_no_domino_falls():
         assert "fallen" in str(e).lower()
         return
     raise AssertionError("expected SegmentDetectionError")
+
+
+def _shape_frame(idx, t, *, roof_tilt=0.0, fallen=0, collisions=()):
+    frame = _frame(idx, t, fallen_indices=range(fallen), collisions=collisions)
+    frame["bodies"].append(_body("Roof", rotation_x=roof_tilt))
+    return frame
+
+
+def test_detect_segments_glancing_when_roof_never_tips():
+    from tools.detect_beamdomino_segments import detect_segments
+
+    # Ball clips a leg at 0.5 s, the roof stays level, the ball strikes a
+    # domino directly at 0.8 s, and the row falls from 1.0 s.
+    log = {
+        "trajectory_id": "glance",
+        "frames": [
+            _shape_frame(0, 0.0),
+            _shape_frame(1, 0.5, collisions=[_collision("FloorBall", "Pillar", 0.0)]),
+            _shape_frame(2, 0.8, collisions=[_collision("FloorBall", "Domino_S00_D00", 0.0)]),
+            _shape_frame(3, 1.0, fallen=1),
+            _shape_frame(4, 1.2, fallen=3),
+            _shape_frame(5, 2.0, fallen=3),
+        ],
+    }
+    out = detect_segments(log)
+
+    assert out["trajectory_shape"] == "glancing"
+    assert [(e["name"], e["start_sec"], e["end_sec"]) for e in out["events"]] == [
+        ("rolling", 0.0, 0.5),
+        ("glance", 0.5, 0.8),
+        ("strike", 0.8, 1.0),
+        ("cascade", 1.0, 1.2),
+    ]
+
+
+def test_detect_segments_direct_strike_when_ball_hits_a_domino_first():
+    from tools.detect_beamdomino_segments import detect_segments
+
+    # The ball never touches the platform: its first contact is a domino.
+    log = {
+        "trajectory_id": "far",
+        "frames": [
+            _shape_frame(0, 0.0),
+            _shape_frame(1, 0.6, collisions=[_collision("FloorBall", "Domino_S00_D00", 0.0)]),
+            _shape_frame(2, 0.9, fallen=1),
+            _shape_frame(3, 1.1, fallen=3),
+            _shape_frame(4, 2.0, fallen=3),
+        ],
+    }
+    out = detect_segments(log)
+
+    assert out["trajectory_shape"] == "direct_strike"
+    assert [(e["name"], e["start_sec"], e["end_sec"]) for e in out["events"]] == [
+        ("rolling", 0.0, 0.6),
+        ("strike", 0.6, 0.9),
+        ("cascade", 0.9, 1.1),
+    ]

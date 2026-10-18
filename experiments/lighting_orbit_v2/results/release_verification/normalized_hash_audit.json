@@ -1,0 +1,107 @@
+[
+  {
+    "model": "HY-WorldPlay",
+    "seed": "2",
+    "normalized_sha256": "22c417f2d6bc4fc3292ef376f43c2d86e8b6c357b0529b432faba702e5f0167c",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "HY-WorldPlay",
+    "seed": "4",
+    "normalized_sha256": "58e971052a0ecbe0d246e25b3a9fa0e5a2b832b5331a22ebab89b8b10249df15",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "LingBot",
+    "seed": "1",
+    "normalized_sha256": "afb67539bd4e6f12cabbebc637ed93f9c7990cc8e19bf14d83a4af5fd84a113c",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "LingBot",
+    "seed": "3",
+    "normalized_sha256": "0fa9631e2dc2d54387383463708180125b30dfc362d7e1475538cd1a7c8bcf78",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "LingBot",
+    "seed": "42",
+    "normalized_sha256": "45110eb788f915a10a0b7f3fa175e36946ae193808cb582b10d44c3028097580",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "Matrix-Game3",
+    "seed": "2",
+    "normalized_sha256": "a257aa88fcfd2fee32c98adc12475214972f6ef7668b435d4acb02a4d6939883",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "Matrix-Game3",
+    "seed": "4",
+    "normalized_sha256": "0e053eb1e0da113664a922453c606559d820520f974c8a27beb471036cb8b6e9",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "HY-WorldPlay",
+    "seed": "1",
+    "normalized_sha256": "7fe93be8f0f4fa6a285f2d0c0f541136da66f735cf470149ef90b69574c864c2",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "HY-WorldPlay",
+    "seed": "3",
+    "normalized_sha256": "05d4f8685da7a281d4f6a40b5b55a48dc22e936915fa72f47166e86ba26524a8",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "HY-WorldPlay",
+    "seed": "42",
+    "normalized_sha256": "700cc62ae964328ea23645ca7562782262f0c9052cff1a17afcd0a12b2874b8a",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "LingBot",
+    "seed": "2",
+    "normalized_sha256": "1df91b3076a451d89630cbe8ea5cc8756670023cfb98be6d2cfd9de4ae91ace6",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "LingBot",
+    "seed": "4",
+    "normalized_sha256": "eee9ea507aa1d8e336507a0f07d901185f20ae1716d35148e93ebef05465ae14",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "Matrix-Game3",
+    "seed": "1",
+    "normalized_sha256": "8c08601379bd778104737cac06d58a7493ad3b1e728fee93612cee3995568fd9",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "Matrix-Game3",
+    "seed": "3",
+    "normalized_sha256": "b9cb9caf70b8b792f80ec94c0ca29dcbbc5f46f2f3b786b2f57f778c917f8411",
+    "original_present": true,
+    "matches_original": true
+  },
+  {
+    "model": "Matrix-Game3",
+    "seed": "42",
+    "normalized_sha256": "c98c73b134c076fe1d74b341fe25be216fb81539be243e1b50996a9acb49749d",
+    "original_present": true,
+    "matches_original": true
+  }
+]

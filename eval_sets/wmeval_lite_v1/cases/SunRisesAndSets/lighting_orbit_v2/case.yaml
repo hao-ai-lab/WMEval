@@ -1,0 +1,64 @@
+schema_version: 2
+case_id: SunRisesAndSets/lighting_orbit_v2
+scene: SunRisesAndSets
+display_name: SunRisesAndSets complete camera orbit
+prompt: First-person viewpoint, eye height 1.6 metres above a wooden floor. No body
+  or hands visible. Move counter-clockwise around the round wooden table at a constant
+  2-metre radius, completing one full circle in exactly 10 seconds, continuously looking
+  at the tabletop centre. Constant speed, no head bobbing or roll. The table, chairs,
+  red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain
+  static. One fixed bright sun lights the scene; its world direction, intensity and
+  colour temperature remain constant throughout.
+perspective: first_person
+modules:
+- shadow_consistency
+reference:
+  first_frame: reference/ref.png
+  video: reference/unity_orbit.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    trajectory: reference/artifacts/trajectory.yaml
+    action_npz: reference/artifacts/action.npz
+    camera_pose_samples: reference/artifacts/actions.jsonl
+    camera_poses: reference/artifacts/poses.npy
+    camera_intrinsics: reference/artifacts/intrinsics.npy
+    compile_manifest: reference/artifacts/compile_manifest.json
+    scene_calibration: reference/artifacts/calibration.json
+    unity_qa: reference/artifacts/unity_qa.json
+    evaluator_assets_lock: reference/artifacts/evaluator_assets.lock.json
+    table_cell: reference/artifacts/table_cell.json
+protocol:
+  candidate_normalization: lighting_orbit_10s_fps12
+  min_duration_sec: 10.0
+  min_duration_ratio: 1.0
+  duration_threshold_mode: max
+  scoring_window_sec:
+  - 0.0
+  - 10.0
+  scoring_fps: 12
+  scoring_frames: 120
+  time_mapping: receipt-derived native frame offset; no stretch
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: e48f75cf80ddd581148f085099913696480ec0c6
+  evaluator_fingerprint: d2676b7f6d2ca69f480e6ee91f8fce2e
+  module_config: &id001
+    shadow_consistency:
+      shadow_text_prompt: table. chair. lamp.
+      shadow_anchor_label: table
+  artifact_schema_versions:
+    camera_pose_samples: 1
+    trajectory: 1
+    action_npz: 1
+    table_cell: 1
+  dependency_versions:
+    python: '3.12'
+    torch: 2.8.0+cu128
+    numpy: 1.26.4
+    opencv-python-headless: 4.10.0.84
+    transformers: 4.51.3
+    sam2_source_revision: 2b90b9f5ceec907a1c18123530e92e794ad901a4
+    cuda: '12.8'
+    gpu: NVIDIA RTX PRO 6000 Blackwell Server Edition
+    nvidia_driver: 595.91.07
+module_params: *id001

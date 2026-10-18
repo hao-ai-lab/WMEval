@@ -16,6 +16,7 @@ reference:
   artifacts:
     actions_file: reference/artifacts/actions.txt
     synthetic_action_dir: reference/artifacts
+    reference_scores: reference/artifacts/reference_scores.json
 protocol:
   candidate_normalization: none
   min_duration_sec: 1.0
@@ -24,7 +25,14 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
-  evaluator_fingerprint: a6298915f01d6a8e812141b7507bda1f
+  evaluator_fingerprint: b76f938613af0e41ab6c176fab952712
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pydantic: 2.13.5
+    requests: 2.34.2
+    lock_source: tools/lock_case_dependencies.py

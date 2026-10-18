@@ -281,6 +281,204 @@ def _box_area(box: np.ndarray) -> float:
     return max(0.0, x1 - x0) * max(0.0, y1 - y0)
 
 
+def _character_prompt_is_disabled(prompt: str) -> bool:
+    """Recognize the suite's explicit no-character sentinel.
+
+    WanderingGarden has no persistent visible character by paper definition.
+    Sending its sentinel through GroundingDINO on every frame adds a second
+    full detector pass without defining a metric, and can create spurious
+    character boxes.  Empty prompts and the established sentinel therefore
+    disable that branch explicitly.
+    """
+    normalized = prompt.strip().lower()
+    return not normalized or normalized.startswith("no_character_configured_for_this_case")
+
+
+def _empty_detections() -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    return (
+        np.empty((0, 4), dtype=np.float32),
+        np.empty((0,), dtype=np.float32),
+        [],
+    )
+
+
+def _detect_prompt_groups(
+    frame: np.ndarray,
+    prompt: str,
+    model_id: str,
+    box_threshold: float,
+    text_threshold: float,
+    device: str,
+) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+    """Detect pipe-delimited prompts independently, then concatenate them.
+
+    GroundingDINO can emit one merged phrase for a period-delimited prompt
+    such as ``"yellow ball. red ball."``. That merged label cannot be joined
+    to per-object Unity ground truth. A pipe explicitly requests independent
+    detector calls while retaining the legacy single-prompt behavior.
+    """
+    groups = [item.strip() for item in prompt.split("|") if item.strip()]
+    if not groups:
+        return _empty_detections()
+    detections = [
+        _detect_objects_groundingdino(
+            frame,
+            group,
+            model_id,
+            box_threshold,
+            text_threshold,
+            device,
+        )
+        for group in groups
+    ]
+    boxes = [item[0] for item in detections if len(item[0])]
+    scores = [item[1] for item in detections if len(item[1])]
+    labels = [label for item in detections for label in item[2]]
+    return (
+        np.concatenate(boxes, axis=0) if boxes else np.empty((0, 4), dtype=np.float32),
+        np.concatenate(scores, axis=0) if scores else np.empty((0,), dtype=np.float32),
+        labels,
+    )
+
+
+def _anchor_semantic_class(label: str) -> Optional[str]:
+    normalized = label.strip().lower()
+    if "sphere" in normalized or "ball" in normalized:
+        return "sphere"
+    if "tree" in normalized:
+        return "tree"
+    if "lamp" in normalized or "lantern" in normalized:
+        return "lamp"
+    if "rock" in normalized:
+        return "rock"
+    return None
+
+
+def _project_unity_anchor(
+    label: str,
+    *,
+    gt: Dict[str, Any],
+    poses: np.ndarray,
+    intrinsics: np.ndarray,
+    frame_idx: int,
+) -> Optional[Tuple[float, float, float]]:
+    """Project one Unity anchor into its aligned candidate frame.
+
+    ``poses`` is camera-to-world with Unity's image-down Y convention, which
+    is already the convention used by the bundled intrinsics.  The returned
+    tuple is ``(u, v, camera_z)``; non-positive Z is behind the camera.
+    """
+    objects = gt.get("objects", {})
+    lower_index = {str(key).strip().lower(): value for key, value in objects.items()}
+    entry = lower_index.get(label.strip().lower())
+    if not isinstance(entry, dict):
+        return None
+    frames = [int(value) for value in entry.get("frames", [])]
+    positions = entry.get("positions_world", [])
+    if not frames or not positions:
+        return None
+    nearest = min(range(len(frames)), key=lambda index: abs(frames[index] - frame_idx))
+    position = np.asarray(positions[nearest], dtype=np.float64)
+    pose = poses[min(max(frame_idx, 0), poses.shape[0] - 1)]
+    camera_point = np.linalg.inv(pose) @ np.asarray([*position, 1.0], dtype=np.float64)
+    z = float(camera_point[2])
+    if z <= EPS:
+        return None
+    fx, fy, cx, cy = intrinsics[min(max(frame_idx, 0), intrinsics.shape[0] - 1)]
+    u = float(fx * camera_point[0] / z + cx)
+    v = float(fy * camera_point[1] / z + cy)
+    return u, v, z
+
+
+def _assign_fixed_anchor_detections(
+    *,
+    boxes: np.ndarray,
+    scores: np.ndarray,
+    labels: Sequence[str],
+    fixed_anchor_labels: Sequence[str],
+    gt: Dict[str, Any],
+    poses: np.ndarray,
+    intrinsics: np.ndarray,
+    frame_idx: int,
+    frame_width: int,
+    frame_height: int,
+    max_normalized_distance: float = 0.30,
+) -> List[Dict[str, Any]]:
+    """Assign generic GroundingDINO detections to the paper's fixed anchors.
+
+    The paper names two lamp posts and two rockery ornaments, while open-vocab
+    detectors generally emit only generic ``lamp post``/``rock`` labels.  The
+    aligned Unity pose provides the missing identity: detections are matched
+    one-to-one to visible analytical projections within the same semantic
+    class.  This preserves the five-object denominator and exact Unity labels
+    instead of silently collapsing several anchors into one generic label.
+    """
+    diagonal = max(float(np.hypot(frame_width, frame_height)), EPS)
+    valid_detections: List[Tuple[int, str, float, List[float], float, float]] = []
+    for index, (box, score, label) in enumerate(zip(boxes, scores, labels)):
+        semantic_class = _anchor_semantic_class(str(label))
+        if semantic_class is None:
+            continue
+        x1, y1, x2, y2 = [float(value) for value in box]
+        area_fraction = max(0.0, x2 - x1) * max(0.0, y2 - y1) / max(
+            float(frame_width * frame_height), EPS
+        )
+        # A close landmark can legitimately occupy most of the frame (the
+        # Garden main tree is ~60%).  The stricter 0.60 generic-dedup guard is
+        # therefore inappropriate once semantic class + Unity projection are
+        # available to disambiguate it; reject only near-whole-frame boxes.
+        if area_fraction >= 0.90:
+            continue
+        valid_detections.append(
+            (index, semantic_class, float(score), [x1, y1, x2, y2], (x1 + x2) / 2.0, (y1 + y2) / 2.0)
+        )
+
+    pairings: List[Tuple[float, str, int]] = []
+    for anchor_label in fixed_anchor_labels:
+        projected = _project_unity_anchor(
+            anchor_label,
+            gt=gt,
+            poses=poses,
+            intrinsics=intrinsics,
+            frame_idx=frame_idx,
+        )
+        if projected is None:
+            continue
+        u, v, _ = projected
+        # Do not let an off-screen Unity anchor steal a visually similar box
+        # from a different in-frame object.  A projected pivot must itself be
+        # inside the aligned frame to participate in assignment.
+        if not (0.0 <= u < frame_width and 0.0 <= v < frame_height):
+            continue
+        anchor_class = _anchor_semantic_class(anchor_label)
+        for detection_index, detection_class, _score, _box, center_x, center_y in valid_detections:
+            if detection_class != anchor_class:
+                continue
+            distance = float(np.hypot(center_x - u, center_y - v)) / diagonal
+            if distance <= max_normalized_distance:
+                pairings.append((distance, anchor_label, detection_index))
+
+    assigned_anchors: set[str] = set()
+    assigned_detections: set[int] = set()
+    output: List[Dict[str, Any]] = []
+    detection_lookup = {entry[0]: entry for entry in valid_detections}
+    for distance, anchor_label, detection_index in sorted(pairings):
+        if anchor_label in assigned_anchors or detection_index in assigned_detections:
+            continue
+        _index, _kind, score, box, _center_x, _center_y = detection_lookup[detection_index]
+        output.append(
+            {
+                "label": anchor_label,
+                "score": score,
+                "box": box,
+                "assignment_distance_normalized": distance,
+            }
+        )
+        assigned_anchors.add(anchor_label)
+        assigned_detections.add(detection_index)
+    return output
+
+
 def _track_objects(
     video_path: str,
     text_prompt: str,
@@ -292,6 +490,10 @@ def _track_objects(
     sam2_config: str,
     sam2_hf: str,
     max_objects: int,
+    fixed_anchor_labels: Optional[Sequence[str]] = None,
+    unity_gt: Optional[Dict[str, Any]] = None,
+    unity_poses: Optional[np.ndarray] = None,
+    unity_intrinsics: Optional[np.ndarray] = None,
 ) -> Dict[str, Any]:
     """GroundingDINO (frame 0 seed) + SAM 2 video tracking of key objects and
     the main character. Returns per-frame masks/centroids plus independent
@@ -306,17 +508,55 @@ def _track_objects(
     if not ok:
         return {"error": f"cannot read first frame of {video_path}"}
 
-    obj_boxes, obj_scores, obj_labels = _detect_objects_groundingdino(
+    obj_boxes, obj_scores, obj_labels = _detect_prompt_groups(
         first_frame, text_prompt, gd_model_id, gd_threshold, gd_text_threshold, device
     )
-    char_boxes, char_scores, char_labels = _detect_objects_groundingdino(
-        first_frame, character_prompt, gd_model_id, gd_threshold, gd_text_threshold, device
+    character_disabled = _character_prompt_is_disabled(character_prompt)
+    char_boxes, char_scores, char_labels = (
+        _empty_detections()
+        if character_disabled
+        else _detect_objects_groundingdino(
+            first_frame,
+            character_prompt,
+            gd_model_id,
+            gd_threshold,
+            gd_text_threshold,
+            device,
+        )
     )
-    obj_boxes, obj_scores, obj_labels = _dedupe_seed_detections(
-        obj_boxes, obj_scores, obj_labels, frame_width=width, frame_height=height,
-    )
+    fixed_anchors = [str(label) for label in (fixed_anchor_labels or [])]
+    if fixed_anchors:
+        if unity_gt is None or unity_poses is None or unity_intrinsics is None:
+            return {
+                "n_frames_total": n_frames,
+                "fps": fps,
+                "width": width,
+                "height": height,
+                "objects": [],
+                "character_id": None,
+                "frames": [],
+                "detections_by_frame": [],
+                "error": "fixed anchors require Unity transforms, poses, and intrinsics",
+            }
+        seed_anchor_detections = _assign_fixed_anchor_detections(
+            boxes=obj_boxes,
+            scores=obj_scores,
+            labels=obj_labels,
+            fixed_anchor_labels=fixed_anchors,
+            gt=unity_gt,
+            poses=unity_poses,
+            intrinsics=unity_intrinsics,
+            frame_idx=0,
+            frame_width=width,
+            frame_height=height,
+        )
+    else:
+        obj_boxes, obj_scores, obj_labels = _dedupe_seed_detections(
+            obj_boxes, obj_scores, obj_labels, frame_width=width, frame_height=height,
+        )
+        seed_anchor_detections = []
 
-    if len(obj_boxes) == 0 and len(char_boxes) == 0:
+    if not fixed_anchors and len(obj_boxes) == 0 and len(char_boxes) == 0:
         return {
             "n_frames_total": n_frames,
             "fps": fps,
@@ -329,27 +569,59 @@ def _track_objects(
             "error": "GroundingDINO found 0 objects and 0 characters on frame 0",
         }
 
-    order = np.argsort(-obj_scores)[:max_objects] if len(obj_scores) else np.array([], dtype=int)
-    boxes = obj_boxes[order] if len(order) else np.empty((0, 4), dtype=np.float32)
-    scores = obj_scores[order] if len(order) else np.empty((0,), dtype=np.float32)
-    labels = [obj_labels[i] for i in order]
+    seed_prompts: List[Tuple[int, np.ndarray]] = []
+    if fixed_anchors:
+        by_label = {entry["label"]: entry for entry in seed_anchor_detections}
+        objects_meta = []
+        for object_id, label in enumerate(fixed_anchors, start=1):
+            detection = by_label.get(label)
+            box = detection.get("box") if detection else None
+            objects_meta.append(
+                {
+                    "id": object_id,
+                    "label": label,
+                    "seed_score": float(detection["score"]) if detection else 0.0,
+                    "box": box,
+                    "is_character": False,
+                }
+            )
+            if box is not None:
+                seed_prompts.append((object_id, np.asarray(box, dtype=np.float32)))
+    else:
+        order = np.argsort(-obj_scores)[:max_objects] if len(obj_scores) else np.array([], dtype=int)
+        boxes = obj_boxes[order] if len(order) else np.empty((0, 4), dtype=np.float32)
+        scores = obj_scores[order] if len(order) else np.empty((0,), dtype=np.float32)
+        labels = [obj_labels[i] for i in order]
+        objects_meta = [
+            {
+                "id": i + 1,
+                "label": labels[i],
+                "seed_score": float(scores[i]),
+                "box": [float(v) for v in boxes[i]],
+                "is_character": False,
+            }
+            for i in range(len(boxes))
+        ]
+        seed_prompts.extend(
+            (entry["id"], np.asarray(entry["box"], dtype=np.float32))
+            for entry in objects_meta
+        )
 
-    seed_boxes: List[np.ndarray] = list(boxes)
-    seed_labels: List[str] = list(labels)
-    seed_scores: List[float] = [float(s) for s in scores]
     character_id: Optional[int] = None
     if len(char_boxes) > 0:
         best = int(np.argmax(char_scores))
-        seed_boxes.append(char_boxes[best])
-        seed_labels.append(char_labels[best])
-        seed_scores.append(float(char_scores[best]))
-        character_id = len(seed_boxes)  # 1-indexed id assigned below
-
-    objects_meta = [
-        {"id": i + 1, "label": seed_labels[i], "seed_score": seed_scores[i],
-         "box": [float(v) for v in seed_boxes[i]], "is_character": (i + 1) == character_id}
-        for i in range(len(seed_boxes))
-    ]
+        character_id = len(objects_meta) + 1
+        char_box = [float(v) for v in char_boxes[best]]
+        objects_meta.append(
+            {
+                "id": character_id,
+                "label": char_labels[best],
+                "seed_score": float(char_scores[best]),
+                "box": char_box,
+                "is_character": True,
+            }
+        )
+        seed_prompts.append((character_id, np.asarray(char_box, dtype=np.float32)))
 
     predictor = _build_sam2_predictor(sam2_config, sam2_hf, device)
 
@@ -369,22 +641,23 @@ def _track_objects(
             )
         cap.release()
 
-        state = predictor.init_state(video_path=tmpdir)
-        for entry, box in zip(objects_meta, seed_boxes):
-            predictor.add_new_points_or_box(
-                inference_state=state, frame_idx=0,
-                obj_id=entry["id"], box=box.astype(np.float32),
-            )
-
         masks_per_frame: Dict[int, Dict[int, np.ndarray]] = {}
-        for f_idx, obj_ids, mask_logits in predictor.propagate_in_video(state):
-            per_obj: Dict[int, np.ndarray] = {}
-            for k, oid in enumerate(obj_ids):
-                m = (mask_logits[k] > 0.0).cpu().numpy()
-                if m.ndim == 3:
-                    m = m[0]
-                per_obj[int(oid)] = m.astype(bool)
-            masks_per_frame[int(f_idx)] = per_obj
+        if seed_prompts:
+            state = predictor.init_state(video_path=tmpdir)
+            for object_id, box in seed_prompts:
+                predictor.add_new_points_or_box(
+                    inference_state=state, frame_idx=0,
+                    obj_id=object_id, box=box.astype(np.float32),
+                )
+
+            for f_idx, obj_ids, mask_logits in predictor.propagate_in_video(state):
+                per_obj: Dict[int, np.ndarray] = {}
+                for k, oid in enumerate(obj_ids):
+                    m = (mask_logits[k] > 0.0).cpu().numpy()
+                    if m.ndim == 3:
+                        m = m[0]
+                    per_obj[int(oid)] = m.astype(bool)
+                masks_per_frame[int(f_idx)] = per_obj
 
     frames_out: List[Dict[str, Any]] = []
     detections_by_frame: List[Dict[str, Any]] = []
@@ -396,18 +669,46 @@ def _track_objects(
 
         # Independent re-detection (not tied to SAM 2 IDs) for a genuine
         # per-frame confidence signal.
-        det_boxes, det_scores, det_labels = _detect_objects_groundingdino(
+        det_boxes, det_scores, det_labels = _detect_prompt_groups(
             frame, text_prompt, gd_model_id, gd_threshold, gd_text_threshold, device
         )
-        cdet_boxes, cdet_scores, cdet_labels = _detect_objects_groundingdino(
-            frame, character_prompt, gd_model_id, gd_threshold, gd_text_threshold, device
+        cdet_boxes, cdet_scores, cdet_labels = (
+            _empty_detections()
+            if character_disabled
+            else _detect_objects_groundingdino(
+                frame,
+                character_prompt,
+                gd_model_id,
+                gd_threshold,
+                gd_text_threshold,
+                device,
+            )
         )
+        if fixed_anchors:
+            canonical_detections = _assign_fixed_anchor_detections(
+                boxes=det_boxes,
+                scores=det_scores,
+                labels=det_labels,
+                fixed_anchor_labels=fixed_anchors,
+                gt=unity_gt,
+                poses=unity_poses,
+                intrinsics=unity_intrinsics,
+                frame_idx=f_idx,
+                frame_width=width,
+                frame_height=height,
+            )
+        else:
+            canonical_detections = [
+                {
+                    "label": det_labels[i],
+                    "score": float(det_scores[i]),
+                    "box": [float(v) for v in det_boxes[i]],
+                }
+                for i in range(len(det_boxes))
+            ]
         detections_by_frame.append({
             "frame": f_idx,
-            "objects": [
-                {"label": det_labels[i], "score": float(det_scores[i])}
-                for i in range(len(det_boxes))
-            ],
+            "objects": canonical_detections,
             "character": [
                 {"label": cdet_labels[i], "score": float(cdet_scores[i])}
                 for i in range(len(cdet_boxes))
@@ -415,10 +716,28 @@ def _track_objects(
         })
 
         per_obj = masks_per_frame.get(f_idx, {})
+        detection_by_label = {entry["label"]: entry for entry in canonical_detections}
         objects_out: List[Dict[str, Any]] = []
         for entry in objects_meta:
             mask = per_obj.get(entry["id"])
+            detection = detection_by_label.get(entry["label"])
+            if fixed_anchors and not entry["is_character"] and detection is None:
+                mask = None
             if mask is None or not mask.any():
+                if fixed_anchors and not entry["is_character"] and detection is not None:
+                    x1, y1, x2, y2 = detection["box"]
+                    objects_out.append(
+                        {
+                            "id": entry["id"],
+                            "label": entry["label"],
+                            "is_character": False,
+                            "mask_area_px": int(max(0.0, x2 - x1) * max(0.0, y2 - y1)),
+                            "centroid_uv": [(x1 + x2) / 2.0, (y1 + y2) / 2.0],
+                            "bbox_xyxy": [x1, y1, x2, y2],
+                            "geometry_source": "groundingdino_box_no_sam_seed",
+                        }
+                    )
+                    continue
                 objects_out.append({
                     "id": entry["id"], "label": entry["label"],
                     "is_character": entry["is_character"],
@@ -449,6 +768,8 @@ def _track_objects(
         "character_id": character_id,
         "frames": frames_out,
         "detections_by_frame": detections_by_frame,
+        "fixed_anchor_labels": fixed_anchors,
+        "fixed_anchor_assignment": "nearest_unity_projection_by_semantic_class" if fixed_anchors else None,
     }
 
 
@@ -944,6 +1265,18 @@ def analyze_environment_object_consistency_from_context(
     tau_mask = float(artifacts.get("eoc_tau_mask", 0.50))
     tau_id = float(artifacts.get("eoc_tau_id", 0.50))
     max_objects = int(artifacts.get("eoc_max_objects", 6))
+    fixed_anchor_value = artifacts.get("eoc_fixed_anchor_labels") or []
+    if isinstance(fixed_anchor_value, str):
+        fixed_anchor_labels = [
+            item.strip() for item in fixed_anchor_value.split("|") if item.strip()
+        ]
+    elif isinstance(fixed_anchor_value, (list, tuple)):
+        fixed_anchor_labels = [str(item).strip() for item in fixed_anchor_value if str(item).strip()]
+    else:
+        return {
+            "module": "environment_object_consistency",
+            "error": "eoc_fixed_anchor_labels must be a list or pipe-delimited string",
+        }
     depth_model_override = artifacts.get("eoc_depth_model")
     diameters_path = artifacts.get("eoc_unity_object_diameters_json")
     real_diameter_m: Dict[str, float] = {}
@@ -958,6 +1291,26 @@ def analyze_environment_object_consistency_from_context(
     if not video_path:
         return {"module": "environment_object_consistency", "error": "candidate_video is required"}
 
+    assignment_gt = None
+    assignment_poses = None
+    assignment_intrinsics = None
+    if fixed_anchor_labels:
+        try:
+            assignment_gt = _load_unity_object_transforms(
+                str(artifacts.get("eoc_unity_object_transforms_json") or "")
+            )
+            assignment_poses = _load_camera_poses(
+                str(artifacts.get("eoc_unity_poses_npy") or "")
+            )
+            assignment_intrinsics = _load_camera_intrinsics(
+                str(artifacts.get("eoc_unity_intrinsics_npy") or "")
+            )
+        except Exception as exc:
+            return {
+                "module": "environment_object_consistency",
+                "error": f"failed to load fixed-anchor assignment artifacts: {exc}",
+            }
+
     track = _track_objects(
         video_path=video_path,
         text_prompt=text_prompt,
@@ -969,6 +1322,10 @@ def analyze_environment_object_consistency_from_context(
         sam2_config=SAM2_DEFAULT_CONFIG,
         sam2_hf=str(artifacts.get("sam2_model") or SAM2_DEFAULT_HF),
         max_objects=max_objects,
+        fixed_anchor_labels=fixed_anchor_labels,
+        unity_gt=assignment_gt,
+        unity_poses=assignment_poses,
+        unity_intrinsics=assignment_intrinsics,
     )
     if "error" in track and not track.get("frames"):
         return {"module": "environment_object_consistency", "error": track["error"]}
@@ -980,6 +1337,8 @@ def analyze_environment_object_consistency_from_context(
         "text_prompt": text_prompt,
         "character_prompt": character_prompt,
         "objects": track.get("objects", []),
+        "fixed_anchor_labels": fixed_anchor_labels,
+        "fixed_anchor_assignment": track.get("fixed_anchor_assignment"),
     }
     if diameter_artifact_error is not None:
         result["diameter_artifact_error"] = diameter_artifact_error
@@ -1094,5 +1453,38 @@ def analyze_environment_object_consistency_from_context(
         result["pairwise_distance_mae_pct"] = round(100.0 * float(np.mean(rel_errs)), 2)
     else:
         result["pairwise_distance_mae_pct"] = None
+    result["pairwise_distance_support"] = _pairwise_distance_support(track, cand_point3d, common_pairs)
 
     return result
+
+
+# Anchor-validity rule for pairwise_distance_mae_pct (diagnostic; the metric is
+# reported unchanged): at least two anchors with candidate 3D points, and the
+# least-covered compared pair paired on at least half the tracked frames.
+MIN_MEASURABLE_ANCHORS = 2
+MIN_PAIRED_FRAME_COVERAGE = 0.5
+
+
+def _pairwise_distance_support(
+    track: Dict[str, Any],
+    point3d: Dict[str, List[np.ndarray]],
+    common_pairs: Sequence[Tuple[str, str]],
+) -> Dict[str, Any]:
+    tracked_frames = len(track.get("frames") or []) or int(track.get("n_frames_total") or 0)
+    anchors = [label for label, points in point3d.items() if points]
+    paired = [min(len(point3d.get(a) or []), len(point3d.get(b) or [])) for a, b in common_pairs]
+    min_paired = min(paired) if paired else 0
+    coverage = (min_paired / tracked_frames) if tracked_frames else 0.0
+    return {
+        "anchors_with_points": len(anchors),
+        "pairs_compared": len(common_pairs),
+        "min_paired_frames": min_paired,
+        "tracked_frames": tracked_frames,
+        "paired_frame_coverage": round(coverage, 4),
+        "measurable": bool(
+            len(anchors) >= MIN_MEASURABLE_ANCHORS
+            and common_pairs
+            and coverage >= MIN_PAIRED_FRAME_COVERAGE
+        ),
+        "rule": f">={MIN_MEASURABLE_ANCHORS} anchors with 3D points and paired-frame coverage >= {MIN_PAIRED_FRAME_COVERAGE}",
+    }

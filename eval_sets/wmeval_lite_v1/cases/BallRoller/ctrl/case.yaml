@@ -19,6 +19,7 @@ modules:
 - control_motion
 - environment_object_consistency
 - kinematics_mechanics
+- lpips
 module_params:
   environment_object_consistency:
     eoc_text_prompt: ramp. dome. cube.
@@ -33,6 +34,8 @@ module_params:
     kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
     kin_unity_object_masses_json: reference/artifacts/object_masses.json
     kin_track_thresh: 0.3
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json
 reference:
   video: reference/reference.mp4
   checksums: reference/checksums.sha256
@@ -41,19 +44,34 @@ reference:
     synthetic_action_dir: reference/artifacts
 protocol:
   candidate_normalization: none
-  # Lowered from 1.0/0.5: at least one known-good, fully-real generation for
-  # this case (a short-but-complete run that actually executes the action
-  # script rather than stalling or corrupting) only reaches ~0.9s of real
-  # frame-time once its candidate_fps_override is applied -- 15.6% of this
-  # case's ~5.77s reference. 0.5/0.15 admits that run while still rejecting
-  # near-empty or badly corrupted candidates.
   min_duration_sec: 0.5
   min_duration_ratio: 0.15
   duration_threshold_mode: max
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
-  evaluator_fingerprint: 02c26ecf6c075f891deb495dc2ca7512
+  evaluator_fingerprint: 6fc74c75ed86b20b83be1a26bb607b75
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    cjm-byte-track: 0.0.6
+    lpips: 0.1.4
+    numpy: 2.4.6
+    openai: 3.22.1
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    sam2: 1.1.0
+    torch: 2.14.1
+    torchvision: 0.29.1
+    transformers: 5.18.0
+    asset:depth_anything_metric_indoor: e990eb82fbf11b05b7813261196a2b841bdcf5a05f64396724a8987fa90504a3
+    asset:depth_anything_metric_outdoor: ad065c77a7421ca55159a1f0db9433397a607690f2d76bb8a6fc54b1be7a3124
+    asset:dinov2: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    asset:lpips_vgg: a78928a0af1e5f0fcb1f3b9e8f8c3a2a5a3de244d830ad5c1feddc79b8432868
+    asset:ptlflow_synthetic: 9397588204a48ad826ad168b9bd6961a78f09661
+    asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
+    asset:sam2: 2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318
+    lock_source: tools/lock_case_dependencies.py

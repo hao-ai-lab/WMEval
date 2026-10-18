@@ -1,0 +1,20 @@
+{
+  "action_npy": "wandering_garden_scene_first.action.npy",
+  "action_npy_sha256": "f95004c745b505a8d3cd909ca6e83827ac5c68cadace067b5158cef98a9ce2cc",
+  "action_npz": "wandering_garden_scene_first.action.npz",
+  "action_npz_sha256": "50a1b1b9e99844313602d36005d0eef092f43bb0c0b238395a31ccedad60519b",
+  "actions_txt": "wandering_garden_scene_first.actions.txt",
+  "actions_txt_sha256": "487565c43ccc2363f463088b70e3358cdc986ed2e5975262bf367c4e2c1c143a",
+  "alignment_status": "exact",
+  "channel_names": [
+    "yaw_rate_deg_s"
+  ],
+  "project_genie_actions": "wandering_garden_scene_first.actions.jsonl",
+  "project_genie_actions_sha256": "3bc11afbe77c6fe29f9e26d1e5f6a7fcdeddbf3fe06119e2e2efbaa9cf401471",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "652c456c8171b4d94a3528448fbc9bfc955dd936ee97ae16a7f3ac05c2168bad",
+  "source": "../trajectories/wandering_garden_scene_first.yaml",
+  "step_count": 150,
+  "trajectory_id": "wmeval_lite.wandering_garden.scene_first.yaw_sweep_v1"
+}

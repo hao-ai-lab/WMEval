@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
+import shutil
+import subprocess
 from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
-from evaluation.lite.output import PER_CASE_RESULTS_FILENAME, read_rows
+from evaluation.lite.output import PER_CASE_RESULTS_FILENAME, read_rows, write_rows
 from evaluation.lite.suite import SuiteRunError, run_suite
 from lite_suite_test_utils import (
     DEFAULT_SUITE_YAML,
@@ -44,6 +48,45 @@ def _registry_only_suite(tmp_path: Path) -> Path:
     root = write_suite(tmp_path / "suite", payload)
     write_reference_case(root / "cases")
     return root
+
+
+@pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='ffmpeg required')
+def test_orbit_receipt_is_consumed_and_resume_invalidates_video_or_params(tmp_path, monkeypatch):
+    suite_root = _registry_only_suite(tmp_path)
+    case_path = suite_root/'cases/scene_a/main/case.yaml'
+    raw = yaml.safe_load(case_path.read_text())
+    raw['protocol']['candidate_normalization'] = 'lighting_orbit_10s_fps12'
+    case_path.write_text(yaml.safe_dump(raw, sort_keys=False))
+    mock_video_probing(monkeypatch)
+    video = tmp_path/'rollout.mp4'
+    subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','testsrc2=size=64x48:rate=12:duration=10',
+                    '-c:v','libx264',str(video)],check=True,capture_output=True)
+    mapping = {'schema_version':1,'native_fps':12,'canonical_zero_frame':0,
+               'video_sha256':hashlib.sha256(video.read_bytes()).hexdigest()}
+    entry = {'model':'test','case_id':'scene_a/main','seed':'42','candidate_video':str(video),
+             'params':{'lighting_time_mapping':mapping}}
+    manifest = tmp_path/'manifest.jsonl'
+    runner = RecordingRunner()
+    def evaluate():
+        manifest.write_text(json.dumps(entry)+'\n')
+        run_suite(suite_root=suite_root,output_dir=tmp_path/'out',candidate_manifest=manifest,
+                  runner=runner,resume=True,log=_quiet)
+        return read_rows(tmp_path/'out'/PER_CASE_RESULTS_FILENAME)
+    assert evaluate()[0]['status']=='completed'
+    evaluate()
+    assert len(runner.calls)==1
+    assert 'lighting_time_mapping' not in runner.calls[0]
+    from evaluation.lite.normalization import _probe
+    assert _probe(Path(runner.calls[0]['video_path']),timeout_sec=30)['frames']==120
+    entry['params']['max_pairs']=2
+    assert evaluate()[0]['status']=='completed' and len(runner.calls)==2
+    # A same-path replacement must invalidate the saved result. Until the
+    # receipt is updated, fail rather than skipping or silently rescoring.
+    with video.open('ab') as handle: handle.write(b'\0\0\0\0')
+    assert evaluate()[0]['status']=='error' and len(runner.calls)==2
+    mapping['video_sha256']=hashlib.sha256(video.read_bytes()).hexdigest()
+    rows=evaluate()
+    assert len(rows)==1 and rows[0]['status']=='completed' and len(runner.calls)==3
 
 
 def test_run_suite_registry_dimension_end_to_end(
@@ -373,6 +416,86 @@ def test_run_suite_resume_skips_done_items(
     assert len(runner.calls) == 1  # second pass resumed
     rows = read_rows(tmp_path / "out" / PER_CASE_RESULTS_FILENAME)
     assert len(rows) == 1
+
+
+def test_run_suite_resume_retries_error_rows(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    suite_root = _registry_only_suite(tmp_path)
+    model_root = tmp_path / "genie3"
+    write_candidates(model_root, ["scene_a/main"])
+    mock_video_probing(monkeypatch)
+    runner = RecordingRunner()
+    output_dir = tmp_path / "out"
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+    results_path = output_dir / PER_CASE_RESULTS_FILENAME
+    rows = read_rows(results_path)
+    rows[0]["status"] = "error"
+    rows[0]["error"] = "transient GPU failure"
+    write_rows(results_path, rows)
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+
+    assert len(runner.calls) == 2
+    rows = read_rows(results_path)
+    assert len(rows) == 1
+    assert rows[0]["status"] == "completed"
+
+
+def test_run_suite_resume_replaces_stale_fingerprint_row(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    suite_root = _registry_only_suite(tmp_path)
+    model_root = tmp_path / "genie3"
+    write_candidates(model_root, ["scene_a/main"])
+    mock_video_probing(monkeypatch)
+    runner = RecordingRunner()
+    output_dir = tmp_path / "out"
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+
+    case_yaml = suite_root / "cases" / "scene_a" / "main" / "case.yaml"
+    raw = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
+    raw["evaluator_lock"]["evaluator_fingerprint"] = "replacement-fingerprint"
+    case_yaml.write_text(yaml.safe_dump(raw, sort_keys=False), encoding="utf-8")
+
+    run_suite(
+        suite_root=suite_root,
+        output_dir=output_dir,
+        model_root=model_root,
+        runner=runner,
+        resume=True,
+        log=_quiet,
+    )
+
+    assert len(runner.calls) == 2
+    rows = read_rows(output_dir / PER_CASE_RESULTS_FILENAME)
+    assert len(rows) == 1
+    assert rows[0]["evaluator_lock"]["evaluator_fingerprint"] == (
+        "replacement-fingerprint"
+    )
 
 
 def test_run_suite_dry_run_writes_nothing(tmp_path: Path) -> None:

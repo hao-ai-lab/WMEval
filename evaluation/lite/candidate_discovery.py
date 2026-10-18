@@ -26,7 +26,9 @@ class CandidateRow:
     candidate_video: Path
     # Optional per-candidate parameters (e.g. shadow_hud_preset). Excluded
     # from identity/ordering: (model, case_id, seed) stays the identity.
-    params: Mapping[str, Any] = field(default=_EMPTY_PARAMS, compare=False)
+    params: Mapping[str, Any] = field(
+        default_factory=lambda: _EMPTY_PARAMS, compare=False
+    )
 
 
 def _add_unique(

@@ -196,6 +196,20 @@ class AgentResult(BaseModel):
     explanations: TopLevelExplanation
 
 
+class JudgeCallRecord(BaseModel):
+    """One hosted-judge request and the response it got back.
+
+    ``request`` holds what identifies the call without the image payloads
+    (system-prompt hash, user text, schema hash, per-image label + sha256);
+    ``response`` holds what the provider returned (resolved model snapshot,
+    response id, usage, attempts, raw output text).
+    """
+
+    agent: Literal["environment", "object"]
+    request: Dict[str, Any]
+    response: Dict[str, Any]
+
+
 class JudgeResult(BaseModel):
     scene_name: str
     provider: str
@@ -213,6 +227,10 @@ class JudgeResult(BaseModel):
         ge=0.0,
         le=1.0,
         description="alpha * environment_score + (1-alpha) * object_score",
+    )
+    judge_calls: List[JudgeCallRecord] = Field(
+        default_factory=list,
+        description="Every judge request/response behind this result",
     )
 
 

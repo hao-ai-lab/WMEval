@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import math
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -13,10 +17,98 @@ LIQUID_NORM_FPS = 16
 
 # ffmpeg can hang on malformed inputs; bound every normalization call.
 DEFAULT_NORMALIZATION_TIMEOUT_SEC = 600.0
+LIGHTING_NORM_FPS = 12
 
 
 class NormalizationError(RuntimeError):
     """Candidate video normalization (ffmpeg) failed."""
+
+
+def normalize_lighting_window(
+    source: str | Path, destination: str | Path, *, time_mapping: dict,
+    timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
+) -> dict[str, float]:
+    """Verified native timeline -> [0,10) at 12 fps, without playback stretch.
+
+    The generation receipt supplies a frozen frame offset and native FPS.
+    Reject short/VFR inputs before ffmpeg can conceal missing time by padding.
+    """
+    source, destination = Path(source), Path(destination)
+    if source.resolve() == destination.resolve():
+        raise NormalizationError("normalization must not overwrite the source video")
+    if time_mapping.get("schema_version") != 1:
+        raise NormalizationError("lighting_time_mapping schema_version must be 1")
+    offset, fps = time_mapping.get("canonical_zero_frame"), time_mapping.get("native_fps")
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        raise NormalizationError("canonical_zero_frame must be a nonnegative integer")
+    if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not math.isfinite(fps) or fps <= 0:
+        raise NormalizationError("native_fps must be finite and positive")
+    with source.open("rb") as handle:
+        digest = hashlib.file_digest(handle, "sha256").hexdigest()
+    if time_mapping.get("video_sha256") != digest:
+        raise NormalizationError("lighting time mapping does not match candidate video hash")
+    current = _probe(source, timeout_sec=timeout_sec)
+    if abs(current["fps"] - fps) > 1e-6:
+        raise NormalizationError("native_fps differs from decoded video")
+    expected_native = 10 * fps
+    if abs(expected_native - round(expected_native)) > 1e-8:
+        raise NormalizationError("10 seconds must contain an integral native frame count")
+    required = offset + round(expected_native)
+    if current["frames"] < required:
+        raise NormalizationError(f"short lighting video: {current['frames']} native frames, need {required}")
+    try:
+        result = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_frames",
+                                 "-show_entries", "frame=best_effort_timestamp_time", "-of", "json", str(source)],
+                                check=True, capture_output=True, text=True, timeout=timeout_sec)
+        frames = json.loads(result.stdout)["frames"]
+        pts = [float(f["best_effort_timestamp_time"]) for f in frames[:required]]
+        if len(pts) != required or any(abs((p - pts[0]) - i / fps) > 2e-5 for i, p in enumerate(pts)):
+            raise NormalizationError("lighting receipt requires a constant-rate native timeline")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
+                        "-vf", f"trim=start_frame={offset}:end_frame={required},setpts=PTS-STARTPTS,"
+                        f"fps=fps={LIGHTING_NORM_FPS}:start_time=0:round=near",
+                        "-frames:v", "120", "-an", "-c:v", "libx264", "-crf", "0",
+                        "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(destination)],
+                       check=True, capture_output=True, text=True, timeout=timeout_sec)
+        actual = _probe(destination, timeout_sec=timeout_sec)
+    except (FileNotFoundError, KeyError, ValueError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
+        raise NormalizationError(f"lighting window normalization failed: {exc}") from exc
+    if actual != {**current, "fps": 12.0, "frames": 120}:
+        raise NormalizationError(f"lighting window has unexpected geometry/timeline: {actual}")
+    return actual
+
+
+def normalize_lighting_video(
+    source: str | Path, destination: str | Path, *,
+    timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
+) -> dict[str, float]:
+    """Sample at 12 fps using timestamps, preserving size and playback speed.
+
+    Apply BEFORE GroundingDINO/SAM tracking. A rounded frame stride does not
+    normalize 16/17/20-fps inputs to 12 fps. Lossless encoding avoids adding
+    another lossy compression pass to shadow-mask measurements.
+    """
+    destination = Path(destination)
+    if Path(source).resolve() == destination.resolve():
+        raise NormalizationError("normalization must not overwrite the source video")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    command = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
+               "-vf", f"setpts=PTS-STARTPTS,fps=fps={LIGHTING_NORM_FPS}:start_time=0:round=near",
+               "-an", "-c:v", "libx264", "-crf", "0", "-pix_fmt", "yuv420p",
+               "-movflags", "+faststart", str(destination)]
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True, timeout=timeout_sec)
+        actual = _probe(destination, timeout_sec=timeout_sec)
+    except FileNotFoundError as exc:
+        raise NormalizationError("ffmpeg/ffprobe executable not found") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise NormalizationError(f"ffmpeg/ffprobe timed out normalizing {source}") from exc
+    except subprocess.CalledProcessError as exc:
+        raise NormalizationError(f"lighting normalization failed: {(exc.stderr or '').strip()}") from exc
+    if abs(actual["fps"] - LIGHTING_NORM_FPS) > 1e-6:
+        raise NormalizationError(f"expected {LIGHTING_NORM_FPS} fps, got {actual['fps']}")
+    return actual
 
 
 def _scale_fps_filter() -> str:
@@ -72,3 +164,86 @@ def normalize_liquid_video(
         raise NormalizationError(
             f"ffmpeg failed to normalize {source} (exit {exc.returncode}): {stderr}"
         ) from exc
+
+
+# ── Reference-matched normalization (Table 4/7 cells) ──────────────────────
+# `match_reference` resamples a candidate onto its case's reference video:
+# spatially it is fit inside the reference frame and padded (no cropping, no
+# aspect distortion); temporally its whole duration is stretched onto the
+# reference duration and sampled at the reference fps for exactly the
+# reference frame count. This is the same transform the Table 4/7 preparation
+# applied to native model outputs, so frame k of the candidate is compared with
+# frame k of the Unity reference and its ground truth.
+
+
+def _probe(path: str | Path, *, timeout_sec: float) -> dict[str, float]:
+    command = [
+        "ffprobe", "-v", "error", "-count_frames", "-select_streams", "v:0",
+        "-show_entries", "stream=width,height,avg_frame_rate,nb_read_frames",
+        "-of", "default=noprint_wrappers=1", str(path),
+    ]
+    try:
+        out = subprocess.run(
+            command, check=True, capture_output=True, text=True, timeout=timeout_sec
+        ).stdout
+    except FileNotFoundError as exc:
+        raise NormalizationError("ffprobe executable not found") from exc
+    except subprocess.CalledProcessError as exc:
+        raise NormalizationError(f"ffprobe failed on {path}: {(exc.stderr or '').strip()}") from exc
+    fields = dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
+    numerator, _, denominator = fields["avg_frame_rate"].partition("/")
+    fps = float(numerator) / float(denominator or 1)
+    frames = int(fields["nb_read_frames"])
+    if fps <= 0 or frames <= 0:
+        raise NormalizationError(f"{path}: unreadable frame rate or frame count")
+    return {"width": int(fields["width"]), "height": int(fields["height"]), "fps": fps, "frames": frames}
+
+
+def normalize_to_reference(
+    source: str | Path,
+    destination: str | Path,
+    *,
+    reference: str | Path,
+    timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
+) -> dict[str, float]:
+    """Resample ``source`` to ``reference``'s resolution, fps and frame count."""
+    target = _probe(reference, timeout_sec=timeout_sec)
+    current = _probe(source, timeout_sec=timeout_sec)
+    width, height = int(target["width"]), int(target["height"])
+    destination_path = Path(destination)
+    if (current["width"], current["height"], current["frames"]) == (width, height, int(target["frames"])) and abs(
+        current["fps"] - target["fps"]
+    ) <= 1e-3:
+        # Already on the reference timeline: copy bytes instead of a lossy re-encode.
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, destination_path)
+        return current
+    stretch = (target["frames"] / target["fps"]) / (current["frames"] / current["fps"])
+    video_filter = (
+        f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:black,"
+        f"setpts={stretch:.12f}*PTS,fps={target['fps']:.12g}"
+    )
+    destination_path.parent.mkdir(parents=True, exist_ok=True)
+    command = [
+        "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
+        "-vf", video_filter, "-frames:v", str(int(target["frames"])), "-an",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+        str(destination_path),
+    ]
+    try:
+        subprocess.run(command, check=True, capture_output=True, text=True, timeout=timeout_sec)
+    except FileNotFoundError as exc:
+        raise NormalizationError("ffmpeg executable not found; install ffmpeg") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise NormalizationError(f"ffmpeg timed out after {timeout_sec}s normalizing {source}") from exc
+    except subprocess.CalledProcessError as exc:
+        raise NormalizationError(
+            f"ffmpeg failed to normalize {source} (exit {exc.returncode}): {(exc.stderr or '').strip()}"
+        ) from exc
+    actual = _probe(destination_path, timeout_sec=timeout_sec)
+    if (actual["width"], actual["height"], actual["frames"]) != (width, height, int(target["frames"])) or abs(
+        actual["fps"] - target["fps"]
+    ) > 1e-3:
+        raise NormalizationError(f"{destination_path}: normalized to {actual}, expected {target}")
+    return actual

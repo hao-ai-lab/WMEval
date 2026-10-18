@@ -42,6 +42,7 @@ def _merge_lpips_artifacts(
     lpips_vlm_scene_key: Optional[str],
     lpips_causal_event_source: str,
     lpips_causal_lpips_pairing: Optional[str],
+    lpips_reference_events_json: Optional[str] = None,
     lpips_vlm_pair_accept_cost: Optional[float],
     lpips_vlm_skip_cost: Optional[float],
     lpips_vlm_parallel_videos: bool,
@@ -116,6 +117,8 @@ def _merge_lpips_artifacts(
         raw = str(lpips_causal_lpips_pairing).strip().lower()
         if raw and raw != "auto":
             context.artifacts["lpips_causal_lpips_pairing"] = raw
+    if lpips_reference_events_json:
+        context.artifacts["lpips_reference_events_json"] = str(lpips_reference_events_json)
     if lpips_vlm_pair_accept_cost is not None:
         context.artifacts["lpips_vlm_pair_accept_cost"] = float(lpips_vlm_pair_accept_cost)
     if lpips_vlm_skip_cost is not None:
@@ -223,6 +226,7 @@ def run_world_model_evaluation(
     lpips_vlm_scene_key: Optional[str] = None,
     lpips_causal_event_source: str = "both",
     lpips_causal_lpips_pairing: Optional[str] = None,
+    lpips_reference_events_json: Optional[str] = None,
     lpips_vlm_pair_accept_cost: Optional[float] = None,
     lpips_vlm_skip_cost: Optional[float] = None,
     lpips_vlm_parallel_videos: bool = True,
@@ -301,6 +305,7 @@ def run_world_model_evaluation(
     eoc_tau_mask: float = 0.50,
     eoc_tau_id: float = 0.50,
     eoc_max_objects: int = 6,
+    eoc_fixed_anchor_labels: Optional[Sequence[str]] = None,
     eoc_depth_model: Optional[str] = None,
     eoc_gd_model: Optional[str] = None,
     eoc_unity_object_transforms_json: Optional[str] = None,
@@ -320,11 +325,16 @@ def run_world_model_evaluation(
     kin_unity_poses_npy: Optional[str] = None,
     kin_unity_intrinsics_npy: Optional[str] = None,
     kin_unity_object_masses_json: Optional[str] = None,
+    kin_plane_calibration_json: Optional[str] = None,
     kin_color_filter: bool = False,
     kin_color_hue_tolerance_deg: float = 25.0,
+    kin_track_point: str = "centroid",
     kin_depth_lift: bool = False,
     kin_depth_lift_window: int = 6,
     kin_depth_model: Optional[str] = None,
+    kin_mechanics_estimator: str = "multi_frame_linear_fit",
+    kin_event_alignment_tolerance_frames: int = 15,
+    kin_event_min_neighbor_ratio: float = 0.5,
 ) -> Dict[str, Any]:
     resolved_device = ensure_device(device)
     normalized_modules = normalize_modules(modules)
@@ -381,6 +391,7 @@ def run_world_model_evaluation(
                 lpips_vlm_scene_key=lpips_vlm_scene_key,
                 lpips_causal_event_source=lpips_causal_event_source,
                 lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+                lpips_reference_events_json=lpips_reference_events_json,
                 lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
                 lpips_vlm_skip_cost=lpips_vlm_skip_cost,
                 lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,
@@ -469,6 +480,7 @@ def run_world_model_evaluation(
         lpips_vlm_scene_key=lpips_vlm_scene_key,
         lpips_causal_event_source=lpips_causal_event_source,
         lpips_causal_lpips_pairing=lpips_causal_lpips_pairing,
+        lpips_reference_events_json=lpips_reference_events_json,
         lpips_vlm_pair_accept_cost=lpips_vlm_pair_accept_cost,
         lpips_vlm_skip_cost=lpips_vlm_skip_cost,
         lpips_vlm_parallel_videos=lpips_vlm_parallel_videos,
@@ -513,6 +525,7 @@ def run_world_model_evaluation(
             "eoc_tau_mask": eoc_tau_mask,
             "eoc_tau_id": eoc_tau_id,
             "eoc_max_objects": eoc_max_objects,
+            "eoc_fixed_anchor_labels": list(eoc_fixed_anchor_labels or []),
             "eoc_depth_model": eoc_depth_model,
             "eoc_gd_model": eoc_gd_model,
             "eoc_unity_object_transforms_json": eoc_unity_object_transforms_json,
@@ -532,11 +545,16 @@ def run_world_model_evaluation(
             "kin_unity_poses_npy": kin_unity_poses_npy,
             "kin_unity_intrinsics_npy": kin_unity_intrinsics_npy,
             "kin_unity_object_masses_json": kin_unity_object_masses_json,
+            "kin_plane_calibration_json": kin_plane_calibration_json,
             "kin_color_filter": kin_color_filter,
             "kin_color_hue_tolerance_deg": kin_color_hue_tolerance_deg,
+            "kin_track_point": kin_track_point,
             "kin_depth_lift": kin_depth_lift,
             "kin_depth_lift_window": kin_depth_lift_window,
             "kin_depth_model": kin_depth_model,
+            "kin_mechanics_estimator": kin_mechanics_estimator,
+            "kin_event_alignment_tolerance_frames": kin_event_alignment_tolerance_frames,
+            "kin_event_min_neighbor_ratio": kin_event_min_neighbor_ratio,
             "unity_log_json": unity_log_json,
             "camera_intrinsics_json": camera_intrinsics_json,
             "unity_flow_dir": unity_flow_dir,

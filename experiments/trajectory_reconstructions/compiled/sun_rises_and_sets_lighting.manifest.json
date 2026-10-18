@@ -1,0 +1,20 @@
+{
+  "action_npy": "sun_rises_and_sets_lighting.action.npy",
+  "action_npy_sha256": "d54b5e46ffaed0bfc282cda4fc867a00a807ad2eaa7f96e10e562c387e42f4fd",
+  "action_npz": "sun_rises_and_sets_lighting.action.npz",
+  "action_npz_sha256": "3365eaeae3bb02d87d5cebdcc2edf8beb11c64c4cac28cf82d14dd465a954bd1",
+  "actions_txt": "sun_rises_and_sets_lighting.actions.txt",
+  "actions_txt_sha256": "4fc19dfc04c3357581addedcfc9099787c18d675c86019134a5306e726210ae0",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "orbit_ccw"
+  ],
+  "project_genie_actions": "sun_rises_and_sets_lighting.actions.jsonl",
+  "project_genie_actions_sha256": "eadaeac187bb5afb845af17d70f3e1a34ca2d29a8132d35ec20beec8fb62147f",
+  "project_genie_status": "exact_locked_schedule",
+  "schema_version": 1,
+  "semantic_sha256": "074d51d038dbc2cc4ef938949cc824daeebe0621178f5b9e0fbf504694331d6d",
+  "source": "../trajectories/sun_rises_and_sets_lighting.yaml",
+  "step_count": 160,
+  "trajectory_id": "wmeval_lite.sun_rises_and_sets.lighting_orbit_v1"
+}

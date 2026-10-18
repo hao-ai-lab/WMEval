@@ -1,0 +1,8 @@
+# wmeval_lite.sun_rises_and_sets.lighting_orbit_v1 -- generated action trajectory.
+# Provenance: sun_rises_and_sets_lighting.yaml (semantic SHA-256: 074d51d038dbc2cc4ef938949cc824daeebe0621178f5b9e0fbf504694331d6d)
+# Alignment: reconstructed; 160 steps; channels: orbit_ccw
+# start_s end_s orbit_ccw
+0.0 10.0 1.0
+
+# Project Genie browser actions:
+{"keys": ["ArrowLeft"], "ms": 10000, "op": "hold"}

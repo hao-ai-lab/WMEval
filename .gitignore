@@ -157,6 +157,11 @@ venv/
 venv_test/
 .venv_test/
 WMEval/.venv_test/
+.uv-cache/
+.local/
+runs/
+calibration_samples/
+.venv-unity/
 ENV/
 env.bak/
 venv.bak/
@@ -238,3 +243,36 @@ run_logs*
 vlm_test_data/
 tools/Sample frame result/
 evaluation/modules/vlm_consistency.local_backup/
+
+# Table 4/7 reproduction tests kept local only (paper-table tooling, not part of the Lite release)
+tests/test_assess_table7_paired_character_variance.py
+tests/test_assess_table_repeat_variance.py
+tests/test_audit_open_model_table_completion.py
+tests/test_audit_project_genie_trajectories.py
+tests/test_audit_table4_action_coverage.py
+tests/test_audit_table_reproduction.py
+tests/test_build_table7_rerun_results.py
+tests/test_calibrate_table4_variance.py
+tests/test_export_open_model_tables_latex.py
+tests/test_finalize_open_model_tables.py
+tests/test_plan_lingbot_adaptive_expansion.py
+tests/test_prepare_lingbot_table7_inputs.py
+tests/test_prepare_matrix_game_inputs.py
+tests/test_prepare_project_genie_table7_eval.py
+tests/test_prepare_table_assets.py
+tests/test_regenerate_invalid_project_genie_run.py
+tests/test_run_lingbot_adaptive_evaluations.py
+tests/test_run_lingbot_table7_batch.py
+tests/test_run_open_model_table_evaluations.py
+tests/test_run_prepared_table_evaluations.py
+tests/test_run_project_genie_tables.py
+tests/test_run_unity_table_scenes.py
+tests/test_summarize_open_model_statistical_tests.py
+tests/test_table_comparison.py
+tests/test_table_lite_cases.py
+
+# WMEval Lite case data is hosted on the Hugging Face Hub (lmgame/WMEval-Lite);
+# fetch it with `python tools/sync_lite_data.py download`. Only the checksum
+# manifests (and each case.yaml) stay in this repository.
+eval_sets/wmeval_lite_v1/cases/*/*/reference/*
+!eval_sets/wmeval_lite_v1/cases/*/*/reference/checksums.sha256

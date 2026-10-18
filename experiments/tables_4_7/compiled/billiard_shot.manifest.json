@@ -1,0 +1,31 @@
+{
+  "action_npy": "billiard_shot.action.npy",
+  "action_npy_sha256": "d1d6e7c24c6a3411a7981a565b156efc416f53cd22b1c069c0cdc2a376c9dbe6",
+  "action_npz": "billiard_shot.action.npz",
+  "action_npz_sha256": "0e399824213b40ee144781dd294b611bcf1bf41c76077a5209e428134da0a28c",
+  "actions_txt": "billiard_shot.actions.txt",
+  "actions_txt_sha256": "8acb2bb7534afbe3e6069b95c8486a632f95a178442027a6b3b76abf18bd59e3",
+  "alignment_status": "reconstructed",
+  "channel_names": [
+    "ball0_x",
+    "ball0_z",
+    "ball1_x",
+    "ball1_z",
+    "ball2_x",
+    "ball2_z",
+    "cue_angle",
+    "strength",
+    "hit_x",
+    "hit_y",
+    "execute",
+    "force_end"
+  ],
+  "project_genie_actions": "billiard_shot.actions.jsonl",
+  "project_genie_actions_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "project_genie_status": "unsupported",
+  "schema_version": 1,
+  "semantic_sha256": "d16c3e2adba0d819bf6562b7497a134998be84ed71e151aa802c045eb411bf93",
+  "source": "../trajectories/billiard_shot.yaml",
+  "step_count": 150,
+  "trajectory_id": "table4.billiard_game.center_ball_shot_v1"
+}

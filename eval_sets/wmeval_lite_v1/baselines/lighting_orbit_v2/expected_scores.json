@@ -1,0 +1,201 @@
+{
+  "comparison": "same pinned evaluator/environment; compare every per-seed metric",
+  "rows": [
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 27.88,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 5.21,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 0.15,
+        "shadow_shape_drift": 2.4227
+      },
+      "model": "HY-WorldPlay",
+      "seed": "1"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 58.45,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 5.31,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 0.62,
+        "shadow_shape_drift": 3.3557
+      },
+      "model": "HY-WorldPlay",
+      "seed": "2"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 19.17,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 3.58,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 0.32,
+        "shadow_shape_drift": 3.4048
+      },
+      "model": "HY-WorldPlay",
+      "seed": "3"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 24.0,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 5.52,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 0.15,
+        "shadow_shape_drift": 2.1748
+      },
+      "model": "HY-WorldPlay",
+      "seed": "4"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 57.37,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 8.38,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 0.94,
+        "shadow_shape_drift": 3.835
+      },
+      "model": "HY-WorldPlay",
+      "seed": "42"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 69.35,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 24.21,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 7.81,
+        "shadow_shape_drift": 9.6214
+      },
+      "model": "LingBot",
+      "seed": "1"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 52.69,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 16.1,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 4.4,
+        "shadow_shape_drift": 7.683
+      },
+      "model": "LingBot",
+      "seed": "2"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 44.89,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 18.16,
+        "shadow_detection_rate_pct": 99.17,
+        "shadow_direction_jitter_deg_per_frame": 2.93,
+        "shadow_shape_drift": 9.5398
+      },
+      "model": "LingBot",
+      "seed": "3"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 52.77,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 12.66,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 4.04,
+        "shadow_shape_drift": 5.4153
+      },
+      "model": "LingBot",
+      "seed": "4"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 44.28,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 15.58,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 2.53,
+        "shadow_shape_drift": 6.6071
+      },
+      "model": "LingBot",
+      "seed": "42"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 56.16,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 24.39,
+        "shadow_detection_rate_pct": 95.83,
+        "shadow_direction_jitter_deg_per_frame": 9.3,
+        "shadow_shape_drift": 8.1917
+      },
+      "model": "Matrix-Game3",
+      "seed": "1"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 71.2,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 26.83,
+        "shadow_detection_rate_pct": 97.5,
+        "shadow_direction_jitter_deg_per_frame": 10.08,
+        "shadow_shape_drift": 8.9164
+      },
+      "model": "Matrix-Game3",
+      "seed": "2"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 81.51,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 23.83,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 10.94,
+        "shadow_shape_drift": 9.0885
+      },
+      "model": "Matrix-Game3",
+      "seed": "3"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 62.84,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 26.3,
+        "shadow_detection_rate_pct": 100.0,
+        "shadow_direction_jitter_deg_per_frame": 10.53,
+        "shadow_shape_drift": 10.1691
+      },
+      "model": "Matrix-Game3",
+      "seed": "4"
+    },
+    {
+      "case_id": "SunRisesAndSets/lighting_orbit_v2",
+      "metrics": {
+        "multi_object_sun_disagreement_deg": 64.76,
+        "scene_retention_rate_pct": 100.0,
+        "shadow_area_stability_pct": 24.05,
+        "shadow_detection_rate_pct": 98.33,
+        "shadow_direction_jitter_deg_per_frame": 14.47,
+        "shadow_shape_drift": 9.0944
+      },
+      "model": "Matrix-Game3",
+      "seed": "42"
+    }
+  ],
+  "schema_version": 1
+}

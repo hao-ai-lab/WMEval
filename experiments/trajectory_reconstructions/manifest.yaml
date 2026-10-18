@@ -1,0 +1,32 @@
+schema_version: 1
+cases:
+  - case_id: ChessBoard/walk_third
+    trajectory: trajectories/chess_walk_third.yaml
+    provenance: exact_reference_capture_schedule
+  - case_id: WanderingGarden/scene_first
+    trajectory: trajectories/wandering_garden_scene_first.yaml
+    provenance: exact_reference_capture_poses
+  - case_id: SunRisesAndSets/lighting
+    trajectory: trajectories/sun_rises_and_sets_lighting.yaml
+    provenance: exact_locked_browser_schedule_with_semantic_native_channel
+  - case_id: BeamDomino/causal
+    trajectory: trajectories/beam_domino_causal.yaml
+    provenance: exact_deterministic_controller_policy
+  - case_id: BeamDomino/causal_glancing
+    trajectory: trajectories/beam_domino_causal_glancing.yaml
+    provenance: exact_deterministic_controller_policy
+  - case_id: BeamDomino/causal_direct_strike
+    trajectory: trajectories/beam_domino_causal_direct_strike.yaml
+    provenance: exact_deterministic_controller_policy
+  - case_id: LiquidContainer/fluid_rest
+    trajectory: trajectories/liquid_container_fluid_rest.yaml
+    provenance: nominal_controller_profile_of_wall_clock_capture
+  - case_id: LiquidContainer/fluid_impulse_decay
+    trajectory: trajectories/liquid_container_fluid_impulse_decay.yaml
+    provenance: nominal_controller_profile_of_wall_clock_capture
+  - case_id: LiquidContainer/fluid_chirp_strafe
+    trajectory: trajectories/liquid_container_fluid_chirp_strafe.yaml
+    provenance: nominal_controller_profile_of_wall_clock_capture
+  - case_id: LiquidContainer/fluid_step_hold
+    trajectory: trajectories/liquid_container_fluid_step_hold.yaml
+    provenance: nominal_controller_profile_of_wall_clock_capture

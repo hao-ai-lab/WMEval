@@ -29,4 +29,8 @@ def resolve_ptlflow_root(
         if (sibling / "synthetic_flow.py").is_file():
             return str(sibling)
 
+    vendored = Path(__file__).resolve().parent / "modules" / "vendor" / "ptlflow_synthetic"
+    if (vendored / "synthetic_flow.py").is_file():
+        return str(vendored)
+
     return "/workspace/ptlflow"

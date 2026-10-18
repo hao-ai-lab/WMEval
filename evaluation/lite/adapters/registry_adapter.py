@@ -29,10 +29,14 @@ METRIC_CONFIG_KEYS = frozenset(
         "eval_fps",
         "max_pairs",
         "candidate_fps_override",
+        # Candidate-specific semantic prompt for reconstructed camera/control
+        # regimes that intentionally reuse a Lite reference case.
+        "text_prompt",
         # lpips / causal-VLM collision sampling
         "lpips_sampling",
         "lpips_causal_event_source",
         "lpips_causal_lpips_pairing",
+        "lpips_reference_events_json",
         "lpips_vlm_model",
         "lpips_vlm_coarse_model",
         "lpips_vlm_prompt_version",
@@ -91,6 +95,7 @@ METRIC_CONFIG_KEYS = frozenset(
         "eoc_tau_mask",
         "eoc_tau_id",
         "eoc_max_objects",
+        "eoc_fixed_anchor_labels",
         "eoc_depth_model",
         "eoc_gd_model",
         "eoc_unity_object_transforms_json",
@@ -111,11 +116,16 @@ METRIC_CONFIG_KEYS = frozenset(
         "kin_unity_poses_npy",
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
+        "kin_plane_calibration_json",
         "kin_color_filter",
         "kin_color_hue_tolerance_deg",
+        "kin_track_point",
         "kin_depth_lift",
         "kin_depth_lift_window",
         "kin_depth_model",
+        "kin_mechanics_estimator",
+        "kin_event_alignment_tolerance_frames",
+        "kin_event_min_neighbor_ratio",
     }
 )
 
@@ -149,7 +159,11 @@ def merge_metric_config(
         if params:
             merged.update(dict(params))
     if candidate.params:
-        merged.update(dict(candidate.params))
+        candidate_params = dict(candidate.params)
+        if case.protocol.get('candidate_normalization') == 'lighting_orbit_10s_fps12':
+            # Receipt metadata is consumed by normalization, not a runner kwarg.
+            candidate_params.pop('lighting_time_mapping', None)
+        merged.update(candidate_params)
 
     unknown = sorted(set(merged) - METRIC_CONFIG_KEYS)
     if unknown:
@@ -158,20 +172,6 @@ def merge_metric_config(
             f"keys outside the sanctioned runner whitelist: {unknown}"
         )
     return merged
-
-
-def _resolve_synthetic_action_file(case: LiteCase) -> Path | None:
-    """Mirror PR #16's lookup: <synthetic_action_dir>/action.npy first, then
-    the raw actions_file."""
-    action_dir = case.reference_artifacts.get(ARTIFACT_SYNTHETIC_ACTION_DIR)
-    if action_dir is not None:
-        action_npy = Path(action_dir) / "action.npy"
-        if action_npy.exists():
-            return action_npy
-    actions_file = case.reference_artifacts.get(ARTIFACT_ACTIONS_FILE)
-    if actions_file is not None:
-        return Path(actions_file)
-    return None
 
 
 def build_runner_kwargs(
@@ -200,11 +200,10 @@ def build_runner_kwargs(
     }
 
     if "control_motion" in dimension.modules:
-        synthetic_action_file = _resolve_synthetic_action_file(case)
-        kwargs["synthetic_action_file"] = (
-            str(synthetic_action_file) if synthetic_action_file is not None else None
-        )
-        kwargs["synthetic_infer_actions"] = synthetic_action_file is None
+        # The reference action is fit to the reference RAFT flow per pair; the
+        # baked trajectories are object-control channels, not camera keyboard/mouse.
+        kwargs["synthetic_action_file"] = None
+        kwargs["synthetic_infer_actions"] = True
 
     if "causal_step" in dimension.modules:
         qa_dataset = case.reference_artifacts.get(ARTIFACT_QA_DATASET)

@@ -12,6 +12,8 @@ needs PyYAML.
 """
 from __future__ import annotations
 
+import hashlib
+import json
 import time
 import traceback
 from collections.abc import Mapping, Sequence
@@ -20,13 +22,17 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .adapters.base import (
+    STATUS_COMPLETED,
     STATUS_DRY_RUN,
     STATUS_ERROR,
     STATUS_INVALID_CANDIDATE,
     STATUS_MISSING_CANDIDATE,
+    STATUS_UNSUPPORTED,
     CaseResult,
     DimensionEvaluator,
 )
+from .action_support import support_record, unsupported_reason
+from evaluation import action_backends
 from .aggregate import (
     build_aggregate,
     write_aggregate_json,
@@ -44,8 +50,9 @@ from .output import (
     PER_CASE_RESULTS_FILENAME,
     append_row,
     build_row,
-    load_done_keys,
     read_rows,
+    row_key,
+    write_rows,
 )
 from .suite_loader import (
     EVALUATOR_REGISTRY,
@@ -71,7 +78,26 @@ NORMALIZATION_TOKENS: dict[str, str | None] = {
     "none": None,
     "beamdomino_native": None,
     "liquid_832x464_16fps": "liquid",
+    # Resample to the case's reference video (fps, resolution, frame count);
+    # used by the Table 4/7 cells so frame k aligns with Unity ground truth k.
+    "match_reference": "reference",
+    "lighting_fps12": "lighting",
+    "lighting_orbit_10s_fps12": "lighting_orbit",
 }
+
+
+def _lighting_input_fingerprint(item: WorkItem) -> str | None:
+    if item.case.protocol.get('candidate_normalization') != 'lighting_orbit_10s_fps12':
+        return None
+    video = item.candidate.candidate_video
+    digest = None
+    if video.is_file():
+        with video.open('rb') as handle:
+            digest = hashlib.file_digest(handle, 'sha256').hexdigest()
+    payload = {'candidate_sha256': digest, 'params': dict(item.candidate.params),
+               'dimension_metric_config': dict(item.dimension.metric_config),
+               'modules': item.dimension.modules}
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 MODEL_PARAMS_FILENAME = "model.yaml"
 
@@ -117,6 +143,30 @@ def _merge_candidate_params(
         seed=candidate.seed,
         candidate_video=candidate.candidate_video,
         params=merged,
+    )
+
+
+def _with_backend_defaults(candidate: CandidateRow) -> CandidateRow:
+    """Fill params the backend registry knows, e.g. a model's real frame rate.
+
+    Generators that write one frame per fixed action tick tag their mp4 with an
+    unrelated fps; the registry records the real rate so users need not know to
+    pass ``candidate_fps_override``. Explicit candidate/model params still win.
+    """
+    if "candidate_fps_override" in candidate.params:
+        return candidate
+    try:
+        real_fps = action_backends.backend(candidate.model).get("real_fps")
+    except KeyError:
+        return candidate
+    if real_fps is None:
+        return candidate
+    return CandidateRow(
+        model=candidate.model,
+        case_id=candidate.case_id,
+        seed=candidate.seed,
+        candidate_video=candidate.candidate_video,
+        params={**candidate.params, "candidate_fps_override": float(real_fps)},
     )
 
 
@@ -181,11 +231,28 @@ def _normalize_candidate(
     if kind is None:
         return candidate.candidate_video
 
-    from .normalization import normalize_liquid_video
+    from .normalization import normalize_liquid_video, normalize_to_reference, normalize_lighting_video, normalize_lighting_window
 
     destination = _default_normalized_path(output_root, candidate)
+    if kind == "lighting_orbit":
+        mapping = candidate.params.get("lighting_time_mapping")
+        if not isinstance(mapping, Mapping):
+            raise SuiteRunError(f"{case.case_id}: candidate requires receipt-derived lighting_time_mapping")
+        # This small artifact must be verified/rebuilt for changed receipt/input,
+        # even when a previous candidate occupied the same output path.
+        normalize_lighting_window(candidate.candidate_video, destination, time_mapping=dict(mapping))
+        return destination
     if not destination.is_file():
-        normalize_liquid_video(candidate.candidate_video, destination)
+        if kind == "reference":
+            if case.reference_video is None:
+                raise SuiteRunError(f"{case.case_id}: match_reference needs a reference video")
+            normalize_to_reference(
+                candidate.candidate_video, destination, reference=case.reference_video
+            )
+        elif kind == "lighting":
+            normalize_lighting_video(candidate.candidate_video, destination)
+        else:
+            normalize_liquid_video(candidate.candidate_video, destination)
     return destination
 
 
@@ -280,7 +347,8 @@ def run_suite(
         allowed_cases=frozenset(case_ids),
     )
     candidate_rows = [
-        _merge_candidate_params(row, model_params) for row in candidate_rows
+        _with_backend_defaults(_merge_candidate_params(row, model_params))
+        for row in candidate_rows
     ]
 
     work_items = [
@@ -301,9 +369,56 @@ def run_suite(
     output_root = Path(output_dir).expanduser().resolve()
     results_path = output_root / PER_CASE_RESULTS_FILENAME
 
+    input_fingerprints = {
+        (item.dimension.dimension_id, item.candidate.case_id,
+         item.candidate.model, item.candidate.seed): _lighting_input_fingerprint(item)
+        for item in work_items
+    } if not dry_run else {}
+
     done_keys = set()
     if resume and not dry_run:
-        done_keys = load_done_keys(results_path)
+        existing_rows = read_rows(results_path)
+        current_rows: list[dict[str, Any]] = []
+        stale_count = 0
+        retryable_count = 0
+        for row in existing_rows:
+            case = cases.get(str(row.get("case_id") or ""))
+            if case is None:
+                current_rows.append(row)
+                continue
+            recorded_lock = row.get("evaluator_lock") or {}
+            recorded_fingerprint = (
+                recorded_lock.get("evaluator_fingerprint")
+                if isinstance(recorded_lock, Mapping)
+                else None
+            )
+            current_fingerprint = case.evaluator_lock.get("evaluator_fingerprint")
+            expected_input = input_fingerprints.get(row_key(row))
+            input_matches = expected_input is None or row.get('candidate_input_fingerprint') == expected_input
+            if recorded_fingerprint == current_fingerprint and input_matches:
+                # An interrupted or temporarily misconfigured run can leave an
+                # error row behind.  Treating that row as done makes --resume
+                # skip the item forever, so remove it before constructing the
+                # completed-key set and let the item run again.
+                if row.get("status") == STATUS_ERROR:
+                    retryable_count += 1
+                else:
+                    current_rows.append(row)
+            else:
+                stale_count += 1
+        if stale_count or retryable_count:
+            write_rows(results_path, current_rows)
+            if stale_count:
+                emit(
+                    f"[wmeval-lite] removed {stale_count} stale result row(s) "
+                    "whose evaluator or lighting candidate input fingerprint changed"
+                )
+            if retryable_count:
+                emit(
+                    f"[wmeval-lite] removed {retryable_count} retryable error "
+                    "row(s)"
+                )
+        done_keys = {row_key(row) for row in current_rows}
 
     resolved_adapters: Mapping[str, DimensionEvaluator] = (
         dict(adapters) if adapters is not None else _default_adapters(runner)
@@ -399,6 +514,21 @@ def run_suite(
             error=result.error,
             timing_sec=round(timing, 3),
         )
+        if input_fingerprints.get(key) is not None:
+            row['candidate_input_fingerprint'] = input_fingerprints[key]
+            row['required_repeats'] = 5
+        if result.input_contract is not None:
+            row['input_contract'] = result.input_contract
+        support = support_record(item.case.artifacts_dir, candidate.model)
+        if support is not None:
+            row['action_support'] = support
+        row['metric_status'] = metric_status(result.status, result.metrics)
+        none_metrics = [
+            name for name, value in (result.metrics or {}).items()
+            if value is None and result.status == STATUS_COMPLETED
+        ]
+        for name in none_metrics:
+            row['metric_status'][name] = "unmeasurable"
         append_row(results_path, row)
         emit(
             f"[wmeval-lite] {dimension.dimension_id}/{case.case_id}/"
@@ -436,6 +566,10 @@ def _evaluate_item(
     case = item.case
     candidate = item.candidate
 
+    reason = unsupported_reason(case.artifacts_dir, candidate.model)
+    if reason is not None:
+        return CaseResult(status=STATUS_UNSUPPORTED, error=reason)
+
     if not candidate.candidate_video.is_file():
         return CaseResult(
             status=STATUS_MISSING_CANDIDATE,
@@ -447,7 +581,7 @@ def _evaluate_item(
     protocol = case.protocol
     candidate_fps_override = candidate.params.get("candidate_fps_override")
     try:
-        validate_candidate_video(
+        validated = validate_candidate_video(
             candidate.candidate_video,
             case.reference_video if dimension.requires_reference else None,
             min_duration_sec=float(protocol["min_duration_sec"]),
@@ -468,7 +602,7 @@ def _evaluate_item(
     )
 
     adapter = _resolve_adapter(dimension, adapters)
-    return adapter.evaluate(
+    result = adapter.evaluate(
         suite=suite,
         dimension=dimension,
         case=case,
@@ -476,3 +610,65 @@ def _evaluate_item(
         candidate_video=candidate_video,
         device=device,
     )
+    result.input_contract = input_contract(
+        validated, normalization=str(protocol.get("candidate_normalization") or "none")
+    )
+    return result
+
+
+# Tolerances for the input-contract report (scores are never altered by it).
+_FPS_TOLERANCE = 0.5
+_ASPECT_TOLERANCE = 0.01
+_DURATION_TOLERANCE = 0.05
+
+
+def input_contract(validated: Any, *, normalization: str) -> dict[str, Any]:
+    """Candidate vs. reference video properties for one scored row.
+
+    The case's reference video is the declared input spec. With
+    ``candidate_normalization: none`` the evaluator consumes the candidate as
+    supplied, so mismatches are flagged (``within_spec: false``) for the reader;
+    normalized cases report the raw candidate before resampling.
+    """
+    candidate = validated.candidate
+    reference = validated.reference
+
+    def props(meta: Any) -> dict[str, Any]:
+        return {
+            "fps": round(float(meta.fps), 4),
+            "width": int(meta.width),
+            "height": int(meta.height),
+            "frame_count": int(meta.frame_count),
+            "duration_sec": round(float(meta.duration_sec), 4),
+        }
+
+    report: dict[str, Any] = {"normalization": normalization, "candidate": props(candidate)}
+    if reference is None:
+        report["within_spec"] = None
+        return report
+    report["reference"] = props(reference)
+    flags = {
+        "fps_mismatch": abs(candidate.fps - reference.fps) > _FPS_TOLERANCE,
+        "resolution_mismatch": (candidate.width, candidate.height) != (reference.width, reference.height),
+        "aspect_mismatch": abs(candidate.width / candidate.height - reference.width / reference.height)
+        > _ASPECT_TOLERANCE * reference.width / reference.height,
+        "duration_mismatch": abs(candidate.duration_sec - reference.duration_sec)
+        > _DURATION_TOLERANCE * reference.duration_sec,
+    }
+    report["flags"] = flags
+    report["duration_ratio"] = round(candidate.duration_sec / reference.duration_sec, 4)
+    report["within_spec"] = (not any(flags.values())) if normalization == "none" else None
+    return report
+
+
+def metric_status(status: str, metrics: Mapping[str, Any] | None) -> dict[str, str]:
+    """Per-metric status: ``ok`` / ``unmeasurable`` for completed rows, else the row status."""
+    out: dict[str, str] = {}
+    for name, value in (metrics or {}).items():
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        if status != STATUS_COMPLETED:
+            out[name] = status
+        else:
+            out[name] = "ok" if value == value and value not in (float("inf"), float("-inf")) else "unmeasurable"
+    return out

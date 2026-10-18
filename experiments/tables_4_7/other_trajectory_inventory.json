@@ -1,0 +1,659 @@
+{
+  "backend_readiness_counts": {
+    "project_genie_browser": {
+      "mixed_ready_and_unsupported": 1,
+      "native_executable_ready": 9,
+      "not_machine_executable": 7,
+      "supplemental_executable_ready": 2
+    },
+    "unity_or_numeric_evaluator": {
+      "native_numeric_ready": 15,
+      "supplemental_numeric_ready": 3,
+      "supplemental_semantic_numeric_only": 1
+    }
+  },
+  "case_count": 19,
+  "cases": [
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/BallRoller/ctrl/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 11,
+      "case_id": "BallRoller/ctrl",
+      "dimensions": [
+        "action_controllability",
+        "environment_object_consistency",
+        "kinematics_mechanics"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          33,
+          4
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/BallRoller/ctrl/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/BeamDomino/causal/reference/artifacts/actions.txt",
+      "actions_text_kind": "structured_text",
+      "backend_readiness": {
+        "project_genie_browser": "not_machine_executable",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "BeamDomino/causal",
+      "dimensions": [
+        "lpips",
+        "action_controllability",
+        "physical_causality"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          122,
+          2
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/BeamDomino/causal/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/BeamDomino/causal_direct_strike/reference/artifacts/actions.txt",
+      "actions_text_kind": "structured_text",
+      "backend_readiness": {
+        "project_genie_browser": "not_machine_executable",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "BeamDomino/causal_direct_strike",
+      "dimensions": [
+        "physical_causality"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          122,
+          2
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/BeamDomino/causal_direct_strike/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/BeamDomino/causal_glancing/reference/artifacts/actions.txt",
+      "actions_text_kind": "structured_text",
+      "backend_readiness": {
+        "project_genie_browser": "not_machine_executable",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "BeamDomino/causal_glancing",
+      "dimensions": [
+        "physical_causality"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          122,
+          2
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/BeamDomino/causal_glancing/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": null,
+      "actions_text_kind": "missing",
+      "backend_readiness": {
+        "project_genie_browser": "mixed_ready_and_unsupported",
+        "unity_or_numeric_evaluator": "supplemental_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "BilliardGame/prompt_first",
+      "dimensions": [
+        "environment_object_consistency",
+        "kinematics_mechanics"
+      ],
+      "effective_status": "supplemental_reconstruction_ready",
+      "issues": [
+        "the locked Lite case lacks native controls; reconstructed controls live outside the case bundle"
+      ],
+      "numeric_action": null,
+      "numeric_file": null,
+      "status": "underspecified",
+      "supplemental_trajectories": [
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/billiard_shot.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": null,
+          "project_genie_status": "unsupported",
+          "source": "experiments/tables_4_7/trajectories/billiard_shot.yaml",
+          "trajectory_id": "table4.billiard_game.center_ball_shot_v1",
+          "unity_status": "ready"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_perturb_in.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_perturb_in.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_perturb_in.yaml",
+          "trajectory_id": "table7.camera.perturb_in_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_perturb_out.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_perturb_out.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_perturb_out.yaml",
+          "trajectory_id": "table7.camera.perturb_out_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_360_in.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_360_in.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_360_in.yaml",
+          "trajectory_id": "table7.camera.360_in_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_360_out.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_360_out.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_360_out.yaml",
+          "trajectory_id": "table7.camera.360_out_v1",
+          "unity_status": "needs_scene_calibration"
+        }
+      ]
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/ChessBoard/prompt_first/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 2,
+      "case_id": "ChessBoard/prompt_first",
+      "dimensions": [
+        "prompt_scene_consistency"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          300,
+          5
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/ChessBoard/prompt_first/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/ChessBoard/prompt_third/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 2,
+      "case_id": "ChessBoard/prompt_third",
+      "dimensions": [
+        "prompt_scene_consistency"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          300,
+          5
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/ChessBoard/prompt_third/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/ChessBoard/walk_third/reference/artifacts/actions.txt",
+      "actions_text_kind": "comment_only",
+      "backend_readiness": {
+        "project_genie_browser": "supplemental_executable_ready",
+        "unity_or_numeric_evaluator": "supplemental_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "ChessBoard/walk_third",
+      "dimensions": [
+        "environment_object_consistency"
+      ],
+      "effective_status": "supplemental_reconstruction_ready",
+      "issues": [
+        "the locked Lite case lacks native controls; reconstructed controls live outside the case bundle"
+      ],
+      "numeric_action": null,
+      "numeric_file": null,
+      "status": "underspecified",
+      "supplemental_trajectories": [
+        {
+          "compiled_numeric": "experiments/trajectory_reconstructions/compiled/chess_walk_third.action.npy",
+          "paper_alignment_status": "exact",
+          "project_genie_actions": "experiments/trajectory_reconstructions/compiled/chess_walk_third.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/trajectory_reconstructions/trajectories/chess_walk_third.yaml",
+          "trajectory_id": "wmeval_lite.chess_board.walk_third.capture_v1",
+          "unity_status": "exact"
+        }
+      ]
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_chirp_strafe/reference/artifacts/actions.txt",
+      "actions_text_kind": "structured_text",
+      "backend_readiness": {
+        "project_genie_browser": "not_machine_executable",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "LiquidContainer/fluid_chirp_strafe",
+      "dimensions": [
+        "lpips",
+        "fluid_mechanics"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          3
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_chirp_strafe/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_impulse_decay/reference/artifacts/actions.txt",
+      "actions_text_kind": "structured_text",
+      "backend_readiness": {
+        "project_genie_browser": "not_machine_executable",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "LiquidContainer/fluid_impulse_decay",
+      "dimensions": [
+        "lpips",
+        "fluid_mechanics"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          3
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_impulse_decay/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_rest/reference/artifacts/actions.txt",
+      "actions_text_kind": "structured_text",
+      "backend_readiness": {
+        "project_genie_browser": "not_machine_executable",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "LiquidContainer/fluid_rest",
+      "dimensions": [
+        "lpips",
+        "fluid_mechanics"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          200,
+          3
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_rest/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_step_hold/reference/artifacts/actions.txt",
+      "actions_text_kind": "structured_text",
+      "backend_readiness": {
+        "project_genie_browser": "not_machine_executable",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "LiquidContainer/fluid_step_hold",
+      "dimensions": [
+        "lpips",
+        "fluid_mechanics"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          202,
+          3
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/LiquidContainer/fluid_step_hold/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/lpips_collision/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 7,
+      "case_id": "MirrorRollingBall/lpips_collision",
+      "dimensions": [
+        "lpips"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          65,
+          4
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/lpips_collision/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_first/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 2,
+      "case_id": "MirrorRollingBall/prompt_first",
+      "dimensions": [
+        "prompt_scene_consistency"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          300,
+          5
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_first/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": []
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_third/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 2,
+      "case_id": "MirrorRollingBall/prompt_third",
+      "dimensions": [
+        "prompt_scene_consistency",
+        "environment_object_consistency"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          300,
+          5
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_third/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": [
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_perturb_in.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_perturb_in.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_perturb_in.yaml",
+          "trajectory_id": "table7.camera.perturb_in_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_perturb_out.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_perturb_out.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_perturb_out.yaml",
+          "trajectory_id": "table7.camera.perturb_out_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_360_in.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_360_in.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_360_in.yaml",
+          "trajectory_id": "table7.camera.360_in_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_360_out.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_360_out.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_360_out.yaml",
+          "trajectory_id": "table7.camera.360_out_v1",
+          "unity_status": "needs_scene_calibration"
+        }
+      ]
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/RacingCar/prompt_first/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 2,
+      "case_id": "RacingCar/prompt_first",
+      "dimensions": [
+        "prompt_scene_consistency"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          300,
+          5
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/RacingCar/prompt_first/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": [
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/racing_car_drive.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/racing_car_drive.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/racing_car_drive.yaml",
+          "trajectory_id": "table4.racing_car.drive_v1",
+          "unity_status": "ready"
+        }
+      ]
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/RacingCar/prompt_third/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "native_numeric_ready"
+      },
+      "browser_op_count": 2,
+      "case_id": "RacingCar/prompt_third",
+      "dimensions": [
+        "prompt_scene_consistency",
+        "environment_object_consistency",
+        "kinematics_mechanics"
+      ],
+      "effective_status": "native_machine_readable_ready",
+      "issues": [],
+      "numeric_action": {
+        "dtype": "float32",
+        "shape": [
+          300,
+          5
+        ]
+      },
+      "numeric_file": "eval_sets/wmeval_lite_v1/cases/RacingCar/prompt_third/reference/artifacts/action.npy",
+      "status": "ready",
+      "supplemental_trajectories": [
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/racing_car_drive.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/racing_car_drive.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/racing_car_drive.yaml",
+          "trajectory_id": "table4.racing_car.drive_v1",
+          "unity_status": "ready"
+        }
+      ]
+    },
+    {
+      "actions_file": "eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting/reference/artifacts/actions.txt",
+      "actions_text_kind": "executable_json",
+      "backend_readiness": {
+        "project_genie_browser": "native_executable_ready",
+        "unity_or_numeric_evaluator": "supplemental_semantic_numeric_only"
+      },
+      "browser_op_count": 2,
+      "case_id": "SunRisesAndSets/lighting",
+      "dimensions": [
+        "lighting_shading"
+      ],
+      "effective_status": "supplemental_reconstruction_ready",
+      "issues": [
+        "the locked Lite case lacks native controls; reconstructed controls live outside the case bundle"
+      ],
+      "numeric_action": null,
+      "numeric_file": null,
+      "status": "executable_script_only",
+      "supplemental_trajectories": [
+        {
+          "compiled_numeric": "experiments/trajectory_reconstructions/compiled/sun_rises_and_sets_lighting.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/trajectory_reconstructions/compiled/sun_rises_and_sets_lighting.actions.jsonl",
+          "project_genie_status": "exact_locked_schedule",
+          "source": "experiments/trajectory_reconstructions/trajectories/sun_rises_and_sets_lighting.yaml",
+          "trajectory_id": "wmeval_lite.sun_rises_and_sets.lighting_orbit_v1",
+          "unity_status": "semantic_only"
+        }
+      ]
+    },
+    {
+      "actions_file": null,
+      "actions_text_kind": "missing",
+      "backend_readiness": {
+        "project_genie_browser": "supplemental_executable_ready",
+        "unity_or_numeric_evaluator": "supplemental_numeric_ready"
+      },
+      "browser_op_count": 0,
+      "case_id": "WanderingGarden/scene_first",
+      "dimensions": [
+        "environment_object_consistency"
+      ],
+      "effective_status": "supplemental_reconstruction_ready",
+      "issues": [
+        "the locked Lite case lacks native controls; reconstructed controls live outside the case bundle"
+      ],
+      "numeric_action": null,
+      "numeric_file": null,
+      "status": "underspecified",
+      "supplemental_trajectories": [
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_perturb_in.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_perturb_in.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_perturb_in.yaml",
+          "trajectory_id": "table7.camera.perturb_in_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_perturb_out.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_perturb_out.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_perturb_out.yaml",
+          "trajectory_id": "table7.camera.perturb_out_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_360_in.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_360_in.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_360_in.yaml",
+          "trajectory_id": "table7.camera.360_in_v1",
+          "unity_status": "needs_scene_calibration"
+        },
+        {
+          "compiled_numeric": "experiments/tables_4_7/compiled/camera_360_out.action.npy",
+          "paper_alignment_status": "reconstructed",
+          "project_genie_actions": "experiments/tables_4_7/compiled/camera_360_out.actions.jsonl",
+          "project_genie_status": "nominal",
+          "source": "experiments/tables_4_7/trajectories/camera_360_out.yaml",
+          "trajectory_id": "table7.camera.360_out_v1",
+          "unity_status": "needs_scene_calibration"
+        }
+      ]
+    }
+  ],
+  "effective_status_counts": {
+    "native_machine_readable_ready": 15,
+    "supplemental_reconstruction_ready": 4
+  },
+  "schema_version": 3,
+  "status_counts": {
+    "executable_script_only": 1,
+    "ready": 15,
+    "underspecified": 3
+  }
+}

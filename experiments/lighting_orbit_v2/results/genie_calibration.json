@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "backend": "Project Genie",
+  "run_kind": "calibration_only",
+  "status": "control_response_calibrated_timing_not_qualified",
+  "method": "Mesh-anchored PnP; motion onset is diagnostic only, never a formal canonical-zero offset. Fixed limits: R2>=0.9, strafe RMS<=0.04m, yaw RMS<=2deg, independent gain relative range<=25%.",
+  "measurements": {
+    "yaw1": {
+      "hosted_export_id": "4f3f56fc8aaa469ea421a09a9ffb3400",
+      "video_sha256": "8c8b72487e2130e57ec89258013fd4cca427aae1737f8e9494550cf25a404d6f",
+      "measurement_sha256": "e0fc6607d1d44903df4bc65f53740da6743f940f01c789bb90bfc9b290baf5e5",
+      "native_fps": 24,
+      "native_frames": 80,
+      "control": "Left",
+      "requested_ms": 4000,
+      "call_elapsed_ms": 4012,
+      "gain_per_native_sec": -101.7667677357369,
+      "fit_r2": 0.9936157283065795,
+      "residual_rms": 0.9762660012625389,
+      "valid_pose_frames": 23,
+      "active_valid_frames": 10,
+      "fit_status": "measured"
+    },
+    "yaw2": {
+      "hosted_export_id": "7765120790ae4711a28efe0f0df83683",
+      "video_sha256": "16597b4e774f7a5bfb9c8bb9282e43f716e7e1601d781b8a4bdf48b211e2883c",
+      "measurement_sha256": "63349bc7ca8a927a01b224c6363a7fa3eabc32f612d7cc447054e3118a5bd502",
+      "native_fps": 24,
+      "native_frames": 216,
+      "control": "Left",
+      "requested_ms": 500,
+      "call_elapsed_ms": 511,
+      "gain_per_native_sec": -102.50668761158649,
+      "fit_r2": 0.9880827306625104,
+      "residual_rms": 1.347285561205794,
+      "valid_pose_frames": 215,
+      "active_valid_frames": 10,
+      "fit_status": "measured"
+    },
+    "strafe1": {
+      "hosted_export_id": "799d3dfdc7334859b7733d0543697c62",
+      "video_sha256": "81fa7c37405037c49fa58e89c82ace9f74d6b6a61440587d5405d58509b82fe8",
+      "measurement_sha256": "cc7d3c0320150e19758678c916a4b3222d6387d9790cbd63515c8dba1039a38e",
+      "native_fps": 24,
+      "native_frames": 36,
+      "control": "D",
+      "requested_ms": 1000,
+      "call_elapsed_ms": 1014,
+      "gain_per_native_sec": 1.5910481172831,
+      "fit_r2": 0.9402384458669717,
+      "residual_rms": 0.05285231456583369,
+      "valid_pose_frames": 23,
+      "active_valid_frames": 11,
+      "fit_status": "unresolved"
+    },
+    "strafe2": {
+      "hosted_export_id": "ec1415b9c0de482a912b0a92538dbf59",
+      "video_sha256": "6317b776bf8d022e1856d9e734bf6972534b14bda994c26b7af0d192d08dad4c",
+      "measurement_sha256": "205cdcfdfba0bf5325adbee52dd6f8c6fe80a8bc6056d9d6d57f0e86b10c4fc7",
+      "native_fps": 24,
+      "native_frames": 36,
+      "control": "D",
+      "requested_ms": 1000,
+      "call_elapsed_ms": 1019,
+      "gain_per_native_sec": 1.645127702046697,
+      "fit_r2": 0.9810921703754608,
+      "residual_rms": 0.030092225594092203,
+      "valid_pose_frames": 23,
+      "active_valid_frames": 11,
+      "fit_status": "measured"
+    },
+    "strafe_short_1": {
+      "control": "D",
+      "requested_ms": 400,
+      "gain_per_native_sec": 1.9480787564903073,
+      "fit_r2": 0.9934749377388313,
+      "residual_rms": 0.016984920223491615,
+      "fit_native_frame_window": [
+        14,
+        22
+      ],
+      "status": "measured",
+      "export_id": "b7d96505be264ababff6aaa6e42ad8ea",
+      "video_sha256": "766e3a4dfac51f484dca487b030b21cf7f5edffa5be72ddde5471fd1eac73a15",
+      "measurement_sha256": "157059b9b8c401079c6a90a3ee2cca04780ea56691a9a304056d411365d6be10",
+      "association_proof": {
+        "before_native_frame": 1,
+        "before_sift_score": 0.398,
+        "released_native_frames": [
+          15,
+          32,
+          50
+        ],
+        "released_sift_scores": [
+          0.489,
+          0.475,
+          0.475
+        ]
+      }
+    }
+  },
+  "reason": "Independent D and Left response fits accepted. Five frozen fine-pulse repeats executed and scored; their native timing differs, so the exact ten-second orbit remains unqualified.",
+  "frozen_at_utc": "2026-10-11T21:16:51.121934+00:00",
+  "accepted_calibration_runs": {
+    "strafe": [
+      "strafe2",
+      "strafe_short_1"
+    ],
+    "yaw": [
+      "yaw1",
+      "yaw2"
+    ]
+  },
+  "translation_m_per_native_sec": 1.7966032292685021,
+  "yaw_deg_per_native_sec": 102.1367276736617,
+  "independent_strafe_relative_range": 0.1686243515030075,
+  "previous_coarse_replay": {
+    "interval_count": 20,
+    "browser_interval_ms": 750,
+    "canonical_interval_sec": 0.5,
+    "browser_seconds_per_canonical_second": 1.5,
+    "d_intervals": 14,
+    "left_intervals": 7,
+    "duty_quantization": "floor cumulative requested key duty; binary simultaneous D+Left",
+    "canonical_zero_frame": 0,
+    "scoring_native_frames": [
+      0,
+      240
+    ],
+    "native_fps": 24,
+    "timing_evidence": [
+      {
+        "trial": 1,
+        "slope": 0.6770480421866611,
+        "r_squared": 0.9997436964103293
+      },
+      {
+        "trial": 2,
+        "slope": 0.7052756876358819,
+        "r_squared": 0.9919610461174319
+      },
+      {
+        "trial": 3,
+        "slope": 0.6680593727389942,
+        "r_squared": 0.9941168704131473
+      }
+    ],
+    "limitation": "Open-loop binary-key approximation of the analytic target, not a guarantee of generated pose accuracy. Native video stays at its original speed; browser clock calibration does not retime video."
+  },
+  "frozen_replay": {
+    "schema_version": 1,
+    "kind": "calibrated_open_loop_fine_pulses",
+    "canonical_duration_sec": 10,
+    "canonical_step_sec": 0.25,
+    "cycles": 40,
+    "clock": "wall_clock",
+    "assumed_native_per_wall_ratio": 0.7738572066462889,
+    "segments": [
+      {
+        "keys": "d+Left",
+        "duration_ms": 114
+      },
+      {
+        "keys": "d",
+        "duration_ms": 112
+      }
+    ],
+    "settle_ms": 2250,
+    "pose_target": "CCW360 radius2m eye1.6m lookat tabletop center",
+    "caveat": "Visible media clock and UI timer include waiting time. Native timing must be verified for each export. No rendered-image feedback changes keys.",
+    "frozen_at_utc": "2026-10-11T21:40:10.566Z",
+    "timing_calibration": "results/genie_calibration.json",
+    "timing_scope": "Open-loop nominal native timeline; per-export timing audit required",
+    "cycle_wall_ms": 323,
+    "scheduler": "fixed absolute wall-clock cycle deadlines, compensate RPC overhead in released remainder",
+    "freeze_id": "fine40-native10-v1"
+  },
+  "fine_timing_evidence": [
+    {
+      "trial": 5,
+      "slope": 0.7738572066462889,
+      "r_squared": 0.9998036739420414
+    }
+  ],
+  "formal_timing_audits": [
+    {
+      "run": "run_01",
+      "status": "validated",
+      "metrics": {
+        "matched_sample_count": 5,
+        "maximum_local_speed_ratio": 0.7851685182580977,
+        "median_margin": 0.29651162790697677,
+        "median_match": 0.47547169811320755,
+        "minimum_local_speed_ratio": 0.7607406261282169,
+        "minimum_margin": 0.25679758308157097,
+        "minimum_match": 0.36253776435045315,
+        "native_observed_span_ratio": 0.7704258353708231,
+        "native_span_sec": 10.083333333333334,
+        "observed_span_sec": 13.088000000000001,
+        "sample_count": 5,
+        "strictly_increasing": true,
+        "timeline_intercept_sec": 0.16366941543236946,
+        "timeline_r_squared": 0.99996680360346,
+        "timeline_slope": 0.7686974871720254,
+        "useful_margin_sample_count": 5
+      },
+      "error": null
+    },
+    {
+      "run": "run_02",
+      "status": "validated",
+      "metrics": {
+        "sample_count": 5,
+        "strictly_increasing": true,
+        "matched_sample_count": 5,
+        "useful_margin_sample_count": 4,
+        "minimum_match": 0.1625,
+        "median_match": 0.42857142857142855,
+        "minimum_margin": 0.0,
+        "median_margin": 0.2621951219512195,
+        "timeline_slope": 0.6941526753284302,
+        "timeline_intercept_sec": 0.356458066611373,
+        "timeline_r_squared": 0.988865746373314,
+        "minimum_local_speed_ratio": 0.4340277777777779,
+        "maximum_local_speed_ratio": 0.8305202807694368,
+        "native_span_sec": 8.958333333333334,
+        "observed_span_sec": 13.1175,
+        "native_observed_span_ratio": 0.6829299282129472
+      },
+      "error": null
+    },
+    {
+      "run": "run_03",
+      "status": "validated",
+      "metrics": {
+        "sample_count": 5,
+        "strictly_increasing": true,
+        "matched_sample_count": 5,
+        "useful_margin_sample_count": 5,
+        "minimum_match": 0.36752136752136755,
+        "median_match": 0.4759036144578313,
+        "minimum_margin": 0.264957264957265,
+        "median_margin": 0.30198019801980197,
+        "timeline_slope": 0.6750578464946974,
+        "timeline_intercept_sec": 0.10591239234227696,
+        "timeline_r_squared": 0.9899753287639061,
+        "minimum_local_speed_ratio": 0.5418795479176346,
+        "maximum_local_speed_ratio": 0.9027386981804538,
+        "native_span_sec": 9.25,
+        "observed_span_sec": 13.085,
+        "native_observed_span_ratio": 0.7069163163928162
+      },
+      "error": null
+    },
+    {
+      "run": "run_04",
+      "status": "validated",
+      "metrics": {
+        "sample_count": 5,
+        "strictly_increasing": true,
+        "matched_sample_count": 5,
+        "useful_margin_sample_count": 5,
+        "minimum_match": 0.4012158054711246,
+        "median_match": 0.49222797927461137,
+        "minimum_margin": 0.2917933130699088,
+        "median_margin": 0.34269662921348315,
+        "timeline_slope": 0.7636628816519042,
+        "timeline_intercept_sec": 0.2078992138497372,
+        "timeline_r_squared": 0.9998747915920514,
+        "minimum_local_speed_ratio": 0.7457424883392992,
+        "maximum_local_speed_ratio": 0.7887178038329336,
+        "native_span_sec": 10.0,
+        "observed_span_sec": 13.082999999999998,
+        "native_observed_span_ratio": 0.7643506840938623
+      },
+      "error": null
+    },
+    {
+      "run": "run_05",
+      "status": "validated",
+      "metrics": {
+        "sample_count": 5,
+        "strictly_increasing": true,
+        "matched_sample_count": 5,
+        "useful_margin_sample_count": 5,
+        "minimum_match": 0.37317784256559766,
+        "median_match": 0.5204081632653061,
+        "minimum_margin": 0.26822157434402333,
+        "median_margin": 0.41836734693877553,
+        "timeline_slope": 0.7735389322519372,
+        "timeline_intercept_sec": 0.12773351775452504,
+        "timeline_r_squared": 0.9998932992046458,
+        "minimum_local_speed_ratio": 0.7491217193635048,
+        "maximum_local_speed_ratio": 0.8099789405475457,
+        "native_span_sec": 10.166666666666666,
+        "observed_span_sec": 13.092500000000001,
+        "native_observed_span_ratio": 0.7765260008910952
+      },
+      "error": null
+    }
+  ]
+}

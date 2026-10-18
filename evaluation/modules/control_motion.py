@@ -23,6 +23,9 @@ from .flow_utils import (
 )
 
 
+VENDORED_SYNTHETIC_DIR = Path(__file__).resolve().parent / "vendor" / "ptlflow_synthetic"
+
+
 def _get_thresholds(raw_thresholds: Any) -> List[float]:
     if raw_thresholds is None:
         return [1.0, 3.0]
@@ -459,11 +462,13 @@ def analyze_control_motion_from_context(
     global_motion_mode = str(
         artifacts.get("control_global_motion_mode", "median_translation")
     )
-    synthetic_calibration = artifacts.get("synthetic_calibration")
+    synthetic_calibration = artifacts.get("synthetic_calibration") or str(
+        VENDORED_SYNTHETIC_DIR / "calibration.json"
+    )
     synthetic_action_file = artifacts.get("synthetic_action_file")
     synthetic_infer_actions = bool(artifacts.get("synthetic_infer_actions", False))
     synthetic_use_depth = bool(artifacts.get("synthetic_use_depth", False))
-    ptlflow_root = str(artifacts.get("ptlflow_root", "/workspace/ptlflow"))
+    ptlflow_root = str(artifacts.get("ptlflow_root") or VENDORED_SYNTHETIC_DIR)
     synthetic_grid_size = int(artifacts.get("synthetic_grid_size", 8))
 
     model, transform = load_raft_model(device_obj)

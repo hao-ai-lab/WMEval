@@ -54,9 +54,34 @@ def _get(mapping: Any, *path: str) -> Any:
 
 
 def _extract_lpips(result: Mapping[str, Any]) -> dict[str, Any]:
+    primary_source = result.get("lpips_primary_source")
+    mean = _numeric(result.get("lpips_mean"))
+    median = _numeric(result.get("lpips_median"))
+    causal_context = any(
+        key in result
+        for key in (
+            "num_reference_events",
+            "num_candidate_events",
+            "causal_lpips_skipped_reason",
+        )
+    )
+    is_temporal_fallback = primary_source == "temporal_only" and causal_context
     return {
-        "lpips_mean": _numeric(result.get("lpips_mean")),
-        "lpips_median": _numeric(result.get("lpips_median")),
+        # A causal row that fell back to temporal LPIPS is not averaged into
+        # the causal headline. Its value remains available under an explicit
+        # fallback metric and source field.
+        "lpips_mean": None if is_temporal_fallback else mean,
+        "lpips_median": None if is_temporal_fallback else median,
+        "lpips_causal_mean": mean if primary_source == "causal" else None,
+        "lpips_temporal_fallback_mean": mean if is_temporal_fallback else None,
+        "lpips_primary_source": primary_source,
+        "lpips_num_matched_events": _numeric(result.get("num_matched_events")),
+        "lpips_num_reference_events": _numeric(result.get("num_reference_events")),
+        "lpips_num_candidate_events": _numeric(result.get("num_candidate_events")),
+        "lpips_matched_reference_event_fraction": _numeric(
+            result.get("matched_reference_event_fraction")
+        ),
+        "lpips_causal_skipped_reason": result.get("causal_lpips_skipped_reason"),
     }
 
 
@@ -94,9 +119,12 @@ def _extract_control_motion(result: Mapping[str, Any]) -> dict[str, Any]:
                 _get(stats, "summary", "mean")
             )
     synthetic = result.get("synthetic_vs_candidate")
-    if isinstance(synthetic, Mapping):
-        metrics["synthetic_epe_mean"] = _numeric(
-            _get(synthetic, "epe_summary", "mean")
+    if isinstance(synthetic, Mapping) and synthetic.get("enabled"):
+        metrics["synthetic_mean_flow_cosine"] = _numeric(
+            _get(synthetic, "temporal_summary", "mf_cosine_mean")
+        )
+        metrics["synthetic_pixel_epe_mean"] = _numeric(
+            _get(synthetic, "temporal_summary", "pixel_epe_mean_mean")
         )
     return metrics
 
@@ -208,7 +236,18 @@ def _extract_environment_object_consistency(result: Mapping[str, Any]) -> dict[s
         "pairwise_distance_mae_pct": _numeric(result.get("pairwise_distance_mae_pct")),
         "object_permanence_pct": _numeric(result.get("object_permanence_pct")),
         "character_consistency_pct": _numeric(result.get("character_consistency_pct")),
+        # Anchor-validity diagnostic (1 = pairwise distance measurable under the rule).
+        "pairwise_distance_measurable": _measurable(result.get("pairwise_distance_support")),
+        "pairwise_paired_frame_coverage": _numeric(
+            (result.get("pairwise_distance_support") or {}).get("paired_frame_coverage")
+        ),
     }
+
+
+def _measurable(support: Any) -> float | None:
+    if not isinstance(support, Mapping) or "measurable" not in support:
+        return None
+    return 1.0 if support["measurable"] else 0.0
 
 
 def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
@@ -220,18 +259,58 @@ def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
     fidelity = result.get("trajectory_fidelity")
     fde_values: list[float] = []
     dtw_values: list[float] = []
+    fde_m_values: list[float] = []
+    dtw_m_values: list[float] = []
     if isinstance(fidelity, Mapping):
         for entry in fidelity.values():
             if isinstance(entry, Mapping):
                 fde = _numeric(entry.get("fde_px"))
                 dtw = _numeric(entry.get("dtw_px"))
+                fde_m = _numeric(entry.get("fde_m"))
+                dtw_m = _numeric(entry.get("dtw_m_mean"))
                 if fde is not None:
                     fde_values.append(fde)
                 if dtw is not None:
                     dtw_values.append(dtw)
+                if fde_m is not None:
+                    fde_m_values.append(fde_m)
+                if dtw_m is not None:
+                    dtw_m_values.append(dtw_m)
+    coverage = result.get("trajectory_coverage")
+    required_count = tracked_count = scored_count = missing_count = None
+    fidelity_status = None
+    if isinstance(coverage, Mapping):
+        required_count = _numeric(coverage.get("required_label_count"))
+        tracked_count = _numeric(coverage.get("tracked_required_label_count"))
+        scored_count = _numeric(coverage.get("scored_required_label_count"))
+        missing_count = _numeric(coverage.get("missing_required_label_count"))
+        fidelity_status = coverage.get("status")
+        # Never publish an average over a favorable subset of required labels.
+        # Counts and status remain available so callers can distinguish this
+        # from a detector/evaluator crash.
+        if missing_count is not None and missing_count > 0:
+            fde_values.clear()
+            dtw_values.clear()
+            fde_m_values.clear()
+            dtw_m_values.clear()
+    mechanical_summary = result.get("mechanical_summary")
+    exact_match_pct = None
+    error_rate_pct = None
+    if isinstance(mechanical_summary, Mapping):
+        exact_match_pct = _numeric(mechanical_summary.get("exact_match_pct"))
+        error_rate_pct = _numeric(mechanical_summary.get("error_rate_pct"))
     return {
         "fde_px_mean": _mean(fde_values),
         "dtw_px_mean": _mean(dtw_values),
+        "fde_m_mean": _mean(fde_m_values),
+        "dtw_m_mean": _mean(dtw_m_values),
+        "exact_match_pct": exact_match_pct,
+        "error_rate_pct": error_rate_pct,
+        "trajectory_fidelity_status": fidelity_status,
+        "required_label_count": required_count,
+        "tracked_required_label_count": tracked_count,
+        "scored_required_label_count": scored_count,
+        "missing_required_label_count": missing_count,
     }
 
 
@@ -290,6 +369,7 @@ def _metric_names(rows: Sequence[Mapping[str, Any]]) -> list[str]:
 
 def _two_level_stats(
     completed_rows: Sequence[Mapping[str, Any]],
+    required_repeats: Mapping[str, int] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Two-level statistics: seeds within a case, then cases within the dimension.
 
@@ -308,13 +388,16 @@ def _two_level_stats(
     for metric_name in _metric_names(completed_rows):
         case_means: dict[str, float] = {}
         seed_std_by_case: dict[str, float | None] = {}
+        valid_repeats_by_case: dict[str, int] = {}
         for case_id in sorted(by_case):
             values = [
                 value
                 for row in by_case[case_id]
                 if (value := _numeric(_get(row, "metrics", metric_name))) is not None
             ]
-            if not values:
+            valid_repeats_by_case[case_id] = len(values)
+            required = (required_repeats or {}).get(case_id)
+            if not values or (required is not None and len(values) != required):
                 continue
             case_means[case_id] = sum(values) / len(values)
             seed_std_by_case[case_id] = _sample_std(values)
@@ -328,7 +411,41 @@ def _two_level_stats(
             "case_means": case_means,
             "seed_std_by_case": seed_std_by_case,
         }
+        if required_repeats:
+            stats[metric_name]['valid_repeats_by_case'] = valid_repeats_by_case
+            if any(valid_repeats_by_case.get(case_id,0) != count for case_id,count in required_repeats.items()):
+                stats[metric_name]['mean'] = None
     return stats
+
+
+def suite_coverage(
+    suite: Suite, dimension: Any, dimension_rows: Sequence[Mapping[str, Any]]
+) -> dict[str, Any] | None:
+    """Coverage of one model on one dimension under the suite's repeat policy.
+
+    A case is covered when it has ``required_repeats`` distinct completed seeds,
+    or when the model is ``unsupported`` for it (reported N/A, not missing).
+    Returns None when the suite declares no repeat policy.
+    """
+    required = getattr(suite, "required_repeats", None)
+    if not required:
+        return None
+    by_case: dict[str, dict[str, Any]] = {}
+    for case_id in dimension.cases:
+        rows = [row for row in dimension_rows if str(row.get("case_id")) == case_id]
+        completed = len({str(row.get("seed")) for row in rows if row.get("status") == "completed"})
+        unsupported = any(row.get("status") == "unsupported" for row in rows)
+        by_case[case_id] = {"completed": completed, "unsupported": unsupported}
+    missing = sorted(
+        case_id for case_id, info in by_case.items()
+        if not info["unsupported"] and info["completed"] < required
+    )
+    return {
+        "required_repeats": required,
+        "complete": not missing,
+        "cases_missing_repeats": missing,
+        "cases": by_case,
+    }
 
 
 def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
@@ -346,7 +463,18 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
             if not dimension_rows:
                 continue
             done = [row for row in dimension_rows if row.get("status") == "completed"]
-            stats = _two_level_stats(done)
+            unsupported = [
+                row for row in dimension_rows if row.get("status") == "unsupported"
+            ]
+            required_repeats = {str(row['case_id']): int(row['required_repeats'])
+                                for row in dimension_rows if row.get('required_repeats')}
+            coverage = {case_id: {'required': count,
+                         'completed': len({str(row['seed']) for row in done if row['case_id']==case_id})}
+                        for case_id,count in required_repeats.items()}
+            stats = _two_level_stats(done, required_repeats=required_repeats)
+            if any(c['completed'] != c['required'] for c in coverage.values()):
+                for payload in stats.values():
+                    payload['mean'] = None
             means = {metric: payload["mean"] for metric, payload in stats.items()}
             headline: dict[str, Any] | None = None
             if dimension.aggregate is not None:
@@ -357,11 +485,41 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                     "std_across_cases": headline_stats.get("std_across_cases"),
                     "direction": dimension.aggregate.direction,
                 }
+            source_counts: dict[str, int] = {}
+            for row in done:
+                source = _get(row, "metrics", "lpips_primary_source")
+                if isinstance(source, str):
+                    source_counts[source] = source_counts.get(source, 0) + 1
+            gate = suite_coverage(suite, dimension, dimension_rows)
+            if headline is not None and gate is not None and not gate["complete"]:
+                headline["provisional_value"] = headline["value"]
+                headline["value"] = None
+                headline["coverage_complete"] = False
+            metric_status_counts: dict[str, int] = {}
+            for row in dimension_rows:
+                for value in (row.get("metric_status") or {}).values():
+                    metric_status_counts[str(value)] = metric_status_counts.get(str(value), 0) + 1
+            unvalidated = sum(
+                1 for row in done
+                if "validation_required" in str((row.get("action_support") or {}).get("status") or "")
+            )
+            outside_spec = sum(
+                1 for row in done if (row.get("input_contract") or {}).get("within_spec") is False
+            )
             dimension_summaries[dimension_id] = {
                 "display_name": dimension.display_name,
+                **({"lpips_primary_source_counts": source_counts} if source_counts else {}),
+                **({"lpips_temporal_fallback_rate": round(
+                    source_counts.get("temporal_only", 0) / sum(source_counts.values()), 4)}
+                   if source_counts else {}),
+                **({"coverage": gate} if gate is not None else {}),
+                **({"metric_status_counts": metric_status_counts} if metric_status_counts else {}),
+                "num_target_unvalidated": unvalidated,
+                "num_outside_input_spec": outside_spec,
                 "num_rows": len(dimension_rows),
                 "num_cases": len({str(row.get("case_id")) for row in dimension_rows}),
                 "num_completed": len(done),
+                "num_unsupported": len(unsupported),
                 "headline": headline,
                 "means": means,
                 "stats": stats,
@@ -376,6 +534,10 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                     for row in dimension_rows
                 ],
             }
+            if coverage:
+                dimension_summaries[dimension_id]['repeat_coverage'] = coverage
+                dimension_summaries[dimension_id]['coverage_status'] = (
+                    'complete' if all(c['completed'] == c['required'] for c in coverage.values()) else 'incomplete')
         models[model_name] = {"dimensions": dimension_summaries}
 
     return {
@@ -435,15 +597,20 @@ def write_summary_csv(
             for dimension_id in dimension_ids:
                 summary = dimensions.get(dimension_id) or {}
                 headline = summary.get("headline") or {}
-                row.append(headline.get("value"))
-                row.append(headline.get("std_across_cases"))
                 dimension = suite.dimensions[dimension_id]
                 headline_name = (
                     dimension.aggregate.headline
                     if dimension.aggregate is not None
                     else "n/a"
                 )
+                extras = _extra_mean_names(dimension, headline_name)
+                # A dimension the backend cannot express is N/A, not blank.
+                if summary.get("num_completed") == 0 and summary.get("num_unsupported"):
+                    row.extend(["unsupported", None] + ["unsupported"] * len(extras))
+                    continue
+                row.append(headline.get("value"))
+                row.append(headline.get("std_across_cases"))
                 means = summary.get("means") or {}
-                for extra in _extra_mean_names(dimension, headline_name):
+                for extra in extras:
                     row.append(means.get(extra))
             writer.writerow(row)

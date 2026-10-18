@@ -59,8 +59,23 @@ def _fingerprint(case_dir: Path, raw: dict) -> str:
     checksums = (case_dir / "reference" / "checksums.sha256").read_text(
         encoding="utf-8"
     )
+    # The lock identifies the complete evaluator contract, not merely the
+    # media checksum and normalization protocol.  In particular,
+    # ``module_params`` carries prompts, thresholds, model IDs and analytical
+    # ground-truth bindings; changing any of those must invalidate resumable
+    # results.  Exclude only the self-referential lock block.
+    case_config = {key: value for key, value in raw.items() if key != "evaluator_lock"}
+    evaluator_sources = {
+        path.relative_to(REPO_ROOT).as_posix(): sha256_file(path)
+        for path in sorted((REPO_ROOT / "evaluation").rglob("*.py"))
+        if path.is_file()
+    }
     payload = json.dumps(
-        {"checksums": sorted(checksums.splitlines()), "protocol": raw.get("protocol")},
+        {
+            "checksums": sorted(checksums.splitlines()),
+            "case_config": case_config,
+            "evaluator_sources": evaluator_sources,
+        },
         sort_keys=True,
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:32]

@@ -1,6 +1,31 @@
+# 2026-10-11: lighting_shading uses the verified lighting_orbit_v2 baseline.
+# Historical native-paper lighting has its own lighting_paper_native/ suite.
 # WMEval Lite suite manifest — hand-maintained single source of truth.
 # (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
 #
+# ==========================================================================
+# 2026-10-11: BEAMDOMINO QA REPAIR -- the lite physical_causality QA is no
+# longer byte-identical to the paper's (WMEval_causal/runs/BeamDomino/
+# traj_*/qa_dataset.json). Four descriptive items failed on the Unity
+# reference itself; each was checked against the Unity physics log and the
+# K=8 frames the judge sees, and human-reviewed before editing. Keys and key
+# letters are unchanged; only false-correct or event-hiding wording moved:
+#   direct_strike seg1: distractor B ("away from the platform, toward the open
+#     floor on the right") was also true -- the key moved D -> A after
+#     generation without regenerating distractors. B now says "to the left".
+#   causal seg2: the leg contact is on the window's first frame and hidden
+#     behind the ball, which then sits at tabletop height for the rest of the
+#     window, so distractor D ("rolls onto the top surface") was what the
+#     frames showed. Key C reworded to the visible event; D replaced.
+#   glancing seg1: toward/away is read in depth under a following camera;
+#     A and C now name the camera direction.
+#   glancing seg2: the ball rolls straight under the tabletop between the legs
+#     (0.16 m from centre at 3.04 s); only distractor B said so. Key C now
+#     does, and B was replaced. (Previously filed as a "judge error"; it was
+#     an item error.)
+# Re-recorded (gpt-5.4, K=8, v1, 5 passes) and re-locked. csr_unity went
+# 80 / 20 / 0 -> 100 / 80 / 100 (canonical / glancing / direct_strike; Table
+# 12: 100 / 60 / 100). Every item is now 5/5 except glancing seg1 (4/5).
 # ==========================================================================
 # 2026-09-24: Waypoint-1.5 THROUGH THE TWO VLM DIMENSIONS TOO -- every live
 # dimension has now scored a real candidate model. Same candidate tree
@@ -437,7 +462,7 @@
 #   MirrorRollingBall -> lpips, prompt_scene_consistency
 #   WanderingGarden   -> scene_character_consistency                     (data pending),
 #                        environment_object_consistency (live, scoped, see below)
-#   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting, 2026-09-15)
+#   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting_orbit_v2, 2026-10-11)
 #   LiquidContainer   -> fluid_mechanics (LIVE, all 4 action profiles, 2026-09)
 #   BeamDomino        -> physical_causality (LIVE, all 3 trajectory shapes, 2026-09)
 #   BilliardGame      -> per paper Table 10 + Sec 4.2 results narrative, its REAL
@@ -616,6 +641,11 @@
 #   2026-09-18 — both are now live; see the dated banner at the top.)
 suite_name: WMEval Lite
 version: v1
+# Coverage gate: a dimension headline is reported only when every case has this
+# many distinct completed seeds for the model, or the model is `unsupported` for
+# it (N/A). Otherwise the aggregate keeps the number as `provisional_value`.
+repeat_policy:
+  required_repeats: 5
 description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
 dimensions:
   lpips:
@@ -641,6 +671,7 @@ dimensions:
     cases:
     - MirrorRollingBall/lpips_collision
     - BeamDomino/causal
+    - BallRoller/ctrl
     - LiquidContainer/fluid_rest
     - LiquidContainer/fluid_step_hold
     - LiquidContainer/fluid_impulse_decay
@@ -668,24 +699,23 @@ dimensions:
     cases:
     - BallRoller/ctrl
     - BeamDomino/causal
+    - MirrorRollingBall/lpips_collision
     aggregate:
-      headline: epe_dynamic_mean_compensated
+      # Scale-normalized EPE on dynamic-region flow: comparable across scenes
+      # and candidate resolutions. Absolute pixel EPE stays as extra means.
+      headline: relative_epe_dynamic_mean_raw
       direction: lower
       extra_means:
+      - cosine_similarity_dynamic_mean_raw
+      - synthetic_mean_flow_cosine
+      - synthetic_pixel_epe_mean
+      - epe_dynamic_mean_compensated
       - epe_mean_raw
       - bad_pixel_rate_1px_mean
       - bad_pixel_rate_3px_mean
-      # Relative (scale-normalized) EPE and directional cosine similarity on
-      # dynamic-region flow -- control_motion.py always computed these but
-      # aggregate.py never extracted them past full_report until now. Left as
-      # extra_means rather than promoted to headline: cosine similarity's
-      # natural direction is "higher", opposite this dimension's "lower", so
-      # changing the headline is a bigger call than this fix's scope.
-      - relative_epe_dynamic_mean_raw
-      - cosine_similarity_dynamic_mean_raw
   prompt_scene_consistency:
     display_name: Prompt-Scene Consistency
-    description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only).
+    description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only). New models compile the baked 10 s / 40 deg/s left turn (prompt.camera.left_turn_v1); the paper's rows used per-model as-run camera inputs recorded in experiments/tables_4_7/prompt_as_run_inputs.yaml.
     evaluator: vlm_consistency
     requires_reference: false
     vlm:
@@ -708,23 +738,28 @@ dimensions:
     aggregate:
       headline: overall_score
       direction: higher
+      # *_unity: the Unity reference's frozen scores
+      # (reference/artifacts/reference_scores.json, read, not re-judged)
       extra_means:
       - env_score
       - obj_score
+      - overall_score_unity
+      - env_score_unity
+      - obj_score_unity
   lighting_shading:
     display_name: Lighting & Shading
-    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD) under the paper''s first-person, fixed-sun, walking-orbit regime. Live on its paper-target scene SunRisesAndSets/lighting since 2026-09-15 (see the dated banner above for provenance and the analytic geometry floor); ChessBoard/lighting is still pending a team decision (PENDING.md).'
+    description: 'Fixed-sun full camera look-at orbit: explicit two-metre radius, ten native seconds, exactly 120 timestamp-sampled frames at 12fps. Three supported pose backends with five seeds each; other strict interfaces are N/A. Historical native-paper scoring is retained in lighting_paper_native/. Strict numerical reproduction is verified on the pinned RTX PRO 6000 environment.'
     evaluator: registry
     requires_reference: false
     modules:
     - shadow_consistency
     metric_config:
-      eval_fps: 24.0
+      eval_fps: 12.0
       max_pairs: 0
     # first-person (the paper's lighting regime). Per-candidate
     # shadow_hud_preset comes from model.yaml / manifest params, not the case.
     cases:
-    - SunRisesAndSets/lighting
+    - SunRisesAndSets/lighting_orbit_v2
     aggregate:
       headline: shadow_direction_jitter_deg_per_frame
       direction: lower
@@ -760,11 +795,22 @@ dimensions:
       max_pairs: 32
     cases:
     - BallRoller/ctrl
-    - MirrorRollingBall/prompt_third
     - RacingCar/prompt_third
     - ChessBoard/walk_third
     - WanderingGarden/scene_first
-    - BilliardGame/prompt_first
+    # Table 7 cells (tools/build_table_lite_cases.py)
+    - WanderingGarden/scene_perturb_in
+    - WanderingGarden/scene_perturb_out
+    - WanderingGarden/scene_360_in
+    - WanderingGarden/scene_360_out
+    - BilliardGame/scene_perturb_in
+    - BilliardGame/scene_perturb_out
+    - BilliardGame/scene_360_in
+    - BilliardGame/scene_360_out
+    - MirrorRollingBall/scene_perturb_in
+    - MirrorRollingBall/scene_perturb_out
+    - MirrorRollingBall/scene_360_in
+    - MirrorRollingBall/scene_360_out
     aggregate:
       headline: object_permanence_pct
       direction: higher
@@ -774,7 +820,7 @@ dimensions:
       - character_consistency_pct
   kinematics_mechanics:
     display_name: Kinematics & Mechanics
-    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction, 2D pixel-space FDE/DTW proxy (not the paper''s full 3D metric -- see module docstring) against Unity ground truth reprojected through a (recovered or shipped) camera pose. BallRoller/ctrl is scoped to its static "dome"/"cube" obstacles (zero velocity by construction, "ramp" excluded -- doesn''t survive ByteTrack); needed a recovered 6-DOF camera pose (~20-70px residual, see suite.yaml header). RacingCar/prompt_third is scoped to its stationary parked "car" (also zero velocity by construction); needed only a small physically-sensible 3D offset correction to the case''s already-real, already-correct shipped poses.npy (car Transform pivot vs. visual body-center height, ~15-23px residual after correction) -- FDE 19.41px self-match across all 300 frames. Both cases''s own ground truth is static-anchor-only: BallRoller/ctrl''s ball has a separate, unresolved data-provenance conflict (see PENDING.md); RacingCar/prompt_third''s car never moves in this rollout at all (a genuinely static parked-car shot). BilliardGame/prompt_first (added 2026-08) is the FIRST genuinely moving-object case in this dimension: its "yellow ball" is struck by the cue ball and rolls/collides for real, and "red ball" is a real static second anchor (see environment_object_consistency description above for the capture pipeline); this is also its paper-primary dimension per Table 10 + the Sec 4.2 results narrative (the paper explicitly compares Billiard Game vs Racing Car here), not environment_object_consistency. **Real bug found and fixed 2026-08**: the first wiring attempt gave dtw_px 3451.6 for "yellow ball", which turned out to be a genuine ByteTrack identity swap, not metric noise -- GroundingDINO''s "yellow ball." prompt falsely fired on the WHITE cue ball once it came to rest near the yellow ball''s start position (confirmed by reprojecting all 3 balls'' real positions: the wrongly-tracked pixels matched Ball_0, not Ball_1, for ~106 frames), and the module''s track-merging logic blindly concatenated the resulting track segments without checking they were the same physical object. Fixed via a new HSV color-consistency filter (`kin_color_filter`, opt-in) that locks each label''s color signature from its first detection and rejects same-label detections that don''t match; also added `kin_track_thresh: 0.3` (same fix class as BallRoller). Post-fix self-match: yellow ball fde_px 0.25 / dtw_px 26.4 (44/150 frames survive the color filter -- the rest are correctly rejected as ambiguous/occluded rather than silently mistracked); red ball fde_px 0.29 / dtw_px 52.0 (144/150 frames, near-static so easy). mechanical_quantities (momentum/kinetic-energy exact-match, the paper''s other B.3 headline metric) is now REAL and WIRED (new `kin_depth_lift` opt-in flag: lifts the tracked pixel centroid to a metric 3D point via the same monocular depth model B.1 uses + known camera intrinsics, differences the last two tracked frames for terminal velocity, per Eq 11-13) but the resulting numbers are not yet usable: error_rate_pct is 381% (yellow ball) to 141,129% (red ball, whose near-zero ground-truth speed blows up the relative-error denominator). Root cause: a 2-point finite-difference velocity estimate is extremely sensitive to per-frame depth-map noise; a real fix needs multi-frame smoothing (e.g. a short linear/parabolic fit across several tracked frames instead of a raw 2-point difference), not yet implemented. Treat momentum/energy numbers as "wired but not yet trustworthy" -- exact-match/error-rate are computed and present in every case''s output, but should not be read as real signal until the velocity-estimation noise is addressed.'
+    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction against timestamp-matched Unity trajectories. For calibrated planar Table-4 captures, candidate contact points are mapped into Unity X/Z metres by camera-ray/plane intersection; FDE and path-normalized DTW are reported in metres, with raw pixel diagnostics retained. Simulator-exported mass and a bounded, persistence-gated alignment of peak physical events feed momentum and kinetic energy using the paper''s one-step finite difference. Error Rate is the sole headline mechanics metric. Visual anchors remain a camera-divergence QA signal and do not redefine metric scale. Non-planar legacy Lite cases without plane calibration retain their prior pixel/depth diagnostic behavior.'
     evaluator: registry
     requires_reference: true
     modules:
@@ -784,12 +830,16 @@ dimensions:
       max_pairs: 32
     cases:
     - BallRoller/ctrl
-    - RacingCar/prompt_third
-    - BilliardGame/prompt_first
+    # Table 4 cells (tools/build_table_lite_cases.py)
+    - RacingCar/kinematics_third
+    - BilliardGame/kinematics_first
     aggregate:
-      headline: fde_px_mean
+      headline: fde_m_mean
       direction: lower
       extra_means:
+      - dtw_m_mean
+      - error_rate_pct
+      - fde_px_mean
       - dtw_px_mean
   physical_causality:
     display_name: Physical Causality
@@ -826,18 +876,28 @@ dimensions:
       REPEATED JUDGE PASSES. CSR is all-or-nothing per video
       (`max_chain_length >= num_segments`, causalstep/metrics.py), so ONE judge
       pass over a case -- which bundles one video -- can only ever report csr 0
-      or 100, and the judge is not reproducible at temperature 0 (two runs of
-      this exact config differ on 4 of 19 items; `glancing` has been observed at
-      both 0 and 100). `causal_step_judge_repeats: 5` is what makes the reported
-      numbers match the paper's cell semantics: CSR over five passes is
-      successes/5, which is how the published per-shape reference figures land
-      at clean 100, far 100, glancing 60 (= 3/5). Lower it and csr becomes a
-      coin flip again; amcl/ws/dua/icra degrade gracefully either way.
+      or 100. The judge is sampled, not deterministic: gpt-5.4 rejects a
+      non-default temperature, so none is sent and answers come from the API
+      default (two runs of this exact config differ on 4 of 19 items;
+      `glancing` has been observed at both 0 and 100).
+      `causal_step_judge_repeats: 5` makes CSR successes/5, so a fractional
+      value is expressible. It is NOT the paper's estimator: Table 12's CSR is
+      over five rollouts (generation variance), lite's is over five judge
+      passes of one rollout (judge-sampling variance). The shipped reference
+      recordings give csr_unity 100 / 80 / 100 (canonical / glancing /
+      direct_strike) against Table 12's 100 / 60 / 100, after the 2026-10-11
+      QA repair (see the banner at the top); the one remaining miss is
+      glancing's segment-1 descriptive item at 4/5. Lower the repeats and csr
+      becomes a coin flip again; amcl/ws/dua/icra degrade gracefully either
+      way.
       THE REFERENCE SIDE IS A FIXTURE, NOT A RUN. When a case ships
       `reference/artifacts/judge_answers.json`, the reference side replays those
       recorded passes instead of calling the judge -- zero API cost, and
       csr_unity stops moving between runs. The recording carries the settings
-      that produced it, and its pass count sets the default repeat count. Record
+      that produced it, and its pass count sets the default repeat count. A run
+      whose live judge differs from the recording in model, frame count or
+      prompt version is refused rather than silently compared across
+      protocols. Record
       or re-record with:
         python tools/record_causal_reference_answers.py <case_dir> --passes 5
       A case with no recording still runs; it just pays the live judge on both

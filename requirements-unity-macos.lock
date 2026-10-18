@@ -1,0 +1,27 @@
+# Unity validation environment used on macOS arm64 (2026-09-30).
+# Python 3.10.21. Create/install with:
+#   UV_CACHE_DIR=.uv-cache uv venv --python 3.10 .venv-unity
+#   UV_CACHE_DIR=.uv-cache uv pip install --no-deps \
+#     --python .venv-unity/bin/python -r requirements-unity-macos.lock
+#
+# ML-Agents 1.1.0 pins Python<=3.10.12 and grpcio<=1.48.2; uv currently ships
+# Python 3.10.21, and grpcio 1.48.2 has no usable arm64 wheel here. The explicit
+# packages below are therefore installed with --no-deps. grpcio 1.67.1 is an
+# intentional transport-only override. Imports work, while a full live-player
+# handshake still requires the opt-out player rebuild documented in the plan.
+cloudpickle==3.1.2
+cython==3.3.0
+filelock==4.0.7
+grpcio==1.67.1
+gym==0.26.2
+gym-notices==0.1.0
+mlagents-envs==1.1.0
+numpy==1.23.5
+packaging==26.3
+pettingzoo==1.15.0
+pillow==12.3.0
+protobuf==3.20.3
+pyyaml==6.0.3
+setuptools==80.10.2
+six==1.17.0
+wheel==0.48.0

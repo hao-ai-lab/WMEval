@@ -62,24 +62,71 @@ def test_extract_metrics_kinematics_mechanics():
                 "ball": {"status": "reprojection_proxy_2d", "fde_px": 4.0, "dtw_px": 12.0},
                 "car": {"status": "reprojection_proxy_2d", "fde_px": 8.0, "dtw_px": 20.0},
             },
+            "trajectory_coverage": {
+                "status": "complete",
+                "required_label_count": 2,
+                "tracked_required_label_count": 2,
+                "scored_required_label_count": 2,
+                "missing_required_label_count": 0,
+            },
             "mechanical_quantities": None,
         }
     }
     metrics = extract_metrics(dimension, results)
     assert metrics["fde_px_mean"] == 6.0
     assert metrics["dtw_px_mean"] == 16.0
+    assert metrics["fde_m_mean"] is None
+    assert metrics["dtw_m_mean"] is None
+    assert metrics["trajectory_fidelity_status"] == "complete"
+    assert metrics["missing_required_label_count"] == 0
+
+
+def test_extract_metrics_kinematics_rejects_partial_required_label_mean():
+    from evaluation.lite.aggregate import extract_metrics
+    from evaluation.lite.suite_loader import DimensionSpec
+
+    dimension = DimensionSpec(
+        dimension_id="kinematics_mechanics",
+        display_name="Kinematics & Mechanics",
+        description="test dimension",
+        evaluator="registry",
+        requires_reference=False,
+        cases=(),
+        modules=("kinematics_mechanics",),
+    )
+    results = {
+        "kinematics_mechanics": {
+            "trajectory_fidelity": {
+                "red ball": {"fde_px": 0.5, "dtw_px": 0.5},
+            },
+            "trajectory_coverage": {
+                "status": "incomplete_required_labels",
+                "required_label_count": 2,
+                "tracked_required_label_count": 1,
+                "scored_required_label_count": 1,
+                "missing_required_label_count": 1,
+            },
+        }
+    }
+    metrics = extract_metrics(dimension, results)
+    assert metrics["fde_px_mean"] is None
+    assert metrics["dtw_px_mean"] is None
+    assert metrics["trajectory_fidelity_status"] == "incomplete_required_labels"
+    assert metrics["missing_required_label_count"] == 1
 
 
 def test_metric_config_whitelist_accepts_new_module_keys():
     from evaluation.lite.adapters.registry_adapter import METRIC_CONFIG_KEYS
 
     for key in (
+        "text_prompt",
         "eoc_text_prompt",
         "eoc_character_prompt",
         "eoc_tau_det",
         "eoc_tau_mask",
         "eoc_tau_id",
         "eoc_max_objects",
+        "eoc_fixed_anchor_labels",
         "eoc_depth_model",
         "eoc_gd_model",
         "eoc_unity_object_transforms_json",
@@ -98,6 +145,7 @@ def test_metric_config_whitelist_accepts_new_module_keys():
         "kin_unity_poses_npy",
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
+        "kin_plane_calibration_json",
         # 2026-08-27: apparent-size depth (MirrorRollingBall's reflective
         # sphere) and the depth-lift/color-filter/multistage mechanics path
         # (BilliardGame) -- added to case.yaml but originally missed here,
@@ -109,6 +157,7 @@ def test_metric_config_whitelist_accepts_new_module_keys():
         "eoc_unity_object_diameters_json",
         "kin_color_filter",
         "kin_color_hue_tolerance_deg",
+        "kin_track_point",
         "kin_depth_lift",
         "kin_depth_lift_window",
         "kin_depth_model",
@@ -133,8 +182,10 @@ def test_run_world_model_evaluation_accepts_new_module_kwargs():
         "kin_text_prompt",
         "kin_unity_object_transforms_json",
         "kin_unity_object_masses_json",
+        "kin_plane_calibration_json",
         "kin_color_filter",
         "kin_color_hue_tolerance_deg",
+        "kin_track_point",
         "kin_depth_lift",
         "kin_depth_lift_window",
         "kin_depth_model",

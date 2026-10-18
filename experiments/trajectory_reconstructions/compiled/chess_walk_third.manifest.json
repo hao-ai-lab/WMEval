@@ -1,0 +1,23 @@
+{
+  "action_npy": "chess_walk_third.action.npy",
+  "action_npy_sha256": "07d7858840168dd726e23889118a800f61f3a45afc02202f8532864ba5a8f257",
+  "action_npz": "chess_walk_third.action.npz",
+  "action_npz_sha256": "d8b441f11577a7f320ce4f516e75f27d3a53e554f2253bde06bb9781cc263ea8",
+  "actions_txt": "chess_walk_third.actions.txt",
+  "actions_txt_sha256": "9fea133581cafa6a0bddf8893c692ded95ae1a1c9bffe29676ad2ab4b0505789",
+  "alignment_status": "exact",
+  "channel_names": [
+    "move_x",
+    "move_y",
+    "jump",
+    "sprint"
+  ],
+  "project_genie_actions": "chess_walk_third.actions.jsonl",
+  "project_genie_actions_sha256": "e478a2cbc738b60f51978e973daa75ba966ec9c1cdd8b35a9d895ac0880efd1a",
+  "project_genie_status": "nominal",
+  "schema_version": 1,
+  "semantic_sha256": "5d20171373c66ae4b32b6a16cbf77121c3f17ed621a6176cdad2a51a13c11703",
+  "source": "../trajectories/chess_walk_third.yaml",
+  "step_count": 90,
+  "trajectory_id": "wmeval_lite.chess_board.walk_third.capture_v1"
+}

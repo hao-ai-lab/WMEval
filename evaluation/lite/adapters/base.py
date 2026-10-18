@@ -16,6 +16,7 @@ STATUS_MISSING_CANDIDATE = "missing_candidate"
 STATUS_INVALID_CANDIDATE = "invalid_candidate"
 STATUS_MISSING_RUBRIC = "missing_rubric"
 STATUS_SKIPPED_NO_API_KEY = "skipped_no_api_key"
+STATUS_UNSUPPORTED = "unsupported"
 STATUS_ERROR = "error"
 
 
@@ -25,6 +26,8 @@ class CaseResult:
     metrics: dict[str, Any] = field(default_factory=dict)
     full_report: dict[str, Any] | None = None
     error: str | None = None
+    # Candidate-vs-reference video properties, recorded for every scored row.
+    input_contract: dict[str, Any] | None = None
 
 
 class DimensionEvaluator(Protocol):

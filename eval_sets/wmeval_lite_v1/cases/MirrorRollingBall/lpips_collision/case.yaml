@@ -15,6 +15,7 @@ prompt: 'Starting world must match this layout: low camera near a flat light gra
 perspective: third_person
 modules:
 - lpips
+- control_motion
 reference:
   video: reference/reference.mp4
   checksums: reference/checksums.sha256
@@ -29,7 +30,22 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
-  evaluator_fingerprint: 8222b8b8aeb4098cd403c7a2d1c5a284
+  evaluator_fingerprint: 0d1402ca598c8305a7464a97e23d2b81
   module_config: {}
   artifact_schema_versions: {}
-  dependency_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    lpips: 0.1.4
+    numpy: 2.4.6
+    openai: 3.22.1
+    opencv-python-headless: 5.0.0.93
+    torch: 2.14.1
+    torchvision: 0.29.1
+    asset:lpips_vgg: a78928a0af1e5f0fcb1f3b9e8f8c3a2a5a3de244d830ad5c1feddc79b8432868
+    asset:ptlflow_synthetic: 9397588204a48ad826ad168b9bd6961a78f09661
+    asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
+    lock_source: tools/lock_case_dependencies.py
+module_params:
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json
