@@ -28,7 +28,7 @@ Examples::
     python tools/run_wmeval_lite.py run \
         --suite eval_sets/wmeval_lite_v1 \
         --model-root runs/genie3 \
-        --dimensions prompt_consistency,shadow_consistency \
+        --dimensions prompt_scene_consistency,lighting_shading \
         --resume \
         --output-dir reports/wmeval_lite/genie3
 
