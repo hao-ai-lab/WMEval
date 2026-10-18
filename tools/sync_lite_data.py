@@ -100,20 +100,77 @@ def cmd_download(args: argparse.Namespace) -> int:
     return 1 if bad else 0
 
 
+INDEX_NAME = "test.jsonl"
+
+
+def build_index(root: Path = SUITE_ROOT) -> list[dict]:
+    """One row per suite case: the Hub viewer's ``test`` split (paths are dataset-relative)."""
+    import yaml
+
+    suites = {"wmeval_lite_v1": root}
+    for path in sorted(root.glob("*/suite.yaml")):
+        suites[f"wmeval_lite_v1/{path.parent.name}"] = path.parent
+    rows: dict[str, dict] = {}
+    for suite_name, suite_root in suites.items():
+        doc = yaml.safe_load((suite_root / "suite.yaml").read_text(encoding="utf-8"))
+        cases_root = (suite_root / str(doc.get("cases_root") or "cases")).resolve()
+        for dim, spec in (doc.get("dimensions") or {}).items():
+            for case_id in spec.get("cases") or []:
+                case_dir = cases_root / case_id
+                rel_dir = case_dir.relative_to(root.resolve()).as_posix()
+                row = rows.get(rel_dir)
+                if row is None:
+                    case = yaml.safe_load((case_dir / "case.yaml").read_text(encoding="utf-8"))
+                    ref = case.get("reference") or {}
+                    art = case_dir / "reference" / "artifacts"
+
+                    def rel(path):
+                        return f"{rel_dir}/{path}" if path else None
+
+                    row = rows[rel_dir] = {
+                        "case_id": case_id,
+                        "scene": case.get("scene") or case_id.split("/")[0],
+                        "variant": case_id.split("/")[1],
+                        "suites": [],
+                        "dimensions": [],
+                        "perspective": case.get("perspective"),
+                        "prompt": case.get("prompt"),
+                        "reference_video": rel(ref.get("video")),
+                        "first_frame": rel(ref.get("first_frame")),
+                        "trajectory": rel("reference/artifacts/trajectory.yaml") if (art / "trajectory.yaml").is_file() else None,
+                        "candidate_normalization": (case.get("protocol") or {}).get("candidate_normalization"),
+                    }
+                if suite_name not in row["suites"]:
+                    row["suites"].append(suite_name)
+                row["dimensions"].append(dim if suite_name == "wmeval_lite_v1" else f"{dim} (paper-native)")
+    return sorted(rows.values(), key=lambda r: r["case_id"] + ("~" if r["suites"] != ["wmeval_lite_v1"] else ""))
+
+
 def cmd_upload(args: argparse.Namespace) -> int:
+    import json
+    import tempfile
+
     from huggingface_hub import HfApi
 
-    report = status(verify_hashes=True)
-    bad = {c: r for c, r in report.items() if r[1] or r[2]}
-    if bad:
-        print(f"refusing to upload: {len(bad)} case(s) incomplete locally, e.g. {next(iter(bad))}")
-        return 1
     api = HfApi(token=_token(args))
     api.create_repo(args.repo, repo_type="dataset", private=args.private, exist_ok=True)
     card = SUITE_ROOT / "DATASET_CARD.md"
     if card.is_file():
         api.upload_file(path_or_fileobj=str(card), path_in_repo="README.md", repo_id=args.repo, repo_type="dataset",
                         commit_message="Dataset card")
+    with tempfile.TemporaryDirectory() as tmp:
+        index = Path(tmp) / INDEX_NAME
+        index.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in build_index()), encoding="utf-8")
+        api.upload_file(path_or_fileobj=str(index), path_in_repo=INDEX_NAME, repo_id=args.repo, repo_type="dataset",
+                        commit_message="Case index (test split)")
+    if args.card_only:
+        print(f"updated the dataset card and {INDEX_NAME} on https://huggingface.co/datasets/{args.repo}")
+        return 0
+    report = status(verify_hashes=True)
+    bad = {c: r for c, r in report.items() if r[1] or r[2]}
+    if bad:
+        print(f"refusing to upload: {len(bad)} case(s) incomplete locally, e.g. {next(iter(bad))}")
+        return 1
     api.upload_folder(
         folder_path=str(SUITE_ROOT),
         repo_id=args.repo,
@@ -136,6 +193,8 @@ def main(argv: list[str] | None = None) -> int:
     sub.choices["download"].add_argument("--revision", help="dataset revision (tag/commit) to pin")
     sub.choices["upload"].add_argument("--private", action="store_true", help="create the dataset as private")
     sub.choices["upload"].add_argument("--message", default="Upload WMEval Lite case data")
+    sub.choices["upload"].add_argument("--card-only", action="store_true",
+                                       help="refresh only the dataset card and the case index")
     p_status = sub.add_parser("status")
     p_status.add_argument("--verify", action="store_true", help="also verify sha256")
     args = parser.parse_args(argv)

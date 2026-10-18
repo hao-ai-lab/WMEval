@@ -12,6 +12,11 @@ tags:
   - unity
 size_categories:
   - n<1K
+configs:
+  - config_name: default
+    data_files:
+      - split: test
+        path: test.jsonl
 ---
 
 # WMEval Lite (v1)
