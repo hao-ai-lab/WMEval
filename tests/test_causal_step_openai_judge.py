@@ -381,3 +381,30 @@ def test_describe_settings_keeps_the_temperature_for_older_models(tmp_path):
     settings = _judge(tmp_path, "gpt-4o").describe_settings()
     assert settings["temperature"] == pytest.approx(0.0)
     assert "temperature_note" not in settings
+
+
+def test_openai_judge_logs_token_usage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    usage_log = tmp_path / "usage.jsonl"
+    monkeypatch.setenv("WMEVAL_VLM_USAGE_LOG", str(usage_log))
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = MagicMock(
+        choices=[MagicMock(message=MagicMock(content="A"))],
+        usage={"prompt_tokens": 9400, "completion_tokens": 120,
+               "completion_tokens_details": {"reasoning_tokens": 100}},
+    )
+    judge = OpenAIJudge(
+        client=fake_client,
+        model="gpt-5.4",
+        cache_dir=tmp_path / "cache",
+        frames_provider=_windowed_frames_provider(60),
+    )
+    req = JudgeRequest(
+        video_path="x.mp4", segment_index=1, qa_type="descriptive",
+        question="What moves?", choices=["A) ball", "B) beam"],
+        start_sec=0.5, end_sec=1.2, segment_frames_start=15, segment_frames_end=36,
+    )
+    assert judge.answer(req) == "A"
+    judge.answer(req)  # served from the cache
+    records = [json.loads(line) for line in usage_log.read_text().splitlines()]
+    assert len(records) == 1
+    assert (records[0]["model"], records[0]["input_tokens"], records[0]["reasoning_tokens"]) == ("gpt-5.4", 9400, 100)

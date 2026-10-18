@@ -1,10 +1,11 @@
 """Per-call VLM token accounting.
 
 Every OpenAI call made by the evaluators (prompt_scene_consistency's judge,
-lpips's causal-VLM judge) reports its ``usage`` here. The record is printed to
-stderr and, when ``WMEVAL_VLM_USAGE_LOG`` names a file, appended to it as one
-JSON line -- ``tools/run_wmeval_lite_modal.py`` sets that per row and sums the
-records so spend can be checked before the next batch.
+lpips's causal-VLM judge, physical_causality's causal_step judge) reports its
+``usage`` here. The record is printed to stderr and, when
+``WMEVAL_VLM_USAGE_LOG`` names a file, appended to it as one JSON line --
+``tools/run_wmeval_lite_modal.py`` sets that per row and sums the records so
+spend can be checked before the next batch.
 """
 from __future__ import annotations
 
