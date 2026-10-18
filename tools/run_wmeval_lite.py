@@ -74,8 +74,46 @@ def _split_csv(value: str | None) -> list[str] | None:
     return items or None
 
 
+def _missing_case_data(suite_root, case_ids=None) -> list[str]:
+    """Cases whose manifest-listed reference files are absent (data not downloaded)."""
+    from evaluation.lite.suite_loader import load_suite
+
+    suite = load_suite(suite_root)
+    missing = []
+    for case_id in sorted(case_ids or suite.all_case_ids()):
+        case_dir = suite.cases_root / case_id
+        manifest = case_dir / "reference" / "checksums.sha256"
+        if not manifest.is_file():
+            continue
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            if line.strip() and not (case_dir / line.split(None, 1)[1].strip()).is_file():
+                missing.append(case_id)
+                break
+    return missing
+
+
+def _data_hint(missing: list[str]) -> int:
+    print(
+        f"Case data not found for {len(missing)} case(s) (e.g. {missing[0]}). "
+        "Download it from the Hugging Face Hub first:\n"
+        "    python tools/sync_lite_data.py download",
+        file=sys.stderr,
+    )
+    return 2
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
     from evaluation.lite.suite import run_suite
+
+    if not args.dry_run:
+        from evaluation.lite.suite_loader import load_suite
+
+        suite = load_suite(args.suite)
+        dims = _split_csv(args.dimensions) or list(suite.dimensions)
+        wanted = {c for d in dims if d in suite.dimensions for c in suite.dimensions[d].cases}
+        missing = _missing_case_data(args.suite, wanted)
+        if missing:
+            return _data_hint(missing)
 
     run_id = args.run_id or _datetime.datetime.now(_datetime.timezone.utc).strftime(
         "%Y-%m-%dT%H-%M-%SZ"
@@ -102,6 +140,10 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     from evaluation.lite.validation import CaseValidationError, validate_case_bundle
 
     suite = load_suite(args.suite)
+    if not args.skip_checksums:
+        missing = _missing_case_data(args.suite)
+        if missing:
+            return _data_hint(missing)
     failures: list[str] = []
     for case_id in sorted(suite.all_case_ids()):
         try:
