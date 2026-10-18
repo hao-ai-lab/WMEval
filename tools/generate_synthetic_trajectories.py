@@ -5,8 +5,9 @@ Every trajectory is a structured, schema-v1 ``trajectory.yaml`` (the same format
 as the curated cases) built from a named pattern and bound to an existing core
 case that supplies the scene, conditioning frame, prompt and action target.
 Patterns keep the source case's initial state, so the core conditioning frame
-stays valid. The suite is deterministic: re-running reproduces byte-identical
-files, which ``--verify`` checks against ``synthetic/manifest.json``.
+stays valid. The suite is deterministic: re-running reproduces the files in
+``synthetic/manifest.json``, which ``--verify`` checks (byte-identical, except
+orbit poses, which may differ in the last float bits across platforms).
 
 Each trajectory directory gets ``trajectory.yaml``, the compiled ``action.npz``
 (timestamps, values, channel names; camera poses for look-at orbits),
@@ -33,6 +34,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Callable
 
+import numpy as np
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -377,6 +379,58 @@ def generate(out_root: Path) -> list[dict[str, Any]]:
     return rows
 
 
+# Look-at orbit poses go through trigonometry whose last bits differ across
+# platforms/libm; those files count as equal when they match the published
+# (downloaded, checksum-verified) copy numerically.
+FLOAT_FILES = ("action.npz", "poses.npy")
+
+
+def _load_arrays(path: Path) -> dict[str, np.ndarray]:
+    loaded = np.load(path)
+    if isinstance(loaded, np.ndarray):
+        return {"": loaded}
+    with loaded:
+        return {key: loaded[key] for key in loaded.files}
+
+
+def _arrays_close(a: Path, b: Path) -> bool:
+    xs, ys = _load_arrays(a), _load_arrays(b)
+    if xs.keys() != ys.keys():
+        return False
+    for key, u in xs.items():
+        v = ys[key]
+        if u.shape != v.shape or u.dtype != v.dtype:
+            return False
+        if np.issubdtype(u.dtype, np.floating):
+            if not np.allclose(u, v, rtol=0.0, atol=1e-9):
+                return False
+        elif not np.array_equal(u, v):
+            return False
+    return True
+
+
+def compare(rows: list[dict[str, Any]], out_root: Path) -> list[str]:
+    """synthetic_ids whose regenerated files (under ``out_root``) differ from the manifest."""
+    want = {r["synthetic_id"]: r["files"] for r in json.loads(MANIFEST.read_text(encoding="utf-8"))["trajectories"]}
+    diff = sorted(set(want) - {r["synthetic_id"] for r in rows})
+    for r in rows:
+        expected = want.get(r["synthetic_id"])
+        if expected is None or expected.keys() != r["files"].keys():
+            diff.append(r["synthetic_id"])
+            continue
+        for name, digest in r["files"].items():
+            if digest == expected[name]:
+                continue
+            published = SUITE_ROOT / r["path"] / name
+            if (name in FLOAT_FILES and published.is_file()
+                    and hashlib.sha256(published.read_bytes()).hexdigest() == expected[name]
+                    and _arrays_close(out_root / r["path"] / name, published)):
+                continue
+            diff.append(r["synthetic_id"])
+            break
+    return diff
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--verify", action="store_true", help="regenerate in a temp dir and compare with the manifest")
@@ -384,11 +438,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.verify:
         with tempfile.TemporaryDirectory() as tmp:
             rows = generate(Path(tmp) / "synthetic")
-        expected = json.loads(MANIFEST.read_text(encoding="utf-8"))["trajectories"]
-        got = {r["synthetic_id"]: r["files"] for r in rows}
-        want = {r["synthetic_id"]: r["files"] for r in expected}
-        if got != want:
-            diff = sorted(set(got) ^ set(want)) or [k for k in got if got[k] != want.get(k)]
+            diff = compare(rows, Path(tmp))
+        if diff:
             print(f"MISMATCH: {len(diff)} trajectory(ies) differ, e.g. {diff[:3]}")
             return 1
         print(f"verified {len(rows)} synthetic trajectories against {MANIFEST.relative_to(ROOT)}")

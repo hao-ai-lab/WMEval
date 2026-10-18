@@ -46,9 +46,7 @@ def test_full_index_extends_core() -> None:
 @pytest.mark.integration("case_data")
 def test_generator_is_deterministic(tmp_path: Path) -> None:
     rows = gen.generate(tmp_path / "synthetic")
-    assert {r["synthetic_id"]: r["files"] for r in rows} == {
-        r["synthetic_id"]: r["files"] for r in MANIFEST["trajectories"]
-    }
+    assert gen.compare(rows, tmp_path) == []
     for r in rows[:: max(1, len(rows) // 25)]:
         traj = load_trajectory(tmp_path / r["path"] / "trajectory.yaml")
         validate_trajectory(traj, source=r["synthetic_id"])

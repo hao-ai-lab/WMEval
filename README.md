@@ -158,7 +158,7 @@ The curated cases form the `test_core` split (33 rows). The `test_full` split ad
 ```
 python tools/sync_lite_data.py download --split full     # cases + synthetic/, checksum-verified
 python tools/expected_jobs.py --model "<backend>" --split full --output runs/<model>
-python tools/generate_synthetic_trajectories.py --verify  # rebuild locally; byte-identical to synthetic/manifest.json
+python tools/generate_synthetic_trajectories.py --verify  # rebuild locally and check against synthetic/manifest.json
 ```
 
 Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Unity reference renders for the synthetic trajectories are not in this release (`reference_status: pending_unity_render`): they are ready for generation, but simulator-grounded scoring needs a Unity capture per trajectory, so `run_wmeval_lite.py` currently scores `test_core` only.
