@@ -68,6 +68,9 @@ def export(
     # Only the baseline's table shape is needed here; the paper LaTeX sources
     # it pins live in a separate checkout most users do not have.
     output = result_template(load_baseline(baseline_path, missing_sources=missing_sources))
+    if not model:
+        names = sorted({str(row["model"]) for row in rows if row.get("model")})
+        model = ", ".join(names) or None
     if model:
         output["model"] = model
     repeats = output["repeat_ids"]
