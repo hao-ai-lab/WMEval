@@ -88,7 +88,8 @@ The viewer shows two splits:
   ball force, beam-domino strike, bottle motion, character). Each one starts from a
   core case's state and reuses its conditioning frame and prompt; Unity reference
   renders for them are pending (`reference_status: pending_unity_render`), so they
-  are generation-ready and scoreable on reference-free metrics only.
+  are generation-ready but not yet scored. Their `suites` value is `wmeval_v1`;
+  core rows carry the Lite suite they belong to (`wmeval_lite_v1`).
 
 Each row links to its first frame, trajectory and, for core cases, reference video.
 

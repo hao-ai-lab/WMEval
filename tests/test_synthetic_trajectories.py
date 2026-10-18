@@ -41,6 +41,7 @@ def test_full_index_extends_core() -> None:
     assert full[: len(core)] == core
     assert len(full) == len(core) + MANIFEST["count"]
     assert {row["group"] for row in full[len(core):]} == {"synthetic"}
+    assert {tuple(row["suites"]) for row in full[len(core):]} == {("wmeval_v1",)}
 
 
 @pytest.mark.integration("case_data")

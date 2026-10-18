@@ -114,6 +114,7 @@ def cmd_download(args: argparse.Namespace) -> int:
 # split can be added beside it later.
 INDEX_NAME = "test_core.jsonl"
 FULL_INDEX_NAME = "test_full.jsonl"
+SYNTHETIC_SUITE = "wmeval_v1"  # suite label of the synthetic (non-Lite) test_full rows
 INDEX_COLUMNS = ("case_id", "scene", "variant", "group", "family", "action_target", "suites", "dimensions",
                  "perspective", "prompt", "conditioning_case", "reference_video", "first_frame", "trajectory",
                  "candidate_normalization", "reference_status")
@@ -187,7 +188,7 @@ def synthetic_rows(root: Path = SUITE_ROOT) -> list[dict]:
     for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
         rows.append({
             "case_id": t["synthetic_id"], "scene": t["scene"], "variant": t["pattern"], "group": "synthetic",
-            "family": t["family"], "action_target": t["action_target"], "suites": [], "dimensions": t["dimensions"],
+            "family": t["family"], "action_target": t["action_target"], "suites": [SYNTHETIC_SUITE], "dimensions": t["dimensions"],
             "perspective": t["perspective"], "prompt": t["prompt"], "conditioning_case": t["conditioning_case"],
             "reference_video": None, "first_frame": t["first_frame"], "trajectory": f"{t['path']}/trajectory.yaml",
             "candidate_normalization": None, "reference_status": t["reference_status"],
