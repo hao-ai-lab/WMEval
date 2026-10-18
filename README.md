@@ -3,7 +3,7 @@
 </p>
 
 <div align="center"> <h1>WMEval: Evaluating Interactive World Models Grounded on Physical Simulations</h1> </div>
-<p align="center"> <b>📜 Paper</b> (coming soon) | <b>🌐 Project Page</b> (coming soon) | <a href="https://huggingface.co/datasets/lmgame/WMEval-Lite"><b>🤗 Dataset</b></a></p>
+<p align="center"> <b>📜 Paper</b> (coming soon) | <a href="https://snyhlx.github.io/wmeval-blog/"><b>🌐 Project Page</b></a> | <a href="https://huggingface.co/datasets/lmgame/WMEval-Lite"><b>🤗 Dataset</b></a></p>
 
 ## Introduction
 
