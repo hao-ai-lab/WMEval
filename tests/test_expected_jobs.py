@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 import json
 from pathlib import Path
 
@@ -8,6 +10,7 @@ from tools.expected_jobs import main
 ROOT = Path(__file__).resolve().parents[1]
 
 
+@pytest.mark.integration("case_data")
 def test_expected_jobs_split_supported_and_not_applicable(tmp_path: Path) -> None:
     assert main(["--model", "odyssey", "--dimensions", "action_controllability,prompt_scene_consistency",
                  "--seeds", "42,1", "--output", str(tmp_path), "--no-probe"]) == 0

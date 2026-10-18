@@ -113,6 +113,7 @@ def test_package_build_inputs_resolve_relative_to_manifest(tmp_path, monkeypatch
     assert build(inputs, tmp_path / 'relative-inputs', repo)['formal_jobs'] == 15
 
 
+@pytest.mark.integration("case_data")
 def test_transport_metadata_refreshes_stale_case_lock_without_changing_inputs(tmp_path):
     from evaluation.lite.authoring import _fingerprint
     from tools.build_lighting_orbit_case import write_table_cell

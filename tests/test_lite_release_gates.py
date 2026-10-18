@@ -55,6 +55,7 @@ def test_metric_status_marks_non_finite_values_unmeasurable() -> None:
     assert metric_status("unsupported", {"a": 0.5}) == {"a": "unsupported"}
 
 
+@pytest.mark.integration("case_data")
 def test_declared_target_falls_back_to_bundled_trajectory() -> None:
     cases = SUITE_ROOT / "cases"
     assert declared_target(cases / "RacingCar/kinematics_third/reference/artifacts") == "ego_vehicle"

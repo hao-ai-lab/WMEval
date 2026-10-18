@@ -38,6 +38,7 @@ def _runner_json(capsys: pytest.CaptureFixture[str], argv: list[str]) -> dict:
     return json.loads(out[out.index("{\n"):])
 
 
+@pytest.mark.integration("case_data")
 def test_identity_fixtures_drive_runner_validate_and_dry_run(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

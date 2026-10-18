@@ -1,3 +1,4 @@
+import pytest
 import json
 from pathlib import Path
 
@@ -10,6 +11,7 @@ import yaml
 CASE = Path(__file__).resolve().parents[1]/'eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2'
 
 
+@pytest.mark.integration("case_data")
 def test_lingbot_native_intrinsics_preserve_square_seed_fov(tmp_path):
     receipt=prepare(CASE,tmp_path,'lingbot')
     poses=np.load(tmp_path/'poses.npy'); k=np.load(tmp_path/'intrinsics.npy')
@@ -22,6 +24,7 @@ def test_lingbot_native_intrinsics_preserve_square_seed_fov(tmp_path):
     np.testing.assert_allclose(poses[40,:3,3],[2,1.6,0],atol=1e-6)
 
 
+@pytest.mark.integration("case_data")
 def test_hy_latent_spacing_and_terminal_hold_are_not_time_stretched(tmp_path):
     receipt=prepare(CASE,tmp_path,'hy-worldplay')
     times=json.loads((tmp_path/'native_control_times.json').read_text())
@@ -33,6 +36,7 @@ def test_hy_latent_spacing_and_terminal_hold_are_not_time_stretched(tmp_path):
     assert receipt['terminal_hold_after_sec']==10
 
 
+@pytest.mark.integration("case_data")
 def test_mg3_native_basis_preserves_camera_relative_orbit(tmp_path):
     receipt = prepare(CASE, tmp_path, 'matrix-game3')
     data = np.load(tmp_path/'conditioning.npz')

@@ -1,6 +1,8 @@
+import pytest
 from tools.audit_production_readiness import build_report, render_markdown
 
 
+@pytest.mark.integration("case_data")
 def test_production_readiness_manifest_covers_live_suite() -> None:
     report = build_report()
 
@@ -27,6 +29,7 @@ def test_production_readiness_manifest_covers_live_suite() -> None:
     }
 
 
+@pytest.mark.integration("case_data")
 def test_production_readiness_report_surfaces_portability_gaps() -> None:
     report = build_report()
     rows = {row["dimension"]: row for row in report["dimensions"]}

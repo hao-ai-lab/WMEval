@@ -44,10 +44,12 @@ uv venv --python 3.11 .venv
 uv pip install --python .venv/bin/python -r requirements-macos.lock
 source .venv/bin/activate
 ```
-3. Validate the bundled suite:
+3. Download the case data and validate the suite. The repository holds each case's metadata (`case.yaml` and the checksum manifest); the case data itself (reference videos, conditioning frames, action trajectories and other artifacts) is hosted on the Hugging Face Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite):
 ```
+python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
 python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
 ```
+Pin a dataset version with `--revision <tag-or-commit>`; set `HF_TOKEN` if the dataset is private. `python tools/sync_lite_data.py status` reports which cases are present.
 
 VLM-judged dimensions (`prompt_scene_consistency`, `physical_causality`, causal `lpips`) need an `OPENAI_API_KEY`; CV-based dimensions download pinned checkpoints on first use (see `experiments/tables_4_7/evaluator_assets.lock.json`).
 
@@ -106,8 +108,8 @@ On Modal GPUs, `modal run tools/run_wmeval_lite_modal.py::main --model-root /can
 eval_sets/wmeval_lite_v1/
   suite.yaml                       # dimension-level manifest (single source of truth)
   cases/<Scene>/<variant>/
-    case.yaml                      # prompt, modules, protocol, evaluator_lock
-    reference/
+    case.yaml                      # prompt, modules, protocol, evaluator_lock      (in this repo)
+    reference/                     # case data: downloaded from lmgame/WMEval-Lite, except checksums.sha256
       reference.mp4                # reference video (reference-based dimensions)
       ref.png                      # conditioning frame where it differs from video frame 0
       checksums.sha256             # covers every file under reference/ (feeds the evaluator fingerprint)
@@ -118,7 +120,7 @@ eval_sets/wmeval_lite_v1/
         qa_dataset.json / *.npz    # dimension-specific payloads (causal QA, liquid masks/flow)
 ```
 
-Author or refresh a case with `python tools/build_lite_case.py <case_dir>` (writes checksums and the evaluator lock); generate prompt rubrics with `python tools/run_wmeval_lite.py generate-rubrics` (requires `OPENAI_API_KEY`). Legacy candidate ids are mapped through `legacy_case_aliases` in `suite.yaml`; convert old files with `tools/convert_legacy_candidates.py`.
+Author or refresh a case with `python tools/build_lite_case.py <case_dir>` (writes checksums and the evaluator lock), then publish the data with `python tools/sync_lite_data.py upload` (maintainers); generate prompt rubrics with `python tools/run_wmeval_lite.py generate-rubrics` (requires `OPENAI_API_KEY`). Legacy candidate ids are mapped through `legacy_case_aliases` in `suite.yaml`; convert old files with `tools/convert_legacy_candidates.py`.
 
 ### Outputs
 

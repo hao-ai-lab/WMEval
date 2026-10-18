@@ -37,6 +37,15 @@ or help from the maintainers.
 
 ## Dataset structure
 
+This Hub dataset holds the case data: every file under each case's `reference/`
+directory (reference videos, conditioning frames, action trajectories, Unity
+ground-truth arrays and frozen judge outputs), at the same paths as in the code
+repository [hao-ai-lab/WMEval](https://github.com/hao-ai-lab/WMEval). The code
+repository keeps `suite.yaml`, each `case.yaml` and the `reference/checksums.sha256`
+manifests; `python tools/sync_lite_data.py download` places the files and verifies
+every checksum.
+
+
 ```
 README.md                         # this card
 MANIFEST.json                     # sha256 + size of every file, dataset id/version,

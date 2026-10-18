@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 import importlib.util
 import sys
 from pathlib import Path
@@ -13,6 +15,7 @@ sys.modules[SPEC.name] = MODULE
 SPEC.loader.exec_module(MODULE)
 
 
+@pytest.mark.integration("case_data")
 def test_inventory_covers_every_lite_case_and_surfaces_known_gaps() -> None:
     result = MODULE.inventory(MODULE.DEFAULT_CASES)
     assert result["case_count"] == 34

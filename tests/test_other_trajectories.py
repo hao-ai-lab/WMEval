@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from pathlib import Path
 
 import numpy as np
@@ -47,6 +49,7 @@ def test_lighting_orbit_compiles_locked_ten_second_schedule() -> None:
 CASES = Path(__file__).resolve().parents[1] / "eval_sets" / "wmeval_lite_v1" / "cases"
 
 
+@pytest.mark.integration("case_data")
 def test_beam_domino_trajectories_reproduce_the_locked_action_npy() -> None:
     for case in ("causal", "causal_glancing", "causal_direct_strike"):
         compiled = compile_trajectory(ROOT / "trajectories" / f"beam_domino_{case}.yaml")
@@ -71,6 +74,7 @@ def test_liquid_trajectories_follow_the_nominal_12hz_profiles() -> None:
     assert np.diff(flips[:3]).min() > np.diff(flips[-3:]).max()  # frequency rises
 
 
+@pytest.mark.integration("case_data")
 def test_bundled_trajectory_files_match_the_compiled_sources() -> None:
     import hashlib
     import json

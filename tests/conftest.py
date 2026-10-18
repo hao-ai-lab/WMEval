@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
 # reproduction runs, and the sibling paper checkout ``../_arxiv__WorldModel_Eval``
 # pinned by experiments/tables_4_7/paper_baseline.yaml.  Such tests are marked
 #
-#     @pytest.mark.integration("table_runs")          # or "paper_checkout"
+#     @pytest.mark.integration("case_data")           # or "table_runs", "paper_checkout"
 #
 # and are skipped (with the first missing path in the reason) when the named
 # input is absent, so ``pytest tests`` stays green in a fresh clone/CI, and
@@ -103,7 +103,24 @@ def _table_runs_paths() -> list[Path]:
     return list(dict.fromkeys(paths))
 
 
+def _case_data_paths() -> list[Path]:
+    """Every case-data file listed in the suites' checksum manifests (Hugging Face download)."""
+    import sys
+
+    root = Path(__file__).resolve().parents[1]
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+    from tools.sync_lite_data import case_dirs, manifest
+
+    return [case_dir / rel for case_dir in case_dirs() for rel in manifest(case_dir)]
+
+
 EXTERNAL_INPUTS: dict[str, tuple[str, Callable[[], list[Path]]]] = {
+    "case_data": (
+        "WMEval Lite case data from the Hugging Face Hub "
+        "(python tools/sync_lite_data.py download)",
+        _case_data_paths,
+    ),
     "table_runs": (
         "git-ignored runs/ Table 4/7 reproduction outputs (Unity captures, "
         "prepared assets, backend calibration)",

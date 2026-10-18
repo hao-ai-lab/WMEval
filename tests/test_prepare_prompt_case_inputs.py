@@ -17,6 +17,7 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+@pytest.mark.integration("case_data")
 def test_canonical_turn_is_registered_and_baked_into_every_prompt_case() -> None:
     canonical = prep.TABLE_ROOT / prep.TRAJECTORY
     trajectory = load_trajectory(canonical)
@@ -33,6 +34,7 @@ def test_canonical_turn_is_registered_and_baked_into_every_prompt_case() -> None
             assert _sha(case.artifacts_dir / name) == _sha(prep.TABLE_ROOT / source), (case.case_id, name)
 
 
+@pytest.mark.integration("case_data")
 def test_prepare_writes_runner_queues_and_a_lite_candidate_manifest(tmp_path: Path) -> None:
     cases = prep.prompt_cases()
     summary = prep.prepare(cases, tmp_path)

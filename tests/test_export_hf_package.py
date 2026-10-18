@@ -295,6 +295,7 @@ def test_git_ignored_files_are_not_exported(tmp_path: Path) -> None:
     assert "cases/SceneA/one/case.yaml" in manifest["excluded"]["untracked_included"]
 
 
+@pytest.mark.integration("case_data")
 @pytest.mark.skipif(not (REAL_SUITE / "suite.yaml").is_file(), reason="suite not present")
 def test_real_suite_subset_round_trip_validates(tmp_path: Path) -> None:
     out = tmp_path / "pkg"
