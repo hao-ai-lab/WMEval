@@ -131,10 +131,10 @@ def validate_trajectory(raw: Mapping[str, Any], *, source: str = "trajectory") -
 
     alignment = raw.get("paper_alignment")
     if not isinstance(alignment, dict) or alignment.get("status") not in {
-        "exact", "reconstructed", "unresolved"
+        "exact", "reconstructed", "unresolved", "synthetic"
     }:
         raise TrajectoryError(
-            f"{source}: paper_alignment.status must be exact, reconstructed, or unresolved"
+            f"{source}: paper_alignment.status must be exact, reconstructed, unresolved, or synthetic"
         )
     if kind == "camera_look_at_orbit":
         from .camera_orbit import validate_orbit

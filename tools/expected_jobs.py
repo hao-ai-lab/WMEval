@@ -80,6 +80,7 @@ def build_jobs(
     seeds: list[str],
     model_root: Path,
     probe: bool = True,
+    split: str = "core",
 ) -> dict[str, Any]:
     suite = load_suite(suite_root)
     selected = dimensions or list(suite.dimensions)
@@ -125,8 +126,11 @@ def build_jobs(
                 "candidate_video": str(model_root / case_id / f"{seed}.mp4"),
                 "conditioning": conditioning,
             })
+    if split == "full":
+        _add_synthetic_jobs(suite_root, model, selected, seeds, model_root, jobs, not_applicable)
     return {
         "schema_version": 1,
+        "split": "test_full" if split == "full" else "test_core",
         "suite": suite.suite_name,
         "suite_version": suite.version,
         "model": model,
@@ -138,6 +142,56 @@ def build_jobs(
     }
 
 
+def _synthetic_support(model: str, target: str) -> tuple[str | None, str | None]:
+    """(support status, unsupported reason) for a synthetic trajectory's target."""
+    from evaluation import action_backends
+
+    try:
+        backend = action_backends.backend(model)
+    except KeyError:
+        return None, None  # unregistered model: generate, no gate
+    if backend.get("scope") == "trajectories_only":
+        return "trajectory_scoped", None
+    status = action_backends.support_status(model, target)
+    if status is None:
+        return None, f"{model} cannot express {target} actions: {backend.get('unsupported', {}).get(target, 'not supported')}"
+    return status, None
+
+
+def _add_synthetic_jobs(suite_root: Path, model: str, selected: list[str], seeds: list[str], model_root: Path,
+                        jobs: list[dict[str, Any]], not_applicable: list[dict[str, Any]]) -> None:
+    manifest = Path(suite_root) / "synthetic" / "manifest.json"
+    if not manifest.is_file():
+        raise SystemExit(f"{manifest} not found; run tools/generate_synthetic_trajectories.py")
+    for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
+        dims = [d for d in t["dimensions"] if d in selected]
+        if not dims:
+            continue
+        t = {**t, "dimensions": dims}
+        status, reason = _synthetic_support(model, t["action_target"])
+        support = {"target": t["action_target"], "status": status}
+        if reason is not None:
+            not_applicable.append({"case_id": t["synthetic_id"], "dimensions": t["dimensions"], "model": model,
+                                   "action_support": support, "reason": reason})
+            continue
+        base = Path(suite_root) / t["path"]
+        conditioning = {
+            "first_frame": _rel(Path(suite_root) / t["first_frame"]),
+            "prompt": t["prompt"],
+            "perspective": t["perspective"],
+            "action_files": {name: _rel(base / name) for name in ("trajectory.yaml", "action.npz", "actions.jsonl", "poses.npy")
+                             if name in t["files"]},
+            "conditioning_case": t["conditioning_case"],
+            "reference_status": t["reference_status"],
+            "duration_sec": t["duration_sec"],
+        }
+        for seed in seeds:
+            jobs.append({"model": model, "case_id": t["synthetic_id"], "dimensions": t["dimensions"], "seed": seed,
+                         "status": "expected", "action_support": support,
+                         "candidate_video": str(model_root / t["synthetic_id"] / f"{seed}.mp4"),
+                         "conditioning": conditioning})
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--suite", type=Path, default=DEFAULT_SUITE)
@@ -147,6 +201,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--model-root", type=Path, help="where videos will be written (default: --output)")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--no-probe", action="store_true", help="skip reading reference video timing")
+    parser.add_argument("--split", choices=("core", "full"), default="core",
+                        help="core = curated cases; full = core + synthetic trajectories (download with "
+                             "tools/sync_lite_data.py download --split full)")
     args = parser.parse_args(argv)
 
     output = args.output
@@ -159,6 +216,7 @@ def main(argv: list[str] | None = None) -> int:
         seeds=[s.strip() for s in args.seeds.split(",") if s.strip()],
         model_root=model_root,
         probe=not args.no_probe,
+        split=args.split,
     )
     (output / "expected_jobs.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     (output / "candidates.template.jsonl").write_text(

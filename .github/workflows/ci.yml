@@ -52,7 +52,7 @@ jobs:
       # Case data (reference videos, frames, trajectories) is the public Hugging
       # Face dataset lmgame/WMEval-Lite; no token needed.
       - name: Download case data
-        run: python tools/sync_lite_data.py download
+        run: python tools/sync_lite_data.py download --split full
 
       - name: Validate Lite suite bundles
         run: |

@@ -12,11 +12,48 @@ tags:
   - unity
 size_categories:
   - n<1K
+dataset_info:
+  - config_name: default
+    features:
+      - name: case_id
+        dtype: string
+      - name: scene
+        dtype: string
+      - name: variant
+        dtype: string
+      - name: group
+        dtype: string
+      - name: family
+        dtype: string
+      - name: action_target
+        dtype: string
+      - name: suites
+        sequence: string
+      - name: dimensions
+        sequence: string
+      - name: perspective
+        dtype: string
+      - name: prompt
+        dtype: string
+      - name: conditioning_case
+        dtype: string
+      - name: reference_video
+        dtype: string
+      - name: first_frame
+        dtype: string
+      - name: trajectory
+        dtype: string
+      - name: candidate_normalization
+        dtype: string
+      - name: reference_status
+        dtype: string
 configs:
   - config_name: default
     data_files:
-      - split: test
-        path: test.jsonl
+      - split: test_core
+        path: test_core.jsonl
+      - split: test_full
+        path: test_full.jsonl
 ---
 
 # WMEval Lite (v1)
@@ -41,6 +78,20 @@ or help from the maintainers.
   ("native") lighting protocol for historical comparison.
 
 ## Dataset structure
+
+The viewer shows two splits:
+
+- `test_core` (33 rows): the curated WMEval Lite v1 cases, each with a Unity
+  reference rendering. The paper's numbers come from this split.
+- `test_full` (252 rows): `test_core` plus 219 structured synthetic action
+  trajectories under `synthetic/` (camera yaw, look-at orbit, vehicle, cue ball,
+  ball force, beam-domino strike, bottle motion, character). Each one starts from a
+  core case's state and reuses its conditioning frame and prompt; Unity reference
+  renders for them are pending (`reference_status: pending_unity_render`), so they
+  are generation-ready but not yet scored. Their `suites` value is `wmeval_v1`;
+  core rows carry the Lite suite they belong to (`wmeval_lite_v1`).
+
+Each row links to its first frame, trajectory and, for core cases, reference video.
 
 This Hub dataset holds the case data: every file under each case's `reference/`
 directory (reference videos, conditioning frames, action trajectories, Unity
