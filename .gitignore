@@ -276,5 +276,3 @@ tests/test_table_lite_cases.py
 # manifests (and each case.yaml) stay in this repository.
 eval_sets/wmeval_lite_v1/cases/*/*/reference/*
 !eval_sets/wmeval_lite_v1/cases/*/*/reference/checksums.sha256
-eval_sets/wmeval_lite_v1/lighting_paper_native/cases/*/*/reference/*
-!eval_sets/wmeval_lite_v1/lighting_paper_native/cases/*/*/reference/checksums.sha256

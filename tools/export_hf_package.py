@@ -65,6 +65,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -242,6 +243,14 @@ class SuitePlan:
     doc: dict[str, Any]
     cases: list[str]
     unlisted_case_dirs: list[str] = field(default_factory=list)
+    cases_dir: str = "cases"  # suite.yaml `cases_root` (may point at a shared case directory)
+
+    def case_source(self, case_id: str) -> Path:
+        return self.root / self.cases_dir / case_id
+
+    def case_package_path(self, case_id: str) -> PurePosixPath:
+        prefix = "" if self.rel == "." else self.rel
+        return PurePosixPath(posixpath.normpath(posixpath.join(prefix, self.cases_dir, case_id)))
 
 
 def _filter_suite_doc(doc: dict[str, Any], keep: set[str]) -> dict[str, Any]:
@@ -331,19 +340,21 @@ def plan_suites(suite_root: Path, cases: list[str] | None) -> list[SuitePlan]:
             ids = [c for c in ids if c in keep]
             if not ids:
                 continue  # companion suite has nothing in the subset
-        on_disk = sorted(
-            p.parent.relative_to(root / "cases").as_posix()
-            for p in (root / "cases").glob("*/*/case.yaml")
-        ) if (root / "cases").is_dir() else []
-        listed_all = set(suite_case_ids(doc))
-        plans.append(
-            SuitePlan(
-                rel=rel,
-                root=root,
-                doc=doc,
-                cases=ids,
-                unlisted_case_dirs=[c for c in on_disk if c not in listed_all],
-            )
+        cases_dir = str(doc.get("cases_root") or "cases")
+        plans.append(SuitePlan(rel=rel, root=root, doc=doc, cases=ids, cases_dir=cases_dir))
+    # A case directory is unlisted only if no suite (sharing that directory) lists it.
+    listed_paths = {
+        (plan.root / plan.cases_dir / c).resolve()
+        for plan in plans for c in suite_case_ids(plan.doc)
+    }
+    for plan in plans:
+        cases_root = plan.root / plan.cases_dir
+        if plan.cases_dir != "cases" or not cases_root.is_dir():
+            continue  # shared directories are reported by their owning suite
+        plan.unlisted_case_dirs = sorted(
+            p.parent.relative_to(cases_root).as_posix()
+            for p in cases_root.glob("*/*/case.yaml")
+            if p.parent.resolve() not in listed_paths
         )
     return plans
 
@@ -387,9 +398,9 @@ def collect_export_files(
                 f"{plan.rel}/cases/{c}" for c in plan.unlisted_case_dirs
             ]
         for case_id in plan.cases:
-            case_root = plan.root / "cases" / case_id
+            case_root = plan.case_source(case_id)
             _check_case_bundle(case_root, case_id)
-            add_tree(case_root, prefix / "cases" / case_id)
+            add_tree(case_root, plan.case_package_path(case_id))
         # suite.yaml is written separately (it may be filtered for --cases);
         # companion suite roots carry nothing else we export.
         for other in sorted(plan.root.iterdir()):
@@ -463,7 +474,7 @@ def collect_schema_versions(
     for plan in plans:
         prefix = Path(plan.rel)
         for case_id in plan.cases:
-            doc = _load_yaml(package_root / prefix / "cases" / case_id / "case.yaml") or {}
+            doc = _load_yaml(package_root / plan.case_package_path(case_id) / "case.yaml") or {}
             case_versions[str(doc.get("schema_version"))] += 1
             lock = doc.get("evaluator_lock") or {}
             if lock.get("release_id"):
@@ -769,6 +780,17 @@ def _on_line(value: str, line: str) -> bool:
     return bool(fragment) and " ".join(fragment.split()) in " ".join(value.split())
 
 
+def _stays_in_package(package_root: Path, rel: str, token: str) -> bool:
+    """True when a ../ path, resolved from the file's directory, stays inside the package."""
+    root = package_root.resolve()
+    target = (package_root / rel).parent.joinpath(token).resolve()
+    try:
+        target.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
 def scan_text_file(package_root: Path, rel: str) -> list[Hit]:
     path = package_root / rel
     try:
@@ -801,6 +823,8 @@ def scan_text_file(package_root: Path, rel: str) -> list[Hit]:
                 if not token or any(s <= start and end <= e for s, e in spans):
                     continue  # same text already reported (e.g. inside a path)
                 spans.append((start, end))
+                if kind == "parent_escape" and _stays_in_package(package_root, rel, token):
+                    continue  # e.g. a companion suite's cases_root: ../cases
                 if comment_at is not None and start >= comment_at:
                     category, context = "provenance", "comment"
                 elif suffix == ".md":

@@ -26,8 +26,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 DEFAULT_REPO = "lmgame/WMEval-Lite"
 CHECKSUMS = "checksums.sha256"
-# Case data lives under each case's reference/ directory (main and paper-native suites).
-DATA_PATTERNS = ["cases/*/*/reference/**", "lighting_paper_native/cases/*/*/reference/**"]
+# Case data lives under each case's reference/ directory; every suite (including the
+# paper-native lighting suite, via `cases_root: ../cases`) uses the shared cases/ tree.
+DATA_PATTERNS = ["cases/*/*/reference/**"]
 
 
 def _token(args: argparse.Namespace) -> str | None:
@@ -37,9 +38,7 @@ def _token(args: argparse.Namespace) -> str | None:
 
 
 def case_dirs(root: Path = SUITE_ROOT) -> list[Path]:
-    dirs = sorted(p.parent for p in root.glob("cases/*/*/case.yaml"))
-    dirs += sorted(p.parent for p in root.glob("lighting_paper_native/cases/*/*/case.yaml"))
-    return dirs
+    return sorted(p.parent for p in root.glob("cases/*/*/case.yaml"))
 
 
 def manifest(case_dir: Path) -> dict[str, str]:

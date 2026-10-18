@@ -1,6 +1,8 @@
 schema_version: 1
 suite_name: WMEval historical native lighting
 version: paper-native
+# The case bundle lives with the main suite's cases (one copy, one Hub path).
+cases_root: ../cases
 dimensions:
   lighting_shading:
     display_name: Lighting & Shading

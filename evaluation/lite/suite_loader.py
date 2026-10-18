@@ -98,10 +98,13 @@ class Suite:
     # Repeats per (model, case) a dimension headline requires (suite.yaml
     # `repeat_policy.required_repeats`); None disables the coverage gate.
     required_repeats: int | None = None
+    # Case directory relative to the suite root (suite.yaml `cases_root`); lets a
+    # companion suite reuse the main suite's case bundles (e.g. "../cases").
+    cases_dir: str = "cases"
 
     @property
     def cases_root(self) -> Path:
-        return self.root / "cases"
+        return self.root / self.cases_dir
 
     def all_case_ids(self) -> frozenset[str]:
         return frozenset(
@@ -250,6 +253,13 @@ def _parse_dimension(
     )
 
 
+def _cases_dir(raw: Mapping[str, Any]) -> str:
+    value = raw.get("cases_root", "cases")
+    if not isinstance(value, str) or not value.strip() or Path(value).is_absolute():
+        raise SuiteValidationError("cases_root must be a relative directory path")
+    return value.strip()
+
+
 def _required_repeats(raw: Mapping[str, Any]) -> int | None:
     policy = raw.get("repeat_policy")
     if policy is None:
@@ -345,6 +355,7 @@ def load_suite(
         dimensions=MappingProxyType(dimensions),
         legacy_case_aliases=MappingProxyType(aliases),
         required_repeats=_required_repeats(raw),
+        cases_dir=_cases_dir(raw),
     )
 
     if check_case_dirs:
