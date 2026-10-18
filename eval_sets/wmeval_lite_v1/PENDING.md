@@ -535,7 +535,7 @@ gave 0.615 before the freeze; re-checking it needs API credits.
 - [ ] **Scope and rights (P0-01).** Freeze the case roster (32 live Lite case bundles, including the 14 Table 4/7
   cells) and repeat policy; clear redistribution of Unity renders, quantities and
   annotations; add LICENSE files, attribution, citation, dataset card; confirm HY-WorldPlay.
-- [x] **HF package tooling (P0-02).** `tools/export_hf_package.py export|verify` (488 files, verify PASS, 0 load-bearing out-of-package references). Upload still pending. Export → download → verify into a clean directory with
+- [x] **HF package tooling (P0-02).** `tools/export_hf_package.py export|verify` (488 files, verify PASS, 0 load-bearing out-of-package references). Case data is on the Hub at `lmgame/WMEval-Lite` (private; `tools/sync_lite_data.py download`); make it public after license and clearance. Export → download → verify into a clean directory with
   per-file hashes and dataset/evaluator/schema versions; nothing may resolve into `runs/`,
   a private repo or a Modal volume.
 - [x] **Adapter template (P0-05).** `tools/expected_jobs.py`, `tools/model_adapters/TEMPLATE.md`, `tools/fixture_backend.py`. A model-neutral adapter (capability check +

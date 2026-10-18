@@ -199,6 +199,17 @@ def git_untracked(directory: Path) -> set[Path]:
     return {(root / item).resolve() for item in out.split("\0") if item}
 
 
+def _manifest_listed(suite_root: Path) -> set[Path]:
+    """Every file listed in a case's reference/checksums.sha256 (case data fetched from the Hub)."""
+    listed: set[Path] = set()
+    for manifest in suite_root.glob("**/cases/*/*/reference/checksums.sha256"):
+        case_dir = manifest.parent.parent
+        for line in manifest.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                listed.add((case_dir / line.split(None, 1)[1].strip()).resolve())
+    return listed
+
+
 def git_ignored(paths: list[Path], cwd: Path) -> set[Path]:
     """Subset of ``paths`` that git ignores (tracked files never count)."""
     if not paths or _git(["rev-parse", "--is-inside-work-tree"], cwd) is None:
@@ -411,9 +422,12 @@ def collect_export_files(
             raise ExportError(f"refusing to export symlink {source} (as {rel})")
 
     ignored = git_ignored(list(selected.values()), suite_root)
+    # Case data is git-ignored on purpose (it is hosted on the Hub and fetched with
+    # tools/sync_lite_data.py); files a case's checksum manifest lists are always kept.
+    manifest_listed = _manifest_listed(suite_root)
     if ignored:
         for rel in sorted(selected):
-            if selected[rel] in ignored:
+            if selected[rel] in ignored and selected[rel].resolve() not in manifest_listed:
                 excluded["git_ignored"].append(rel)
                 del selected[rel]
     untracked = git_untracked(suite_root)
