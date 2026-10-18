@@ -380,9 +380,9 @@ def generate(out_root: Path) -> list[dict[str, Any]]:
 
 
 # Look-at orbit poses go through trigonometry whose last bits differ across
-# platforms/libm; those files count as equal when they match the published
-# (downloaded, checksum-verified) copy numerically.
-FLOAT_FILES = ("action.npz", "poses.npy")
+# platforms/libm; those files (arrays and JSON pose samples) count as equal when
+# they match the published (downloaded, checksum-verified) copy numerically.
+FLOAT_FILES = ("action.npz", "poses.npy", "actions.jsonl")
 
 
 def _load_arrays(path: Path) -> dict[str, np.ndarray]:
@@ -393,7 +393,21 @@ def _load_arrays(path: Path) -> dict[str, np.ndarray]:
         return {key: loaded[key] for key in loaded.files}
 
 
-def _arrays_close(a: Path, b: Path) -> bool:
+def _json_close(x: Any, y: Any) -> bool:
+    if isinstance(x, float) or isinstance(y, float):
+        return (isinstance(x, (int, float)) and isinstance(y, (int, float))
+                and not isinstance(x, bool) and not isinstance(y, bool) and abs(x - y) <= 1e-9)
+    if isinstance(x, list) and isinstance(y, list):
+        return len(x) == len(y) and all(_json_close(u, v) for u, v in zip(x, y))
+    if isinstance(x, dict) and isinstance(y, dict):
+        return x.keys() == y.keys() and all(_json_close(x[k], y[k]) for k in x)
+    return x == y
+
+
+def _numerically_equal(a: Path, b: Path) -> bool:
+    if a.suffix == ".jsonl":
+        xs, ys = a.read_text(encoding="utf-8").splitlines(), b.read_text(encoding="utf-8").splitlines()
+        return len(xs) == len(ys) and all(_json_close(json.loads(u), json.loads(v)) for u, v in zip(xs, ys))
     xs, ys = _load_arrays(a), _load_arrays(b)
     if xs.keys() != ys.keys():
         return False
@@ -424,7 +438,7 @@ def compare(rows: list[dict[str, Any]], out_root: Path) -> list[str]:
             published = SUITE_ROOT / r["path"] / name
             if (name in FLOAT_FILES and published.is_file()
                     and hashlib.sha256(published.read_bytes()).hexdigest() == expected[name]
-                    and _arrays_close(out_root / r["path"] / name, published)):
+                    and _numerically_equal(out_root / r["path"] / name, published)):
                 continue
             diff.append(r["synthetic_id"])
             break
