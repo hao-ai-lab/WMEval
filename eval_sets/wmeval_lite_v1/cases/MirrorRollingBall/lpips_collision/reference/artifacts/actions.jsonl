@@ -1,8 +1,0 @@
-{"keys": ["KeyW"], "ms": 2000, "op": "hold"}
-{"ms": 100, "op": "wait"}
-{"keys": ["KeyD"], "ms": 1000, "op": "hold"}
-{"ms": 100, "op": "wait"}
-{"keys": ["KeyS"], "ms": 2000, "op": "hold"}
-{"ms": 100, "op": "wait"}
-{"keys": ["KeyA"], "ms": 1000, "op": "hold"}
-{"ms": 1970, "op": "wait"}

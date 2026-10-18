@@ -1,8 +1,0 @@
-# table7.camera.360_out_v1 -- generated action trajectory.
-# Provenance: camera_360_out.yaml (semantic SHA-256: de3cce86bcf6f0ce53780a43057eaddae92d32fcc8df443a00de5ec28eb07d97)
-# Alignment: reconstructed; 200 steps; channels: yaw_rate_deg_s
-# start_s end_s yaw_rate_deg_s
-0.0 10.0 36.0
-
-# Project Genie browser actions:
-{"keys": ["ArrowRight"], "ms": 10000, "op": "hold", "target_yaw_deg": 360.0}

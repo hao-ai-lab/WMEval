@@ -270,3 +270,11 @@ tests/test_run_unity_table_scenes.py
 tests/test_summarize_open_model_statistical_tests.py
 tests/test_table_comparison.py
 tests/test_table_lite_cases.py
+
+# WMEval Lite case data is hosted on the Hugging Face Hub (lmgame/WMEval-Lite);
+# fetch it with `python tools/sync_lite_data.py download`. Only the checksum
+# manifests (and each case.yaml) stay in this repository.
+eval_sets/wmeval_lite_v1/cases/*/*/reference/*
+!eval_sets/wmeval_lite_v1/cases/*/*/reference/checksums.sha256
+eval_sets/wmeval_lite_v1/lighting_paper_native/cases/*/*/reference/*
+!eval_sets/wmeval_lite_v1/lighting_paper_native/cases/*/*/reference/checksums.sha256

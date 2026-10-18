@@ -1,4 +1,0 @@
-[
-  {"op": "setview", "key": "first", "note": "start in first-person (no on-screen switch)"},
-  {"op": "hold", "key": "ArrowLeft", "ms": 10000, "note": "rotate left for 10 seconds"}
-]

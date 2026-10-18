@@ -1,7 +1,0 @@
-# lighting.camera.look_at_orbit_v2 -- generated action trajectory.
-# Provenance: trajectory.yaml (semantic SHA-256: 6649252e0317aaf1b696eee475748781f28714a59432a2fb0778272bcf2dc8e5)
-# Alignment: reconstructed; 600 steps; channels: orbit_phase_rate_deg_s
-# start_s end_s orbit_phase_rate_deg_s
-0.0 10.0 36.0
-
-# Project Genie browser adapter: not compiled; camera pose records are not browser actions.
