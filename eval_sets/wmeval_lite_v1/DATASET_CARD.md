@@ -12,6 +12,41 @@ tags:
   - unity
 size_categories:
   - n<1K
+dataset_info:
+  - config_name: default
+    features:
+      - name: case_id
+        dtype: string
+      - name: scene
+        dtype: string
+      - name: variant
+        dtype: string
+      - name: group
+        dtype: string
+      - name: family
+        dtype: string
+      - name: action_target
+        dtype: string
+      - name: suites
+        sequence: string
+      - name: dimensions
+        sequence: string
+      - name: perspective
+        dtype: string
+      - name: prompt
+        dtype: string
+      - name: conditioning_case
+        dtype: string
+      - name: reference_video
+        dtype: string
+      - name: first_frame
+        dtype: string
+      - name: trajectory
+        dtype: string
+      - name: candidate_normalization
+        dtype: string
+      - name: reference_status
+        dtype: string
 configs:
   - config_name: default
     data_files:

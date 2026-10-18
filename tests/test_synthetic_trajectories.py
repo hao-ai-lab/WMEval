@@ -74,3 +74,16 @@ def test_expected_jobs_full_split_adds_gated_synthetic_jobs(tmp_path: Path) -> N
     assert "trajectory.yaml" in job["conditioning"]["action_files"]
     gated = {row["action_support"]["target"] for row in report["not_applicable"] if row["case_id"].startswith("synthetic/")}
     assert {"ego_vehicle", "cue_ball"} <= gated
+
+
+def test_dataset_card_declares_every_index_column() -> None:
+    # The Hub viewer infers column types per chunk; all-null stretches (synthetic rows have
+    # no reference video) break that, so the card must declare every column explicitly.
+    import yaml
+
+    from tools.sync_lite_data import INDEX_COLUMNS
+
+    header = (SUITE / "DATASET_CARD.md").read_text(encoding="utf-8").split("---")[1]
+    (info,) = yaml.safe_load(header)["dataset_info"]
+    assert [f["name"] for f in info["features"]] == list(INDEX_COLUMNS)
+    assert all(f.get("dtype") == "string" or f.get("sequence") == "string" for f in info["features"])
