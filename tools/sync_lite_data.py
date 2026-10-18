@@ -100,11 +100,13 @@ def cmd_download(args: argparse.Namespace) -> int:
     return 1 if bad else 0
 
 
-INDEX_NAME = "test.jsonl"
+# The current curated suite is the core test split; a procedurally extended
+# split can be added beside it later.
+INDEX_NAME = "test_core.jsonl"
 
 
 def build_index(root: Path = SUITE_ROOT) -> list[dict]:
-    """One row per suite case: the Hub viewer's ``test`` split (paths are dataset-relative)."""
+    """One row per suite case: the Hub viewer's ``test_core`` split (paths are dataset-relative)."""
     import yaml
 
     suites = {"wmeval_lite_v1": root}
@@ -162,7 +164,7 @@ def cmd_upload(args: argparse.Namespace) -> int:
         index = Path(tmp) / INDEX_NAME
         index.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in build_index()), encoding="utf-8")
         api.upload_file(path_or_fileobj=str(index), path_in_repo=INDEX_NAME, repo_id=args.repo, repo_type="dataset",
-                        commit_message="Case index (test split)")
+                        commit_message="Case index (test_core split)")
     if args.card_only:
         print(f"updated the dataset card and {INDEX_NAME} on https://huggingface.co/datasets/{args.repo}")
         return 0

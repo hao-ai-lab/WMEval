@@ -15,8 +15,8 @@ size_categories:
 configs:
   - config_name: default
     data_files:
-      - split: test
-        path: test.jsonl
+      - split: test_core
+        path: test_core.jsonl
 ---
 
 # WMEval Lite (v1)
@@ -41,6 +41,11 @@ or help from the maintainers.
   ("native") lighting protocol for historical comparison.
 
 ## Dataset structure
+
+The viewer shows one split, `test_core`: the curated WMEval Lite v1 cases (one row
+per case, with paths to its reference video, first frame and trajectory). It is the
+split the paper's numbers come from; a procedurally extended split may be added
+beside it.
 
 This Hub dataset holds the case data: every file under each case's `reference/`
 directory (reference videos, conditioning frames, action trajectories, Unity
