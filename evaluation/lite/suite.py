@@ -191,6 +191,7 @@ def _discover_candidates(
     model_root: str | Path | None,
     candidate_manifest: str | Path | None,
     allowed_cases: frozenset[str],
+    suite_cases: frozenset[str] | None = None,
 ) -> tuple[list[CandidateRow], Mapping[str, Any]]:
     if (model_root is None) == (candidate_manifest is None):
         raise SuiteRunError(
@@ -200,8 +201,11 @@ def _discover_candidates(
         root = Path(model_root)
         rows = discover_candidate_directory(root, allowed_cases=allowed_cases)
         return rows, _load_model_params(root)
-    rows = load_candidate_manifest(candidate_manifest, allowed_cases=allowed_cases)
-    return rows, {}
+    # Rows for suite cases outside the selected dimensions are skipped.
+    rows = load_candidate_manifest(
+        candidate_manifest, allowed_cases=(suite_cases or allowed_cases) | allowed_cases
+    )
+    return [row for row in rows if row.case_id in allowed_cases], {}
 
 
 def _default_normalized_path(
@@ -345,6 +349,9 @@ def run_suite(
         model_root=model_root,
         candidate_manifest=candidate_manifest,
         allowed_cases=frozenset(case_ids),
+        suite_cases=frozenset(
+            case_id for dimension in suite.dimensions.values() for case_id in dimension.cases
+        ),
     )
     candidate_rows = [
         _with_backend_defaults(_merge_candidate_params(row, model_params))

@@ -498,6 +498,42 @@ def test_run_suite_resume_replaces_stale_fingerprint_row(
     )
 
 
+def test_full_suite_manifest_runs_a_dimension_subset(tmp_path: Path) -> None:
+    suite_root = build_default_suite_dir(tmp_path / "suite")
+    model_root = tmp_path / "genie3"
+    write_candidates(model_root, ["scene_a/main", "scene_b/first"])
+    manifest = tmp_path / "candidates.jsonl"
+    rows = [
+        {"model": "genie3", "case_id": case_id, "seed": "0001",
+         "candidate_video": str(model_root / case_id / "0001.mp4")}
+        for case_id in ("scene_a/main", "scene_b/first")
+    ]
+    manifest.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+
+    result = run_suite(
+        suite_root=suite_root,
+        output_dir=tmp_path / "out",
+        candidate_manifest=manifest,
+        dimensions=["toy_metric"],
+        dry_run=True,
+        log=_quiet,
+    )
+    assert [item["case_id"] for item in result["work_items"]] == ["scene_a/main"]
+
+    # Case ids unknown to the suite are rejected.
+    rows.append({**rows[0], "case_id": "scene_z/typo"})
+    manifest.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    with pytest.raises(ValueError, match="unsupported official Lite case_id 'scene_z/typo'"):
+        run_suite(
+            suite_root=suite_root,
+            output_dir=tmp_path / "out",
+            candidate_manifest=manifest,
+            dimensions=["toy_metric"],
+            dry_run=True,
+            log=_quiet,
+        )
+
+
 def test_run_suite_dry_run_writes_nothing(tmp_path: Path) -> None:
     suite_root = build_default_suite_dir(tmp_path / "suite")
     model_root = tmp_path / "genie3"
