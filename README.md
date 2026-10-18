@@ -49,7 +49,7 @@ source .venv/bin/activate
 python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
 python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
 ```
-Pin a dataset version with `--revision <tag-or-commit>`; set `HF_TOKEN` if the dataset is private. `python tools/sync_lite_data.py status` reports which cases are present.
+Pin a dataset version with `--revision <tag-or-commit>`; no token is needed (the dataset is public). `python tools/sync_lite_data.py status` reports which cases are present.
 
 VLM-judged dimensions (`prompt_scene_consistency`, `physical_causality`, causal `lpips`) need an `OPENAI_API_KEY`; CV-based dimensions download pinned checkpoints on first use (see `experiments/tables_4_7/evaluator_assets.lock.json`).
 

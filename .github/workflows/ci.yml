@@ -20,10 +20,6 @@ jobs:
     env:
       PIP_DISABLE_PIP_VERSION_CHECK: "1"
       PYTHONDONTWRITEBYTECODE: "1"
-      # Case data is on the Hugging Face Hub (private while release clearance is
-      # pending). Without an HF_TOKEN secret (e.g. pull requests from forks) the
-      # data steps are skipped and only the hermetic tests run.
-      HAS_HF_TOKEN: ${{ secrets.HF_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -53,29 +49,17 @@ jobs:
       - name: Install test dependencies
         run: python -m pip install -r requirements-ci.txt
 
+      # Case data (reference videos, frames, trajectories) is the public Hugging
+      # Face dataset lmgame/WMEval-Lite; no token needed.
       - name: Download case data
-        if: env.HAS_HF_TOKEN == 'true'
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: python tools/sync_lite_data.py download
 
       - name: Validate Lite suite bundles
-        if: env.HAS_HF_TOKEN == 'true'
         run: |
           python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
           python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1/lighting_paper_native
 
-      - name: Note skipped data steps
-        if: env.HAS_HF_TOKEN != 'true'
-        run: echo "::notice::HF_TOKEN secret not available; skipped case-data download and suite validation."
-
-      # With case data, run everything; integration tests whose other inputs
-      # (git-ignored runs/, the paper checkout) are absent skip themselves.
-      - name: Tests (with case data)
-        if: env.HAS_HF_TOKEN == 'true'
+      # Integration tests whose other inputs (git-ignored runs/, the sibling paper
+      # checkout) are absent skip themselves; case-data tests run.
+      - name: Tests
         run: python -m pytest -q tests
-
-      # Without case data, run the hermetic subset (see tests/conftest.py).
-      - name: Hermetic tests
-        if: env.HAS_HF_TOKEN != 'true'
-        run: python -m pytest -q -m "not integration" tests
