@@ -23,7 +23,7 @@ if str(ROOT) not in sys.path:
 # reproduction runs, and the sibling paper checkout ``../_arxiv__WorldModel_Eval``
 # pinned by experiments/tables_4_7/paper_baseline.yaml.  Such tests are marked
 #
-#     @pytest.mark.integration("case_data")           # or "table_runs", "paper_checkout"
+#     @pytest.mark.integration("case_data")   # or "synthetic_data", "table_runs", "paper_checkout"
 #
 # and are skipped (with the first missing path in the reason) when the named
 # input is absent, so ``pytest tests`` stays green in a fresh clone/CI, and
@@ -115,11 +115,25 @@ def _case_data_paths() -> list[Path]:
     return [case_dir / rel for case_dir in case_dirs() for rel in manifest(case_dir)]
 
 
+def _synthetic_data_paths() -> list[Path]:
+    """Every synthetic-trajectory file listed in synthetic/manifest.json (``--split full`` download)."""
+    import json
+
+    suite = ROOT / "eval_sets" / "wmeval_lite_v1"
+    manifest = json.loads((suite / "synthetic" / "manifest.json").read_text(encoding="utf-8"))
+    return [suite / t["path"] / name for t in manifest["trajectories"] for name in t["files"]]
+
+
 EXTERNAL_INPUTS: dict[str, tuple[str, Callable[[], list[Path]]]] = {
     "case_data": (
         "WMEval Lite case data from the Hugging Face Hub "
         "(python tools/sync_lite_data.py download)",
         _case_data_paths,
+    ),
+    "synthetic_data": (
+        "WMEval Lite synthetic trajectories from the Hugging Face Hub "
+        "(python tools/sync_lite_data.py download --split full)",
+        _synthetic_data_paths,
     ),
     "table_runs": (
         "git-ignored runs/ Table 4/7 reproduction outputs (Unity captures, "

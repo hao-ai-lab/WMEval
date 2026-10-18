@@ -8,7 +8,8 @@ videos, conditioning images, action trajectories and other artifacts under
 paths. ``download`` writes the files back into ``eval_sets/wmeval_lite_v1`` and
 verifies every case against its manifest.
 
-    python tools/sync_lite_data.py download            # all suites (default)
+    python tools/sync_lite_data.py download            # curated cases (test_core)
+    python tools/sync_lite_data.py download --split full   # + 219 synthetic trajectories (test_full)
     python tools/sync_lite_data.py status              # what is present locally
     python tools/sync_lite_data.py upload --token-file ~/.credentials/hf_key   # maintainers
 
@@ -29,6 +30,9 @@ CHECKSUMS = "checksums.sha256"
 # Case data lives under each case's reference/ directory; every suite (including the
 # paper-native lighting suite, via `cases_root: ../cases`) uses the shared cases/ tree.
 DATA_PATTERNS = ["cases/*/*/reference/**"]
+# test_full adds the synthetic trajectory suite (tools/generate_synthetic_trajectories.py).
+SYNTHETIC_PATTERNS = ["synthetic/*/*/*/**"]
+SYNTHETIC_MANIFEST = SUITE_ROOT / "synthetic" / "manifest.json"
 
 
 def _token(args: argparse.Namespace) -> str | None:
@@ -84,12 +88,13 @@ def cmd_status(args: argparse.Namespace) -> int:
 def cmd_download(args: argparse.Namespace) -> int:
     from huggingface_hub import snapshot_download
 
+    patterns = DATA_PATTERNS + (SYNTHETIC_PATTERNS if args.split == "full" else [])
     snapshot_download(
         repo_id=args.repo,
         repo_type="dataset",
         revision=args.revision,
         local_dir=str(SUITE_ROOT),
-        allow_patterns=DATA_PATTERNS,
+        allow_patterns=patterns,
         token=_token(args),
     )
     report = status(verify_hashes=True)
@@ -97,12 +102,21 @@ def cmd_download(args: argparse.Namespace) -> int:
     for case, (n, miss, mism) in bad.items():
         print(f"FAILED {case}: {len(miss)} missing, {len(mism)} mismatched of {n}")
     print(f"downloaded {args.repo}@{args.revision or 'main'}: {len(report) - len(bad)}/{len(report)} case(s) verified")
-    return 1 if bad else 0
+    failed = bool(bad)
+    if args.split == "full":
+        n, missing, mism = check_synthetic()
+        print(f"synthetic trajectories: {n - len({m.rsplit('/', 1)[0] for m in missing + mism})}/{n} verified")
+        failed = failed or bool(missing or mism)
+    return 1 if failed else 0
 
 
 # The current curated suite is the core test split; a procedurally extended
 # split can be added beside it later.
 INDEX_NAME = "test_core.jsonl"
+FULL_INDEX_NAME = "test_full.jsonl"
+INDEX_COLUMNS = ("case_id", "scene", "variant", "group", "family", "action_target", "suites", "dimensions",
+                 "perspective", "prompt", "conditioning_case", "reference_video", "first_frame", "trajectory",
+                 "candidate_normalization", "reference_status")
 
 
 def build_index(root: Path = SUITE_ROOT) -> list[dict]:
@@ -133,19 +147,75 @@ def build_index(root: Path = SUITE_ROOT) -> list[dict]:
                         "case_id": case_id,
                         "scene": case.get("scene") or case_id.split("/")[0],
                         "variant": case_id.split("/")[1],
+                        "group": "core",
+                        "family": "core",
+                        "action_target": _declared_target(art),
                         "suites": [],
                         "dimensions": [],
                         "perspective": case.get("perspective"),
                         "prompt": case.get("prompt"),
+                        "conditioning_case": case_id,
                         "reference_video": rel(ref.get("video")),
-                        "first_frame": rel(ref.get("first_frame")),
+                        "first_frame": rel(ref.get("first_frame") or ref.get("video")),
                         "trajectory": rel("reference/artifacts/trajectory.yaml") if (art / "trajectory.yaml").is_file() else None,
                         "candidate_normalization": (case.get("protocol") or {}).get("candidate_normalization"),
+                        "reference_status": "unity_rendered",
                     }
                 if suite_name not in row["suites"]:
                     row["suites"].append(suite_name)
                 row["dimensions"].append(dim if suite_name == "wmeval_lite_v1" else f"{dim} (paper-native)")
     return sorted(rows.values(), key=lambda r: r["case_id"] + ("~" if r["suites"] != ["wmeval_lite_v1"] else ""))
+
+
+def _declared_target(artifacts: Path) -> str | None:
+    try:
+        from evaluation.lite.action_support import declared_target
+
+        return declared_target(artifacts)
+    except Exception:  # noqa: BLE001 -- index metadata only
+        return None
+
+
+def synthetic_rows(root: Path = SUITE_ROOT) -> list[dict]:
+    """test_full rows for the synthetic trajectories (from the tracked manifest)."""
+    manifest = root / "synthetic" / "manifest.json"
+    if not manifest.is_file():
+        return []
+    import json
+
+    rows = []
+    for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
+        rows.append({
+            "case_id": t["synthetic_id"], "scene": t["scene"], "variant": t["pattern"], "group": "synthetic",
+            "family": t["family"], "action_target": t["action_target"], "suites": [], "dimensions": t["dimensions"],
+            "perspective": t["perspective"], "prompt": t["prompt"], "conditioning_case": t["conditioning_case"],
+            "reference_video": None, "first_frame": t["first_frame"], "trajectory": f"{t['path']}/trajectory.yaml",
+            "candidate_normalization": None, "reference_status": t["reference_status"],
+        })
+    return rows
+
+
+def build_full_index(root: Path = SUITE_ROOT) -> list[dict]:
+    return build_index(root) + synthetic_rows(root)
+
+
+def check_synthetic(root: Path = SUITE_ROOT, *, verify_hashes: bool = True) -> tuple[int, list[str], list[str]]:
+    """(trajectories listed, missing files, mismatched files) for the synthetic suite."""
+    import json
+
+    manifest = root / "synthetic" / "manifest.json"
+    if not manifest.is_file():
+        return 0, ["synthetic/manifest.json"], []
+    missing, bad, n = [], [], 0
+    for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
+        n += 1
+        for name, digest in t["files"].items():
+            path = root / t["path"] / name
+            if not path.is_file():
+                missing.append(f"{t['path']}/{name}")
+            elif verify_hashes and hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                bad.append(f"{t['path']}/{name}")
+    return n, missing, bad
 
 
 def cmd_upload(args: argparse.Namespace) -> int:
@@ -161,10 +231,12 @@ def cmd_upload(args: argparse.Namespace) -> int:
         api.upload_file(path_or_fileobj=str(card), path_in_repo="README.md", repo_id=args.repo, repo_type="dataset",
                         commit_message="Dataset card")
     with tempfile.TemporaryDirectory() as tmp:
-        index = Path(tmp) / INDEX_NAME
-        index.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in build_index()), encoding="utf-8")
-        api.upload_file(path_or_fileobj=str(index), path_in_repo=INDEX_NAME, repo_id=args.repo, repo_type="dataset",
-                        commit_message="Case index (test_core split)")
+        for name, rows in ((INDEX_NAME, build_index()), (FULL_INDEX_NAME, build_full_index())):
+            index = Path(tmp) / name
+            index.write_text("".join(json.dumps({k: r.get(k) for k in INDEX_COLUMNS}, ensure_ascii=False) + "\n"
+                                     for r in rows), encoding="utf-8")
+            api.upload_file(path_or_fileobj=str(index), path_in_repo=name, repo_id=args.repo, repo_type="dataset",
+                            commit_message=f"Case index ({name[:-6]} split)")
     if args.card_only:
         print(f"updated the dataset card and {INDEX_NAME} on https://huggingface.co/datasets/{args.repo}")
         return 0
@@ -173,11 +245,19 @@ def cmd_upload(args: argparse.Namespace) -> int:
     if bad:
         print(f"refusing to upload: {len(bad)} case(s) incomplete locally, e.g. {next(iter(bad))}")
         return 1
+    patterns = list(DATA_PATTERNS)
+    if args.split == "full":
+        n, missing, mism = check_synthetic()
+        if missing or mism:
+            print(f"refusing to upload: synthetic suite incomplete ({len(missing)} missing, {len(mism)} mismatched); "
+                  "run tools/generate_synthetic_trajectories.py")
+            return 1
+        patterns += SYNTHETIC_PATTERNS
     api.upload_folder(
         folder_path=str(SUITE_ROOT),
         repo_id=args.repo,
         repo_type="dataset",
-        allow_patterns=DATA_PATTERNS,
+        allow_patterns=patterns,
         commit_message=args.message,
     )
     print(f"uploaded {len(report)} case(s) to https://huggingface.co/datasets/{args.repo}"
@@ -193,6 +273,9 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--repo", default=DEFAULT_REPO)
         p.add_argument("--token-file")
     sub.choices["download"].add_argument("--revision", help="dataset revision (tag/commit) to pin")
+    for name in ("download", "upload"):
+        sub.choices[name].add_argument("--split", choices=("core", "full"), default="core",
+                                       help="core = curated cases (test_core); full = core + synthetic trajectories (test_full)")
     sub.choices["upload"].add_argument("--private", action="store_true", help="create the dataset as private")
     sub.choices["upload"].add_argument("--message", default="Upload WMEval Lite case data")
     sub.choices["upload"].add_argument("--card-only", action="store_true",

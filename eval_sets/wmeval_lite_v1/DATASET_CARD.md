@@ -17,6 +17,8 @@ configs:
     data_files:
       - split: test_core
         path: test_core.jsonl
+      - split: test_full
+        path: test_full.jsonl
 ---
 
 # WMEval Lite (v1)
@@ -42,10 +44,18 @@ or help from the maintainers.
 
 ## Dataset structure
 
-The viewer shows one split, `test_core`: the curated WMEval Lite v1 cases (one row
-per case, with paths to its reference video, first frame and trajectory). It is the
-split the paper's numbers come from; a procedurally extended split may be added
-beside it.
+The viewer shows two splits:
+
+- `test_core` (33 rows): the curated WMEval Lite v1 cases, each with a Unity
+  reference rendering. The paper's numbers come from this split.
+- `test_full` (252 rows): `test_core` plus 219 structured synthetic action
+  trajectories under `synthetic/` (camera yaw, look-at orbit, vehicle, cue ball,
+  ball force, beam-domino strike, bottle motion, character). Each one starts from a
+  core case's state and reuses its conditioning frame and prompt; Unity reference
+  renders for them are pending (`reference_status: pending_unity_render`), so they
+  are generation-ready and scoreable on reference-free metrics only.
+
+Each row links to its first frame, trajectory and, for core cases, reference video.
 
 This Hub dataset holds the case data: every file under each case's `reference/`
 directory (reference videos, conditioning frames, action trajectories, Unity
