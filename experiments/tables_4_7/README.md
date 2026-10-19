@@ -7,9 +7,7 @@ trajectory YAML files are the authoritative controls; generated repo-native
 `action.npy`, human-readable `actions.txt`, self-describing `action.npz`, and
 browser `actions.jsonl` files are derivatives.
 
-The remaining-model launch plan is tracked in
-[`TABLE4_TABLE7_REMAINING_MODELS_TODO.md`](../../TABLE4_TABLE7_REMAINING_MODELS_TODO.md),
-with machine-readable scope and readiness in [`remaining_models.yaml`](remaining_models.yaml).
+Remaining-model scope and readiness are tracked in [`remaining_models.yaml`](remaining_models.yaml).
 
 ## Alignment status
 
