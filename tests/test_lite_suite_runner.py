@@ -87,6 +87,7 @@ def test_orbit_receipt_is_consumed_and_resume_invalidates_video_or_params(tmp_pa
     mapping['video_sha256']=hashlib.sha256(video.read_bytes()).hexdigest()
     rows=evaluate()
     assert len(rows)==1 and rows[0]['status']=='completed' and len(runner.calls)==3
+    assert rows[0]['input_contract']['lighting_time_mapping']=='receipt'
 
 
 def test_run_suite_registry_dimension_end_to_end(
@@ -263,6 +264,28 @@ def test_run_suite_candidate_params_override_and_whitelist(
     row = read_rows(tmp_path / "out2" / PER_CASE_RESULTS_FILENAME)[0]
     assert row["status"] == "error"
     assert "totally_unknown_kwarg" in row["error"]
+
+
+@pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='ffmpeg required')
+def test_orbit_without_receipt_runs_from_a_model_root(tmp_path, monkeypatch):
+    suite_root = _registry_only_suite(tmp_path)
+    case_path = suite_root/'cases/scene_a/main/case.yaml'
+    raw = yaml.safe_load(case_path.read_text())
+    raw['protocol']['candidate_normalization'] = 'lighting_orbit_10s_fps12'
+    case_path.write_text(yaml.safe_dump(raw, sort_keys=False))
+    mock_video_probing(monkeypatch)
+    video = tmp_path/'new_model'/'scene_a'/'main'/'42.mp4'
+    video.parent.mkdir(parents=True)
+    subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','testsrc2=size=64x48:rate=16:duration=10.0625',
+                    '-c:v','libx264',str(video)],check=True,capture_output=True)
+    runner = RecordingRunner()
+    run_suite(suite_root=suite_root,output_dir=tmp_path/'out',model_root=tmp_path/'new_model',
+              runner=runner,log=_quiet)
+    row = read_rows(tmp_path/'out'/PER_CASE_RESULTS_FILENAME)[0]
+    assert row['status'] == 'completed'
+    assert row['input_contract']['lighting_time_mapping'] == 'derived'
+    from evaluation.lite.normalization import _probe
+    assert _probe(Path(runner.calls[0]['video_path']),timeout_sec=30)['frames'] == 120
 
 
 def test_run_suite_module_error_reports_error_status(

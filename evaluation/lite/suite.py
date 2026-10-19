@@ -235,13 +235,18 @@ def _normalize_candidate(
     if kind is None:
         return candidate.candidate_video
 
-    from .normalization import normalize_liquid_video, normalize_to_reference, normalize_lighting_video, normalize_lighting_window
+    from .normalization import (
+        derive_lighting_time_mapping, normalize_liquid_video, normalize_to_reference,
+        normalize_lighting_video, normalize_lighting_window,
+    )
 
     destination = _default_normalized_path(output_root, candidate)
     if kind == "lighting_orbit":
         mapping = candidate.params.get("lighting_time_mapping")
-        if not isinstance(mapping, Mapping):
-            raise SuiteRunError(f"{case.case_id}: candidate requires receipt-derived lighting_time_mapping")
+        if mapping is None:
+            mapping = derive_lighting_time_mapping(candidate.candidate_video)
+        elif not isinstance(mapping, Mapping):
+            raise SuiteRunError(f"{case.case_id}: lighting_time_mapping must be a mapping")
         # This small artifact must be verified/rebuilt for changed receipt/input,
         # even when a previous candidate occupied the same output path.
         normalize_lighting_window(candidate.candidate_video, destination, time_mapping=dict(mapping))
@@ -620,6 +625,10 @@ def _evaluate_item(
     result.input_contract = input_contract(
         validated, normalization=str(protocol.get("candidate_normalization") or "none")
     )
+    if NORMALIZATION_TOKENS.get(str(protocol.get("candidate_normalization"))) == "lighting_orbit":
+        result.input_contract["lighting_time_mapping"] = (
+            "receipt" if candidate.params.get("lighting_time_mapping") is not None else "derived"
+        )
     return result
 
 
