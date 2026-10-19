@@ -61,3 +61,29 @@ def test_short_orbit_is_invalid_instead_of_padded_or_retimed(tmp_path):
     with pytest.raises(NormalizationError,match='short lighting video'):
         normalize_lighting_window(source,tmp_path/'out.mp4',time_mapping=mapping)
     assert not (tmp_path/'out.mp4').exists()
+
+
+@pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='ffmpeg required')
+@pytest.mark.parametrize('source_fps,extra',[(16,1),(17,7),(24,13)])
+def test_orbit_without_receipt_derives_mapping_from_the_video(tmp_path,source_fps,extra):
+    source=tmp_path/'source.mp4'
+    subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i',f'testsrc2=size=64x48:rate={source_fps}',
+                    '-frames:v',str(source_fps*10+extra),'-c:v','libx264','-crf','0',str(source)],
+                   check=True,capture_output=True)
+    normalized=_normalize_candidate(
+        case=SimpleNamespace(protocol={'candidate_normalization':'lighting_orbit_10s_fps12'}),
+        candidate=SimpleNamespace(candidate_video=source,model='test',case_id='SunRisesAndSets/lighting_orbit_v2',
+                                  seed='42',params={}),output_root=tmp_path/'out')
+    assert _probe(normalized,timeout_sec=30)=={'width':64,'height':48,'fps':12.,'frames':120}
+
+
+@pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='ffmpeg required')
+def test_short_orbit_without_receipt_is_still_invalid(tmp_path):
+    source=tmp_path/'short.mp4'
+    subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','testsrc2=size=64x48:rate=16:duration=9.5',
+                    '-c:v','libx264',str(source)],check=True,capture_output=True)
+    with pytest.raises(NormalizationError,match='short lighting video'):
+        _normalize_candidate(
+            case=SimpleNamespace(protocol={'candidate_normalization':'lighting_orbit_10s_fps12'}),
+            candidate=SimpleNamespace(candidate_video=source,model='test',case_id='SunRisesAndSets/lighting_orbit_v2',
+                                      seed='42',params={}),output_root=tmp_path/'out')

@@ -58,6 +58,16 @@ def sample_segment_frames(
     return frames[idx]
 
 
+def _log_vlm_usage(model: str, resp: Any) -> None:
+    """Token accounting hook (evaluation/vlm_usage.py); never fatal."""
+    try:
+        from ..vlm_usage import log_usage
+
+        log_usage("openai", str(model), getattr(resp, "usage", None), api="chat.completions")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def _encode_png_b64(frame: np.ndarray) -> str:
     img = Image.fromarray(frame)
     buf = io.BytesIO()
@@ -218,6 +228,7 @@ class OpenAIJudge:
             request_kwargs["temperature"] = self.temperature
             request_kwargs["max_tokens"] = self.max_tokens
         resp = self.client.chat.completions.create(**request_kwargs)
+        _log_vlm_usage(self.model, resp)
         raw = resp.choices[0].message.content or ""
         try:
             letter = parse_letter(raw, choices=request.choices)

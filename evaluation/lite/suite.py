@@ -191,6 +191,7 @@ def _discover_candidates(
     model_root: str | Path | None,
     candidate_manifest: str | Path | None,
     allowed_cases: frozenset[str],
+    suite_cases: frozenset[str] | None = None,
 ) -> tuple[list[CandidateRow], Mapping[str, Any]]:
     if (model_root is None) == (candidate_manifest is None):
         raise SuiteRunError(
@@ -200,8 +201,11 @@ def _discover_candidates(
         root = Path(model_root)
         rows = discover_candidate_directory(root, allowed_cases=allowed_cases)
         return rows, _load_model_params(root)
-    rows = load_candidate_manifest(candidate_manifest, allowed_cases=allowed_cases)
-    return rows, {}
+    # Rows for suite cases outside the selected dimensions are skipped.
+    rows = load_candidate_manifest(
+        candidate_manifest, allowed_cases=(suite_cases or allowed_cases) | allowed_cases
+    )
+    return [row for row in rows if row.case_id in allowed_cases], {}
 
 
 def _default_normalized_path(
@@ -231,13 +235,18 @@ def _normalize_candidate(
     if kind is None:
         return candidate.candidate_video
 
-    from .normalization import normalize_liquid_video, normalize_to_reference, normalize_lighting_video, normalize_lighting_window
+    from .normalization import (
+        derive_lighting_time_mapping, normalize_liquid_video, normalize_to_reference,
+        normalize_lighting_video, normalize_lighting_window,
+    )
 
     destination = _default_normalized_path(output_root, candidate)
     if kind == "lighting_orbit":
         mapping = candidate.params.get("lighting_time_mapping")
-        if not isinstance(mapping, Mapping):
-            raise SuiteRunError(f"{case.case_id}: candidate requires receipt-derived lighting_time_mapping")
+        if mapping is None:
+            mapping = derive_lighting_time_mapping(candidate.candidate_video)
+        elif not isinstance(mapping, Mapping):
+            raise SuiteRunError(f"{case.case_id}: lighting_time_mapping must be a mapping")
         # This small artifact must be verified/rebuilt for changed receipt/input,
         # even when a previous candidate occupied the same output path.
         normalize_lighting_window(candidate.candidate_video, destination, time_mapping=dict(mapping))
@@ -345,6 +354,9 @@ def run_suite(
         model_root=model_root,
         candidate_manifest=candidate_manifest,
         allowed_cases=frozenset(case_ids),
+        suite_cases=frozenset(
+            case_id for dimension in suite.dimensions.values() for case_id in dimension.cases
+        ),
     )
     candidate_rows = [
         _with_backend_defaults(_merge_candidate_params(row, model_params))
@@ -535,6 +547,12 @@ def run_suite(
             f"{candidate.model}/{candidate.seed}: {result.status}"
             + (f" ({result.error})" if result.error else "")
         )
+        short = _short_candidate_note(case, result.input_contract)
+        if short is not None:
+            emit(
+                f"[wmeval-lite] warning {dimension.dimension_id}/{case.case_id}/"
+                f"{candidate.model}/{candidate.seed}: {short}"
+            )
 
     if dry_run:
         return {
@@ -613,6 +631,10 @@ def _evaluate_item(
     result.input_contract = input_contract(
         validated, normalization=str(protocol.get("candidate_normalization") or "none")
     )
+    if NORMALIZATION_TOKENS.get(str(protocol.get("candidate_normalization"))) == "lighting_orbit":
+        result.input_contract["lighting_time_mapping"] = (
+            "receipt" if candidate.params.get("lighting_time_mapping") is not None else "derived"
+        )
     return result
 
 
@@ -659,6 +681,27 @@ def input_contract(validated: Any, *, normalization: str) -> dict[str, Any]:
     report["duration_ratio"] = round(candidate.duration_sec / reference.duration_sec, 4)
     report["within_spec"] = (not any(flags.values())) if normalization == "none" else None
     return report
+
+
+def _short_candidate_note(case: LiteCase, contract: Mapping[str, Any] | None) -> str | None:
+    """Note for a candidate shorter than the reference that is scored on the overlap only.
+
+    match_reference stretches the candidate onto the reference timeline and the
+    lighting orbit requires a full window, so neither scores a partial overlap.
+    """
+    if not contract or "duration_ratio" not in contract:
+        return None
+    kind = NORMALIZATION_TOKENS.get(str(case.protocol.get("candidate_normalization")))
+    if kind in ("reference", "lighting_orbit"):
+        return None
+    ratio = float(contract["duration_ratio"])
+    if ratio >= 1 - _DURATION_TOLERANCE:
+        return None
+    return (
+        f"candidate covers {ratio:.0%} of the reference "
+        f"({contract['candidate']['duration_sec']:.2f} s of {contract['reference']['duration_sec']:.2f} s); "
+        "only the overlap is scored"
+    )
 
 
 def metric_status(status: str, metrics: Mapping[str, Any] | None) -> dict[str, str]:
