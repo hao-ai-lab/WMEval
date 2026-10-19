@@ -154,7 +154,8 @@ def compare_results(
         )
     return {
         "schema_version": 1,
-        "model": baseline["model"],
+        "model": rerun.get("model") or baseline["model"],
+        "baseline_model": baseline["model"],
         "generation_count": 5,
         "ddof": 1,
         "complete": not missing,
@@ -182,7 +183,8 @@ def write_comparison(comparison: Mapping[str, Any], output_dir: Path) -> None:
         writer.writeheader()
         writer.writerows(comparison["rows"])
     lines = [
-        "# Project Genie Table 4/7 cross-comparison",
+        f"# {comparison['model']} vs. published {comparison.get('baseline_model', comparison['model'])}: "
+        "Table 4/7 cross-comparison",
         "",
         f"Five-run sample statistics (`ddof=1`). Complete: `{str(comparison['complete']).lower()}`.",
     ]

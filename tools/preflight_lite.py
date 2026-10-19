@@ -3,7 +3,9 @@
 
 Checks, for the selected dimensions (default: all) of a suite:
 
-* python      -- interpreter version vs. the case locks' ``python`` pins
+* python      -- interpreter version (>= 3.11) vs. the case locks' ``python`` pins
+* imports     -- runtime-only imports a dimension needs that no lock lists
+                 (e.g. decord for SAM2's video predictor in fluid_mechanics)
 * deps        -- every ``evaluator_lock.dependency_versions`` entry vs. what is
                  installed (packages, plus cuda/gpu/nvidia_driver and
                  ``*_source_revision`` pins where they can be read locally)
@@ -30,6 +32,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import importlib.metadata as importlib_metadata
+import importlib.util
 import json
 import os
 import platform
@@ -47,7 +50,11 @@ if str(REPO_ROOT) not in sys.path:
 from tools import lock_case_dependencies as lcd  # noqa: E402
 
 PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
-MIN_PYTHON = (3, 10)
+MIN_PYTHON = (3, 11)
+# Modules a dimension imports at run time that its pinned packages do not declare.
+RUNTIME_IMPORTS = {
+    "fluid_mechanics": ("decord",),  # sam2's video predictor on .mp4 input
+}
 JUDGE_KEYS = {"openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY", "gemini": "GEMINI_API_KEY"}
 HARDWARE_KEYS = ("cuda", "gpu", "nvidia_driver")
 
@@ -177,6 +184,22 @@ def check_dependencies(
             rows.append(Row(PASS, f"dep {key}", f"{have} {label}"))
         else:
             rows.append(Row(mismatch, f"dep {key}", f"installed {have}, locked {want} {label}"))
+    return rows
+
+
+def check_runtime_imports(
+    dimension_ids: Iterable[str],
+    find_spec: Callable[[str], Any] = importlib.util.find_spec,
+) -> list[Row]:
+    needed: dict[str, list[str]] = {}
+    for dim in dimension_ids:
+        for module in RUNTIME_IMPORTS.get(dim, ()):
+            needed.setdefault(module, []).append(dim)
+    rows = []
+    for module, dims in sorted(needed.items()):
+        status = PASS if find_spec(module) is not None else FAIL
+        detail = "importable" if status == PASS else "not installed (pip install it; see requirements-gpu.lock)"
+        rows.append(Row(status, f"import {module}", f"{detail} [{', '.join(sorted(dims))}]"))
     return rows
 
 
@@ -436,6 +459,7 @@ def main(argv: list[str] | None = None) -> int:
 
     rows += check_python(locks, strict=args.strict)
     rows += check_dependencies(locks, strict=args.strict)
+    rows += check_runtime_imports(dimension_ids)
     if not args.skip_assets:
         derived: dict[str, set[str]] = {}
         for d in dimension_ids:

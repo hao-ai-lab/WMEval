@@ -38,11 +38,18 @@ WMEval evaluates interactive world models against Unity-based physical simulatio
 git clone https://github.com/hao-ai-lab/WMEval.git
 cd WMEval
 ```
-2. Install dependencies (tested macOS arm64 lock shown; CUDA/Modal jobs use the pins in `tools/run_wmeval_lite_modal.py` and `requirements-gpu.lock`):
+2. Install dependencies with [`uv`](https://docs.astral.sh/uv/) (Modal jobs pin their own image in `tools/run_wmeval_lite_modal.py`).
+
+   macOS (Apple silicon):
 ```
 uv venv --python 3.11 .venv
 uv pip install --python .venv/bin/python -r requirements-macos.lock
 source .venv/bin/activate
+```
+   Linux with an NVIDIA GPU (the script creates `.venv-gpu` and checks the environment at the end):
+```
+bash scripts/bootstrap_tables_4_7_gpu.sh
+source .venv-gpu/bin/activate
 ```
 3. Download the case data and validate the suite. The repository holds each case's metadata (`case.yaml` and the checksum manifest); the case data itself (reference videos, conditioning frames, action trajectories and other artifacts) is hosted on the Hugging Face Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite):
 ```

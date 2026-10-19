@@ -24,6 +24,23 @@ class NormalizationError(RuntimeError):
     """Candidate video normalization (ffmpeg) failed."""
 
 
+def derive_lighting_time_mapping(
+    source: str | Path, *, timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
+) -> dict:
+    """Time mapping for a candidate without a generation receipt.
+
+    The native fps is read from the video and the orbit is taken to start at
+    its first frame. normalize_lighting_window() still enforces a constant
+    frame rate and ten full seconds.
+    """
+    fps = _probe(source, timeout_sec=timeout_sec)["fps"]
+    if abs(fps - round(fps)) < 1e-9:
+        fps = int(round(fps))
+    with Path(source).open("rb") as handle:
+        digest = hashlib.file_digest(handle, "sha256").hexdigest()
+    return {"schema_version": 1, "native_fps": fps, "canonical_zero_frame": 0, "video_sha256": digest}
+
+
 def normalize_lighting_window(
     source: str | Path, destination: str | Path, *, time_mapping: dict,
     timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
