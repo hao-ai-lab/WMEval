@@ -547,6 +547,12 @@ def run_suite(
             f"{candidate.model}/{candidate.seed}: {result.status}"
             + (f" ({result.error})" if result.error else "")
         )
+        short = _short_candidate_note(case, result.input_contract)
+        if short is not None:
+            emit(
+                f"[wmeval-lite] warning {dimension.dimension_id}/{case.case_id}/"
+                f"{candidate.model}/{candidate.seed}: {short}"
+            )
 
     if dry_run:
         return {
@@ -675,6 +681,27 @@ def input_contract(validated: Any, *, normalization: str) -> dict[str, Any]:
     report["duration_ratio"] = round(candidate.duration_sec / reference.duration_sec, 4)
     report["within_spec"] = (not any(flags.values())) if normalization == "none" else None
     return report
+
+
+def _short_candidate_note(case: LiteCase, contract: Mapping[str, Any] | None) -> str | None:
+    """Note for a candidate shorter than the reference that is scored on the overlap only.
+
+    match_reference stretches the candidate onto the reference timeline and the
+    lighting orbit requires a full window, so neither scores a partial overlap.
+    """
+    if not contract or "duration_ratio" not in contract:
+        return None
+    kind = NORMALIZATION_TOKENS.get(str(case.protocol.get("candidate_normalization")))
+    if kind in ("reference", "lighting_orbit"):
+        return None
+    ratio = float(contract["duration_ratio"])
+    if ratio >= 1 - _DURATION_TOLERANCE:
+        return None
+    return (
+        f"candidate covers {ratio:.0%} of the reference "
+        f"({contract['candidate']['duration_sec']:.2f} s of {contract['reference']['duration_sec']:.2f} s); "
+        "only the overlap is scored"
+    )
 
 
 def metric_status(status: str, metrics: Mapping[str, Any] | None) -> dict[str, str]:
