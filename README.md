@@ -51,6 +51,7 @@ source .venv/bin/activate
 bash scripts/bootstrap_tables_4_7_gpu.sh
 source .venv-gpu/bin/activate
 ```
+   This environment runs every dimension. To reproduce the published lighting scores, score `lighting_shading` in a separate environment built from the lighting lock (Python 3.12, torch 2.8, SAM2 with its CUDA extension); see [Reproducing the published lighting scores](docs/evaluation_dimensions.md#reproducing-the-published-lighting-scores).
 3. Download the case data and validate the suite. The repository holds each case's metadata (`case.yaml` and the checksum manifest); the case data itself (reference videos, conditioning frames, action trajectories and other artifacts) is hosted on the Hugging Face Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite):
 ```
 python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
@@ -81,6 +82,8 @@ Instead of a directory tree you can pass a strict JSONL manifest with `--candida
 {"model":"my_model","case_id":"BallRoller/ctrl","seed":"42","candidate_video":"/data/my_model/BallRoller/ctrl/42.mp4"}
 {"model":"my_model","case_id":"RacingCar/prompt_first","seed":"42","candidate_video":"/data/other.mp4","params":{"shadow_hud_preset":"genie"}}
 ```
+
+The lighting case scores exactly ten seconds of the orbit. If your model's output does not start the orbit at its first frame, or its mp4 is tagged with a rate other than its generation rate, declare `lighting_canonical_zero_frame` / `candidate_fps_override` in `<model_root>/model.yaml`; see [Candidate time mapping](docs/evaluation_dimensions.md#candidate-time-mapping-lighting_time_mapping).
 
 To compare the Table 4/7 cells with the paper baseline, export the rows and run the comparison:
 

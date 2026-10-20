@@ -506,6 +506,11 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
             outside_spec = sum(
                 1 for row in done if (row.get("input_contract") or {}).get("within_spec") is False
             )
+            time_mapping_counts: dict[str, int] = {}
+            for row in done:
+                source = (row.get("input_contract") or {}).get("lighting_time_mapping")
+                if isinstance(source, str):
+                    time_mapping_counts[source] = time_mapping_counts.get(source, 0) + 1
             dimension_summaries[dimension_id] = {
                 "display_name": dimension.display_name,
                 **({"lpips_primary_source_counts": source_counts} if source_counts else {}),
@@ -516,6 +521,7 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                 **({"metric_status_counts": metric_status_counts} if metric_status_counts else {}),
                 "num_target_unvalidated": unvalidated,
                 "num_outside_input_spec": outside_spec,
+                **({"lighting_time_mapping_counts": time_mapping_counts} if time_mapping_counts else {}),
                 "num_rows": len(dimension_rows),
                 "num_cases": len({str(row.get("case_id")) for row in dimension_rows}),
                 "num_completed": len(done),
