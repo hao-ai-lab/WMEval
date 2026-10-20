@@ -9,7 +9,7 @@ paths. ``download`` writes the files back into ``eval_sets/wmeval_lite_v1`` and
 verifies every case against its manifest.
 
     python tools/sync_lite_data.py download            # curated cases (test_core)
-    python tools/sync_lite_data.py download --split full   # + 219 synthetic trajectories (test_full)
+    python tools/sync_lite_data.py download --split full   # + 220 synthetic trajectories (test_full)
     python tools/sync_lite_data.py status              # what is present locally
     python tools/sync_lite_data.py upload --token-file ~/.credentials/hf_key   # maintainers
 
@@ -259,6 +259,8 @@ def cmd_upload(args: argparse.Namespace) -> int:
         repo_id=args.repo,
         repo_type="dataset",
         allow_patterns=patterns,
+        # a regenerated synthetic suite replaces the old one: drop remote trajectories that no longer exist
+        delete_patterns=SYNTHETIC_PATTERNS if args.split == "full" else None,
         commit_message=args.message,
     )
     print(f"uploaded {len(report)} case(s) to https://huggingface.co/datasets/{args.repo}"

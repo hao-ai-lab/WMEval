@@ -88,3 +88,36 @@ def test_dataset_card_declares_every_index_column() -> None:
     (info,) = yaml.safe_load(header)["dataset_info"]
     assert [f["name"] for f in info["features"]] == list(INDEX_COLUMNS)
     assert all(f.get("dtype") == "string" or f.get("sequence") == "string" for f in info["features"])
+
+
+def test_descriptions_match_actions_and_are_diverse() -> None:
+    import numpy as np
+
+    families = {fam["family"]: fam for fam in gen.families()}
+    rows = MANIFEST["trajectories"]
+    assert len({r["prompt"] for r in rows}) == len(rows)
+    for r in rows:
+        fam = families[r["family"]]
+        # text first: the prompt ends with the action description, which parses back into the steps
+        assert r["prompt"].endswith("\n\n" + r["action_description"])
+        assert gen.parse_description(fam["grammar"], r["action_description"], fam["duration"]) == r["action_steps"]
+        for old, _ in gen.SCENE_EDITS.get(r["conditioning_case"], []):
+            assert old not in r["prompt"], f"{r['synthetic_id']} still describes the core case's action"
+    for name, fam in families.items():
+        plans = [r["action_steps"] for r in rows if r["family"] == name]
+        signals = np.stack([gen.control_signal(fam, plan) for plan in plans]).astype(float)
+        assert len({s.tobytes() for s in signals}) == len(plans), f"{name}: duplicate action sequences"
+        dist = np.sqrt(((signals[:, None] - signals[None]) ** 2).mean(-1)) / np.sqrt((signals ** 2).mean())
+        np.fill_diagonal(dist, np.inf)
+        assert dist.min() > 0.25, f"{name}: two action sequences are near-duplicates ({dist.min():.2f})"
+
+
+def test_parse_rejects_text_that_does_not_match_the_steps() -> None:
+    fam = next(f for f in gen.families() if f["family"] == "camera_yaw")
+    g = fam["grammar"]
+    good = "From this starting view, the camera turns left at 30 degrees per second for 2 seconds (60 degrees in total)."
+    assert gen.parse_description(g, good + "", 2.0) == [{"kind": "turn", "dir": "left", "speed": 30.0, "sec": 2.0}]
+    with pytest.raises(ValueError):  # stated total contradicts speed x duration
+        gen.parse_description(g, good.replace("60 degrees", "90 degrees"), 2.0)
+    with pytest.raises(ValueError):  # the steps end early but the end-of-clip phrase is missing
+        gen.parse_description(g, good, fam["duration"])
