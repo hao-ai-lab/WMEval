@@ -21,6 +21,12 @@ Two sources are supported:
     Run the live pipeline against the normalized reference video instead. Needed
     only if the cache is unavailable.
 
+``--synthetic``
+    Run the live pipeline (``--recompute``) for the synthetic ``liquid_container``
+    trajectories, writing into their render source of truth
+    ``runs/synthetic_unity/liquid_container/<case>/<slug>/artifacts/`` (``publish``
+    with ``tools/render_synthetic_references.py`` copies them into the dataset).
+
 The reference video must already be normalized to the locked 832x464 @ 16 fps
 geometry (``evaluation.lite.normalization.normalize_liquid_video``).
 """
@@ -236,6 +242,31 @@ def build_profile(profile, case_dir, cache_dir, content_hash, recompute, cache_r
         print(f"    wrote  {name}  ({size/1e6:.1f} MB)")
 
 
+SYNTHETIC_RENDERS = REPO_ROOT / "runs/synthetic_unity/liquid_container"
+ARTIFACT_NAMES = ("liquid_mask.npz", "bottle_mask.npz", "raft_pooled_flow.npz")
+
+
+def build_synthetic(render_dir: Path, cache_root: Path, *, overwrite: bool = False) -> bool:
+    """Compute the three reference artifacts for one synthetic render directory
+    (``reference.mp4`` is already the normalized 832x464 @ 16 fps video)."""
+    artifacts = render_dir / "artifacts"
+    if not overwrite and all((artifacts / name).is_file() for name in ARTIFACT_NAMES):
+        print(f"  {render_dir.name}: present, skipped")
+        return False
+    video = render_dir / "reference.mp4"
+    if not video.is_file():
+        raise BuildError(f"{render_dir}: missing reference.mp4")
+    liquid, bottle, field, _ = _recompute(video, cache_root)
+    _verify(render_dir.name, liquid, bottle, field, video)
+    artifacts.mkdir(parents=True, exist_ok=True)
+    write_liquid_mask(artifacts / "liquid_mask.npz", liquid)
+    write_liquid_mask(artifacts / "bottle_mask.npz", bottle)
+    write_piv_field(artifacts / "raft_pooled_flow.npz", field)
+    print(f"  {render_dir.parent.name}/{render_dir.name}: masks {liquid.masks.shape} "
+          f"raft {field.u.shape} valid_frac={field.valid.mean():.4f}", flush=True)
+    return True
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -254,7 +285,31 @@ def main() -> None:
     parser.add_argument("--recompute-cache-root", type=Path,
                         default=Path("runs/liquid_cache"),
                         help="where --recompute writes its own pickle cache")
+    parser.add_argument("--synthetic", action="store_true",
+                        help="recompute for the synthetic liquid_container renders under "
+                             "runs/synthetic_unity (implies --recompute)")
+    parser.add_argument("--only", default=None,
+                        help="--synthetic: comma-separated trajectory slugs (default: all)")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="--synthetic: recompute even when the artifacts exist")
     args = parser.parse_args()
+
+    if args.synthetic:
+        wanted = {s.strip() for s in (args.only or "").split(",") if s.strip()}
+        dirs = sorted(p.parent for p in SYNTHETIC_RENDERS.glob("*/*/reference.mp4")
+                      if not wanted or p.parent.name in wanted)
+        print(f"building synthetic liquid reference artifacts for {len(dirs)} render(s)", flush=True)
+        failures = []
+        for render_dir in dirs:
+            try:
+                build_synthetic(render_dir, args.recompute_cache_root, overwrite=args.overwrite)
+            except BuildError as exc:
+                failures.append(str(exc))
+                print(f"  {render_dir.name}: FAILED -- {exc}", flush=True)
+        if failures:
+            raise SystemExit(f"\n{len(failures)} render(s) failed")
+        print("ok")
+        return
 
     profiles = [p.strip() for p in args.profiles.split(",") if p.strip()]
     unknown = [p for p in profiles if p not in PROFILES]

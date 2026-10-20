@@ -428,23 +428,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s01_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "f24e843c8f6f0cb5a83dbad1c80a75b58bfc8b78948171c07dab1d9eb0817607",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "a71a4145f858ef91191510745fb4cfcb48f0641ae450763e8732d897e6b38933",
-        "reference/capture.json": "adb07a31521aa0457fa2002cdbac5a59489f8667f88abbb0cdbf88f60c964098",
-        "reference/ref.png": "d899ec5188ca92cc3a65fd54d29087bd45ae2302976736ddff7f5ca3497a4bd1",
-        "reference/reference.mp4": "c2c930dd727debad1f7c3ecdd6fefac041bb9a847822867376e1e5f7bdac053d",
-        "reference/schedule.json": "6fdfec6ac33694e8d05810a31b86325cead3a72efc9778ad0fe50ae8cf9dd19a"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "69cd5a350e834cd38e292044e26f838967c3baed4cfc374bf627d716a14db87a",
+        "reference/capture.json": "6006c6a534df365344c6b3bb77ba9179f7ac49692dcb81e977756072f188d8fa",
+        "reference/ref.png": "2e4cdb24734436c7fda22307762081bc7dfc982d4906a317d4a8fb99cfa790d9",
+        "reference/reference.mp4": "be366df53d1ea351a817d9d608449b116a9ea98e471afb7e213df79fd88a0999",
+        "reference/schedule.json": "48c164668a278d5a89bc1d90e8618ac17da653466cf5fe754dc64554b2bbdad6"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.287,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -458,23 +458,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s03_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "35732f9a912e6f49000d273e426dbd785b8cf8e1ca106e76fe01b03371e0b6b8",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "0d2bc11a82115a37412dce81961198087accea20b1e766e1d059765822483a4f",
-        "reference/capture.json": "39d9e22ee0328ef28ef413c1423b32b37844c89ec3e97b0442cf94c882cbe53e",
-        "reference/ref.png": "bb89e917603a6ec3ac649087ffbf3ff0d6ae1319ba095e510b5c7f0febdf1687",
-        "reference/reference.mp4": "40cb8ca358799df1f49e5ffe29f5e6da20547798164aa2a26b877b6147171628",
-        "reference/schedule.json": "a1e9f1efb55d17c5ee42bf9c53f69fa478d7ca4834558b10dc8efac55dac63ba"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "7baca265e6dfd7f8f0b77e3326d6690fa4007d0794070e556025ca1a9e69a67c",
+        "reference/capture.json": "bd13c8ede5edb236d4436fa9145dafe6922e5da9d9ff8436265ab0e09d706c43",
+        "reference/ref.png": "3f37ef3149e4807e669fc56a065fbcf66ecfc04dc1d54b7847af630900a913b9",
+        "reference/reference.mp4": "450a69ffdf4e5d6723109dfc1913a4665a239402c136c2d8888c362a0ecf24bd",
+        "reference/schedule.json": "70688161e4a2fec9e52a65525cbbcaad2ea549fc4141a571075370bab41520d8"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.286,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -488,23 +488,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s05_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "93a1dedfbc69b6f0d82acb6f603c2893c30c820f93a9ca24b122ecc4953fd16a",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "5afb91bdbdfb1d171929dcb5ac7dcf2705eb1b556a82d56512a3dd750f561132",
-        "reference/capture.json": "4c7b8fafe74ab7185183e221d3d482a2bbfec8f015e5301a263cc005652faf62",
-        "reference/ref.png": "247c0d519409628a7751d869c1199fba9c1b9cbad27ee278f02d829ecefe9588",
-        "reference/reference.mp4": "a74f5c2a6cdf6a64a6e3a2af7e1f71710962b7e0cd91f92c1614a8d8c51065e1",
-        "reference/schedule.json": "33597133ce1b13668aefe9f9531d26ae02ddb29abf34b83dc4274cb6d4731539"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "a9ba668f32b4a49e5dfe892a1b77aeef8b22a637d5d6abecbe6401f10cfa5ad6",
+        "reference/capture.json": "68aa79c9b3747ec76768cc870e48312bdb34bcd750e7a885c397f2b5c810fe6a",
+        "reference/ref.png": "090df6144309ea4afb60b5cb215880d8d25ec58001993f821a40137985f4adc7",
+        "reference/reference.mp4": "1d9efaf5cecb4f1c66620475b51fc35973c970dd5768219948d8d79b184a9b2d",
+        "reference/schedule.json": "c5cd5e52db78bedb738dad3a5c749245ecccd0445f16b03bdf43cdb600a58711"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.287,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -518,23 +518,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s07_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "ef5905257000e84000c5323f4e0114636823bdfd1ab5cb8fb6d2570ad51bf6f4",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "cfc342a9022a4c322207160c72e4881af58620e0714649558eabee9df73fa0c7",
-        "reference/capture.json": "44d50b44588975a289c4e188a5bfae2bd1a061aa324d46f6e4d4885139894e7b",
-        "reference/ref.png": "16d0ddf05093b8cf027ba0a1e13e8e7a731f507115b4b940c33f6c8c95045f68",
-        "reference/reference.mp4": "bc2257449097bd332a398e9446b39959e82b59d8d8e4f367858062d406123f0f",
-        "reference/schedule.json": "61d995f3c1fa10c2daabb4063f6b7c8b3ef5cf4e4362733a816b48e43a19f437"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "451b867e495d8713c8e91128e6611e345de4592d7c32f2cebd219932812ac003",
+        "reference/capture.json": "8cf8914ceca34ddcc46ff8f35b90063e9eb084922d59f8ca2909d3c8c8ea0195",
+        "reference/ref.png": "a19ac53f3c4fcd18d4a7a7bc1f7ceeb17e78eabd15f10c66e8f41118c40fcc93",
+        "reference/reference.mp4": "2f9d974617c862f91d824ab24a0959fe96ebc9fd541e8f8d9b9723ed4a5419a2",
+        "reference/schedule.json": "8398e49332689b9dc5a286895af9a67679069a6a3fdf3c5399fdc2e13f6053b3"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.284,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -548,23 +548,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s09_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "166398a27a273c85787c92585686cd1ea86723cb8ced8a136af89c7229eb6e7c",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "b7075c6191d8129f4a74ae21485735c6e7e379dcbe35ff53194efad0b4250905",
-        "reference/capture.json": "d7c28e5bbe7e1e3aa11e57b06edd4979802e7e42e9532c4002f0f678253584e1",
-        "reference/ref.png": "a1df0f301d8afff95ec18220bb1d7464b7c199180c2638cfc2b0665ad856161a",
-        "reference/reference.mp4": "ab271469fe81027717a699df889371618ce976a838a5cf3cb37aea180b08fa73",
-        "reference/schedule.json": "1ada420d90121b895ea04c91941f9fab397332002b0e710b2dbc6bdb38ba6202"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "9f48749e8b163bafc19e473eaedd73f1ae077f18ec3785d6871522e4ee55b286",
+        "reference/capture.json": "f71a000c4eade6097805470efcc5dc3db5895fb9ac46e0be0a8d7bc553babfe4",
+        "reference/ref.png": "a582e431bd4fb5d4e56136ff92f684309389ec73c5db96099b9008940ce2622c",
+        "reference/reference.mp4": "f06d5e7bf08a2369b27f30700f8d1cb5b5561c808fd8c8e64700ee34ad871606",
+        "reference/schedule.json": "721137f6fdf904911d9966fc7d3a6840db22df96fca19093200435209cb034f4"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.287,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -578,23 +578,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s11_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "d2b258453c7b2f87edd8c5fd0c5bb67a1c817fd3e592207806c13a82d71cad22",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "c46d97f9be726480b6f5377a4a25ee07ade5bae0fdc2d2674ce158ce53ae7c79",
-        "reference/capture.json": "e56565f70fb4a504bdb75b8406915a7f537cd32aff9b367a107ba662f51818cf",
-        "reference/ref.png": "0ade80ff0c9c557bd5faf5d008e071c63ce255e19b3e1842c9c35d020f07b74f",
-        "reference/reference.mp4": "6b715512e6cab466b6306fc1af4b6835c1e9dd28edea9e105cd5b16d4563010e",
-        "reference/schedule.json": "88bf7a83ceec8543128be90555727a65a56ab657ab9821be05f1c2d0e5d580a1"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "9da39be271d04e0d052b22e1e4ca6513c82d595fce378209ba5b0ae634d184ed",
+        "reference/capture.json": "bb2e18b35b2ce7acd66d7c558e4c57374b5c827f17d8f7755a14b8853ae08b45",
+        "reference/ref.png": "d5995b95e3781c1dd2f691f910b744d0e6e6146ab7008d26c63c08ab60e24d66",
+        "reference/reference.mp4": "2ca8e4781dc7bf410dbbdf1f213cb146367df3ea8ea40315a3f826e5069d945e",
+        "reference/schedule.json": "c94d2ce4734da7c19f5b64e9b24f9fa3a7c94f0c21212c73326657896b7891cc"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.286,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -608,23 +608,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s13_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "74822883ed23ed4e602c094b52d356d1efd02387cff95a86e183ec048a92dc1a",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "b05cdf35224c7e7642fb42f1c16089f5423164e4c0557ff237d93c0dad36f3be",
-        "reference/capture.json": "28252cdc5181ed008f0ffa13bd0b0b388893fc90e096c2795295f2fdc0cf8ec5",
-        "reference/ref.png": "cfff10da501813556ec12e88bc188b94fab2322fb0daf59d4acd0f469ffacb57",
-        "reference/reference.mp4": "f2e8b4a7aaca5436335f14f3e948cc34565ef537c5954c23907cd7dbf77f8649",
-        "reference/schedule.json": "1d6f7a365667d507822948ef845608532506c297fa8f73c15f5c92fcf80a8172"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "c9a075a6110dc5048ff8408cd25a1cd09e35aa0542b20ded3533e3a0af1240fd",
+        "reference/capture.json": "81f0e28216eba13da1a0a679c2d060d7521981c81d3df0aa2a5e6f6851195645",
+        "reference/ref.png": "bb8d9383d964acd498c496b01437e3fcd038ab7482cb799e3ba4c70f8104c5db",
+        "reference/reference.mp4": "ec1fcbd6a317743f54362fe3819805bf50f50b940faf3525aea7bc2138db2070",
+        "reference/schedule.json": "87099955b670991ef9e62807378318f6f3c43f3c178ed0b8bd07814701f33247"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.284,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -638,23 +638,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s15_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "e122127f7263c867d4ea1517dc03e0291234cdd594f66f7130694813811fbbd7",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "a334d8131b231f882e8466148d1b7980d351d27bf905e036adba613b662bfb12",
-        "reference/capture.json": "7281a741d95ffd978781bdeff0471177b27a6e330d665c03aef20fcd8a0f3c55",
-        "reference/ref.png": "089aadb54fdf70720c3b82e084f1c6c23463fc9fd257ee5debf19ab0793b1ca3",
-        "reference/reference.mp4": "5a31b31b90c16cc8c1c01729be77fb478cccb65b9fa2f6b05b0227cc5eda4ec9",
-        "reference/schedule.json": "18ec96da86b47725bb51397e045948201cc1507de135fafb03ecf042a64aab0b"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "9e12ad97382bb8c0050327c13c1a0d4b0fb34a6c97a0e92851b7362bb2c5f0c7",
+        "reference/capture.json": "0322faf304b3e36b7f94c491124801cc8cbe467d805813039b24154b37a77962",
+        "reference/ref.png": "1af62f329cfbcd0057e3935a5505cd8ae8ed42bf4e6fce6d854736096f1ae7c2",
+        "reference/reference.mp4": "89b1c722090e58429243775e9b3888824fb326d9ba7821ff3d1f9721a51f5afb",
+        "reference/schedule.json": "8ff69166db45eca1cb2a0f3df3b870aa8dd4725a9b09cf21ac16715276a31bda"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.285,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -668,23 +668,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s17_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "570ebf5eea033d4ccba7bd0e302089ed1edbf01c2bcf381d904433345617ddde",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "3db8815eb8aa8dbcc28a278ef5024879824151382d8e79125ae3bd006e67e164",
-        "reference/capture.json": "bc0e7df1977c1c478b5f1bf619b0d35bc390abd9f396c8b08720578d97ae5ae1",
-        "reference/ref.png": "ef683dc6cf4eb892a422a2be676b7c97e8ba6f6bd762742159b554aec5932fa7",
-        "reference/reference.mp4": "d8c479864840425ec0e35d358dd15d5b3c7a2d7cf44b7c94b35d3eaca6211d1f",
-        "reference/schedule.json": "b54b1d53419f7aba7e4076430ea6161db0d3e123a4b7efa276b5b341831cd706"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "e26e72a09931aff08fc7a1a9f7b35dca8c9bfcf2527521fee3f86c44ba0b06eb",
+        "reference/capture.json": "a1cae55c98cbd9f6564d05b0245b73c58a09d3dda5ccb90e845574064b53a60e",
+        "reference/ref.png": "3a8f4e6213d2c31c4f3a18cbd30865454926c9f8efa4704dc552c53de2701a6d",
+        "reference/reference.mp4": "1307d1702f09ba7f313e6e9e5006c1fe868c2444971bc9371be17d83207dc88f",
+        "reference/schedule.json": "6ff9829aafb77e21d63ca90bbd3a7e5d6a0db65b204d6ef9aafce8c96d865a05"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.286,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -698,23 +698,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s19_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "8bc288baf40f1011478fd3da6fadb8d64b9d8196a144973a83b0639b45341773",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "0dd99615115c30bb5b385a792d522d6e5e33fd856bd18bb85c635663626d6831",
-        "reference/capture.json": "c4cc7101f352d42296de23dc013741171bc5c8667204f4480d0b9acdec4231ee",
-        "reference/ref.png": "40f6c2c6711492820f43be6f207f877ba6e1ab774cc4450eeb9f57e09f99ae77",
-        "reference/reference.mp4": "7e19dc6b17db4ecb857bd04b982c8ae058fc939081619c172e74bce999b93d55",
-        "reference/schedule.json": "afe0c5f5fc18c20a57a3a8c6ede53d4e56d982a8297988fbff1c32b0eb3804db"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "30219c3a5b80e619a5e24ebfb1c615f6b59449ab795708f87bd82c571a26a313",
+        "reference/capture.json": "0937c077dfa9848f8400055f7ed887d10a49a1475af5f046834c9ca20bdfb084",
+        "reference/ref.png": "4eab6561ff527149cc3590064e52add54dabb64948b112a870497010bb8bc724",
+        "reference/reference.mp4": "4750582de8bcd8f30bbe232ec805fd78530102db3775557857a9769c9bd3388d",
+        "reference/schedule.json": "66264eaf91581007256c52256561149e287fb98f867b3f5759bb75085e572aaa"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.287,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -728,23 +728,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s21_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "4409b9ffcdb5877716f5daed3d78391d8ff8f4e7f9b2b01bf0f11e5c310550e9",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "64dff9963daf2a43e7b614be5cef5a78dbf879996116753da3f2a1f2edeef1e0",
-        "reference/capture.json": "f748a1741274c25d83cbe3d6824ee09aa5fc5fbd1cc7b6f7152e77c8394faf4e",
-        "reference/ref.png": "e0f067066ea4b51d031068f9579ba4ff6ae1b117b238e097a0ae1c4c246e00fe",
-        "reference/reference.mp4": "3134a2d5c7eb99b4cd74c9dbe43a72f59bc0973f0634963f1e913fe6299e2cba",
-        "reference/schedule.json": "86aa7b93b099121cf90cdfd4c1cf392377e0226c23bfa5e8d7696bba50b6767d"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "0b67164e6a99b4bc7049d2d4277f75b7dea385752c3b9d24a10977790d7f1d0c",
+        "reference/capture.json": "e933f44efe9dc11602ed12e1c0d068fceedfe22dcbedc05cd0bb68b1534978c9",
+        "reference/ref.png": "1a83e982fb9ffb7235a171a1427115daf6a2c83834401d5b24088b36479d1684",
+        "reference/reference.mp4": "bbd027e880419df295f73e27ac91ed901ca1c96853e15d64484e957dcd4fafdf",
+        "reference/schedule.json": "564e03aac13737cd8deeac436a22e1ddb7a9a8366ff2fbc5807d614c41742664"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.286,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -758,23 +758,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s23_push": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "69b758d8afe8ca7339fd7aa49620038b7e094c864ed6caf1c9d810cb0caf8c31",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "b5be588d5f5234bf107e7a9bef26d859e03badba1c65a8e4572773dc566956d6",
-        "reference/capture.json": "712126483b821028e81786795aca5f408fe8ad7af43efe52efbdceb319b335e1",
-        "reference/ref.png": "65daee910cd7199f7909ab55fc28bd1b14399f26e006b4c24d2a20c6f2a46fd6",
-        "reference/reference.mp4": "701c7b14867d0dc3fda072703976a187d6a74ba23fc49cb7d6b5fed501460873",
-        "reference/schedule.json": "7d3ed8e88d3f0360717bc8a6ab9651fa7c73b6b1808e0870ee2b2af44b359097"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "27cc943502e0b9dfb80cd8a3f029e2c4c92b1963989b61953b63cc37a6d92069",
+        "reference/capture.json": "a4613e4807f09dcb2c8a76be9a7b35cb01c1bf150db74f700e8d2e2b1165f5da",
+        "reference/ref.png": "c7aa73fb2314fc5b070ae2bd4b926f6b8306bd82bcef208adac3e6082e37ce14",
+        "reference/reference.mp4": "4e13bfeb82d67afb2ba6e419f91599fa32f39e8cda39f49fdc2020ede8a2468a",
+        "reference/schedule.json": "5134157285ca6453ec291bb912c06e2bf32282243c75a2161a51dddf4a613d4b"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.286,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -788,23 +788,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s25_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "faf6c15c9d6997a1d72fdd5ee38e7dfff6b2e565920b252200351637d477c608",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "6f0f6cb8ca41f1050c2704c364ccc3e077392750ce78f1a4c183b55c0eeaa506",
-        "reference/capture.json": "60e123829de426426a1c55776a096a0bc11a0ee51162b90d204021b9d86c7720",
-        "reference/ref.png": "996d446683d61fde0bb5fa7b0d5981eebb5c9b2df3d4f0e5e097bca16692d0e6",
-        "reference/reference.mp4": "b7d37857e45b3b7aff99678a054e1474da942e86bd1855578481d2d9dfb906cf",
-        "reference/schedule.json": "6e4ec6843f8b220f2163f1bae0ca56450237c6c872eb4c08c31b6b936009a768"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "4e5a74cab28fd970f8d731c6b3d8a1323cab96a79dae65aac4b29eb8677c52da",
+        "reference/capture.json": "de19eff8e6b5010bd476c01c7222551d9d5d7236ee241c536064826b0c55ab6e",
+        "reference/ref.png": "3092a8131dbf4c94ce407c97c841d973d9173dc733dd0d6dadf3a1fcd3285d2a",
+        "reference/reference.mp4": "050710261e2215ae700b234a05a3b186ad2d0aa9c9817cf82d50284999c04619",
+        "reference/schedule.json": "5ed8cf8093df9ee3954ecd75b405301245eb02f7fbc527059d88b74d5c05028f"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.285,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -818,23 +818,23 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s27_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "742f9bfebfcaa827f810f1b4972a56c9d21d2c9a2a8a2bd537c8dbf3ff0a38cc",
+        "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "29d213755d1f0a370ea2a36da19e7965789e858515bef153f740a5038eb50ea4",
-        "reference/artifacts/poses.npy": "bd1c6f2d4af61338a1f3a9cb205fd1ac0c02cb3033274e7933c2d666a96d9820",
-        "reference/artifacts/unity_gt.json": "fcbd3e1d332a1af66cf143fa16f3930cda9ce0a18cfca63f224109e536b89e2c",
-        "reference/capture.json": "95dbc55245b321960df2c9684052b4d1d0e1fc84e1db59ee042d91edbd75a596",
-        "reference/ref.png": "47b1cf2cd128811c984c3306cca08aae52d3924db17d7e028c81b75a46ae9333",
-        "reference/reference.mp4": "65ca89769379deb27b0820116a6089f3470c42df1f5fc2d170c43ba5b5e6a55e",
-        "reference/schedule.json": "5e9dd1bce39fc3f37126aff9d92d8ab8c90eb96f2766e40356f07b3f3d72a423"
+        "reference/artifacts/poses.npy": "c6583cddb2e0dcda5e46a89fd345386b796b64aca5eb9aa209383924c93fe87c",
+        "reference/artifacts/unity_gt.json": "9e9c40edfc79f349728fc62a6962c6187c263c95fe32e0f18ef5a30d3ad9a8ff",
+        "reference/capture.json": "6bd0f4e7096baa1316dd498dd046ebb73ef23ad84d7c9940ac1ecdfa5354c6be",
+        "reference/ref.png": "8d48dbbeb07fb371b12aaa044a487b7e19c0c10661034c9055ed2578388aed45",
+        "reference/reference.mp4": "244fabc18d8640d867d2f6000761322c5882a4f0ad232786ecd8f407ca5744c9",
+        "reference/schedule.json": "c6f71f32cedbaa51c8bb38cb1d94abea65b5e069c5e98917b8cf7e99d5c8dc03"
       },
       "fps": 60,
       "width": 1280,
       "height": 720,
       "frames": 360,
       "duration_sec": 6.0,
-      "first_frame_psnr_db": 18.481,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 34.286,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/MirrorRollingBall",
         "scene": "Assets/Scenes/SampleScene.unity",
@@ -848,6 +848,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s00_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "8a1d33c27cc8f9d4524556e37022ac28e99fb8ab4ae09e30743101f820101d9a",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "30401aeba81d14a51eb7fdd34acdd655375937b1d05e0555256343e0985d7c5d",
@@ -878,6 +879,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s01_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "0695a071490b5a2d1d6a417cb024f7580d764e262e9fd2487c375c4e0f438ef2",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "bae15a78876059257cfa984549d60fa0cf347b424ea952278f903810cb017989",
@@ -908,6 +910,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s02_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "62be44a94d7b2311a5a6c28aabbbaec603d72e7a24478bf97fb9c21e8faa28f6",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "de7b9f4fd63b3e7677b9f027d1bc1e606e36517f29c088135114b3ed9caeff4d",
@@ -938,6 +941,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s03_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "3aa9911e3a475e119ef4c49e08bac08e187a623f2c199db77923d9af799e589d",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "f041bfc5b203d9900dd7b4979abd57fae22d600c41da513348f3c6b0bd09746c",
@@ -968,6 +972,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s04_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "63a3da7cfd672c5bebb1f5d16d2c400d506aa13064be32341d4a8b62e4b65afd",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "2af3f69bf9bb6687dacbc7a1394409f65346be1987ee22545c20b0635019c484",
@@ -998,6 +1003,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s05_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "959ea7402a7ccd498a6a42a4df28d3c380beab359af90f19a83c45bc3df65f64",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "1d44dee93828a8b463bca3d7d7d0c45bebda1ec9e79f2a21f4d5b47da5f251f2",
@@ -1028,6 +1034,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s06_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "71b6baf8549a96d7c99f127b1efce5f415ff50e3a324cca382cc5f7267cd68ac",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "05d5a99fc3aadc52d331a5b35064039aa06ea6dad2cd09f5f4597a8fd1cc6c6c",
@@ -1058,6 +1065,8 @@
     "synthetic/beam_domino/BeamDomino__causal/s07_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "67bc313cc494a44ecb9dfbfc292be67d0107bad56e48772c4a81d5d5434ff478",
+        "reference/artifacts/dimension_applicability.json": "923da478e3600a0ebb702f86c7ca7d5cf4bef3a590735c760a1a589a47e513d8",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "ffa71d62e46f6834b6c537f41aac79a446c43ee08b3c7a79e63f6b240bebc658",
@@ -1088,6 +1097,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s08_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "4fce92dd9787f063bbee411378c15fc05402ee135bb6a3223ad9974a455c5b86",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "4b3872e821a67c57ae5d21b3024dff2480a3415ec4def172e1682848d51e0bf4",
@@ -1118,6 +1128,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s09_roll_wait": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "c4754732aaf49d94ac69cd410c0567530cd46727518e68d5fd96d5313cd3e85f",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "f301a14198ecfaf496058b2fc08b57e5a46fdf794dc11af9510b45215be4255d",
@@ -1148,6 +1159,8 @@
     "synthetic/beam_domino/BeamDomino__causal/s10_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "83e1d202651a1b1a404f4de8ae9bbb0f783dfbd21d40958f0297294c1a8ce368",
+        "reference/artifacts/dimension_applicability.json": "923da478e3600a0ebb702f86c7ca7d5cf4bef3a590735c760a1a589a47e513d8",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "95786f83ff37342128455543b9b53d5ea27bbd915152cb4785cae0488021b095",
@@ -1178,6 +1191,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s11_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "38791e600cfe0fd0ddffb9f5f8553356f934f8eee4a28937515380c32994c7ba",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "faa5baa684c6cab2cec536670b8734d40f67483d7b15a4e70d4bfe378cacdc70",
@@ -1208,6 +1222,8 @@
     "synthetic/beam_domino/BeamDomino__causal/s12_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "870dd29d2fc63f6c4eb4d270064fc0a024fe4163ec53b46cdd8ebe7d20d339d6",
+        "reference/artifacts/dimension_applicability.json": "a00a455599c70487abef89789af17f6a81d1890e5cbf28efc3af20bd88a61971",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "69e6005860d191994e7eb5d3f3a3f7d2961bf52502dcf0acd1dab463b0999215",
@@ -1238,6 +1254,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s13_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "f1d887f75f206f31d4aa982f31e9bc88a5377ea9284707449c884f45f093fc42",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "8d1dccebf61c18cbc19bc035b1026a0dd093a5b8504bc99758dc2ce15f5e18fb",
@@ -1268,6 +1285,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s14_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "c55e9531e98c4d62ec09bf577a7ef0e2c931c2f9547c3eb38bb4b28adb232913",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "a1e3ab92f63ad933d0799f83778057ef482584a0684b00b65f6ff9e45b9683da",
@@ -1298,6 +1316,8 @@
     "synthetic/beam_domino/BeamDomino__causal/s15_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "947d7e9f3e8b2798683a39fea578eea3db6fcb17160f2795bbece22ffc24856a",
+        "reference/artifacts/dimension_applicability.json": "a00a455599c70487abef89789af17f6a81d1890e5cbf28efc3af20bd88a61971",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "f179c58b089de1b8392790208452c3b6f4f52d52d4b6e8814a90b1cc28784a7b",
@@ -1328,6 +1348,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s16_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "da947038164048a08b3f730bfba084978869a77c62595cb6abc53b153c593134",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "d8fdcf717864eefda1c87a72d43f9a764dcea5bee73490f1706a56afb070b2f6",
@@ -1358,6 +1379,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s17_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "b6f95865798d416f2f9d66f85550867300547e40e7beec7d8dc210ba01246823",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "60142d13158d8871666cfca418a99f63b4c03326110eed7bd386add1808309f0",
@@ -1388,6 +1410,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s18_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "15fc9c5b18f59384bd305e4fe241bd64b2c9bbc226e794c63ba98b7921b341a5",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "a44c0cb684d5a115b233c82aaa598b22e47309c0b519beb30e9918fdade945bd",
@@ -1418,6 +1441,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s19_roll_wait": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "fec766b78c3527ecd6e8ba341949090a81a58c26e10fc12a2aaba6580e808630",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "ff5f9e6458efce2e174f18420dd77052b32c68a98622cfa83fb3364c01bd5fb9",
@@ -1448,6 +1472,8 @@
     "synthetic/beam_domino/BeamDomino__causal/s20_roll_wait": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "ccf57e326e87891951789ed29348fa8a884476466022e0bb0c2737e6d22a7e1e",
+        "reference/artifacts/dimension_applicability.json": "a00a455599c70487abef89789af17f6a81d1890e5cbf28efc3af20bd88a61971",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "605312d66b3ff17ed4a6b11630429ed56cbfb3c39ce530926f4bf0ffc055bb8d",
@@ -1478,6 +1504,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s21_roll_wait": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "d263ba0d445e2117140ee7ca81f4051e099b7d9674660bd54021be0c54b23e60",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "2985e3a07c502af278623f5f8a1f928d3688adc7db0baf094918fee76f785477",
@@ -1508,6 +1535,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s22_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "c4b63e6c06f9b79779b49de7d05351257d867b8b58c3f90a77dc9b3c9a13c49c",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "2b1698adf0f46195c703e700e94da1e37464a69fae34ba341c17170cb08c2aed",
@@ -1538,6 +1566,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s23_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "e9c4aa7e9fd8b1e9ecda26933e0c1241beb9a462bfe8b6527b656f30143c0c4f",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "ef14abe38f51dab4b25f8ba734367bd376c4becb2cc1f2996c0029aee6efeb53",
@@ -1568,6 +1597,7 @@
     "synthetic/beam_domino/BeamDomino__causal/s24_wait_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/causal_segments.json": "5e5186609a694158c0d1ddd8e9b270fb34e16ac69ae1661f04eaa877e345674d",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "cea8e5466fe1ac99a934b8997d8bbde4e0765a1f212d628ba0b2745498ceabcd",
@@ -2324,290 +2354,290 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "60766f85d73463562a074ea2afe20863ab7ad1f958d65f01beda36c544efd547",
-        "reference/artifacts/unity_gt.json": "096d9feac89d1468c61854e80c9fd87c5d006bb651024be75ebe14842678f372",
-        "reference/capture.json": "aa3661c8fdd879bb7592397b56140757143766a463f5ae2ce537dbd55d7b5448",
-        "reference/ref.png": "3273831f15e9de2d65a4ce116236a38b9fdc0c171c44e3ad3ac7b832a11d207d",
-        "reference/reference.mp4": "6282d6cd77b0c4d8a88fdec7a89c8f2289655736d3a7114821bd0769f768d34d",
-        "reference/schedule.json": "371f7905f37b7366f0fd54a21769c29e0b38b7e22b103a6f4189219d8498c77c"
+        "reference/artifacts/unity_gt.json": "0e96f5002e9bb07a2a47704e3269b1f26019dd76962f23a9d8ebc4eaf9ea9406",
+        "reference/capture.json": "5b5f6ee940dabb90294d758e98d8df0e91e01185c3a798d56b879190d9fe5b27",
+        "reference/ref.png": "7b1746ba1c8c23297e04d108199be3a778d054e4d2cad2f7889c94ae9e07b7bb",
+        "reference/reference.mp4": "885f1685be76eda7d82d347491d88501e79666412fb8c0831d33673476726b47",
+        "reference/schedule.json": "653ef916cc12e409e3d209e9e8ecd4f2127afd422cf11baedcbaca708509b802"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 16.27,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 36.715,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_first/s14_turn": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "e07f1011635117748791f9651c31837e6f9e41ab38888d3d870d45694f199a00",
-        "reference/artifacts/unity_gt.json": "d50bbe1b023da655c3084eef526e01c01200c40df28dd4bf83a6e004c17709d1",
-        "reference/capture.json": "d7916c063d30d4b9b3a727cf12162fd91ccab015faf508a1fc1aca942a3e447d",
-        "reference/ref.png": "3273831f15e9de2d65a4ce116236a38b9fdc0c171c44e3ad3ac7b832a11d207d",
-        "reference/reference.mp4": "56babd993a70cc4c549200807d959c0d2eefb0d048c1f4346a13ac3875742cc6",
-        "reference/schedule.json": "30f37c47d8821f38e50f1e99b31041d5b0fda5303b06f88d1c2b008fbeb4cb6f"
+        "reference/artifacts/unity_gt.json": "4c8a2c9c4ffa7491d117dbad345764d30c3fe1fe3e53e28e87f7160565c47d52",
+        "reference/capture.json": "3ebb504c867f8a2d84f2fa3ea9ad9078c5a5418980e1ec95c37294e7d49192b4",
+        "reference/ref.png": "7b1746ba1c8c23297e04d108199be3a778d054e4d2cad2f7889c94ae9e07b7bb",
+        "reference/reference.mp4": "1f0f68be49dbc564d93dde036e4ed042525fe72b553e5e92cbfa14bef5dd8745",
+        "reference/schedule.json": "5401df71879d95539397f82231dd3f8e1859f62094d11fcbc93ee4e9a5990f1f"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 16.27,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 36.715,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_first/s23_sweep_hold_look_back": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "419b2c0a2963d2d1bd4538d469afed02ca19e72544813009664572647ea8126e",
-        "reference/artifacts/unity_gt.json": "c4e228b2b7d4e52bbe5bac45b946c2aed6d51c991d95faf98ad57b36e88064b9",
-        "reference/capture.json": "25442164a9b6a5d0cdf2531ddbd8251485c598c3e782610c5e87b8bb5506249f",
-        "reference/ref.png": "3273831f15e9de2d65a4ce116236a38b9fdc0c171c44e3ad3ac7b832a11d207d",
-        "reference/reference.mp4": "95ec077045fba34d538a4ca7acc0d0140bbd0be75fa97b31b291096d668ea2f2",
-        "reference/schedule.json": "c3acf03a36dcc409be5db5f2685ac5073f99ef721e57132e658c52fd65b22553"
+        "reference/artifacts/unity_gt.json": "e0106868fd1468cb92dc40d8cafd84c56221343a1e09a3b282baf468759f3bbd",
+        "reference/capture.json": "9f025a76b9d23b80d34a43850e3bd3d74a727530110806d0318a61fee60d92a0",
+        "reference/ref.png": "7b1746ba1c8c23297e04d108199be3a778d054e4d2cad2f7889c94ae9e07b7bb",
+        "reference/reference.mp4": "4a147eaef1bdb9a983c06a9868524056b34755c46b35da9840abafa15bb95950",
+        "reference/schedule.json": "a10c116d36f52e404a892b96934be1646cc89a66d52f5c41c5539b4a69262eaa"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 16.27,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 36.715,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_first/s32_sweep_hold_turn": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "a93745f38b058c485728888a17600571b837d2636812e7f6c12f819d98d64fe0",
-        "reference/artifacts/unity_gt.json": "0f4db1bbf14a509853af788a84730354a826ea02f4019dc8958cc8a131b0cdb4",
-        "reference/capture.json": "2320509422cfe23a295362a8e9d462a90bd9f52ee3f7c13542402089f5d53c15",
-        "reference/ref.png": "3273831f15e9de2d65a4ce116236a38b9fdc0c171c44e3ad3ac7b832a11d207d",
-        "reference/reference.mp4": "f72c3425827499d471993126914500ec082a090f37440c21ded8c2f4b8365d2a",
-        "reference/schedule.json": "a8f2b28df4efc8dc7cfbfd8a368b9646269484a853252ed3b7a76de39e11aad3"
+        "reference/artifacts/unity_gt.json": "dd959239bbe059be791b6e1dc15c0b3dccc15afc8a70bd96866588f1e911a1c8",
+        "reference/capture.json": "49344891604f53018804e7599d1a51918862d2fcd30c5d22f75ea09be774e642",
+        "reference/ref.png": "7b1746ba1c8c23297e04d108199be3a778d054e4d2cad2f7889c94ae9e07b7bb",
+        "reference/reference.mp4": "213839f5439ff840af3f03aadb0997516a1e1a97c9ad41f2fe54b2523b8b662b",
+        "reference/schedule.json": "467d703ea9908c8bee1ad1b30e4bbe82b53cb4e049f901e508250936ab0dda7f"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 16.27,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 36.715,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_first/s41_hold_look_back": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "a2bf32413a2403d7a4376b81740bfd24d900096795838e52729bfd08ff532bce",
-        "reference/artifacts/unity_gt.json": "a0a7ab8e0cf1317ebad52554c901b8468ef8be75d47b3ff648aa8a4c50436cf7",
-        "reference/capture.json": "df03256990aee30be05bd2b2518e788d810f18983c212ba2d1fd1e7015d04974",
-        "reference/ref.png": "3273831f15e9de2d65a4ce116236a38b9fdc0c171c44e3ad3ac7b832a11d207d",
-        "reference/reference.mp4": "9f4827907d72962ab88da87c46d5ee9b381ddcc9339e243ff63bbc61817f0d9d",
-        "reference/schedule.json": "321e92e61c020d50f78ba1ea8211a4599cdb3e8579e9398ca22ce99dd315be0d"
+        "reference/artifacts/unity_gt.json": "baac4b761a8229f80055711fd7d05b84b3ee62efd2af6a33390bab95c515d0d8",
+        "reference/capture.json": "ce06e1f9868d51337015d6660023e66761a8fde64b4f49f6ed271ee6a77ad1d0",
+        "reference/ref.png": "7b1746ba1c8c23297e04d108199be3a778d054e4d2cad2f7889c94ae9e07b7bb",
+        "reference/reference.mp4": "99614d632fa8bfe18f2990f004ce14736c710ddc26b1df0cb7275db1d9f50fb8",
+        "reference/schedule.json": "c1c0084f840151d7f38e5f2e04dadb299cab91b6cf3d1e30cbaf6386ec511423"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 16.27,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 36.715,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_third/s06_turn": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "ee2aaddaeed2b7af2af4b590bbea221471b017d2c218a86494a2978ffe9dac2f",
-        "reference/artifacts/unity_gt.json": "bccec01aee7ab9c7f248c24991846b4abcfb1a54c8dfe5f918876ef6b229c344",
-        "reference/capture.json": "c27008d51f668bcafb5573992e8001c199d284182529d9ac9d6e1b20e3478b62",
-        "reference/ref.png": "70aede63e7ddf996551704b86621506f031288d9f2f5b02de6f43e9cf3a3e843",
-        "reference/reference.mp4": "2a13939c8c2bf95659b80fdb7428c7444b2e72495eaa7c5b2ed73c3591626e36",
-        "reference/schedule.json": "29f0e313d4f82af46332b09739b2184c3e7f37c49ae953b22aaf8e9d411f0fb4"
+        "reference/artifacts/unity_gt.json": "6242f551a4c24f92ec8c71a8a380d532f881b2d0dd326f91a168c2aae43fe747",
+        "reference/capture.json": "13dcd2fc8c0c6e2e61e648c9c65c46380a465f07ab06791ee509a59b5112424d",
+        "reference/ref.png": "0715f37d5a6a468f91c580d0fcc30d15717f800d176e3374a56a48087732fce8",
+        "reference/reference.mp4": "786eb614462d17d4565d9f0ff11cfd5e00d68e9aa4833daa12da40320f1418e2",
+        "reference/schedule.json": "de5a80a6581e109671375dbe6a5adf75d321e4dfd8396a7e135e5e485bfc4d96"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 19.074,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 37.367,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_third/s15_sweep_look_back": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "93c0608b7239ad7bad3b121d02095228230dbf088c3d04d809e9cdcf0de9cae9",
-        "reference/artifacts/unity_gt.json": "1ccd5d349270b4caf2f3037f79b3382ddfbcc380c2acf1c94ba47da9da6543fd",
-        "reference/capture.json": "d0b22c0afdbc5118f9782bcb99a617077c789d5aaf8636b9f3e41d9d0d172f8d",
-        "reference/ref.png": "70aede63e7ddf996551704b86621506f031288d9f2f5b02de6f43e9cf3a3e843",
-        "reference/reference.mp4": "063022bf0e37abd5e39a3c9290c7f7ecc3953b7e3285fe0bbc2b48ddc65d2573",
-        "reference/schedule.json": "943c9edb78a31d019e8f1d8ec5161bef0eb4f4e15a123525c2706a88870d232d"
+        "reference/artifacts/unity_gt.json": "af952617f63460d8f4bdc84ebdc2c704b14df2d1b2580c755a1551ab3993e8de",
+        "reference/capture.json": "c411b9fd9362593a0a092e4aafadcc82be6a22ad1bedf9db891b01b365583189",
+        "reference/ref.png": "0715f37d5a6a468f91c580d0fcc30d15717f800d176e3374a56a48087732fce8",
+        "reference/reference.mp4": "5985489e9a5f9671b8aea4cb06001e4b19251723704a39a0721b839a5e4042d5",
+        "reference/schedule.json": "55400abc8970e3df49c3a7c95f65007e5368f4da478495ccd74bf4e1a7772ebc"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 19.074,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 37.367,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_third/s24_sweep_hold_look_back": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "7fd702b2810c997fe46d5e2ba2b17e5c66e14b3f5858d01825fb9d68c3665952",
-        "reference/artifacts/unity_gt.json": "b0285402c821de3f5af533dba8493569cbd893ae5239415d38717dbd5b685417",
-        "reference/capture.json": "11b0e3f621ef6562beec9b0af3b718ac1c57975a307ddf5c1e36779ead4a4bc2",
-        "reference/ref.png": "70aede63e7ddf996551704b86621506f031288d9f2f5b02de6f43e9cf3a3e843",
-        "reference/reference.mp4": "a06246114d8629fca52e0c02bfe80439de667a31009ca67cdb0fb874628560cc",
-        "reference/schedule.json": "7150a771b5e164ddb994c438f47ca1228b7130ae8dd24af91960cde89f7aa724"
+        "reference/artifacts/unity_gt.json": "4a46d425e33a343c9b553ffbc66b7107d88dd6fde2c6ce296d4b67b4fd6d83fd",
+        "reference/capture.json": "77df7fb5ee2a7254b84bcf16c0787f864d473163bba8712c103129f75e59103e",
+        "reference/ref.png": "0715f37d5a6a468f91c580d0fcc30d15717f800d176e3374a56a48087732fce8",
+        "reference/reference.mp4": "8b39b35d75caba7c0417c06313001f6e079fd541e13ad76dd53b79fc17848e5f",
+        "reference/schedule.json": "0e5ef4f73961c4209ecc0a26ab8d6b86b8ddcf1515cc104f5ccaac4d310bfaea"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 19.074,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 37.367,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_third/s33_sweep_look_back": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "58604df644a7551b4369f616b92d2b3971afc26a27437f1e2e28d8b13f1103c7",
-        "reference/artifacts/unity_gt.json": "3bc4044175606ae0d895f56835d2d071416146bae1d3790cf601a91a475f7314",
-        "reference/capture.json": "a5f1d581346e4a076173e99b0dfb96a7bf36df34787cfbb4d840914018626580",
-        "reference/ref.png": "70aede63e7ddf996551704b86621506f031288d9f2f5b02de6f43e9cf3a3e843",
-        "reference/reference.mp4": "31c395cfdf0c60e67c471c62fdbb0c1f1c78c82009c9a7531e2a46bc3083772a",
-        "reference/schedule.json": "eb8d82ec92fabb93a200abbfa048b11856a69b372bec921bd92946cdfef11370"
+        "reference/artifacts/unity_gt.json": "4daaa1bcaebff6c8f9bbeafdef10dde7e64f7437fc6044e7ed2d233fee4c1760",
+        "reference/capture.json": "c51386938304f6146fa2ae4fc8d8860644508528378d28a345d24a7cc9d366ff",
+        "reference/ref.png": "0715f37d5a6a468f91c580d0fcc30d15717f800d176e3374a56a48087732fce8",
+        "reference/reference.mp4": "6f23dd7a38bc2305d03a67e497b0eb7346b22e9744ce0407efc85899d6cd2d52",
+        "reference/schedule.json": "4565985689c7d2409e78583502426da22d29295575cd3e0503d3e38af4c0669e"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 19.074,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 37.367,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/ChessBoard__prompt_third/s42_turn_sweep_look_back": {
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/intrinsics.npy": "145857a69cbbd0cafd32e9161079f01fe35632b4a3bb5a3b3e96ab2c6cbe23e9",
-        "reference/artifacts/object_transforms.json": "66ba26b10a6cdc7c71f1a992afc870ef6d832d59a45fa14c5ff378424f98ea86",
+        "reference/artifacts/object_transforms.json": "06de8c652d7fa4a504eb5978657355182ef497a362119224b9df58e6cfaddee8",
         "reference/artifacts/poses.npy": "23ff9423c0b0cdbcfaa4870cdc285e6bfd00ed5bd624bf85209959c800082395",
-        "reference/artifacts/unity_gt.json": "95acc25de7589945e763b730e3c833f903e198d46aa2823ecd49cf326f74fbdf",
-        "reference/capture.json": "c564420064e482f2c28d43c05814394128bd3be48029372b282f22f39316ddf3",
-        "reference/ref.png": "70aede63e7ddf996551704b86621506f031288d9f2f5b02de6f43e9cf3a3e843",
-        "reference/reference.mp4": "1970b911bc92c0a20861d9de60e04f14dc858abbd7edfa4323bff059915ae9dc",
-        "reference/schedule.json": "c8e7e531c623f2c8b00502b5a5ce82a128a7ca2071469934bf365bf84547fe66"
+        "reference/artifacts/unity_gt.json": "30a076db1e2e0a30ff964f8bbe6ccaa028f59dda3d6b4fd741bde8a4915549b1",
+        "reference/capture.json": "56a0818f5dcdf8b2f9ef52277f16de0ec8e85d6848518505dcdd400e2f5b3c19",
+        "reference/ref.png": "0715f37d5a6a468f91c580d0fcc30d15717f800d176e3374a56a48087732fce8",
+        "reference/reference.mp4": "7571213f77fcc6c58d61dad95d835d6fc50f30fcce846b827ef3c2e303330466",
+        "reference/schedule.json": "f27d3b1d4924a2234edd5c9e927d108b280ebe7cfdd57b6ccdee9dc257e2de35"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 19.074,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 37.367,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/ChessBoardwithSphere",
         "scene": "Assets/Scenes/Chess Demo.unity",
         "replay_mode": "camera_poses",
         "source_rev": "93ec507",
         "lfs_rev": null,
-        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
-        "build_hash": "46d709d592110c7fa1bf386ba0493aaaccac4fef8ed20f2a095dfdf81f42f6b1"
+        "asset_note": "ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; sphere reflection probe re-rendered live (no cloud skybox textures)",
+        "build_hash": "4027345355c6ed67f04ed5dd6cbba52c1539ad5542de271f38a3217a49422185"
       }
     },
     "synthetic/camera_yaw/MirrorRollingBall__prompt_first/s03_sweep": {
@@ -3048,22 +3078,22 @@
     "synthetic/camera_yaw/RacingCar__prompt_third/s08_look_back_turn": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "18f5d61f939de3c83efd950be75f5b038ac17f8dd8155c53068c3317e7b1eee4",
+        "reference/artifacts/intrinsics.npy": "0fa07ad4e0879b59f6bb9f3aa7df90e98169e5b1a8977b5b02e0deed644fbf72",
         "reference/artifacts/object_transforms.json": "76c8b5ef3f380307bc92aa6e89e21e6d3985204c6ff4865b48dbf028489cb721",
-        "reference/artifacts/poses.npy": "fe100592c123e1e879ebbbd1462dd6dde44cdc6620e46192703494b8e7a23675",
-        "reference/artifacts/unity_gt.json": "69d7aafad67885437f6d3d8fa44ff814a4be33e22c0d5937aff232b1b7219711",
-        "reference/capture.json": "f44e9064b3c4168959f0147ae3f620f8ce31fc43c3499c3e6da49786c211b1c3",
-        "reference/ref.png": "7085155b3924968eea18f0350aff2d7e15182985fc72256bc5ca5da82d80dc02",
-        "reference/reference.mp4": "a59909be9a6225014c0cebee980f85e0230fd7a52195b8b6d4d9beddc4b9ce88",
-        "reference/schedule.json": "d10e1d5d4d5d4e41c9d93580ddeef07c93a60dd7746697e58cd6d4501c396732"
+        "reference/artifacts/poses.npy": "823e1c3795481a1b3c36ae63ccdc21a239ae712f4885d2ae6740efb775cbfda1",
+        "reference/artifacts/unity_gt.json": "34a456c17610b8333f692fd05f046ab746f40fdb5dcb5e2458794ac6d01e7651",
+        "reference/capture.json": "4160e15e5ff98491ba38bad56e97a14871c4e469123224d1ac0494b44d897fd1",
+        "reference/ref.png": "79940369df69906e294fe03ddcc2c5dbfb318be6668d77d1b0c882a533e826b0",
+        "reference/reference.mp4": "cc3f3679bb4d55bfdae99319e15e0ee5cb65bb61f6dcaa8233e5d6e9aad3d52b",
+        "reference/schedule.json": "e5557f85b68ff639910f74da6e006c41a29a24b115d473e0c48a7ee090a4123e"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 18.613,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 32.87,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/RacingCar",
         "scene": "Assets/ARCADE - FREE Racing Car/Scenes/Day.unity",
@@ -3077,22 +3107,22 @@
     "synthetic/camera_yaw/RacingCar__prompt_third/s17_turn_look_back": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "18f5d61f939de3c83efd950be75f5b038ac17f8dd8155c53068c3317e7b1eee4",
+        "reference/artifacts/intrinsics.npy": "0fa07ad4e0879b59f6bb9f3aa7df90e98169e5b1a8977b5b02e0deed644fbf72",
         "reference/artifacts/object_transforms.json": "76c8b5ef3f380307bc92aa6e89e21e6d3985204c6ff4865b48dbf028489cb721",
-        "reference/artifacts/poses.npy": "313da0241dfd3b6313bccb56b7914079570649b044ecaa83f1adbcca34a73463",
-        "reference/artifacts/unity_gt.json": "45b8baf8db640bedd97afd492011b67fb1ae32cbb19964cd5fbbebaa761bed31",
-        "reference/capture.json": "07693f0d86652d6b9284a57c2674d686224bf10bd8f07a6f80d22d6f46a31fdf",
-        "reference/ref.png": "b2a6ae238b2a48968a18eef082c0a2c29e62c8472c9202a0ed206447c10c4f74",
-        "reference/reference.mp4": "1ada64f2888a93413baebfc70c61cfd5813ad3dc603f2a4295bcc44048571d46",
-        "reference/schedule.json": "1ecf94dd810cc7b51572bb85d77e4e7060d8d24b011fe9bb26f7f9ce20869fc3"
+        "reference/artifacts/poses.npy": "fce976727dc00f16ecac0e9da0ebf1fb2c2af196bb033fb27681a4fa250e9264",
+        "reference/artifacts/unity_gt.json": "58ab769a7606da9b9d9ae00e1f6fffab5ca8d81293fb59ee6481604b0fa3c9bf",
+        "reference/capture.json": "6a16c1d2aab5ba5d38b7b23e3889eaad792feba65f1a90677c0b8b7a9bd550c9",
+        "reference/ref.png": "966e5b3bd75161c52a4fef8113561d696bacc7e0cdb1c2c53cd4f512e7e15c5c",
+        "reference/reference.mp4": "8147e985845b553bef83464ff64d2b0d8a7c1e85803b48c8d6c88934ed9bfb9e",
+        "reference/schedule.json": "6d21832cb2c7126b3c404ef00407c3a0fc4c494fde34bfabe9d0d0da4172ce1a"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 18.613,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 32.87,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/RacingCar",
         "scene": "Assets/ARCADE - FREE Racing Car/Scenes/Day.unity",
@@ -3106,22 +3136,22 @@
     "synthetic/camera_yaw/RacingCar__prompt_third/s26_turn_hold_sweep": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "18f5d61f939de3c83efd950be75f5b038ac17f8dd8155c53068c3317e7b1eee4",
+        "reference/artifacts/intrinsics.npy": "0fa07ad4e0879b59f6bb9f3aa7df90e98169e5b1a8977b5b02e0deed644fbf72",
         "reference/artifacts/object_transforms.json": "76c8b5ef3f380307bc92aa6e89e21e6d3985204c6ff4865b48dbf028489cb721",
-        "reference/artifacts/poses.npy": "3dc61a84f7400e29a35e9e8549395ab35e56251aecb953afe1652b5609e0b59f",
-        "reference/artifacts/unity_gt.json": "0c27b572ac7f8dff1c798e72637d1f03a1ec13be8a5dc0d37b4014a77f88d674",
-        "reference/capture.json": "b9acdfb7b71478104a4e3f8ab1bdfc00342ba7ba7e9e768e8ddbea03d98d1e1a",
-        "reference/ref.png": "b0a601d54c36fb87850e3a43eb5cb1a7f86b42afe60aab2b0af99e1d44e629fd",
-        "reference/reference.mp4": "30c953d17deb17372aa6e1843bd49441647667ddd65fabaf3226f54c99db216b",
-        "reference/schedule.json": "1ebba494514b9cc0b77c718cfcff47195215433cae4994b4ad076efe3b4ca99d"
+        "reference/artifacts/poses.npy": "6e81ea65219b2238317655744e91e106536e5af257f7a7b095f4a606bc8640a7",
+        "reference/artifacts/unity_gt.json": "7e12812389f3818c58d1998701ac375fc7d899ddb487ae01e37b100a0d3be04e",
+        "reference/capture.json": "1dc7fe17548f1ed28c2cf99a47b1056958f88db6dc0523f56a5f413c03756eda",
+        "reference/ref.png": "d9e634686a984bd7629df18b736bc6fcceac626e9f974896c051f00c2b67116c",
+        "reference/reference.mp4": "80d1c045aa494513db71f5c755abca2033bf0a8a999437ec95a403341c37e305",
+        "reference/schedule.json": "51595f4f7bddc13dd6f20606fcd2b82af66af5a29820eb94567620d080d944d0"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 18.613,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 32.87,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/RacingCar",
         "scene": "Assets/ARCADE - FREE Racing Car/Scenes/Day.unity",
@@ -3135,22 +3165,22 @@
     "synthetic/camera_yaw/RacingCar__prompt_third/s35_hold_turn_sweep_look_back": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "18f5d61f939de3c83efd950be75f5b038ac17f8dd8155c53068c3317e7b1eee4",
+        "reference/artifacts/intrinsics.npy": "0fa07ad4e0879b59f6bb9f3aa7df90e98169e5b1a8977b5b02e0deed644fbf72",
         "reference/artifacts/object_transforms.json": "76c8b5ef3f380307bc92aa6e89e21e6d3985204c6ff4865b48dbf028489cb721",
-        "reference/artifacts/poses.npy": "b070370a3603ab87a618f2b4082c87f31ea9eb523c65bc4804f1a25daa2046bd",
-        "reference/artifacts/unity_gt.json": "73594bb242aaedceab3ef7af2e10df5cc5fe2bc88b4a6577d0dab23320a1d6f4",
-        "reference/capture.json": "fe94f973844029c8beed63bbee90cebbec00ee2664b33c6e970f4277a42fd75e",
-        "reference/ref.png": "9182972ff412c32d913ffd6cb0ff4d89ff6b0773c24c6f0ffe61cea1b699d8d3",
-        "reference/reference.mp4": "0c254747632cf7a255e59fb4e27feb55cc65c72b71098cd32932679e77ee12e2",
-        "reference/schedule.json": "00ca251a2096b202b316273b16cafce32ccec7733e56ee4250848c04b0a8e05b"
+        "reference/artifacts/poses.npy": "1d26a8d4ecb5cc74dfb8e251d75a26baa1c4dcd5055fd528fe7455d9a99503d2",
+        "reference/artifacts/unity_gt.json": "6601f8f2966e701b0ea241eb4c9664abbb9fc2f40c9d1e72bb49a32b5092bd18",
+        "reference/capture.json": "bd40b0f5ec61fb9a0095f5f64761656c300af7f2a89bc3f5740cc7fb40b62f7d",
+        "reference/ref.png": "86347db1aba03d7f57ee0091e193c860913b631bcbe27cbeccddde02ba275657",
+        "reference/reference.mp4": "8e252b07643f602f667656d0ae73c8b5963e58fb1f3bd704472f0d09dca92b77",
+        "reference/schedule.json": "300e279c6e0cc0dad3a1ae397e8b9463e87390659eccdb82f7b47c771c3ade59"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 18.613,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 32.869,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/RacingCar",
         "scene": "Assets/ARCADE - FREE Racing Car/Scenes/Day.unity",
@@ -3164,22 +3194,22 @@
     "synthetic/camera_yaw/RacingCar__prompt_third/s44_sweep_turn_look_back": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/intrinsics.npy": "18f5d61f939de3c83efd950be75f5b038ac17f8dd8155c53068c3317e7b1eee4",
+        "reference/artifacts/intrinsics.npy": "0fa07ad4e0879b59f6bb9f3aa7df90e98169e5b1a8977b5b02e0deed644fbf72",
         "reference/artifacts/object_transforms.json": "76c8b5ef3f380307bc92aa6e89e21e6d3985204c6ff4865b48dbf028489cb721",
-        "reference/artifacts/poses.npy": "d30a294a47b090328d72d4e332b0cbd54599075c8f4fc8b955a9b9c1385df52c",
-        "reference/artifacts/unity_gt.json": "b30f2c2d5faefd9d0e670a8267b7316bfcaed4919b8f9d8e5ab2a09e9679336c",
-        "reference/capture.json": "d8f5e3fe188779e8dedaf4df37f19a4885e87222566c1898b560d2c7249fb4d1",
-        "reference/ref.png": "b70bb081d41bdafdcdaf2d438a9600aaedcbedfe8949460bc878810e6072d26e",
-        "reference/reference.mp4": "d814404d13c3f6ac4540bfc95364fa067a6dfb239b38a30045bdca8e7e43eec0",
-        "reference/schedule.json": "462842f2c497697ef9dc544a8debed600b8c7dd125e975df2d29d70a9b548829"
+        "reference/artifacts/poses.npy": "2f1e1c6a2e923236acb74b72f7c60990a9b771a98bfb2bd6b273a280ff47c470",
+        "reference/artifacts/unity_gt.json": "9ee583686a08b3681e7cf2f38210706da6fb4743a452a5c4abab3ed8e5053c56",
+        "reference/capture.json": "05e0945ddaa0ed50b03e5e1ea33ec0fd96db41131ade41d362e553594389bd8d",
+        "reference/ref.png": "81ecf56471d15d0acfe76b04e3a730cb53682dad4c9312c1870fb0d565be60a4",
+        "reference/reference.mp4": "da3f1f895a1391b709b5da41c9d5e69ec978581f76fd4b9421b4b22e56527ff7",
+        "reference/schedule.json": "885614513ae13b3a259ef852f8e068fc756a24d7d1ff8fc61acefd3568a02ced"
       },
       "fps": 30,
       "width": 1280,
       "height": 720,
       "frames": 300,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 18.613,
-      "quality": "weak_first_frame",
+      "first_frame_psnr_db": 32.869,
+      "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/RacingCar",
         "scene": "Assets/ARCADE - FREE Racing Car/Scenes/Day.unity",
@@ -5900,9 +5930,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s00_rest_shake": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "b1c28a0e2c0476e12b4161d5ad66fea04f59aa2452b2c14fe6efeeefc6a52fb6",
+        "reference/artifacts/contact_events.json": "ffa6abee4c58375a73ddc2308ddd220e10d663567268fd1d6a11840e5d2098c4",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "d0676a943aedcaedfdca6beda7730584971d9517c23de73d00f8e3139546c54b",
         "reference/artifacts/object_transforms.json": "8f330d09fbf2aae6c4f0512104ff882aabd7c7600e280765dbb61ce8956089c8",
         "reference/artifacts/poses.npy": "51c21df9c36509d66982885e09775b6218d7cf795572437374aca5a863975bb9",
+        "reference/artifacts/raft_pooled_flow.npz": "ef4bc6a55869c62b0e09a4f54b90f290efd3426e2aeb57a0bc6f7d0097695b47",
         "reference/artifacts/unity_gt.json": "5cf055ec808d88e09455017c838086bd05e097b203578eed35a3207dfdf2f24a",
         "reference/capture.json": "97de7cd2a781e258ee318939d602e699dd70dfc9e4c1e90645f55925268a9969",
         "reference/ref.png": "ad38e1ccf6c69d1a0104e872785147ec9a6746cd0dd10b33c073e1736ff03d21",
@@ -5930,9 +5964,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s01_rest_chirp": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "c3d0027fdabf671b6d6e6b71f5c179909df1467fdb4de68178cacc5ef051b6d8",
+        "reference/artifacts/contact_events.json": "d113061b885b8a2efe93311da4c75c05ca6bf4dd07f09fe9a3389e2e8d863e6e",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "96db699ada9ee9ec270d6d5adb2920197f0004720ca84b34b5091b56ef2fe348",
         "reference/artifacts/object_transforms.json": "1646cd2f968750290a620a1d7db60703ff2b502b3cf88df94f0d35beb883d63d",
         "reference/artifacts/poses.npy": "fbcf6a839b13979649b6ef51775923614af39c9203621ad9716ab240ed882bd7",
+        "reference/artifacts/raft_pooled_flow.npz": "5efb5447b82820444b34f4405e0d2b37e48ea2bef9e8812c845f109ad9e9f4ab",
         "reference/artifacts/unity_gt.json": "a371a21b40bd6b22ab6e0a243db9580840af98be245d92a3b3b4cf2f46879e4c",
         "reference/capture.json": "94e25348b3b8c1d33992cec7bb650f3a7fdc2fb1e966f98b4ac87b32074d4b59",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -5960,9 +5998,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s02_rest_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "cbc51563592802d863d0a0fa597072283a4d97df69683f441643d009c0d7d042",
+        "reference/artifacts/contact_events.json": "a48d5f66db5d802c4c141bd91ec349a9c5613e3d9fd810ff5b8c2376410726aa",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "08302de43c9d3c01fd778f7588feae39d07fb3abb68d0a3d75e6e55a612ffad8",
         "reference/artifacts/object_transforms.json": "4d74f2c3f1d7613ae6c4fcbbdb53aab289b178dd4f719bddf8b3a9458761561e",
         "reference/artifacts/poses.npy": "c2ef04d5003601421c0c9266f701faa79a62389b03673ad6fc4e64711826d6fa",
+        "reference/artifacts/raft_pooled_flow.npz": "995a74fc79aebbf0d995e6196fc8aa6f1ed87f01224455eb8b3c096e473785c0",
         "reference/artifacts/unity_gt.json": "264b19fb6e1f5f03a0b53d4b98d91e0d0a66f080ba4e497d19c58ea014c3a586",
         "reference/capture.json": "8f565454ceda63086b8dcb229172f6b64ac2c96424874c037b97887e6365f250",
         "reference/ref.png": "2f7efeeaf7712deefc1c4ac81d34ae81188a57829914e4ac78f1b397bbf16f3c",
@@ -5990,9 +6032,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s03_rest_jolt": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "2e12bf1f71ee9e116c660143c68b3b39a526ca54f59790c3307ceaa4d40129f2",
+        "reference/artifacts/contact_events.json": "22f35988dff69f1c768abcbbb83886d4e1a1086abd5ca52cb6b2b087947f2e2f",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "f5dc42f96ef7d6df20ff2a3c898037f9ef9f49cbea6fa94f3a52bd1d9efdb219",
         "reference/artifacts/object_transforms.json": "04fd51a9a8f8c1a9c3bd69648214c379888194bbea110c03b04146327b987029",
         "reference/artifacts/poses.npy": "a4ce5c83d8526c09a003c0cb841a79453bae3cb15905da8c7a0bad42839e4095",
+        "reference/artifacts/raft_pooled_flow.npz": "4120893e0dc8a1b01296ac3aeca386991da763e209bf8bb5aac9d8952144158c",
         "reference/artifacts/unity_gt.json": "1a330728ade1a9c417590101532693d795878e9d55336b280fda35448f90ad01",
         "reference/capture.json": "d871ab117508c2a3c7f405ab468b2deca475a7db27cb702a18fa6bd48cd9445a",
         "reference/ref.png": "3425e04850639f64828fb237887ae67918c8ab9e1c6587436c90224e209490e6",
@@ -6020,9 +6066,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s04_rest_chirp": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "b278274a82b33e0b4578e5663ea95371ce2d0f8579610ce0efa52ede4b74872a",
+        "reference/artifacts/contact_events.json": "3f78e60f596c6e6a000eee4352c110b5e4256a8f720bd287fd54015600515aaa",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "ad018f99910148812de9b18bf1419a2dc76b898b7b782f4e0ed709615072d92c",
         "reference/artifacts/object_transforms.json": "b3de6fafdc6399362ea2206ee430b824d53bc21558c9db8924f87eaeb5c1869c",
         "reference/artifacts/poses.npy": "866a2ced71e0a821af755b5956de584ef0439776151b41110ca79ed55e0d879a",
+        "reference/artifacts/raft_pooled_flow.npz": "922a08c3fc24332285f4d466bd16b7c589c760eeab58abbae46687cb77c2c275",
         "reference/artifacts/unity_gt.json": "c11e389b2e5ca325d425fb8a7b6b07b559a93cd99925b32732d923b135f3dc66",
         "reference/capture.json": "3732ec21d851fef47edf587612f276d535b7bde45af41af14ae02ed727eea310",
         "reference/ref.png": "fb3e84432fe5ba06f4570806a30ad1addba2add6dcb4c5d017e988f7b66bd7e7",
@@ -6050,9 +6100,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s05_rest_shake": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "fb176271875ce4a8e7131af518469e753fa84510af1e7e6195bf0d66334285c0",
+        "reference/artifacts/contact_events.json": "85bdc7e94bee27b5d3a9c6a66835e7f27eb640ebc92a241bfa176ad55d6dc23e",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "d4d218f92ab8d3d74e1cd66cde03e8c0181d8531b295fcb8c7086d54e40fed10",
         "reference/artifacts/object_transforms.json": "c3cbc645b704ca42a1f4209230c1742e3e790ae97a3352600d3477d2eecc35ae",
         "reference/artifacts/poses.npy": "5154c1a72f61f0ce20a54de803c2b804396234253cfc6ba80f6bc8417cf79c24",
+        "reference/artifacts/raft_pooled_flow.npz": "54a3efdf1dd8f53e3ef926a2066799ea175d927ec5f0c684d081b05ffbf241d0",
         "reference/artifacts/unity_gt.json": "1e4492c3d82e5ff51cdbdfa95ce47c6012881a741714a6f010481d2d557d3fcc",
         "reference/capture.json": "1e1030fa6584a691a3f076f167ae48cb232c617b05f280167a4d198b396ac055",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6080,9 +6134,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s06_rest_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "79765d857cc7f55288435a55b4ad85322353039d075cac4f20a36b94935eaef3",
+        "reference/artifacts/contact_events.json": "cbe1157c72bc45bcd0982fd640e0ccf90426404c7b8f984e99571f6f644ef5c4",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "0888c5723953725e6e6b6d96e0590d7fb017e134ab412c3da341d0e70a5e6a2e",
         "reference/artifacts/object_transforms.json": "8407a4cd5ea35116573d264b55b935c68282ff48e9e9c471ff6e6c54b4aaf8cb",
         "reference/artifacts/poses.npy": "72426893631f529e7809f3e9e0077dd71f5f1128b51688f5c0d13cdfe0b5cc4d",
+        "reference/artifacts/raft_pooled_flow.npz": "a49f35a16d0eee45c063bcafbd797325e52da797e87001cab5e881c20a0589aa",
         "reference/artifacts/unity_gt.json": "72f21c6b6515b2396e807a48852b25f3e0c8073378a8e2318a4dd0f29ac0bb27",
         "reference/capture.json": "f1398391b29ca8ced05ccde99bdaffbd6bb2f027245f08c5e1fb142ebf84fa1b",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6110,9 +6168,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s07_rest_chirp": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "03333d4598d418883fc75d230c798a082772202ba74cce354fa67a952ff3a2fe",
+        "reference/artifacts/contact_events.json": "2afcf1f6e6f94e30f531073d9ff5a11286794ecc2c93fc4b053a12b95351fbf2",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "c7b99f29ef58cfd990f60d1744984528662098eae79facc356b3217071d31d49",
         "reference/artifacts/object_transforms.json": "3d1afbd6e0998962b52f81d9f945e53fc52fe25fab5b41e8cec04cc890b83d5f",
         "reference/artifacts/poses.npy": "6d467d49ea271ad02d36527eb2c018de56d8c91ac85f6e226ef30aeb95ea7f9c",
+        "reference/artifacts/raft_pooled_flow.npz": "a3a9b5575e8a8c396bcb9bc534ea45939a0cd4088d168d185477712a70b04e2b",
         "reference/artifacts/unity_gt.json": "9ee0ad2a3b7749c63aff550111d9967556cc5a243730f0b87e542b46dab99953",
         "reference/capture.json": "770b209b2eee50601563d204ba7bb60c27497476c506489391d83af0c98130f0",
         "reference/ref.png": "45783cf35e427cdc128c9994ba85a2f88f7c4649ae9530bbe9efd1804c87be79",
@@ -6140,9 +6202,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s08_rest_chirp_jolt": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "84b26d060e3ec3bdd97c4afbf90d78e6984d8e629adc9e52971c39f62bbbaf17",
+        "reference/artifacts/contact_events.json": "8d04c364b9df6edb81a2b9b4f1c00634cbb03ec88167837b2dacba445e856993",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "ec4352519ebddaab635c5b2093aa72de51b1464c30c166ae5686b8ea8bc063ed",
         "reference/artifacts/object_transforms.json": "53c517bf75e23ff0402a7a0c9cb011a8afd00c0bb10effdc6558d2f7eead6200",
         "reference/artifacts/poses.npy": "72dfb22f962ff85f3f1e56cef2939162f393160fa20c3d614eb82a974b44efc0",
+        "reference/artifacts/raft_pooled_flow.npz": "2fc5fadc8f93ba1baeac15b84da850582707e04fc73bee8abc6fcca465e8d009",
         "reference/artifacts/unity_gt.json": "78a490ef1e9d9039c47c2990e5ea9412b29e10052be088449a519cf65be72d5c",
         "reference/capture.json": "31325a6c5e8fcc029b83cb65bfaf12a3819208bcedc3b30732651f844aee4726",
         "reference/ref.png": "e2313316e3e1f3060c524c83f7fe76d62eb74aa068dfd06a498941fd3fdd3aca",
@@ -6170,9 +6236,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s09_rest_shake_chirp": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "ed1075dfd6054dcd8a8181ddb61aa5d4e7c52084194af1e598131112b6cdd6de",
+        "reference/artifacts/contact_events.json": "02f0e7d81084f4c6ca18d34e84d5af9d28b6cd35e9bb602b693584c96a4c2dac",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "459590e5c3449f66c4e1c5f438be8d1c753c401447a80a28b211e2ead9b5ceea",
         "reference/artifacts/object_transforms.json": "677e67a96475b8d186254ef0c311d2b13dc807f320a0b4edce3f509da61f3640",
         "reference/artifacts/poses.npy": "dd7133306f95ff74f8ed17a7eb9a12648e1a3636f83ef77f7bdc53d198584012",
+        "reference/artifacts/raft_pooled_flow.npz": "0192ffb79a9d4d4272f7b879d403d7871c571215baa35f70c1be6022c7369812",
         "reference/artifacts/unity_gt.json": "f4e700fcf88f442db89006063d5a32b2d0597ee4945935d17cc8600b47c38547",
         "reference/capture.json": "c83befb934e97279d3eaf82dd7fe2692d1267e98e51aa6e4929ad3f853748dd2",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6200,9 +6270,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s10_rest_chirp_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "4e6d6ef91d2b0db52daf700cad51b15b22f5607d2212e2ab8d07a0c54beff9ee",
+        "reference/artifacts/contact_events.json": "b5942feac77da9d59e2028b306eca0ad2a25de3e98122e47e3a5f26a729d4dc8",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "30c569e82769e69dfced6b61a20b7e4ea026a2d1ee70b2a81380a10491a55b11",
         "reference/artifacts/object_transforms.json": "22de17c61dfeba35bf6296e2cedc79ecff473997469eb13804261ece80d015d4",
         "reference/artifacts/poses.npy": "932c7e0802f2455c7d81dbbf6503595d3b30e4b686c43abfe9a6286be83c5aeb",
+        "reference/artifacts/raft_pooled_flow.npz": "e9068c85cccc397b2d8446c17e506ed160ddfcfb254b92fd04626a7b694197cd",
         "reference/artifacts/unity_gt.json": "89a54fa91c515441d7768a5c88748cf9d3100fcba6a718dd2deccd23ce840bff",
         "reference/capture.json": "bf8adfcca6bfdf77a4075e3baa3196bdc003b89f3ef9a6c050d193db55619129",
         "reference/ref.png": "1f467d0723fd82ed422dec73832c454acb780d77c1a0bfc9110cfd5bc14942fc",
@@ -6230,9 +6304,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s11_rest_jolt_chirp": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "22ee22f2876798d1cdec3e763fd98aecc9b6d55052a1f8b5940abcaf1ef0b5dc",
+        "reference/artifacts/contact_events.json": "4d80de095d2425ab08d99835c7c82f16593e8225ca0079dda972686c7ab768ce",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "eb302d4c7635ee4dd6f7b3b3c24f1350ffd856b2068d3d51f78b46879f7ae523",
         "reference/artifacts/object_transforms.json": "2066888a259346f10f8df3fb10bba3574a419240a7040cbbbd8f92d23e306595",
         "reference/artifacts/poses.npy": "28478e9647259c8b7bd8d73b8656963fc6ff8cbfb7f341a7faa0110efc8e71dc",
+        "reference/artifacts/raft_pooled_flow.npz": "0f6d5554dc1598f962f58149594d41067fdb4a6ad546e00cd2afb9f252f2747e",
         "reference/artifacts/unity_gt.json": "ef303917240227382dbe617062d9daf9d752a550ddb0dd1bc69432151a503d58",
         "reference/capture.json": "09bc613c07cc87bf17e9e7228b83cca19197b1927742f871accb7b93c0de95e6",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6260,9 +6338,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s12_rest_chirp_shake": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "131434d8fa70e776cc4370386765366e5f63c3aa081a3fed15a667f9778cad2d",
+        "reference/artifacts/contact_events.json": "9eca4573d01a23982c6ad14708ff930a86e9088cb23bcd0d22661d7a6abedd36",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "90d5b1e596b3d4913a4b7f2e47a81afba1c1acf612636c22425c73f909208ed5",
         "reference/artifacts/object_transforms.json": "d7e46957cf5194deacc2df4a905342b97a7cbcbf66cd051c6a8050445c9117db",
         "reference/artifacts/poses.npy": "cb0a4ac1c1676de8e4e291392eb57136b7e92a5316c5bcebf9c35bfde92adbea",
+        "reference/artifacts/raft_pooled_flow.npz": "0d5fdf52375f005ec74f6cd00d560d7a5aa1bff1ecafdfa693c34dce1b88d514",
         "reference/artifacts/unity_gt.json": "aba0943ada020a3426dd9865860393a81f54df3b08e3120597634ab7a28131cc",
         "reference/capture.json": "40a0399130daf14b22df460f733c459c0ce2dbe909bf6ee82283c9f99825aeae",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6290,9 +6372,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s13_rest_slide_shake": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "1e0f2912d242b797516b5bb02a97d212817f8493212b6c3679802c17d455da97",
+        "reference/artifacts/contact_events.json": "3f21ef8d3547add3f26f3814f04be5dcdff0a4a393d8a5751037c89d2d4eef7e",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "eb28f2eb69cf16bd3ed80bec096d18622bbbcb9593240f1c643bcac9fbf00853",
         "reference/artifacts/object_transforms.json": "5436712a15a2a665d4c49baa7d2119e07431abf770a6230bd1fd82b3c22e696e",
         "reference/artifacts/poses.npy": "c778746d126181d3d05b0713bb9ba8b1916923eba6f4268db88ce444b77063d6",
+        "reference/artifacts/raft_pooled_flow.npz": "ff37dce290cd1c41e1913139820ace653ca48692de6e11cee328740942647998",
         "reference/artifacts/unity_gt.json": "481e5b934d1161646c28cfb7c529d65047bc7620c385a3684a8c80ade097912c",
         "reference/capture.json": "2c41121b9ee08a2f5b279df4fb729b4e38c2652ed78c54ee764935050ff2c61b",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6320,9 +6406,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s14_rest_jolt_chirp": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "75ba02e3ac386ab32bfffcc654f93925609f8eea3955d357011ce7c84d7a6294",
+        "reference/artifacts/contact_events.json": "195b5141bb66f47492351208c6d4da1fc72c93f1598f064b2052acac5df6e3c0",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "9c4dc064edc22ffdb6413069a4d7dedcd8836fa314ee24651b172e697d2ccdba",
         "reference/artifacts/object_transforms.json": "51c1e6cf0e6f9b56eb2e2bb52f18bfa59661b815e96c9223c28c656ee59fc7ac",
         "reference/artifacts/poses.npy": "0d532c25431f0c9170a8f3dd5b818f42d56a015fc561b025d9ef1e6c049cc80e",
+        "reference/artifacts/raft_pooled_flow.npz": "6b73363729ee1d5cb196d78132a0edf92cae351a0f1b257e74e62d6172cb65f2",
         "reference/artifacts/unity_gt.json": "118275112159c15866104e8ee3df7e7b10ab15ba3d13af18ed3b1f45a0919a07",
         "reference/capture.json": "2b6a8d674053ea273cc95e95fd059469eba000d1acd2a94b488d8232be19004c",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6350,9 +6440,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s15_rest_shake_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "c945edbd52ab67e7858d9094019ce1f2343524af6e1fa9e216b165e6126a854c",
+        "reference/artifacts/contact_events.json": "4ca60a966de3934a576af132dfa0af69a50b0cefb5057b66f5136a1e69ee2a23",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "7ae98cb3b1bc24ef231b08586748b8231b1f406b51de713540a2f6d33aebc994",
         "reference/artifacts/object_transforms.json": "93e3b94b33572f9f8471ef3aab0519eb06f688acf79b87f134cca3973ab14781",
         "reference/artifacts/poses.npy": "7182e3eb879de888ec2fd76dc7b3dca62ed1e4fe8ae1b7e597523a9304608c59",
+        "reference/artifacts/raft_pooled_flow.npz": "097917ff994094d17e82060b7f2ec6f6196c78a20adb08fcb5de2e1ffd752ac4",
         "reference/artifacts/unity_gt.json": "3defe4764a84e1b969cf0ec234c657a17b803ee114464d3f3cbea07b6ba0d1ce",
         "reference/capture.json": "fdcfa4b09cc774902cce5880154e97bbbf857a0ec5b41935e6e5e32c86170b52",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6380,9 +6474,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s16_rest_jolt_chirp": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "2f6a9dbc6928770fc2ef88fcb3d39c0e2ce18ac55f71648a44cb5f6aee2424af",
+        "reference/artifacts/contact_events.json": "44cad68306bec800ce76c4a12bd64f80182a24eeb4c8b34fd6063c556abd5415",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "ce41d68dd65732030649601bf2a9a6e93598ef31d41ccb20c0007b025dd124eb",
         "reference/artifacts/object_transforms.json": "0934cf1d7a1c9c0f0302bf4d9bf80642bd6c96a71895ead91d4c18e1ffd43429",
         "reference/artifacts/poses.npy": "d67c0b91afdfaf1259e0a2e447ac92a4a8d49702d3cc84b51f4cbb3cc516fbb8",
+        "reference/artifacts/raft_pooled_flow.npz": "ba3342e207cdecb671fa71b34698585f1455aeb6ff9cb99cc0b1a63d65fde02a",
         "reference/artifacts/unity_gt.json": "77b1ab7c02307df95575362afad2363ad6b78bcc70cac13a09b91ff451a85136",
         "reference/capture.json": "5ced80613522d1ace53f5bdd5ee022df15206c0bd44dbd3b927676c0510a15b6",
         "reference/ref.png": "9e9a6f5c4dcf036fd31b93f0b731b45fac8d3d9633ff9f451c76f439314e5b57",
@@ -6410,9 +6508,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s17_rest_chirp_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "ed2df314e98c3ae8431bdbd9a4d816f0405709e93783eb438ae1a2cfd87f4ac9",
+        "reference/artifacts/contact_events.json": "9a339707ae0380dbe805e9e519f02cb30491138d783642683d7fb9247c9a981f",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "e8da41776674b84a64023539bef2c28305224c49e9cd54fd9ff3c68292f946cc",
         "reference/artifacts/object_transforms.json": "4b69cc636141ddc708a6065dc28f90e5d134183aebd7d03a2fe0eaed6fecc56c",
         "reference/artifacts/poses.npy": "7cecf77232ffa94e6186720e8c2c6d0314ca6e7db380396a75789a331f9a01b2",
+        "reference/artifacts/raft_pooled_flow.npz": "78a7836e4ccd82356971e4df5cf243b6bd896b16b86e6c15ff893e5c11f88c48",
         "reference/artifacts/unity_gt.json": "f7c2595b98f2bd91819db75a4c469e90f540de40a6262d16f7922dc5a4592d48",
         "reference/capture.json": "6286c4fa71933335dc3c07b0316bee9372421fc7cac7284be8e1e45fa7b34c49",
         "reference/ref.png": "1f8b8d07d0af8d21faba343301f2e84bbb5818dc2ef9c0482b9d17370f7c94ff",
@@ -6440,9 +6542,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s18_rest_shake_chirp_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "d21de034237168c265dc8f13070b09a595c5cf6727ce0ab342d55d261adbcff1",
+        "reference/artifacts/contact_events.json": "0620b61250c972a7e99f0713c7b0c3be14c594575a81ac5e35d804c820e13e2f",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "cd67d17c2cd9f5e72de2fad56ee3bce4d867f18d43b204fdfa2bf4cfb54a1aa7",
         "reference/artifacts/object_transforms.json": "b579b1018d5b9dc4b67ad6d82cb2326a50dd593020e24718cbbf8468ee33e434",
         "reference/artifacts/poses.npy": "22343aee999b24f9ff8c1b8fb595bd374fe5c979cadd361cf0832a10049d199d",
+        "reference/artifacts/raft_pooled_flow.npz": "80d891a85e955299ccc2132b98b6168c4a8370afb19ca56dc351b31c5be3def2",
         "reference/artifacts/unity_gt.json": "9fd57c664cc6c114b05dec55a3734fe3ac8f5a78a740004cbd3f2c141dccf239",
         "reference/capture.json": "b532ab997b24193e1e59604171439e4e1b85519acdddbe159908d4d2c8209889",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6470,9 +6576,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s19_rest_shake_jolt": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "3ec9a04ff3dcb36f054edb369b2d005c4d1f465b634267ad7e8c3dc0d3e17b3c",
+        "reference/artifacts/contact_events.json": "fd1ab99a709847d9bfc6ecd76f59c0c83a11c4a1fdeb562f6b741d8a001252bd",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "9b32a5e7a158829051c34f36b2a4c5887a0e0b74932fa26d8a981ded40efbe3a",
         "reference/artifacts/object_transforms.json": "5b4b3b0dd83b82ae2334594fe8ab938e84739a3f81c7af9428150c0f2447d114",
         "reference/artifacts/poses.npy": "86499c86690168524e0c4edc234b7cf2deaab0a1027b842a56f09b16b95eae23",
+        "reference/artifacts/raft_pooled_flow.npz": "2bf8654ef4084bb228bebec534f480bf8dd4f2479eaec7eea16bb610487c736d",
         "reference/artifacts/unity_gt.json": "026604a043738510dce01b462c80ec0e1887337c03e1aaa468d2a8253dba3891",
         "reference/capture.json": "57e17bb7efc3cf691cf87a6a50dd5cff9553c82e2bde76ed80c8d9ef1e700d7c",
         "reference/ref.png": "76598302dc6fc181d6dfa5509ddeca67895dc8200114695b48e4da1dd6df122c",
@@ -6500,9 +6610,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s20_rest_slide_chirp_jolt": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "eacff16f50983e99730d1c8e457ffd370ac621717d401dde9664c9f894e72458",
+        "reference/artifacts/contact_events.json": "cac5c007e13bcac5853d077ef9c86fb482b467c8305863b8f3b53ff514ed5d9b",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "64b65e91948507d9c4157d06e081e1439e698e50baed8c19c39dbd8a628d6e90",
         "reference/artifacts/object_transforms.json": "906d5febff027e7c884c0becbae734fc85045fd29586b7d53771cf8c37a85624",
         "reference/artifacts/poses.npy": "17273f1cfa6475cb1d3d4fe0cbb9b912e042d87643cfff408684141fcfb098ed",
+        "reference/artifacts/raft_pooled_flow.npz": "10d8b5ec6698464ce9b2b56416fc7c6e40909e63820296b67066cd605736b7bb",
         "reference/artifacts/unity_gt.json": "36b1c8ff2f141c56f0abff91506f14e8137c9ace7474570111db8515e0a9220a",
         "reference/capture.json": "7ffad68b788997a295dca2022a2e67e0c632be61e871f218057e0fa0c9903ce2",
         "reference/ref.png": "3399013b0024dbb7c0c6968869747edb9e15c331d3e7ccea241383c7a4a8d4da",
@@ -6530,9 +6644,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s21_rest_jolt_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "760e26a6105335d54da407f0222c0a35f919f5b546361124c4c0c34797ccdf71",
+        "reference/artifacts/contact_events.json": "a48dd63948ecc6e09f76586bde9a027051dcb5d04cf2edc2416924b61f70a4f7",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "b114ab9552062a4828242a04bea54548c2cf1458954ba19a844724e8b8573232",
         "reference/artifacts/object_transforms.json": "6509a8a90b26e7916d643d424fb616e8c5b0b631a00f1442940deafb9cc77f08",
         "reference/artifacts/poses.npy": "2a4325638d06ddbadcfa987109bcb88d2debd0222bfc3a60af98a8822a84e97f",
+        "reference/artifacts/raft_pooled_flow.npz": "a0dc2d3bde15ecf84ed03e3e5bdaf22190bc2a3dd05db785bbc5d1f8783ae7b6",
         "reference/artifacts/unity_gt.json": "92c9fdab500a9ed5e645c907f977744912d73cda9c63662d05abc25635b733e5",
         "reference/capture.json": "ed0464c02aab51a7f0f6464bb79cc2ab686f68af41971d9439343b6d9b97a190",
         "reference/ref.png": "119334a181fe08ae7ac53c02208c3bd0e5c98c4f7b0acbbe74673864e1706bc1",
@@ -6560,9 +6678,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s22_rest_shake_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "54fec701b66c53817ced60259708ea22149d3d0ffe07e6961cfea33f7520cec7",
+        "reference/artifacts/contact_events.json": "333c465940003f560cdcf356c5683d997acbe4c8a14834d0f80445fa235135c9",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "c4b230f55ed2af3c75fd941135ddb5d7a1ead48749e9a1a0fbae62c60fcf60cb",
         "reference/artifacts/object_transforms.json": "eefa6a97b29e5b29c997d612047e49d5d7aab1b58650ecbd70a4b5c59d1b6371",
         "reference/artifacts/poses.npy": "eb870023da194593f56c93f861a2848c7a18f4a512e442a91be6202ff8b00ee5",
+        "reference/artifacts/raft_pooled_flow.npz": "323254d47e4cd71a9d3c62baabeffe3bf4add0c121a221fd5c965f1e36c62eea",
         "reference/artifacts/unity_gt.json": "ec35345a1677fb133e11ebd1cc970815f1f12f1b5a9131da4a39ce18844f6bfb",
         "reference/capture.json": "d33acb98baeeb1a7a5d3778da8206f41a7fd8eba47cacfb590b1ee1b938fad80",
         "reference/ref.png": "5a74917dcc185100bcf7925046a4c597485193a8cbe7f68eb6a56d68f1fd1081",
@@ -6590,9 +6712,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s23_rest_chirp_shake_jolt": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "41140d196281039fad9e1b696ecb6872552343089315976d6e94f9aa6e6029c6",
+        "reference/artifacts/contact_events.json": "f959bea0b5c54dc98635b9e2bf66bd993a29daea35962473a7132437b19998ed",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "8c7f2b61180fce772b4e9748d4c884b6e4ffb3c169e357feee49f2a63feb9bc0",
         "reference/artifacts/object_transforms.json": "403a5e2ca4b49fa006d99506ae934af46b0f8448912e8760b9368fc1ca24df33",
         "reference/artifacts/poses.npy": "44d106f4e30225924bc6336b19a1d8d10de1a0842ad2e1a20f0f7996825d9931",
+        "reference/artifacts/raft_pooled_flow.npz": "4caa7d1d2f2f00d0b58c24df1ae8049549238f963dd6d3be321880644749eb6c",
         "reference/artifacts/unity_gt.json": "0bf3cbb0e7592828c4b9cb92a9b604b5e4a51abfcd7a992c461e33b1e8a71435",
         "reference/capture.json": "77b85c90a478c2d879a6809efff8dfdfbe97b95938fab907b6b268e5ee1e649d",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",
@@ -6620,9 +6746,13 @@
     "synthetic/liquid_container/LiquidContainer__fluid_rest/s24_rest_chirp_slide": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/bottle_mask.npz": "7d4a761952afdb208569b11e0e1dd3a8de74c4130b3ff2199b74a7d81a4895a0",
+        "reference/artifacts/contact_events.json": "23e627f29addff1db6ee8709f8b19a72ba6c6440acaa0f374d8e4827eaf2e03a",
         "reference/artifacts/intrinsics.npy": "a6317c6a1711756fad4b6898bdf9f7142ff0518bed41786b62a14e03d5ca36c7",
+        "reference/artifacts/liquid_mask.npz": "5aff39ded886aa083ad30d9b355de5739c91c1846ca3e2b76d3b7c8e99408404",
         "reference/artifacts/object_transforms.json": "52a9aca547e26ca6021c5099f4a6f27f4050a56fc83e19a084387d57916794ef",
         "reference/artifacts/poses.npy": "b76fd7dcbc88dff69b3818b621af7d02f42052a5c199b93cac73213ae60cd7db",
+        "reference/artifacts/raft_pooled_flow.npz": "3141979c40fdca90a89f1b9207833d627237f542af6ef98fd7444c6db84af9ed",
         "reference/artifacts/unity_gt.json": "aca70de3e70e26ff4eeba17a194655a44e204922e4d2f1660bebc39b626dc19f",
         "reference/capture.json": "63167e16c9e08f735723174276ef9aca620d17b943cdc630079306fc10faa85e",
         "reference/ref.png": "1b1a57d4f922932e0cfdee3072b5641c9a2bec12c9518ef6b3ac0e4229447153",

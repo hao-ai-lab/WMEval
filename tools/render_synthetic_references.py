@@ -596,6 +596,17 @@ def _lfs(*args: str, cwd: Path) -> None:
                    cwd=cwd, check=True, env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
 
 
+def _copy_overlay(spec: SceneSpec, project: Path) -> None:
+    """(Re)copy the replay/build scripts from the main Unity working tree into a source_rev variant."""
+    for rel in OVERLAY:
+        src, dst = UNITY_REPO / spec.project / rel, project / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if src.is_dir():
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+        else:
+            shutil.copy2(src, dst)
+
+
 def project_dir(spec: SceneSpec) -> Path:
     """The Unity project a spec builds from, preparing a variant project when it declares one."""
     if not (spec.source_rev or spec.lfs_rev):
@@ -605,6 +616,8 @@ def project_dir(spec: SceneSpec) -> Path:
     want = {"project": spec.project, "source_rev": spec.source_rev, "lfs_rev": spec.lfs_rev}
     project = root / spec.project
     if marker.is_file() and json.loads(marker.read_text()) == want:
+        if spec.source_rev:
+            _copy_overlay(spec, project)   # replay scripts may have changed since the variant was prepared
         return project
     if root.exists():
         if spec.source_rev:
@@ -617,13 +630,7 @@ def project_dir(spec: SceneSpec) -> Path:
         _git("checkout", cwd=root)
         _lfs("fetch", LFS_REMOTE, "--include", f"{spec.project}/**", cwd=root)
         _lfs("checkout", spec.project, cwd=root)
-        for rel in OVERLAY:
-            src, dst = UNITY_REPO / spec.project / rel, project / rel
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            if src.is_dir():
-                shutil.copytree(src, dst, dirs_exist_ok=True)
-            else:
-                shutil.copy2(src, dst)
+        _copy_overlay(spec, project)
     else:
         # The current project, but only with the LFS assets that existed at lfs_rev (later ones
         # stay pointers, i.e. missing, as on the machine that recorded the core reference).
@@ -844,11 +851,15 @@ def _write(art: Path, name: str, obj: Any) -> None:
 
 
 # ---- camera-yaw pose synthesis (prompt-scene cases without a scene camera rig)
-# RacingCar/prompt_third: the core poses.npy frame 0 (an ease-in sample of the original
-# camera rig, 9.2 m from the car) does not match the rendered conditioning frame (the car
-# appears ~1.6x larger). Frame-0 camera recovered by render-and-compare (Nelder-Mead over
-# single-frame Unity renders vs ref.png; 18.6 dB best, trees/shadow shading differ).
-RACING_THIRD_POSE0 = dict(pos=(0.076, 2.591, 13.747), yaw=-0.009, pitch=10.488)
+# RacingCar/prompt_third: the core poses.npy frame 0 IS the conditioning frame's camera pose,
+# but its intrinsics.npy (fy=565 px, i.e. CarCamera.baseFOV 65 deg) is not: the core was
+# recorded through Day.unity's Main Camera + CarCamera, whose field of view starts at the
+# scene's 35 deg and eases towards 65 deg (Lerp by deltaTime*5 per LateUpdate), and frame 0
+# is the first eased step (35 + 30 * 0.25 = 42.5 deg, the same step that moved the camera
+# from the scene's (0, 2, 10) to P[0]). Core P[0] at 42.5 deg matches ref.png at 32.9 dB
+# (FOV scan 41.5..44 deg, sharp optimum; a 6-DoF Nelder-Mead refinement around it found no
+# better pose). The frame-0 camera (pose and FOV) is then yawed about the car.
+RACING_THIRD_POSE0 = dict(fovy=42.5)
 
 
 def _yaw_pose_prepare(third_person: bool, pose0: dict | None = None) -> Callable[[dict, dict, dict], None]:
@@ -863,7 +874,7 @@ def _yaw_pose_prepare(third_person: bool, pose0: dict | None = None) -> Callable
         det = float(np.linalg.det(p0[:3, :3]))
         right, fwd, pos = p0[:3, 0], p0[:3, 2], p0[:3, 3]
         up = p0[:3, 1] if det > 0 else -p0[:3, 1]   # prompt cases store raw Unity axes
-        if pose0 is not None:
+        if pose0 is not None and "pos" in pose0:   # pose0: optional pos/yaw/pitch and/or fovy overrides
             y_, p_ = math.radians(pose0["yaw"]), math.radians(pose0["pitch"])
             fwd = np.array([math.sin(y_) * math.cos(p_), -math.sin(p_), math.cos(y_) * math.cos(p_)])
             right = np.array([math.cos(y_), 0.0, -math.sin(y_)])
@@ -877,6 +888,8 @@ def _yaw_pose_prepare(third_person: bool, pose0: dict | None = None) -> Callable
             pivot = np.array([sol[0], pos[1], sol[1]])
         fy = float(K[1, 1]) if K.ndim == 2 and K.shape == (3, 3) else float(np.asarray(K).reshape(-1, 4)[0, 1])
         fovy = math.degrees(2 * math.atan(doc["height"] / 2 / fy))
+        if pose0 is not None and "fovy" in pose0:
+            fovy = float(pose0["fovy"])
         frame_pos, frame_rot = [], []
         for yaw in doc["frame_yaw_deg"]:
             a = math.radians(yaw)
@@ -931,9 +944,14 @@ def _fixed_camera_prepare(pos: tuple[float, float, float], yaw: float, pitch: fl
 # follow cameras do not reproduce those views). Fitted by projecting the scene's
 # known static geometry (tools/fit: chamfer least squares; median residual noted).
 # MirrorRollingBall/lpips_collision: 47 yellow-ball centres, 0.30 px median residual.
-# Then refined by render-and-compare (Nelder-Mead on single-frame Unity renders vs the
-# core frame 0): 18.8 dB (geometry aligned; the core video is globally darker/desaturated).
-MIRROR_LPIPS_CAMERA = dict(pos=(-12.13156, 9.98120, -12.34495), yaw=46.61247, pitch=25.97976, fovy=70.69868)
+# The core lpips_collision video was rendered through the scene's "Main Camera", whose URP
+# camera data has post-processing on (SampleSceneProfile: Neutral tonemapping, bloom,
+# vignette 0.2) -- hence its darker, desaturated, highlight-compressed look. Camera.main in
+# the replay Player resolves to BootstrapSpectatorCamera's runtime-added camera, which has
+# no post-processing (as in the prompt_first/third core views), so the spec captures from
+# camera_name="Main Camera". Pose then re-refined by render-and-compare (Nelder-Mead on
+# single-frame renders vs the core frame 0): 34.3 dB (was 18.5 dB without post-processing).
+MIRROR_LPIPS_CAMERA = dict(pos=(-12.07204, 9.99295, -12.38425), yaw=46.47564, pitch=26.04596, fovy=70.62146)
 
 
 # BallRoller/ctrl: arena wall corners, cube, dome and rack balls, 5.5 px RMS (7 points),
@@ -1101,11 +1119,27 @@ def register_specs() -> None:
             export=_generic_export(labels={"Player": "ball"}))
         # The prompt references show the Feb 2026 chess scene (before cf2af02 added the hourglass,
         # candles, statues and player on 2026-04-21), so these render from that revision.
+        # Environment lighting: the scene's chrome-sphere ReflectionProbe is Realtime, but the
+        # batch-mode Player (Camera.Render only) never refreshes it, so it kept the baked
+        # ReflectionProbe-2.exr from LightingData.asset -- baked by the author with the
+        # SkySeries cloud skybox textures, which are not in the repo (the skybox renders flat
+        # grey here and in the core references). The core frames show the live probe: grey
+        # sky, captured objects without environment reflections (black), no character.
+        # -wmeval-reflection-probes realtime re-renders it that way (WMEvalReplayCapture).
+        # warmup_frames=60: the core capture's 2 s warmup (meta.json warmup_s), so the third-
+        # person character has settled onto the board in its idle pose at frame 0. First person:
+        # the camera sits inside the (static, idling) character's head, whose mesh would show
+        # at some yaws; the core first-person video never shows the body, so hide it.
         add("camera_yaw", [f"ChessBoard/{view}"], **{**chess, "product": "ChessBoardFeb"}, source_rev="93ec507",
-            asset_note="ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets",
+            asset_note="ChessBoardwithSphere at 93ec507 (2026-02-10) with all its LFS assets; "
+                       "sphere reflection probe re-rendered live (no cloud skybox textures)",
             width=1280, height=720, mode="camera_poses",
+            runtime_args=["-wmeval-reflection-probes", "realtime", "-wmeval-probe-env", "black",
+                          "-wmeval-probe-hide", "PlayerArmature"]
+                         + ([] if third else ["-wmeval-hide-renderers", "PlayerArmature"]),
             prepare=_generic_prepare(disable=["FreeCameraController", "CinemachineBrain", "PlayerAgent", "DecisionRequester"],
-                                     track=["PlayerArmature", "Sphere"], chain=_yaw_pose_prepare(third)),
+                                     track=["PlayerArmature", "Sphere"], params={"warmup_frames": 60},
+                                     chain=_yaw_pose_prepare(third)),
             export=_generic_export(labels={"PlayerArmature": "person", "Sphere": "sphere"}))
         # The prompt references predate the WMEvalOrbitAnchor probe cube in Day.unity,
         # and the first-person one shows no car body (camera sits inside the car).
@@ -1148,7 +1182,7 @@ def register_specs() -> None:
     add("ball_force", ["MirrorRollingBall/lpips_collision"], **mirror, fps=60, mode="rigidbody_force",
         first_frame_ref="reference/reference.mp4",
         prepare=_generic_prepare(target="Player", force_source="BallAgent.forceMultiplier",
-                                 disable=ball_disable + ["CameraController"],
+                                 disable=ball_disable + ["CameraController"], camera="Main Camera",
                                  chain=_fixed_camera_prepare(**MIRROR_LPIPS_CAMERA)),
         export=_generic_export(target_label="mirror ball", masses={}))
 

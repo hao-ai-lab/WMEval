@@ -75,6 +75,8 @@ python tools/run_wmeval_lite.py run \
   --output-dir reports/wmeval_lite/<model> --resume
 ```
 
+`--split full` also scores the 220 synthetic trajectories (candidates at `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`, data from `sync_lite_data.py download --split full`); `--split synthetic` scores only those. Their aggregate is reported apart from the core headline ([below](#synthetic-trajectory-suite-test_full)).
+
 Instead of a directory tree you can pass a strict JSONL manifest with `--candidate-manifest`:
 
 ```json
@@ -176,7 +178,17 @@ python tools/render_synthetic_references.py publish           # copy into synthe
 python tools/generate_synthetic_trajectories.py               # fold reference status into meta.json / manifest
 ```
 
-Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, action description and steps, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Each trajectory also has a Unity reference in its `reference/` folder (video, frame 0, Unity ground truth, capture record), rendered by replaying the same actions in the core case's Unity scene; `synthetic/references.json` lists every reference file's checksum, how closely its frame 0 matches the core conditioning frame, and which scene revision and assets it was rendered from. References whose frame 0 differs visibly from the core frame (below 20 dB PSNR) are marked `reference_quality: weak_first_frame`. Scoring synthetic rows is not wired into `run_wmeval_lite.py` yet: it scores `test_core` only.
+Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, action description and steps, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Each trajectory also has a Unity reference in its `reference/` folder (video, frame 0, Unity ground truth, capture record), rendered by replaying the same actions in the core case's Unity scene; `synthetic/references.json` lists every reference file's checksum, how closely its frame 0 matches the core conditioning frame, and which scene revision and assets it was rendered from. References whose frame 0 differs visibly from the core frame (below 20 dB PSNR) are marked `reference_quality: weak_first_frame`.
+
+`run_wmeval_lite.py run --split synthetic` (or `--split full` with the core cases; `--families` narrows it) scores each trajectory on its declared dimensions as its conditioning core case is scored: same protocol, evaluator lock and module parameters, against its own Unity reference and ground truth (`suite.yaml` `synthetic.module_params` fills in what a conditioning case lacks; `evaluation/lite/synthetic.py`). `validate --split synthetic` checks every listed file and the reference inputs each dimension needs. Rows carry `split: synthetic`, `family`, `conditioning_case` and `reference_quality`; `aggregate_summary.json` keeps the core headline unchanged and adds a `synthetic` block (mean over trajectories of the mean over seeds, also without `weak_first_frame` references and per family), with `aggregate_summary_synthetic.csv` beside it. Reference-side inputs ship as in the core cases: frozen LPIPS contact events, CausalStep QA with recorded reference answers, SAM2/RAFT liquid masks and flow, and prompt rubrics (a camera-yaw trajectory reuses its conditioning case's rubric, since its prompt is that scene description plus an action sentence). Beam-domino trajectories whose ball never starts a domino chain are not scored on `physical_causality` (`reference/artifacts/dimension_applicability.json`).
+
+Reference inputs (maintainers; write into `runs/synthetic_unity/`, then `publish`):
+
+```
+python tools/build_liquid_reference_artifacts.py --synthetic                        # SAM2 + RAFT, local
+python tools/build_synthetic_reference_inputs.py causal-qa                          # segments, QA, 5 recorded reference passes
+python tools/build_synthetic_reference_inputs.py contact-events --family ball_force # also beam_domino; liquid-events, rubrics
+```
 
 ## Evaluation Dimensions
 

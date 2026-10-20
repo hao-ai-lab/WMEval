@@ -190,14 +190,23 @@ def synthetic_rows(root: Path = SUITE_ROOT) -> list[dict]:
         return []
     import json
 
+    import yaml
+
+    normalization: dict[str, str | None] = {}  # scored with the conditioning case's protocol
     rows = []
     for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
+        cond = t["conditioning_case"]
+        if cond not in normalization:
+            case_yaml = root / "cases" / cond / "case.yaml"
+            raw = yaml.safe_load(case_yaml.read_text(encoding="utf-8")) if case_yaml.is_file() else None
+            protocol = (raw or {}).get("protocol") or {}
+            normalization[cond] = protocol.get("candidate_normalization")
         rows.append({
             "case_id": t["synthetic_id"], "scene": t["scene"], "variant": t["pattern"], "group": "synthetic",
             "family": t["family"], "action_target": t["action_target"], "suites": [SYNTHETIC_SUITE], "dimensions": t["dimensions"],
             "perspective": t["perspective"], "prompt": t["prompt"], "conditioning_case": t["conditioning_case"],
             "reference_video": t.get("reference_video"), "first_frame": t["first_frame"], "trajectory": f"{t['path']}/trajectory.yaml",
-            "candidate_normalization": None, "reference_status": t["reference_status"],
+            "candidate_normalization": normalization[cond], "reference_status": t["reference_status"],
         })
     return rows
 

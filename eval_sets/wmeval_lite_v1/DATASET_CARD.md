@@ -95,8 +95,14 @@ The viewer shows two splits:
   Unity scene (`reference_status: unity_rendered`); `synthetic/references.json`
   in the code repository records checksums, render provenance and how closely
   frame 0 matches the core frame (`reference_quality: weak_first_frame` below
-  20 dB). Scoring synthetic rows is not wired into the evaluator yet. Their `suites` value is `wmeval_v1`; core rows carry the
-  Lite suite they belong to (`wmeval_lite_v1`).
+  20 dB). Their `suites` value is `wmeval_v1`; core rows carry the
+  Lite suite they belong to (`wmeval_lite_v1`). `run_wmeval_lite.py run
+  --split synthetic` (or `full`) scores them on their declared dimensions with
+  the conditioning case's protocol, against their own reference and its
+  `reference/artifacts/` (Unity ground truth plus the same pre-computed inputs
+  as the core cases: LPIPS contact events, CausalStep QA and recorded reference
+  answers, liquid masks and flow, rubrics); their aggregate is reported apart
+  from the core headline, with `reference_quality` on every row.
 
 Each row links to its first frame, trajectory and reference video.
 

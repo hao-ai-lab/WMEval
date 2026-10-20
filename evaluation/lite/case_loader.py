@@ -147,6 +147,12 @@ class LiteCase:
     reference_artifacts: Mapping[str, Path] = field(
         default_factory=lambda: _EMPTY_MAPPING
     )
+    # Set for synthetic trajectories (evaluation.lite.synthetic), whose action
+    # target is declared in the manifest rather than in reference/artifacts.
+    action_target: str | None = None
+    # Directory the vlm_consistency ``rubric_dir`` resolves against; None means
+    # ``root``. Synthetic trajectories reuse their conditioning case's rubric.
+    rubric_root: Path | None = None
 
     @property
     def artifacts_dir(self) -> Path:

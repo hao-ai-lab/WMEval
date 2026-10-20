@@ -1014,6 +1014,67 @@ dimensions:
       - mask_area_drift_per_sec_delta
       - surface_tilt_residual_deg_delta
       - surface_tilt_residual_deg_unity
+# ==========================================================================
+# Synthetic split (test_full): the 220 trajectories of synthetic/manifest.json,
+# scored with `run_wmeval_lite.py run --split synthetic|full`. Each trajectory
+# is scored on its manifest `dimensions` as its conditioning core case is
+# (protocol, evaluator lock, module params), against its own Unity reference
+# (reference/reference.mp4 + reference/artifacts/, checksummed in
+# synthetic/references.json). Its aggregate is reported separately from the
+# core headline. See evaluation/lite/synthetic.py.
+# `module_params` below adds or replaces, per conditioning case, what the
+# trajectories inherit from that case's case.yaml (null drops a key); paths
+# are relative to the trajectory directory. Needed where the conditioning
+# case does not run a dimension its synthetic family declares (EOC on the
+# prompt views and the vehicle), or where a core file name differs.
+# Object prompts follow the core EOC cases of the same scene; depth/pairwise
+# need the label to exist in the trajectory's object_transforms.json.
+# ==========================================================================
+# (manifest / references default to synthetic/manifest.json and
+# synthetic/references.json.)
+synthetic:
+  module_params:
+    MirrorRollingBall/prompt_first:
+      # as prompt_third (below); the core prompt_first case runs no EOC
+      environment_object_consistency:
+        eoc_text_prompt: yellow sphere.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    MirrorRollingBall/prompt_third:
+      # the renders log the mirror ball only, not the core's yellow-sphere anchors
+      environment_object_consistency:
+        eoc_fixed_anchor_labels: null
+        eoc_unity_object_diameters_json: null
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    ChessBoard/prompt_first:
+      environment_object_consistency: &eoc_chess
+        eoc_text_prompt: sphere.
+        eoc_character_prompt: person.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    ChessBoard/prompt_third:
+      environment_object_consistency: *eoc_chess
+    RacingCar/prompt_first:
+      # first person: the car body is hidden, the roadside trees are the objects
+      environment_object_consistency:
+        eoc_text_prompt: tree.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/prompt_third:
+      environment_object_consistency:
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/kinematics_third:
+      environment_object_consistency:
+        eoc_text_prompt: car.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
 legacy_case_aliases:
   lpips:
     mirror_ball_third_person: MirrorRollingBall/lpips_collision

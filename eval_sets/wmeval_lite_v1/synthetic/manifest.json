@@ -242,13 +242,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_first/s05_sweep/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 16.27,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 36.715,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_first/s05_sweep",
    "files": {
     "action.npz": "81d3f310d8265ee46da1f6b359af2e69cb7dec0b210bb8881188bbb8e3d66656",
     "actions.jsonl": "4ff946bf184b99b544554c1146c1587f3b684e3a353003b6f3d93897369c126f",
-    "meta.json": "56debdf2fa2e8db63deccbd71ef39ee7c498cc8fe09de33a59d30cf71026cb95",
+    "meta.json": "a96fcdf1a272a9547a34941058628ce9ea4c1a9135e153849990edf4c0dd0a27",
     "trajectory.yaml": "311b579b8fb82c554cb5507b07adcdae7b52a3d9f79a5174c5024b965d6758e3"
    }
   },
@@ -282,13 +282,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_third/s06_turn/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 19.074,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 37.367,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_third/s06_turn",
    "files": {
     "action.npz": "56697afe2c91c67e86b984571ee148d4fe861eb6040492c4a64b55b4081933d3",
     "actions.jsonl": "9215c8a288c69468bd9beca01a71ac616f19e7a05b668c20c0a7c44501399a61",
-    "meta.json": "e95020ccfea167f516a11af8e3f7985edc25e9616ba96a9901a2e873a473adce",
+    "meta.json": "61a78ee06eef6f46edd5842921f50aece3bce0b9ba242f928ff8d02ba3b17c26",
     "trajectory.yaml": "4b52c0dad32d25b3c6aa08bedd2f89b857f587a68896e98c3a584ddd889a8785"
    }
   },
@@ -371,13 +371,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/RacingCar__prompt_third/s08_look_back_turn/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.613,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 32.87,
    "path": "synthetic/camera_yaw/RacingCar__prompt_third/s08_look_back_turn",
    "files": {
     "action.npz": "98681640ac7f18477bb0749d8af5d7949843b006b6cb240f76a3c9cc3b631dd0",
     "actions.jsonl": "9ac436a051733a478ee7b914cdb18414747adad7c19402a82881e8702d8f0ff8",
-    "meta.json": "9414a7356a7d678d1d4c13c915db1b83ba2d209580ffe8fd935ad232574226c3",
+    "meta.json": "965a2082ac49402019593443c001d7dd8c878881cedc423ea3648e1281085db5",
     "trajectory.yaml": "173b05974f5e66c038ed5daf5ac427798eae75c935ad7e31ab2a91d64558b640"
    }
   },
@@ -637,13 +637,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_first/s14_turn/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 16.27,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 36.715,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_first/s14_turn",
    "files": {
     "action.npz": "c388e558039459c6d6c64651a46879724035d00e7bdcda878f340c720c7f89be",
     "actions.jsonl": "54a45d109ac657a8412b3f5b35a8ba89b896ebb7d866d93d8fff8c8508aed4e5",
-    "meta.json": "203f86f9472b77378fb1f8117320f81da9062b2a0c744339495a38d872f75f09",
+    "meta.json": "d020c1723ec0562d47bc364c74f76d4ba585d6ffef346af5671c5ab9a33dedf7",
     "trajectory.yaml": "232246b1414d65920d648ca497e5ebf8c5197d5fd0430d5c3f040caa5b0e5fd1"
    }
   },
@@ -682,13 +682,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_third/s15_sweep_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 19.074,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 37.367,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_third/s15_sweep_look_back",
    "files": {
     "action.npz": "a8d406073e2fbf3144195c89590ab0c75db86d5045edbb916f0d1e8711b109a0",
     "actions.jsonl": "01098de372de4567de0e6a4f583b00d15e5e7b9c8867b3854171cb4ce33ed267",
-    "meta.json": "f5293c23c51d30a3c81b46d60dc0c6b791f0858a0d90c6d8854c358625a57e3e",
+    "meta.json": "0e247251630190a4cbbff02e60729b5b5fdbae6ff3a5995f45c86509485e9fde",
     "trajectory.yaml": "ecd1d58e3a89fde80cd1d5193c48f383c369d817ba86d1e9399a9a0b85243f03"
    }
   },
@@ -771,13 +771,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/RacingCar__prompt_third/s17_turn_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.613,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 32.87,
    "path": "synthetic/camera_yaw/RacingCar__prompt_third/s17_turn_look_back",
    "files": {
     "action.npz": "ed55e776b22d2d84c767125518ddcbf2515f2372a7387c33acb25a8cf33be0be",
     "actions.jsonl": "00485ab98fc66941b277a4cde11a87674d4e5415e04bd71423bf891a382222df",
-    "meta.json": "d0096b859cbebe2fc21df0078e385bd337ed5c58fba67bed19f4de58e3d23985",
+    "meta.json": "3457149b075d2b9c77bbc6270b88baa7eb8d7b4d977d77b52d1153a2f9df124d",
     "trajectory.yaml": "71c09afd17936390d34bb34b531e5363491bcf4a4b4aa6a1e0112d524bb1c9d9"
    }
   },
@@ -1056,13 +1056,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_first/s23_sweep_hold_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 16.27,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 36.715,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_first/s23_sweep_hold_look_back",
    "files": {
     "action.npz": "a754268b65b8b6712a0ea8f72e170bf1778f6ea5043da26f124a19cf2c3891e4",
     "actions.jsonl": "58f68d0359acf64cfef8d58b76494b5a3d281f67bdb0031d75e0ff8f28003a8c",
-    "meta.json": "3e4cd9889f1530b2269dfd85bb9f89a93c38d7bf2b84ab62f73bfeba914b912b",
+    "meta.json": "b67dadd2d0670fda59c3734c888d96a9c3c6f381cd79790513d47c0a2857d44f",
     "trajectory.yaml": "8604c3cae82aa98b97a668d059925ae161b3b3d0880263fbb5cbcbe386d05739"
    }
   },
@@ -1105,13 +1105,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_third/s24_sweep_hold_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 19.074,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 37.367,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_third/s24_sweep_hold_look_back",
    "files": {
     "action.npz": "d7445ca1e329bcd1e4797ca07dbd54d26498583242efbc2b97ca26d468323dac",
     "actions.jsonl": "05f6324abda2e35cf0013d1e55856f6016e31a1f7e0b03f02a32aa0b32d732f6",
-    "meta.json": "67f6298b7a9662930f7f5c540b5330f915bc69dd8eb83ca9ddd3550f56343cdf",
+    "meta.json": "24e83e2dc6da89457dfc6a4ecade0ec4df20e4b03e6575f23300c081e1843505",
     "trajectory.yaml": "168bf56dfc7a35b9f1c74a6c6729b96de717a7a11fc7c6777686bb84ffd61670"
    }
   },
@@ -1206,13 +1206,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/RacingCar__prompt_third/s26_turn_hold_sweep/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.613,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 32.87,
    "path": "synthetic/camera_yaw/RacingCar__prompt_third/s26_turn_hold_sweep",
    "files": {
     "action.npz": "bb47bc9d3c7c6633912a88eac1ae42b7a754001d7a43537dff28509fea798ff5",
     "actions.jsonl": "25f4cd226468b6b12cf480ff05ef8a2710641d63cc8bff14478323df064b8b65",
-    "meta.json": "a97bb2630d7b2d92864168828668e13e7bbd0fe671c4cbd5eb610677f6f4c66e",
+    "meta.json": "3a31962126cee44f4da5e95d3522a6735dbb5875e4465e77b92b75bb20074581",
     "trajectory.yaml": "ef8b957691011c938218dada93bd0b0d177b0d7e3e7b45ae20a8be05bc47b43e"
    }
   },
@@ -1505,13 +1505,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_first/s32_sweep_hold_turn/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 16.27,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 36.715,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_first/s32_sweep_hold_turn",
    "files": {
     "action.npz": "5bc3319e8e31b4cc5def99b36b49072449624544b1fe7e1419729e0c266531f2",
     "actions.jsonl": "5cdac5f28493cd53442d9e369f228d33c3f80db6a302b03088db69394aa31526",
-    "meta.json": "f19733386eed31364f08c02f732cc9461e7cb5437ff626c97083af5afe919963",
+    "meta.json": "102fc5a82e92a2a17c9380c2920d228e50b141a6582b5329dffb4b71e026d02e",
     "trajectory.yaml": "79730609b45044b727d529f2de85ca7836eedd7720eee0331b541906f937810b"
    }
   },
@@ -1556,13 +1556,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_third/s33_sweep_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 19.074,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 37.367,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_third/s33_sweep_look_back",
    "files": {
     "action.npz": "585e3f33dce6bb506c411196be6561d7441b1a1a5b4e2ac37226efe1a2275fde",
     "actions.jsonl": "d749a60508d66b39a47164a7df25431e16dc399dc302c545419f85cdfb682bcf",
-    "meta.json": "5b4f26f527c3849198dc7b82c45a2400a7f26ccb189b30556d199d20b7d3f52d",
+    "meta.json": "0ad93d096b6b32f7f95a16085a249b74f612562d1fcf27a66a07870a3000e84c",
     "trajectory.yaml": "fccf22670e8b91828db8281f051bc03c300c6bb3f05e120c84db324a8c442628"
    }
   },
@@ -1667,13 +1667,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/RacingCar__prompt_third/s35_hold_turn_sweep_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.613,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 32.869,
    "path": "synthetic/camera_yaw/RacingCar__prompt_third/s35_hold_turn_sweep_look_back",
    "files": {
     "action.npz": "6400b45ecc9f7922240d52330978abc7ac5e2e7d3fde49df6dc42636a6db9223",
     "actions.jsonl": "107b706fe7d12466524e900e96a11fbe8fbcfd4a96a2045dd3db3d67eb581aa3",
-    "meta.json": "56634ae0ca12135e95913c1c20e8c815e48ab3bb891dd034552820d32442c1fd",
+    "meta.json": "b88f461aa022e7a4e810a92210ceef84b8b9b21bb0ff89b5d9b5ae17a2de0f5e",
     "trajectory.yaml": "80d9359a977998cf013e8d6cd55f2fb035b035c95c18cf46443004694bd781fa"
    }
   },
@@ -1995,13 +1995,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_first/s41_hold_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 16.27,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 36.715,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_first/s41_hold_look_back",
    "files": {
     "action.npz": "eb7646cfa0e11000859c19248c64b00a42ca2600970f801f53e1b91c13fea648",
     "actions.jsonl": "5d82e1aabb13b62a2b78f650accc0eabf751c1f1e9aa61c68a07bc54ea63a46c",
-    "meta.json": "a883868644d286649934042bd934b5339a5ee912167f2941fc00b77a3524a473",
+    "meta.json": "d4e7485a99aec4e0d02d9fa4e72774150bc5e6f479133ae99d8bbac5aeb7bcfd",
     "trajectory.yaml": "4d19107059a579afa67f48ef2c34267fb2041faa12f4186d1ee52284d3e4a299"
    }
   },
@@ -2052,13 +2052,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/ChessBoard__prompt_third/s42_turn_sweep_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 19.074,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 37.367,
    "path": "synthetic/camera_yaw/ChessBoard__prompt_third/s42_turn_sweep_look_back",
    "files": {
     "action.npz": "96e1be8e400eaa9f4fe6792861157a4b78a53bb81b6905a0533dd0200f0d3cc1",
     "actions.jsonl": "7d12367522484365b8c0f32caa7ee99debd0fbc066829b2d6c2e844e770fba4c",
-    "meta.json": "7cff36c03e169e30e38d1a52fc3a886a76eab0ec4a597915ef11517d5bf2a528",
+    "meta.json": "9799af51f861f8ace66d803bcda77ea7fd90f16250c6dc5d5f49390e368e9bd5",
     "trajectory.yaml": "1b26c101913f686bf32c29c3a0adc32b996c661ba89721cd3fa1a4fb33572668"
    }
   },
@@ -2165,13 +2165,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/camera_yaw/RacingCar__prompt_third/s44_sweep_turn_look_back/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.613,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 32.869,
    "path": "synthetic/camera_yaw/RacingCar__prompt_third/s44_sweep_turn_look_back",
    "files": {
     "action.npz": "a38aa3d9823825a33acff95c9c35bc039ce8af5cbe83be9f5e71e381eb80122b",
     "actions.jsonl": "b4f1d8546b798ea6a1f5b642e755a6e7fc08686688460a6024365d4b3adf8521",
-    "meta.json": "9a789669417b244850e96fc0cd1155916f91a13235353b8f188d7795ed5623d1",
+    "meta.json": "c6f1e48d422207570178365e029a9635d560e86a0f00c68f4bdf00f1fd521dd6",
     "trajectory.yaml": "115a942e23c3c6a744b17cfa7624a1b8a0361d3065e92790fbefed893b148275"
    }
   },
@@ -5921,13 +5921,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s01_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.287,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s01_push",
    "files": {
     "action.npz": "a0d43ebbad460022089f2f20aa9d241cc2bf30849b0cd5c8d354f4a5dd018719",
     "actions.jsonl": "7f900472702026adc232f9a955908468f6cb71ef226b4bfa08b9ff40b82bc97d",
-    "meta.json": "fe1316295f5f1c98b44ee87d76998879e0bbed61c0895371fbdc0ab9a7206dbd",
+    "meta.json": "75965d62980f82c5e5a9db750f2d55ff893711623cd0e469df886174209a1266",
     "trajectory.yaml": "c0ade81c388841bc412462837da0b72491ef9cac72fe3e5d579235f26ab27762"
    }
   },
@@ -6005,13 +6005,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s03_roll_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.286,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s03_roll_push",
    "files": {
     "action.npz": "9703d7a0dc5c9bfa4e2a2d606c812fb8679f0800fd7288b6d005bba93ede27fe",
     "actions.jsonl": "d2064b679d49d343b13689b5573dc6180e5160dce114bfcb3e995e840837fa77",
-    "meta.json": "bda52053402680864f73a18962e0d57f4f3f5fa34e71a54f0fb293c337a2ef80",
+    "meta.json": "b617717510e552b527602757fbf36cc909b6fe21d0a934d6d46769dbc192e75d",
     "trajectory.yaml": "91fb14f2d1efda8ce7690877e231778f630691148d59609a879c31217debe1c6"
    }
   },
@@ -6089,13 +6089,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s05_roll_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.287,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s05_roll_push",
    "files": {
     "action.npz": "f7181a44f74e753a760927c3c29dde9a2ad97ec6deb2d42e7083edde3b881fe0",
     "actions.jsonl": "a19d9ab66fc3366f47365b30eb01d19930f06d8971ea73a2047755e3a3be69cd",
-    "meta.json": "f70fd88388b23ca6f33b7cdd6caae3260b0ee7631a2f1fbe0226ca40d4bdaad6",
+    "meta.json": "dadc25d20f14c006f1b2e15ab024a272300ddf74e93cc88f6b1be7afdd4d1e62",
     "trajectory.yaml": "ba5397c2c80972510fba32471ec8e7a00d8a4998ebfee263a1b3c9c460814a01"
    }
   },
@@ -6189,13 +6189,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s07_push_roll/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.284,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s07_push_roll",
    "files": {
     "action.npz": "2bb49eb2cf9ebadd1e6cb1f58a055c40678985a3d31e46f6a685c170d73f8bba",
     "actions.jsonl": "1ab8bf2d7df52eca02178b0860b9f784f782f0f58c399ffc4efd35cf180da43e",
-    "meta.json": "932d68bbfdc6a75926de2aba610405602cce5296b416a5296cd28ad0c510cc57",
+    "meta.json": "b8e49eefea9fc9134cdfc4338edf0e577debec3dda7e5861b82f9bcfe60ea6b9",
     "trajectory.yaml": "78b689868ef8262a1c3d546f08b725087d2c7a6874b143c879eb8d8363a5a47e"
    }
   },
@@ -6285,13 +6285,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s09_roll_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.287,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s09_roll_push",
    "files": {
     "action.npz": "46bd5c167ce374ad9df506133361151c28d5b1c795463d8869d40bb6e5a7fdd0",
     "actions.jsonl": "9975f1e964860e658bb9d974674a554c98c0cb76b59fe2c18ac463c74cc1189b",
-    "meta.json": "366d7f9771a61d8eb9861418775ebf550a2b6e55c58a1cac22e6d5d240a10e7d",
+    "meta.json": "dd362be2ce93662429898189b3bae2d48dda8e12303f7d7dde9a501836f8ba75",
     "trajectory.yaml": "e7a14194356c4850a96a123490a39b3f20cf7b05d195b59ea2f3c02c43dbf3a2"
    }
   },
@@ -6385,13 +6385,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s11_push_roll/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.286,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s11_push_roll",
    "files": {
     "action.npz": "8453612d7daac4771bbb6068daa3bceeeb57362de88a68e418644cab565c1a84",
     "actions.jsonl": "92e9c56bf944543e3dc932e85d6d067ae27fafc95a68c00f9546254a4fc41f1d",
-    "meta.json": "e7326a27e23b86b988442e5faaf3832c2fc4c68ca58c696c3f628a3171a213de",
+    "meta.json": "6f0e5da6c97e1303b5a1d7549e920f67340341fd67a083d88cd36f3d07ba6663",
     "trajectory.yaml": "81e378e0ae46bbf35f8f2a4f82143a4bc46aaf26cac08500cd7d2d7c440c3e5a"
    }
   },
@@ -6485,13 +6485,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s13_push_roll/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.284,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s13_push_roll",
    "files": {
     "action.npz": "91d4f9bf478b526b6030da97b54f2e72b589b61954111b4d109e5503aaecf8fd",
     "actions.jsonl": "464cf5b7e8ee78ead9c97e97b93d390f2ec0e5054ecbe3114f6cbb1e96a0cf48",
-    "meta.json": "d5e0fac486a8ef8667602593e4c85ba0153a4869b52bef45d3d5af77708975bf",
+    "meta.json": "3341ddfb96fd67b07fa2a82ce4facee8e45ca55cf6c9c5eecf99117e34a3ac12",
     "trajectory.yaml": "08469edfc787c587c98b75696a227c9fcfae07290582864332a5992871c2de50"
    }
   },
@@ -6593,13 +6593,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s15_roll_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.285,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s15_roll_push",
    "files": {
     "action.npz": "e8c46361acd4f5612cc1abe60ba3a412c9fb2618ec5e504d35a2d0debf9227a6",
     "actions.jsonl": "a4bf56a709292acee5abe1533c768bbf6cfa5d76c2432672c52fe2735ce9361a",
-    "meta.json": "caa918e7de37ef42e7e5c18748e4ce5b0ccf1e874a3266f277c4ee1a2b9974dd",
+    "meta.json": "4cb7c57024d079771847d1def1d661f274c1c3e90a5c27136eaefd2a715b5dd0",
     "trajectory.yaml": "6ea092501730f5291a1c9b7727cb96d7eb640c319e1ad5b240fb8747fbc4941c"
    }
   },
@@ -6697,13 +6697,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s17_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.286,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s17_push",
    "files": {
     "action.npz": "eaed028e4a952299cae13ba7480301782c672f66e6531cf71fc39bc69b8005cb",
     "actions.jsonl": "943d06f755a4ae5dc9cac6c98e4105bc1335cdae5212dc8177fca407b84ebfaa",
-    "meta.json": "45cf8bc63bfbadf3f903bbf8b370922476f977bbf9044b64ba96de83d2b8f929",
+    "meta.json": "30d40906921fc23e154c01a287fa9a7f4d3ee26be38c0e4e2fced3f6323c6520",
     "trajectory.yaml": "264e58cf27e56e0268f69a9493876df3e5c8dd43055696ef7379737d44f76826"
    }
   },
@@ -6805,13 +6805,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s19_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.287,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s19_push",
    "files": {
     "action.npz": "6bae57c0c69b0e4196878eebac1ef9c2f9c6522b86fe7a27daa77c594948d85a",
     "actions.jsonl": "08cf9698645fdbb39a18a6839010bea8c3c2d2784b991e8be2d1cf56e7e00c07",
-    "meta.json": "e5aca598d78139d547dcec717bb579236784100a9c6bd6b5f38704ffb8ccda18",
+    "meta.json": "81997045caabedc9663d3e8c0923c01ad6e5f5fd5896d4ac409eb7ad29f1de0f",
     "trajectory.yaml": "913ba244882eb07bb8a1b11df6b582e1c491752bb95cae94f554081e675afe7f"
    }
   },
@@ -6913,13 +6913,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s21_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.286,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s21_push",
    "files": {
     "action.npz": "bd84e29e43c9a08ccf66cf103b94d84d499d67862a3c7f59a07687ce4fb07e43",
     "actions.jsonl": "5177b521c54c4cea5495c99c2e4cc2553e0f3bc9923a22aff89fd8951ac42efc",
-    "meta.json": "c09af7eba426aebb51f785832137dc412e43056759b221beb73ceda23f79b803",
+    "meta.json": "349d57da1f957f05d8e8a6f71a283ab626ba88a9f5147970172364890e1e6ebc",
     "trajectory.yaml": "49878638510a16dd5fdf685fbaadb5c49824c92fc8a9e08e55790c65be91e736"
    }
   },
@@ -7037,13 +7037,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s23_push/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.286,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s23_push",
    "files": {
     "action.npz": "dfeb21863b8ce039577205d7e3ccbf7508728a8a940c9481077ce594e53123e7",
     "actions.jsonl": "08be0efdf8e0ce931545320c26bb1915686ce6561e8633a29e28be8bd6f48fbd",
-    "meta.json": "610cd83655f5760f55f03c47483d1ea099132a0d00b14d2346e021916a19b776",
+    "meta.json": "5496b2cd8e3db76295fec484cf784dda0ff3a26b6fce7101b0eeb723bbbd97ea",
     "trajectory.yaml": "08cab8e8047b9dc7f9fe3b1cfd051fcda1cdcdbb514189fd7f6188afd6dbf9c3"
    }
   },
@@ -7169,13 +7169,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s25_push_roll/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.285,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s25_push_roll",
    "files": {
     "action.npz": "67a3ba4970f45f9fc97bcb0a61bbf3db79dd10b5129061a4639e52b8465b0e54",
     "actions.jsonl": "286b70d4541649e350111ae921b46f942f7896ad779a3774bd1214a26e9a97da",
-    "meta.json": "1f3ffe975dcdd188d68cedcab069fc428a5d9cfcf87762d145f7a873b491995f",
+    "meta.json": "78a9f43b7ccc90c80ee10171da171f4426135c2667591e9e6b5b3b18420d90d4",
     "trajectory.yaml": "c340f1cce1a764339e611ac78e31a6673532068b9cb8cc07aeb2e0d2ca409fc1"
    }
   },
@@ -7289,13 +7289,13 @@
    "reference_status": "unity_rendered",
    "generator_version": 2,
    "reference_video": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s27_push_roll/reference/reference.mp4",
-   "reference_quality": "weak_first_frame",
-   "reference_first_frame_psnr_db": 18.481,
+   "reference_quality": "ok",
+   "reference_first_frame_psnr_db": 34.286,
    "path": "synthetic/ball_force/MirrorRollingBall__lpips_collision/s27_push_roll",
    "files": {
     "action.npz": "d587b4720fd1df3bd638ae34370c2fd70ccc52731626c793f117abf8763bc3fd",
     "actions.jsonl": "5b976d74c2006304134b8efb3a09f294cb1f1c6d7cc9a83e4f7de9accf5bab32",
-    "meta.json": "ebfa0cd93d11fb4a884e8bc4b8ad9f650f14a8d0d162aa2b9ba60b68c58d7b86",
+    "meta.json": "a03fd6c433c8b91a05c5dc9142e8cd3b3eb816e492ec002805b695bef5686d8a",
     "trajectory.yaml": "019c6462c9770f3045cd04c87cffa9c24797003bc6cb9ea03c4ff23e893e0066"
    }
   },

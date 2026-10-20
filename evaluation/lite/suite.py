@@ -37,6 +37,7 @@ from .aggregate import (
     build_aggregate,
     write_aggregate_json,
     write_summary_csv,
+    write_synthetic_summary_csv,
 )
 from .case_loader import LiteCase, load_case
 from .candidate_discovery import (
@@ -48,6 +49,7 @@ from .output import (
     AGGREGATE_CSV_FILENAME,
     AGGREGATE_JSON_FILENAME,
     PER_CASE_RESULTS_FILENAME,
+    SYNTHETIC_AGGREGATE_CSV_FILENAME,
     append_row,
     build_row,
     read_rows,
@@ -60,6 +62,15 @@ from .suite_loader import (
     DimensionSpec,
     Suite,
     load_suite,
+)
+from .synthetic import (
+    SPLIT_CORE,
+    SyntheticCase,
+    check_split,
+    includes_core,
+    includes_synthetic,
+    load_synthetic_cases,
+    load_trajectories,
 )
 
 LIQUID_MODULES = frozenset(
@@ -324,13 +335,20 @@ def run_suite(
     runner: Callable[..., Mapping[str, Any]] | None = None,
     adapters: Mapping[str, DimensionEvaluator] | None = None,
     log: Callable[[str], None] | None = None,
+    split: str = SPLIT_CORE,
+    families: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     """Run the requested dimensions over discovered candidates.
+
+    ``split`` selects the curated cases (``core``, the default), the synthetic
+    trajectories (``synthetic``, optionally limited to ``families``) or both
+    (``full``). Synthetic rows are aggregated separately from the core headline.
 
     Returns the aggregate summary (also written to ``output_dir`` together
     with the per-case JSONL, except in dry runs which write nothing).
     """
     emit = log or (lambda message: print(message, flush=True))
+    check_split(split)
     suite = load_suite(suite_root)
 
     requested = tuple(dimensions) if dimensions else tuple(suite.dimensions)
@@ -341,33 +359,56 @@ def run_suite(
 
     case_ids = sorted(
         {case_id for dimension in requested_dimensions for case_id in dimension.cases}
-    )
+    ) if includes_core(split) else []
     cases = _load_cases(suite, case_ids)
+    synthetic: dict[str, SyntheticCase] = (
+        load_synthetic_cases(suite, dimensions=requested, families=families)
+        if includes_synthetic(split)
+        else {}
+    )
+    cases.update({case_id: entry.case for case_id, entry in synthetic.items()})
 
     if not dry_run:
-        from .validation import validate_case_bundle
+        from .synthetic import validate_synthetic_case
+        from .validation import CaseValidationError, validate_case_bundle
 
         for case_id in case_ids:
             validate_case_bundle(cases[case_id], verify_checksums=verify_checksums)
+        for case_id, entry in synthetic.items():
+            try:
+                validate_synthetic_case(entry, verify_checksums=verify_checksums)
+            except CaseValidationError as exc:
+                raise CaseValidationError(f"{case_id}: {exc}") from exc
 
+    suite_cases = {
+        case_id for dimension in suite.dimensions.values() for case_id in dimension.cases
+    }
+    if suite.synthetic is not None and (
+        candidate_manifest is not None or includes_synthetic(split)
+    ):
+        # Rows for synthetic trajectories outside the selection are skipped.
+        suite_cases |= {t.synthetic_id for t in load_trajectories(suite)}
     candidate_rows, model_params = _discover_candidates(
         model_root=model_root,
         candidate_manifest=candidate_manifest,
-        allowed_cases=frozenset(case_ids),
-        suite_cases=frozenset(
-            case_id for dimension in suite.dimensions.values() for case_id in dimension.cases
-        ),
+        allowed_cases=frozenset(case_ids) | frozenset(synthetic),
+        suite_cases=frozenset(suite_cases),
     )
     candidate_rows = [
         _with_backend_defaults(_merge_candidate_params(row, model_params))
         for row in candidate_rows
     ]
 
+    def scored_on(dimension: DimensionSpec, case_id: str) -> bool:
+        if case_id in synthetic:
+            return dimension.dimension_id in synthetic[case_id].dimensions
+        return case_id in dimension.cases
+
     work_items = [
         WorkItem(dimension=dimension, case=cases[row.case_id], candidate=row)
         for dimension in requested_dimensions
         for row in candidate_rows
-        if row.case_id in dimension.cases
+        if scored_on(dimension, row.case_id)
     ]
     work_items.sort(
         key=lambda item: (
@@ -474,6 +515,9 @@ def run_suite(
             "reference_video": reference_video,
             "evaluator_lock": case.evaluator_lock,
         }
+        synthetic_fields = (
+            synthetic[case.case_id].row_fields() if case.case_id in synthetic else {}
+        )
 
         if dry_run:
             candidate_exists = candidate.candidate_video.is_file()
@@ -490,6 +534,7 @@ def run_suite(
                     "reference_exists": bool(
                         reference_video and Path(reference_video).is_file()
                     ),
+                    **synthetic_fields,
                 }
             )
             emit(
@@ -526,12 +571,15 @@ def run_suite(
             error=result.error,
             timing_sec=round(timing, 3),
         )
+        row.update(synthetic_fields)
         if input_fingerprints.get(key) is not None:
             row['candidate_input_fingerprint'] = input_fingerprints[key]
             row['required_repeats'] = 5
         if result.input_contract is not None:
             row['input_contract'] = result.input_contract
-        support = support_record(item.case.artifacts_dir, candidate.model)
+        support = support_record(
+            item.case.artifacts_dir, candidate.model, target=item.case.action_target
+        )
         if support is not None:
             row['action_support'] = support
         row['metric_status'] = metric_status(result.status, result.metrics)
@@ -554,19 +602,32 @@ def run_suite(
                 f"{candidate.model}/{candidate.seed}: {short}"
             )
 
+    not_applicable = {
+        case_id: dict(entry.not_applicable)
+        for case_id, entry in sorted(synthetic.items())
+        if entry.not_applicable
+    }
     if dry_run:
         return {
             "suite_name": suite.suite_name,
             "version": suite.version,
             "dry_run": True,
+            "split": split,
             "num_work_items": len(work_items),
             "work_items": dry_run_items,
+            **({"synthetic_not_applicable": not_applicable} if not_applicable else {}),
         }
 
     all_rows = read_rows(results_path)
     aggregate = build_aggregate(suite, all_rows)
+    if "synthetic" in aggregate and not_applicable:
+        aggregate["synthetic"]["not_applicable"] = not_applicable
     write_aggregate_json(output_root / AGGREGATE_JSON_FILENAME, aggregate)
     write_summary_csv(output_root / AGGREGATE_CSV_FILENAME, suite, aggregate)
+    if "synthetic" in aggregate:
+        write_synthetic_summary_csv(
+            output_root / SYNTHETIC_AGGREGATE_CSV_FILENAME, suite, aggregate["synthetic"]
+        )
     emit(f"[wmeval-lite] wrote {results_path}")
     return aggregate
 
@@ -584,7 +645,7 @@ def _evaluate_item(
     case = item.case
     candidate = item.candidate
 
-    reason = unsupported_reason(case.artifacts_dir, candidate.model)
+    reason = unsupported_reason(case.artifacts_dir, candidate.model, target=case.action_target)
     if reason is not None:
         return CaseResult(status=STATUS_UNSUPPORTED, error=reason)
 

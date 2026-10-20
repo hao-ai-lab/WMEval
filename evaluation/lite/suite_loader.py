@@ -88,6 +88,24 @@ class DimensionSpec:
 
 
 @dataclass(frozen=True)
+class SyntheticSpec:
+    """suite.yaml ``synthetic``: the synthetic trajectory set scored with ``--split``.
+
+    Each trajectory becomes a case built from its conditioning core case (see
+    :mod:`evaluation.lite.synthetic`); ``module_params`` adds or replaces, per
+    conditioning case and module, the module parameters it inherits from that
+    case's ``case.yaml`` (a ``null`` value drops an inherited key). Artifact
+    paths in them are relative to the trajectory directory.
+    """
+
+    manifest: str = "synthetic/manifest.json"
+    references: str = "synthetic/references.json"
+    module_params: Mapping[str, Mapping[str, Mapping[str, Any]]] = field(
+        default_factory=lambda: _EMPTY_MAPPING
+    )
+
+
+@dataclass(frozen=True)
 class Suite:
     root: Path
     suite_name: str
@@ -101,6 +119,8 @@ class Suite:
     # Case directory relative to the suite root (suite.yaml `cases_root`); lets a
     # companion suite reuse the main suite's case bundles (e.g. "../cases").
     cases_dir: str = "cases"
+    # suite.yaml `synthetic`; None when the suite has no synthetic split.
+    synthetic: SyntheticSpec | None = None
 
     @property
     def cases_root(self) -> Path:
@@ -273,6 +293,49 @@ def _required_repeats(raw: Mapping[str, Any]) -> int | None:
     return value
 
 
+def _relative_file(value: Any, where: str) -> str:
+    text = _nonblank(value, where).strip()
+    if Path(text).is_absolute() or ".." in Path(text).parts:
+        raise SuiteValidationError(f"{where} must be a relative path inside the suite")
+    return text
+
+
+def _parse_synthetic(
+    raw: Any, *, metric_config_keys: frozenset[str] | None
+) -> SyntheticSpec | None:
+    if raw is None:
+        return None
+    mapping = _mapping_value(raw, "synthetic")
+    unknown = sorted(set(mapping) - {"manifest", "references", "module_params"})
+    if unknown:
+        raise SuiteValidationError(f"synthetic has unknown keys {unknown}")
+    params: dict[str, Mapping[str, Mapping[str, Any]]] = {}
+    for case_id, modules in _mapping_value(
+        mapping.get("module_params", {}), "synthetic.module_params"
+    ).items():
+        where = f"synthetic.module_params.{case_id}"
+        _parse_case_id(case_id, f"{where} key")
+        per_module: dict[str, Mapping[str, Any]] = {}
+        for module, values in _mapping_value(modules, where).items():
+            values = dict(_mapping_value(values, f"{where}.{module}"))
+            if metric_config_keys is not None:
+                outside = sorted(set(values) - metric_config_keys)
+                if outside:
+                    raise SuiteValidationError(
+                        f"{where}.{module} has keys outside the sanctioned runner "
+                        f"whitelist: {outside}"
+                    )
+            per_module[_nonblank(module, f"{where} module")] = MappingProxyType(values)
+        params[case_id] = MappingProxyType(per_module)
+    return SyntheticSpec(
+        manifest=_relative_file(mapping.get("manifest", SyntheticSpec.manifest), "synthetic.manifest"),
+        references=_relative_file(
+            mapping.get("references", SyntheticSpec.references), "synthetic.references"
+        ),
+        module_params=MappingProxyType(params),
+    )
+
+
 def load_suite(
     suite_root: str | Path,
     *,
@@ -356,6 +419,9 @@ def load_suite(
         legacy_case_aliases=MappingProxyType(aliases),
         required_repeats=_required_repeats(raw),
         cases_dir=_cases_dir(raw),
+        synthetic=_parse_synthetic(
+            raw.get("synthetic"), metric_config_keys=metric_config_keys
+        ),
     )
 
     if check_case_dirs:
