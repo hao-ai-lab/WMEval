@@ -95,3 +95,19 @@ def test_lighting_checks_the_sam2_cuda_extension() -> None:
     rows = pf.check_lighting_sam2_extension(["lighting_shading"], find_spec=present, import_extension=broken)
     assert _statuses(rows) == {"sam2 CUDA extension": pf.WARN}
     assert pf.LIGHTING_DOC in rows[0].detail and "ImportError" in rows[0].detail
+
+
+def test_source_revision_falls_back_to_the_distribution_of_an_import_name(monkeypatch) -> None:
+    class Dist:
+        def read_text(self, name):
+            return '{"url": "https://github.com/facebookresearch/sam2.git", "vcs_info": {"commit_id": "2b90b9f"}}'
+
+    def distribution(name):
+        if name != "SAM-2":
+            raise md.PackageNotFoundError(name)
+        return Dist()
+
+    monkeypatch.setattr(pf.importlib_metadata, "distribution", distribution)
+    monkeypatch.setattr(pf.importlib_metadata, "packages_distributions", lambda: {"sam2": ["SAM-2"]})
+    assert pf._source_revision("sam2") == "2b90b9f"
+    assert pf._source_revision("other") is None

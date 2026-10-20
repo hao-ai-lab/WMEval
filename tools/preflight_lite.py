@@ -105,10 +105,18 @@ def _installed(dist: str) -> str | None:
 
 
 def _source_revision(dist: str) -> str | None:
-    """VCS commit a distribution was installed from (PEP 610 direct_url.json)."""
-    try:
-        text = importlib_metadata.distribution(dist).read_text("direct_url.json")
-    except importlib_metadata.PackageNotFoundError:
+    """VCS commit a distribution was installed from (PEP 610 direct_url.json).
+
+    ``dist`` may also be the import name: SAM2 from source installs as ``SAM-2``.
+    """
+    names = [dist, *importlib_metadata.packages_distributions().get(dist, [])]
+    for name in names:
+        try:
+            text = importlib_metadata.distribution(name).read_text("direct_url.json")
+            break
+        except importlib_metadata.PackageNotFoundError:
+            continue
+    else:
         return None
     if not text:
         return None
