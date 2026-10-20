@@ -180,10 +180,11 @@ connected-components kernel before accepting the installation.
 
 Each candidate's receipt supplies `lighting_time_mapping`: schema version 1,
 native fps, canonical_zero_frame and video_sha256. A candidate without one
-(e.g. a model-root directory) gets a mapping derived from the video: its
-decoded fps, canonical_zero_frame 0 and its own sha256; rows record
-`input_contract.lighting_time_mapping` as `receipt` or `derived`. A model whose
-orbit does not start at frame 0 passes the mapping in the candidate manifest.
+(e.g. a model-root directory) gets a mapping derived from the video and the
+model's declared `lighting_canonical_zero_frame` / `candidate_fps_override`;
+rows record `input_contract.lighting_time_mapping` as `receipt` or `derived`.
+The field definitions and precedence are specified in
+[docs/evaluation_dimensions.md](../../docs/evaluation_dimensions.md#candidate-time-mapping-lighting_time_mapping).
 Lite verifies CFR timestamps and at least 10 real seconds after that offset,
 then samples exactly 120 frames at 12 fps before tracking. It keeps image
 geometry and playback speed.
