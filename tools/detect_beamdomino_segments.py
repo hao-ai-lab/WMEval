@@ -117,6 +117,95 @@ def _roof_tilt_deg(frame: Dict[str, Any]) -> float | None:
     return _tilt_deg(rf["rotation"])
 
 
+# Synthetic-suite captures (tools/render_synthetic_references.py, ``unity_gt.json``)
+# log per-frame poses (``target_pos``/``target_velocity``/``target_rot`` for the floor
+# ball, ``objects[name].pos/rot`` for everything else, plus world bounds on frame 0)
+# but no collision records. ``log_from_synthetic_capture`` converts one into the
+# GroundTruthRecorder schema above; contacts are geometric: the floor ball's sphere
+# touching a body's oriented box (frame-0 bounds carried along with the body pose).
+SYNTHETIC_BALL_RADIUS_M = 0.55     # FloorBall rests at y=0.55 on the y=0 floor
+SYNTHETIC_CONTACT_MARGIN_M = 0.05
+_SYNTHETIC_CONTACT_BODIES = ("Pillar", "Roof", "Domino")
+
+
+def _quat_to_unity_euler_deg(q: List[float]) -> Dict[str, float]:
+    """Unity ``Quaternion.eulerAngles`` (ZXY order) of an (x, y, z, w) quaternion."""
+    import math
+
+    x, y, z, w = (float(v) for v in q)
+    sin_x = max(-1.0, min(1.0, 2.0 * (w * x - y * z)))
+    ex = math.degrees(math.asin(sin_x))
+    ey = math.degrees(math.atan2(2.0 * (w * y + x * z), 1.0 - 2.0 * (x * x + y * y)))
+    ez = math.degrees(math.atan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (x * x + z * z)))
+    return {"x": ex, "y": ey, "z": ez}
+
+
+def _quat_matrix(q: List[float]):
+    import numpy as np
+
+    x, y, z, w = (float(v) for v in q)
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+    ])
+
+
+def _vec(v: List[float]) -> Dict[str, float]:
+    return {"x": float(v[0]), "y": float(v[1]), "z": float(v[2])}
+
+
+def _local_boxes(first: Dict[str, Any]) -> Dict[str, tuple]:
+    """name -> (center offset, half extents) in the body frame, from frame-0 world bounds."""
+    import numpy as np
+
+    boxes = {}
+    for name, obj in (first.get("objects") or {}).items():
+        if not name.startswith(_SYNTHETIC_CONTACT_BODIES) or "bounds_center" not in obj:
+            continue
+        rot = _quat_matrix(obj["rot"])
+        offset = rot.T @ (np.asarray(obj["bounds_center"], float) - np.asarray(obj["pos"], float))
+        # world AABB half extents = |R| @ local half extents
+        local, *_ = np.linalg.lstsq(np.abs(rot), np.asarray(obj["bounds_extents"], float), rcond=None)
+        boxes[name] = (offset, np.clip(local, 0.0, None))
+    return boxes
+
+
+def log_from_synthetic_capture(
+    capture: Dict[str, Any],
+    *,
+    ball_radius: float = SYNTHETIC_BALL_RADIUS_M,
+    contact_margin: float = SYNTHETIC_CONTACT_MARGIN_M,
+) -> Dict[str, Any]:
+    import numpy as np
+
+    rows = capture["frames"]
+    boxes = _local_boxes(rows[0]) if rows else {}
+    reach = ball_radius + contact_margin
+    frames = []
+    for row in rows:
+        ball = np.asarray(row["target_pos"], float)
+        bodies = [{
+            "name": "FloorBall",
+            "position": _vec(row["target_pos"]),
+            "rotation": _quat_to_unity_euler_deg(row["target_rot"]),
+            "velocity": _vec(row["target_velocity"]),
+        }]
+        collisions = []
+        for name, obj in (row.get("objects") or {}).items():
+            bodies.append({"name": name, "position": _vec(obj["pos"]),
+                           "rotation": _quat_to_unity_euler_deg(obj["rot"])})
+            if name not in boxes:
+                continue
+            offset, half = boxes[name]
+            local = _quat_matrix(obj["rot"]).T @ (ball - np.asarray(obj["pos"], float)) - offset
+            excess = np.clip(np.abs(local) - half, 0.0, None)
+            if float(excess @ excess) <= reach * reach:
+                collisions.append({"bodyA": "FloorBall", "bodyB": name, "impulse": 0.0, "source": "geometric"})
+        frames.append({"time": float(row["time_sec"]), "bodies": bodies, "collisions": collisions})
+    return {"trajectory_id": capture.get("synthetic_id", "unknown"), "source": "synthetic_capture", "frames": frames}
+
+
 def detect_segments(
     log: Dict[str, Any],
     *,

@@ -57,7 +57,7 @@ source .venv-gpu/bin/activate
 python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
 python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
 ```
-Add `--split full` to also fetch the 219 synthetic action trajectories ([below](#synthetic-trajectory-suite-test_full)). Pin a dataset version with `--revision <tag-or-commit>`; no token is needed (the dataset is public). `python tools/sync_lite_data.py status` reports which cases are present.
+Add `--split full` to also fetch the 220 synthetic action trajectories ([below](#synthetic-trajectory-suite-test_full)). The download fetches the dataset commit this checkout was published with (`eval_sets/wmeval_lite_v1/DATASET_REVISION`), so a newer dataset version never breaks an older branch; `--revision <tag-or-commit>` overrides it. No token is needed (the dataset is public). `python tools/sync_lite_data.py status` reports which cases are present.
 
 VLM-judged dimensions (`prompt_scene_consistency`, `physical_causality`, causal `lpips`) need an `OPENAI_API_KEY`; CV-based dimensions download pinned checkpoints on first use (see `experiments/tables_4_7/evaluator_assets.lock.json`).
 
@@ -75,6 +75,8 @@ python tools/run_wmeval_lite.py run \
   --model-root runs/<model> \
   --output-dir reports/wmeval_lite/<model> --resume
 ```
+
+`--split full` also scores the 220 synthetic trajectories (candidates at `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`, data from `sync_lite_data.py download --split full`); `--split synthetic` scores only those. Their aggregate is reported apart from the core headline ([below](#synthetic-trajectory-suite-test_full)).
 
 Instead of a directory tree you can pass a strict JSONL manifest with `--candidate-manifest`:
 
@@ -151,18 +153,18 @@ python tools/prepare_lingbot_table7_inputs.py     # LingBot Base Cam poses/intri
 
 ### Synthetic Trajectory Suite (test_full)
 
-The curated cases form the `test_core` split (33 rows). The `test_full` split adds **219 synthetic action trajectories** (252 rows in total), each a schema-v1 `trajectory.yaml` bound to a core case that supplies the scene, conditioning frame, prompt and action target. Patterns keep the source case's initial state, so the core conditioning frame stays valid.
+The curated cases form the `test_core` split (33 rows). The `test_full` split adds **220 synthetic action trajectories** (253 rows in total), built text first: each starts as an action description (a short sequence of steps from a per-target vocabulary, e.g. *"the camera turns left at 30 degrees per second for 2 seconds (60 degrees in total), then holds still until the end of the 10-second clip"*), which becomes the second half of its prompt and is compiled into the action sequence (a schema-v1 `trajectory.yaml`). The first half of the prompt is the scene description of a core case, which also supplies the conditioning frame and action target; steps start from that case's initial state, so the core conditioning frame stays valid. Steps are sampled with a fixed seed, and each family keeps only distinct, mutually far-apart action sequences, balanced across step types and step counts.
 
-| Family | Target | Trajectories | Built from |
+| Family | Target | Trajectories | Step vocabulary (core case) |
 | --- | --- | --- | --- |
-| `camera_yaw` | camera | 90 | 10 yaw patterns (turns, sweeps, perturb-and-return) × 9 scene views |
-| `camera_orbit` | camera | 12 | look-at orbits on `SunRisesAndSets/lighting_orbit_v2` |
-| `ego_vehicle` | ego_vehicle | 24 | 8 drive patterns × 3 steering magnitudes (`RacingCar`) |
-| `cue_ball` | cue_ball | 21 | 7 shot directions × 3 strengths (`BilliardGame`) |
-| `ball_force` | ball | 24 | 12 push patterns × `BallRoller`, `MirrorRollingBall` |
-| `beam_domino` | rolling_ball | 16 | push timing / angle variants (`BeamDomino`) |
-| `liquid_container` | liquid_container | 20 | impulse / square-wave / chirp shake profiles (`LiquidContainer`) |
-| `character` | character | 12 | walk / sprint / strafe / turn patterns (`ChessBoard`) |
+| `camera_yaw` | camera | 45 | turn, hold, sweep and back, look behind (5 on each of 9 scene views) |
+| `camera_orbit` | camera | 20 | circle clockwise / counter-clockwise, pause (`SunRisesAndSets/lighting_orbit_v2`) |
+| `ego_vehicle` | ego_vehicle | 28 | drive, steer, lane change, brake, coast (`RacingCar/kinematics_third`) |
+| `cue_ball` | cue_ball | 25 | single or repeated strikes in 8 directions at 3 strengths, waits (`BilliardGame/kinematics_first`) |
+| `ball_force` | ball | 28 | pushes in 8 directions at 2 strengths, free rolling (14 each on `BallRoller`, `MirrorRollingBall`) |
+| `beam_domino` | rolling_ball | 25 | rolls forward / angled / sideways / back, waits (`BeamDomino/causal`) |
+| `liquid_container` | liquid_container | 25 | jolts, slides, fixed-rate shakes, rising-rate shakes, rests (`LiquidContainer/fluid_rest`) |
+| `character` | character | 24 | walk in 8 directions, sprint, jump, stand (`ChessBoard/walk_third`) |
 
 ```
 python tools/sync_lite_data.py download --split full     # cases + synthetic/, checksum-verified
@@ -170,7 +172,26 @@ python tools/expected_jobs.py --model "<backend>" --split full --output runs/<mo
 python tools/generate_synthetic_trajectories.py --verify  # rebuild locally and check against synthetic/manifest.json
 ```
 
-Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Unity reference renders for the synthetic trajectories are not in this release (`reference_status: pending_unity_render`): they are ready for generation, but simulator-grounded scoring needs a Unity capture per trajectory, so `run_wmeval_lite.py` currently scores `test_core` only.
+Unity references (maintainers; needs the Unity editor and WorldModelBenchScenePrivate with its LFS assets):
+
+```
+python tools/render_synthetic_references.py build             # replay players (variant scene revisions included)
+python tools/render_synthetic_references.py run --detach      # render every trajectory, resumable, in the background
+python tools/render_synthetic_references.py publish           # copy into synthetic/*/reference/ + synthetic/references.json
+python tools/generate_synthetic_trajectories.py               # fold reference status into meta.json / manifest
+```
+
+Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, action description and steps, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Each trajectory also has a Unity reference in its `reference/` folder (video, frame 0, Unity ground truth, capture record), rendered by replaying the same actions in the core case's Unity scene; `synthetic/references.json` lists every reference file's checksum, how closely its frame 0 matches the core conditioning frame, and which scene revision and assets it was rendered from. References whose frame 0 differs visibly from the core frame (below 20 dB PSNR) are marked `reference_quality: weak_first_frame`.
+
+`run_wmeval_lite.py run --split synthetic` (or `--split full` with the core cases; `--families` narrows it) scores each trajectory on its declared dimensions as its conditioning core case is scored: same protocol, evaluator lock and module parameters, against its own Unity reference and ground truth (`suite.yaml` `synthetic.module_params` fills in what a conditioning case lacks; `evaluation/lite/synthetic.py`). `validate --split synthetic` checks every listed file and the reference inputs each dimension needs. Rows carry `split: synthetic`, `family`, `conditioning_case` and `reference_quality`; `aggregate_summary.json` keeps the core headline unchanged and adds a `synthetic` block (mean over trajectories of the mean over seeds, also without `weak_first_frame` references and per family), with `aggregate_summary_synthetic.csv` beside it. Reference-side inputs ship as in the core cases: frozen LPIPS contact events, CausalStep QA with recorded reference answers, SAM2/RAFT liquid masks and flow, and prompt rubrics (a camera-yaw trajectory reuses its conditioning case's rubric, since its prompt is that scene description plus an action sentence). Beam-domino trajectories whose ball never starts a domino chain are not scored on `physical_causality` (`reference/artifacts/dimension_applicability.json`).
+
+Reference inputs (maintainers; write into `runs/synthetic_unity/`, then `publish`):
+
+```
+python tools/build_liquid_reference_artifacts.py --synthetic                        # SAM2 + RAFT, local
+python tools/build_synthetic_reference_inputs.py causal-qa                          # segments, QA, 5 recorded reference passes
+python tools/build_synthetic_reference_inputs.py contact-events --family ball_force # also beam_domino; liquid-events, rubrics
+```
 
 ## Evaluation Dimensions
 

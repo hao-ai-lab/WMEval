@@ -448,7 +448,112 @@ def suite_coverage(
     }
 
 
+SYNTHETIC_SPLIT = "synthetic"
+SYNTHETIC_AGGREGATION_LABEL = "mean_over_trajectories_of_mean_over_seeds"
+WEAK_REFERENCE_QUALITY = "weak_first_frame"
+
+
+def is_synthetic_row(row: Mapping[str, Any]) -> bool:
+    return row.get("split") == SYNTHETIC_SPLIT
+
+
+def _headline_value(dimension: DimensionSpec, rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    stats = _two_level_stats(rows).get(dimension.aggregate.headline, {}) if dimension.aggregate else {}
+    return {
+        "value": stats.get("mean"),
+        "std_across_trajectories": stats.get("std_across_cases"),
+        "n_trajectories": stats.get("n_cases", 0),
+    }
+
+
+def build_synthetic_aggregate(
+    suite: Suite, rows: Sequence[Mapping[str, Any]]
+) -> dict[str, Any]:
+    """Aggregate of the synthetic split, kept apart from the core headline.
+
+    Two-level mean like the core (seeds within a trajectory, then trajectories),
+    without the core repeat-coverage gate: ``seeds_per_trajectory`` reports the
+    repeats actually scored. ``headline_reference_ok`` drops trajectories whose
+    Unity reference starts visibly off the conditioning frame
+    (``reference_quality: weak_first_frame``); ``by_family`` splits the headline.
+    """
+    models: dict[str, Any] = {}
+    for model_name in sorted({str(row.get("model") or "") for row in rows}):
+        model_rows = [row for row in rows if str(row.get("model") or "") == model_name]
+        summaries: dict[str, Any] = {}
+        for dimension_id, dimension in suite.dimensions.items():
+            dimension_rows = [row for row in model_rows if row.get("dimension") == dimension_id]
+            if not dimension_rows:
+                continue
+            done = [row for row in dimension_rows if row.get("status") == "completed"]
+            stats = _two_level_stats(done)
+            headline = None
+            if dimension.aggregate is not None:
+                headline = {
+                    "metric": dimension.aggregate.headline,
+                    "direction": dimension.aggregate.direction,
+                    **_headline_value(dimension, done),
+                }
+            seeds = {}
+            for row in done:
+                seeds.setdefault(str(row.get("case_id")), set()).add(str(row.get("seed")))
+            families = sorted({str(row.get("family")) for row in dimension_rows})
+            metric_status_counts: dict[str, int] = {}
+            for row in dimension_rows:
+                for value in (row.get("metric_status") or {}).values():
+                    metric_status_counts[str(value)] = metric_status_counts.get(str(value), 0) + 1
+            summaries[dimension_id] = {
+                "display_name": dimension.display_name,
+                "num_rows": len(dimension_rows),
+                "num_trajectories": len({str(row.get("case_id")) for row in dimension_rows}),
+                "num_completed": len(done),
+                "num_unsupported": sum(1 for row in dimension_rows if row.get("status") == "unsupported"),
+                "seeds_per_trajectory": sorted({len(v) for v in seeds.values()}),
+                "headline": headline,
+                "headline_reference_ok": (
+                    _headline_value(
+                        dimension,
+                        [r for r in done if r.get("reference_quality") != WEAK_REFERENCE_QUALITY],
+                    )
+                    if headline is not None
+                    else None
+                ),
+                "by_family": {
+                    family: _headline_value(dimension, [r for r in done if str(r.get("family")) == family])
+                    for family in families
+                } if headline is not None else {},
+                **({"metric_status_counts": metric_status_counts} if metric_status_counts else {}),
+                "means": {metric: payload["mean"] for metric, payload in stats.items()},
+                "stats": stats,
+                "per_case": [
+                    {
+                        "case_id": row.get("case_id"),
+                        "family": row.get("family"),
+                        "reference_quality": row.get("reference_quality"),
+                        "seed": row.get("seed"),
+                        "status": row.get("status"),
+                        "error": row.get("error"),
+                        "metrics": row.get("metrics"),
+                    }
+                    for row in dimension_rows
+                ],
+            }
+        models[model_name] = {"dimensions": summaries}
+    return {
+        "aggregation": SYNTHETIC_AGGREGATION_LABEL,
+        "num_rows": len(rows),
+        "num_completed": sum(1 for row in rows if row.get("status") == "completed"),
+        "models": models,
+    }
+
+
 def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Core aggregate, plus a separate ``synthetic`` block when synthetic rows exist.
+
+    Synthetic rows never enter the core headline.
+    """
+    synthetic_rows = [row for row in rows if is_synthetic_row(row)]
+    rows = [row for row in rows if not is_synthetic_row(row)]
     completed = [row for row in rows if row.get("status") == "completed"]
 
     models: dict[str, Any] = {}
@@ -546,7 +651,7 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
                     'complete' if all(c['completed'] == c['required'] for c in coverage.values()) else 'incomplete')
         models[model_name] = {"dimensions": dimension_summaries}
 
-    return {
+    aggregate = {
         "suite_name": suite.suite_name,
         "version": suite.version,
         "aggregation": AGGREGATION_LABEL,
@@ -554,6 +659,9 @@ def build_aggregate(suite: Suite, rows: Sequence[Mapping[str, Any]]) -> dict[str
         "num_completed": len(completed),
         "models": models,
     }
+    if synthetic_rows:
+        aggregate["synthetic"] = build_synthetic_aggregate(suite, synthetic_rows)
+    return aggregate
 
 
 def write_aggregate_json(path: str | Path, aggregate: Mapping[str, Any]) -> None:
@@ -571,6 +679,38 @@ def _extra_mean_names(dimension, headline_name: str) -> tuple[str, ...]:
     return tuple(
         name for name in dimension.aggregate.extra_means if name != headline_name
     )
+
+
+def write_synthetic_summary_csv(
+    path: str | Path, suite: Suite, synthetic: Mapping[str, Any]
+) -> None:
+    """One row per model; per dimension: synthetic headline (all trajectories and
+    reference-ok only) and the number of trajectories behind it."""
+    dimension_ids = [d for d in suite.dimensions if suite.dimensions[d].aggregate is not None]
+    fieldnames = ["model"]
+    for dimension_id in dimension_ids:
+        headline_name = suite.dimensions[dimension_id].aggregate.headline
+        fieldnames += [
+            f"{dimension_id}:{headline_name}",
+            f"{dimension_id}:{headline_name}_reference_ok",
+            f"{dimension_id}:n_trajectories",
+        ]
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(fieldnames)
+        for model_name, payload in sorted(synthetic.get("models", {}).items()):
+            row: list[Any] = [model_name]
+            for dimension_id in dimension_ids:
+                summary = payload.get("dimensions", {}).get(dimension_id) or {}
+                headline = summary.get("headline") or {}
+                row += [
+                    headline.get("value"),
+                    (summary.get("headline_reference_ok") or {}).get("value"),
+                    headline.get("n_trajectories"),
+                ]
+            writer.writerow(row)
 
 
 def write_summary_csv(

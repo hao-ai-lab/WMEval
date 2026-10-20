@@ -71,7 +71,7 @@ def judge_identity(
         "model": str(cfg["model"]),
         "prompt_version": str(cfg["prompt_version"]),
         "alpha": float(cfg["alpha"]),
-        "rubric": rubric_path.resolve().relative_to(case.root).as_posix(),
+        "rubric": rubric_path.resolve().relative_to(case.rubric_root or case.root).as_posix(),
         "rubric_sha256": sha256_file(rubric_path),
         "first_frame_sha256": sha256_file(first_frame) if first_frame else None,
         "sample_duration_sec": SAMPLE_DURATION,
@@ -167,7 +167,7 @@ class VlmConsistencyAdapter:
         prompt_version = str(cfg["prompt_version"])
         alpha = float(cfg["alpha"])
         # case-relative: the rubric ships inside the case's checksummed bundle
-        rubric_dir = case.root / str(cfg["rubric_dir"])
+        rubric_dir = (case.rubric_root or case.root) / str(cfg["rubric_dir"])
 
         from evaluation.modules.vlm_consistency.rubric_cache import find_rubric
         from evaluation.modules.vlm_consistency.schemas import Rubric

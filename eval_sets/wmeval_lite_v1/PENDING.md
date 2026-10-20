@@ -560,7 +560,7 @@ gave 0.615 before the freeze; re-checking it needs API credits.
 4. Adapter template, environment lock, coverage gate.
 5. Clean-machine acceptance from the HF package; ship when every item above is closed.
 
-Related: open-model Table 4/7 status and calibration →
-[`TABLE4_TABLE7_REMAINING_MODELS_TODO.md`](../../TABLE4_TABLE7_REMAINING_MODELS_TODO.md);
+Related: open-model scope and readiness →
+[`experiments/tables_4_7/remaining_models.yaml`](../../experiments/tables_4_7/remaining_models.yaml);
 generated readiness report → `PRODUCTION_READINESS.md`
 (`python tools/audit_production_readiness.py`).

@@ -132,13 +132,32 @@ def freeze(
 ) -> Path:
     from evaluation.lite.case_loader import load_case
     from evaluation.lite.suite_loader import load_suite
+
+    suite = load_suite(SUITE_ROOT)
+    case = load_case(suite.cases_root / case_id, allowed_cases=suite.all_case_ids())
+    return freeze_case(
+        case, suite.dimensions["lpips"], passes=passes, min_support=min_support,
+        allow_empty=allow_empty, workers=workers,
+    )
+
+
+def freeze_case(
+    case: Any,
+    dimension: Any,
+    *,
+    passes: int,
+    min_support: int | None,
+    allow_empty: bool,
+    workers: int = 5,
+    output: Path | None = None,
+) -> Path:
+    """Judge ``case.reference_video`` ``passes`` times; write the consensus to
+    ``output`` (default: the case's ``reference/artifacts/contact_events.json``)."""
     from evaluation.modules.lpips_causal_vlm import detect_event_candidates
 
     if not os.environ.get("OPENAI_API_KEY"):
         raise SystemExit("OPENAI_API_KEY is required: freezing runs the hosted judge")
-    suite = load_suite(SUITE_ROOT)
-    dimension = suite.dimensions["lpips"]
-    case = load_case(suite.cases_root / case_id, allowed_cases=suite.all_case_ids())
+    case_id = case.case_id
     artifacts = judge_artifacts(case, dimension)
     reference = Path(case.reference_video)
     needed = min_support if min_support is not None else passes // 2 + 1
@@ -210,7 +229,8 @@ def freeze(
             "grid_frame_indices": sorted({i for p in recorded for i in p["grid_frame_indices"]}),
         },
     }
-    output = case.artifacts_dir / EVENTS_FILENAME
+    output = output or case.artifacts_dir / EVENTS_FILENAME
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"[freeze] kept {len(selected)} event(s) -> {output}", flush=True)
     return output

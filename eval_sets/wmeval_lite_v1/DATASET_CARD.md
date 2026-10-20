@@ -83,15 +83,28 @@ The viewer shows two splits:
 
 - `test_core` (33 rows): the curated WMEval Lite v1 cases, each with a Unity
   reference rendering. The paper's numbers come from this split.
-- `test_full` (252 rows): `test_core` plus 219 structured synthetic action
-  trajectories under `synthetic/` (camera yaw, look-at orbit, vehicle, cue ball,
-  ball force, beam-domino strike, bottle motion, character). Each one starts from a
-  core case's state and reuses its conditioning frame and prompt; Unity reference
-  renders for them are pending (`reference_status: pending_unity_render`), so they
-  are generation-ready but not yet scored. Their `suites` value is `wmeval_v1`;
-  core rows carry the Lite suite they belong to (`wmeval_lite_v1`).
+- `test_full` (253 rows): `test_core` plus 220 synthetic action trajectories
+  under `synthetic/` (camera yaw, look-at orbit, vehicle, cue ball, rolling ball,
+  beam-domino ball, bottle motion, character). Each is built text first: an action
+  description (a short sequence of steps such as "turns left at 30 degrees per
+  second for 2 seconds") forms the second half of its prompt and is compiled into
+  its action sequence; the first half is the scene description of the core case
+  whose conditioning frame and initial state it reuses. `meta.json` stores the
+  description and its steps. Each also has a Unity reference in its
+  `reference/` folder, rendered by replaying the same actions in the core case's
+  Unity scene (`reference_status: unity_rendered`); `synthetic/references.json`
+  in the code repository records checksums, render provenance and how closely
+  frame 0 matches the core frame (`reference_quality: weak_first_frame` below
+  20 dB). Their `suites` value is `wmeval_v1`; core rows carry the
+  Lite suite they belong to (`wmeval_lite_v1`). `run_wmeval_lite.py run
+  --split synthetic` (or `full`) scores them on their declared dimensions with
+  the conditioning case's protocol, against their own reference and its
+  `reference/artifacts/` (Unity ground truth plus the same pre-computed inputs
+  as the core cases: LPIPS contact events, CausalStep QA and recorded reference
+  answers, liquid masks and flow, rubrics); their aggregate is reported apart
+  from the core headline, with `reference_quality` on every row.
 
-Each row links to its first frame, trajectory and, for core cases, reference video.
+Each row links to its first frame, trajectory and reference video.
 
 This Hub dataset holds the case data: every file under each case's `reference/`
 directory (reference videos, conditioning frames, action trajectories, Unity
