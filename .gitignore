@@ -281,6 +281,7 @@ eval_sets/wmeval_lite_v1/cases/*/*/reference/*
 # and hosted on the Hub; only the manifest is tracked.
 eval_sets/wmeval_lite_v1/synthetic/*
 !eval_sets/wmeval_lite_v1/synthetic/manifest.json
+!eval_sets/wmeval_lite_v1/synthetic/references.json
 
 # Table 4/7 working notes (kept locally, not part of the release)
 /TABLE4_TABLE7_REMAINING_MODELS_TODO.md

@@ -33,7 +33,7 @@ def test_manifest_is_consistent() -> None:
         assert r["action_target"] in targets
         assert r["dimensions"] and set(r["dimensions"]) <= dimensions
         assert {"trajectory.yaml", "action.npz", "actions.jsonl", "meta.json"} <= set(r["files"])
-        assert r["reference_status"] == "pending_unity_render"
+        assert r["reference_status"] in {"pending_unity_render", "unity_rendered"}
 
 
 def test_full_index_extends_core() -> None:
@@ -121,3 +121,30 @@ def test_parse_rejects_text_that_does_not_match_the_steps() -> None:
         gen.parse_description(g, good.replace("60 degrees", "90 degrees"), 2.0)
     with pytest.raises(ValueError):  # the steps end early but the end-of-clip phrase is missing
         gen.parse_description(g, good, fam["duration"])
+
+
+def test_references_are_consistent_with_the_manifest() -> None:
+    path = SUITE / "synthetic" / "references.json"
+    if not path.is_file():
+        pytest.skip("no Unity references published yet")
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    refs, rows = doc["references"], {r["synthetic_id"]: r for r in MANIFEST["trajectories"]}
+    assert doc["count"] == len(refs) and set(refs) <= set(rows)
+    for sid, row in rows.items():
+        ref = refs.get(sid)
+        # meta.json (in the manifest) mirrors references.json, so --verify covers it
+        assert row["reference_status"] == ("unity_rendered" if ref else "pending_unity_render")
+        if ref is None:
+            continue
+        assert row["reference_video"] == f"{sid}/{ref['video']}"
+        assert ref["video"] in ref["files"] and all(f.startswith("reference/") for f in ref["files"])
+        weak = ref["first_frame_psnr_db"] is not None and ref["first_frame_psnr_db"] < doc["weak_first_frame_threshold_db"]
+        assert ref["quality"] == ("weak_first_frame" if weak else "ok") == row["reference_quality"]
+        assert "/Users/" not in json.dumps(ref)
+
+
+def test_dataset_revision_is_pinned() -> None:
+    from tools.sync_lite_data import pinned_revision
+
+    rev = pinned_revision()
+    assert rev is not None and len(rev) == 40 and all(c in "0123456789abcdef" for c in rev)

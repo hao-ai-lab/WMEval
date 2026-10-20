@@ -90,12 +90,15 @@ The viewer shows two splits:
   second for 2 seconds") forms the second half of its prompt and is compiled into
   its action sequence; the first half is the scene description of the core case
   whose conditioning frame and initial state it reuses. `meta.json` stores the
-  description and its steps. Unity reference renders are pending
-  (`reference_status: pending_unity_render`), so these rows are generation-ready
-  but not yet scored. Their `suites` value is `wmeval_v1`; core rows carry the
+  description and its steps. Each also has a Unity reference in its
+  `reference/` folder, rendered by replaying the same actions in the core case's
+  Unity scene (`reference_status: unity_rendered`); `synthetic/references.json`
+  in the code repository records checksums, render provenance and how closely
+  frame 0 matches the core frame (`reference_quality: weak_first_frame` below
+  20 dB). Scoring synthetic rows is not wired into the evaluator yet. Their `suites` value is `wmeval_v1`; core rows carry the
   Lite suite they belong to (`wmeval_lite_v1`).
 
-Each row links to its first frame, trajectory and, for core cases, reference video.
+Each row links to its first frame, trajectory and reference video.
 
 This Hub dataset holds the case data: every file under each case's `reference/`
 directory (reference videos, conditioning frames, action trajectories, Unity

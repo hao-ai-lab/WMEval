@@ -28,9 +28,11 @@ orbit poses, which may differ in the last float bits across platforms).
 Each trajectory directory gets ``trajectory.yaml``, the compiled ``action.npz``
 (timestamps, values, channel names; camera poses for look-at orbits),
 ``actions.jsonl`` (Project Genie browser program) and ``meta.json`` (prompt,
-action description and steps). The generated files are published to the Hub
-dataset (split ``test_full``); this repository keeps the generator and the
-manifest.
+action description and steps, and -- once ``tools/render_synthetic_references.py
+publish`` has listed it in ``synthetic/references.json`` -- its Unity reference,
+which sits in the trajectory's ``reference/`` folder). The generated files and
+references are published to the Hub dataset (split ``test_full``); this
+repository keeps the generator, the manifest and references.json.
 
     python tools/generate_synthetic_trajectories.py            # write eval_sets/wmeval_lite_v1/synthetic/
     python tools/generate_synthetic_trajectories.py --verify   # regenerate and compare with the manifest
@@ -68,6 +70,7 @@ from evaluation.trajectories import load_trajectory, write_compiled_trajectory  
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 OUT_ROOT = SUITE_ROOT / "synthetic"
 MANIFEST = OUT_ROOT / "manifest.json"
+REFERENCES = OUT_ROOT / "references.json"  # written by tools/render_synthetic_references.py publish
 GENERATOR_VERSION = 2
 SEED = 20261019
 POOL_FACTOR = 20  # candidate plans sampled per selected trajectory
@@ -799,8 +802,15 @@ def trajectory_doc(fam: dict[str, Any], case_id: str, slug: str, plan: list[Step
     }
 
 
+def load_references() -> dict[str, Any]:
+    if not REFERENCES.is_file():
+        return {}
+    return json.loads(REFERENCES.read_text(encoding="utf-8"))["references"]
+
+
 def generate(out_root: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
+    references = load_references()
     for index, fam in enumerate(families()):
         g: Grammar = fam["grammar"]
         for i, plan in enumerate(select_plans(fam, index)):
@@ -835,6 +845,12 @@ def generate(out_root: Path) -> list[dict[str, Any]]:
                 "duration_sec": fam["duration"], "control_hz": fam["hz"], "dimensions": fam["dimensions"],
                 "reference_status": "pending_unity_render", "generator_version": GENERATOR_VERSION,
             }
+            ref = references.get(f"synthetic/{rel}")
+            if ref:
+                meta.update({"reference_status": "unity_rendered",
+                             "reference_video": f"synthetic/{rel}/{ref['video']}",
+                             "reference_quality": ref["quality"],
+                             "reference_first_frame_psnr_db": ref["first_frame_psnr_db"]})
             (out / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             files = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file()}
             rows.append({**meta, "path": f"synthetic/{rel}", "files": files})
@@ -918,11 +934,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(f"verified {len(rows)} synthetic trajectories against {MANIFEST.relative_to(ROOT)}")
         return 0
-    if OUT_ROOT.exists():
-        for child in OUT_ROOT.iterdir():
-            if child.is_dir():
-                shutil.rmtree(child)
     rows = generate(OUT_ROOT)
+    # Drop trajectory folders that are no longer generated (each one's reference/ is kept
+    # with it otherwise: references are published into the same folder).
+    keep = {Path(r["path"]).relative_to("synthetic") for r in rows}
+    for traj in sorted(OUT_ROOT.glob("*/*/*")):
+        if traj.is_dir() and traj.relative_to(OUT_ROOT) not in keep:
+            shutil.rmtree(traj)
     by_family: dict[str, int] = {}
     for r in rows:
         by_family[r["family"]] = by_family.get(r["family"], 0) + 1

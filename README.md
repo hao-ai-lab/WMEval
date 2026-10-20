@@ -56,7 +56,7 @@ source .venv-gpu/bin/activate
 python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
 python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
 ```
-Add `--split full` to also fetch the 220 synthetic action trajectories ([below](#synthetic-trajectory-suite-test_full)). Pin a dataset version with `--revision <tag-or-commit>`; no token is needed (the dataset is public). `python tools/sync_lite_data.py status` reports which cases are present.
+Add `--split full` to also fetch the 220 synthetic action trajectories ([below](#synthetic-trajectory-suite-test_full)). The download fetches the dataset commit this checkout was published with (`eval_sets/wmeval_lite_v1/DATASET_REVISION`), so a newer dataset version never breaks an older branch; `--revision <tag-or-commit>` overrides it. No token is needed (the dataset is public). `python tools/sync_lite_data.py status` reports which cases are present.
 
 VLM-judged dimensions (`prompt_scene_consistency`, `physical_causality`, causal `lpips`) need an `OPENAI_API_KEY`; CV-based dimensions download pinned checkpoints on first use (see `experiments/tables_4_7/evaluator_assets.lock.json`).
 
@@ -167,7 +167,16 @@ python tools/expected_jobs.py --model "<backend>" --split full --output runs/<mo
 python tools/generate_synthetic_trajectories.py --verify  # rebuild locally and check against synthetic/manifest.json
 ```
 
-Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, action description and steps, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Unity reference renders for the synthetic trajectories are not in this release (`reference_status: pending_unity_render`): they are ready for generation, but simulator-grounded scoring needs a Unity capture per trajectory, so `run_wmeval_lite.py` currently scores `test_core` only.
+Unity references (maintainers; needs the Unity editor and WorldModelBenchScenePrivate with its LFS assets):
+
+```
+python tools/render_synthetic_references.py build             # replay players (variant scene revisions included)
+python tools/render_synthetic_references.py run --detach      # render every trajectory, resumable, in the background
+python tools/render_synthetic_references.py publish           # copy into synthetic/*/reference/ + synthetic/references.json
+python tools/generate_synthetic_trajectories.py               # fold reference status into meta.json / manifest
+```
+
+Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, action description and steps, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Each trajectory also has a Unity reference in its `reference/` folder (video, frame 0, Unity ground truth, capture record), rendered by replaying the same actions in the core case's Unity scene; `synthetic/references.json` lists every reference file's checksum, how closely its frame 0 matches the core conditioning frame, and which scene revision and assets it was rendered from. References whose frame 0 differs visibly from the core frame (below 20 dB PSNR) are marked `reference_quality: weak_first_frame`. Scoring synthetic rows is not wired into `run_wmeval_lite.py` yet: it scores `test_core` only.
 
 ## Evaluation Dimensions
 
