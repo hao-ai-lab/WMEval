@@ -6,6 +6,7 @@ Checks, for the selected dimensions (default: all) of a suite:
 * python      -- interpreter version (>= 3.11) vs. the case locks' ``python`` pins
 * imports     -- runtime-only imports a dimension needs that no lock lists
                  (e.g. decord for SAM2's video predictor in fluid_mechanics)
+* sam2 ext    -- SAM2's CUDA extension (``sam2._C``) when lighting_shading is selected
 * deps        -- every ``evaluator_lock.dependency_versions`` entry vs. what is
                  installed (packages, plus cuda/gpu/nvidia_driver and
                  ``*_source_revision`` pins where they can be read locally)
@@ -201,6 +202,35 @@ def check_runtime_imports(
         detail = "importable" if status == PASS else "not installed (pip install it; see requirements-gpu.lock)"
         rows.append(Row(status, f"import {module}", f"{detail} [{', '.join(sorted(dims))}]"))
     return rows
+
+
+LIGHTING_DOC = "docs/evaluation_dimensions.md#reproducing-the-published-lighting-scores"
+
+
+def _import_sam2_extension() -> None:
+    import torch  # noqa: F401  -- sam2._C links against torch's shared libraries
+    importlib.import_module("sam2._C")
+
+
+def check_lighting_sam2_extension(
+    dimension_ids: Iterable[str],
+    find_spec: Callable[[str], Any] = importlib.util.find_spec,
+    import_extension: Callable[[], None] = _import_sam2_extension,
+) -> list[Row]:
+    """SAM2's CUDA extension: without it SAM2 skips mask hole filling and lighting scores drift.
+
+    pip/uv report success when the extension fails to build, so import it directly.
+    """
+    if "lighting_shading" not in dimension_ids or find_spec("sam2") is None:
+        return []
+    try:
+        import_extension()
+    except Exception as exc:  # missing, or built against another torch
+        return [Row(WARN, "sam2 CUDA extension",
+                    f"sam2._C not importable ({type(exc).__name__}): SAM2 skips mask hole filling, so "
+                    f"lighting scores differ from the published ones; rebuild SAM2 as in {LIGHTING_DOC} "
+                    "[lighting_shading]")]
+    return [Row(PASS, "sam2 CUDA extension", "sam2._C importable [lighting_shading]")]
 
 
 def _sha256(path: Path, cache: dict[Path, str]) -> str:
@@ -460,6 +490,7 @@ def main(argv: list[str] | None = None) -> int:
     rows += check_python(locks, strict=args.strict)
     rows += check_dependencies(locks, strict=args.strict)
     rows += check_runtime_imports(dimension_ids)
+    rows += check_lighting_sam2_extension(dimension_ids)
     if not args.skip_assets:
         derived: dict[str, set[str]] = {}
         for d in dimension_ids:

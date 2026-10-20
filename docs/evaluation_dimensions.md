@@ -1611,6 +1611,37 @@ candidate_fps_override: 10         # generation rate, only if the mp4 tag differ
 
 Every lighting row records `input_contract.lighting_time_mapping` (`receipt` or `derived`) and `input_contract.lighting_time_mapping_detail` (the values used, where each came from, the container fps, and whether the frames were re-timed). A derived mapping also prints a warning, and `aggregate_summary.json` counts the rows of each kind under `lighting_time_mapping_counts`.
 
+#### Reproducing the published lighting scores
+
+The published lighting scores (`eval_sets/wmeval_lite_v1/baselines/lighting_orbit_v2/expected_scores.json`) come from a pinned scoring stack: Python 3.12, torch 2.8.0 / CUDA 12.8, `experiments/lighting_orbit_v2/requirements-lighting-score.lock`, and SAM2 built from source revision `2b90b9f` **with its CUDA extension**. The default environment (`scripts/bootstrap_tables_4_7_gpu.sh`) runs the lighting dimension, but its numbers differ: on the same H200, the 15 baseline videos moved by up to 1.85 °/frame SDJ, 0.94° MOSD and 0.67 pp SAS (SRR/SDR unchanged, model ranking unchanged). To compare a new model with the published rows, score `lighting_shading` in a separate environment (after downloading the case data, README step 3):
+
+```bash
+# Needs gcc and a CUDA 12.8 toolkit (nvcc, CUDA_HOME) to build SAM2's extension.
+uv venv --python 3.12 .venv-lighting
+uv pip install --python .venv-lighting/bin/python torch==2.8.0 torchvision==0.23.0 \
+  --index-url https://download.pytorch.org/whl/cu128
+uv pip install --python .venv-lighting/bin/python setuptools wheel ninja \
+  -r experiments/lighting_orbit_v2/requirements-lighting-score.lock
+# uv/pip report success even when the extension fails to build; CC/CXX override uv's
+# clang-built Python, --no-build-isolation keeps the torch installed above, and the
+# arch list (A100 through Blackwell) is required when no GPU is visible during the build.
+CC=gcc CXX=g++ TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0;10.0;12.0" SAM2_BUILD_ALLOW_ERRORS=0 \
+  uv pip install --python .venv-lighting/bin/python --no-build-isolation \
+  "git+https://github.com/facebookresearch/sam2.git@2b90b9f5ceec907a1c18123530e92e794ad901a4"
+.venv-lighting/bin/python -c "import torch, sam2._C"   # must succeed
+
+# Locked GroundingDINO / SAM2.1 weights in a dedicated cache; score offline.
+.venv-lighting/bin/python tools/prepare_lighting_evaluator.py \
+  --lock eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/evaluator_assets.lock.json \
+  --cache-dir "$PWD/.cache/lighting-hub"
+export HF_HUB_CACHE="$PWD/.cache/lighting-hub" HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+.venv-lighting/bin/python tools/preflight_lite.py --dimensions lighting_shading --device cuda
+.venv-lighting/bin/python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \
+  --dimensions lighting_shading --model-root runs/<model> --output-dir reports/wmeval_lite/<model>-lighting
+```
+
+Under this stack the published values are reproduced exactly on the pinned RTX PRO 6000. On other GPUs they agree to within 0.17 °/frame SDJ, 0.18 pp SAS, 0.01° MOSD and 0.13 Hu-L2 SSD (measured on an H200). `tools/preflight_lite.py` warns when `lighting_shading` is selected and `sam2._C` cannot be imported.
+
 <details>
 <summary><b>Full reference</b> (formerly <code>README_shadow_consistency_eval.md</code>)</summary>
 

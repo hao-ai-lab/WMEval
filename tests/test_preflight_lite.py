@@ -81,3 +81,17 @@ def test_main_renders_table_and_exit_code(tmp_path: Path, monkeypatch: pytest.Mo
 
     monkeypatch.setattr(runner, "_load_dotenv", lambda root: None)  # ignore a local .env
     assert pf.main(["--suite", str(suite), "--device", "cpu", "--dimensions", "toy_promptcons"]) == 1
+
+
+def test_lighting_checks_the_sam2_cuda_extension() -> None:
+    present = lambda name: object()  # noqa: E731
+    def broken() -> None:
+        raise ImportError("libc10.so: cannot open shared object file")
+    assert pf.check_lighting_sam2_extension(["fluid_mechanics"], find_spec=present, import_extension=broken) == []
+    assert pf.check_lighting_sam2_extension(["lighting_shading"], find_spec=lambda name: None,
+                                            import_extension=broken) == []
+    assert _statuses(pf.check_lighting_sam2_extension(
+        ["lighting_shading"], find_spec=present, import_extension=lambda: None)) == {"sam2 CUDA extension": pf.PASS}
+    rows = pf.check_lighting_sam2_extension(["lighting_shading"], find_spec=present, import_extension=broken)
+    assert _statuses(rows) == {"sam2 CUDA extension": pf.WARN}
+    assert pf.LIGHTING_DOC in rows[0].detail and "ImportError" in rows[0].detail

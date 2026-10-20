@@ -51,6 +51,7 @@ source .venv/bin/activate
 bash scripts/bootstrap_tables_4_7_gpu.sh
 source .venv-gpu/bin/activate
 ```
+   This environment runs every dimension. To reproduce the published lighting scores, score `lighting_shading` in a separate environment built from the lighting lock (Python 3.12, torch 2.8, SAM2 with its CUDA extension); see [Reproducing the published lighting scores](docs/evaluation_dimensions.md#reproducing-the-published-lighting-scores).
 3. Download the case data and validate the suite. The repository holds each case's metadata (`case.yaml` and the checksum manifest); the case data itself (reference videos, conditioning frames, action trajectories and other artifacts) is hosted on the Hugging Face Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite):
 ```
 python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
