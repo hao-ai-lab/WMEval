@@ -32,6 +32,7 @@ from .adapters.base import (
     DimensionEvaluator,
 )
 from .action_support import support_record, unsupported_reason
+from .normalization import LIGHTING_ZERO_FRAME_PARAM
 from evaluation import action_backends
 from .aggregate import (
     build_aggregate,
@@ -220,6 +221,61 @@ def _default_normalized_path(
     )
 
 
+def resolve_lighting_time_mapping(case: LiteCase, candidate: CandidateRow) -> dict[str, Any]:
+    """The lighting orbit's time mapping for one candidate, and where each field came from.
+
+    A generation receipt (``params.lighting_time_mapping``) wins. Without one the
+    mapping is derived from the video: ``native_fps`` from ``candidate_fps_override``
+    (explicit, or the backend registry's ``real_fps``) else the container, and
+    ``canonical_zero_frame`` from ``lighting_canonical_zero_frame`` (model.yaml or
+    manifest params) else 0. A receipt that disagrees with those params is an error.
+    """
+    from .normalization import derive_lighting_time_mapping
+
+    params = candidate.params or {}
+    zero = params.get(LIGHTING_ZERO_FRAME_PARAM)
+    if zero is not None and (isinstance(zero, bool) or not isinstance(zero, int) or zero < 0):
+        raise SuiteRunError(f"{case.case_id}: {LIGHTING_ZERO_FRAME_PARAM} must be a nonnegative integer")
+    override = params.get("candidate_fps_override")
+    receipt = params.get("lighting_time_mapping")
+    if receipt is not None:
+        if not isinstance(receipt, Mapping):
+            raise SuiteRunError(f"{case.case_id}: lighting_time_mapping must be a mapping")
+        if zero is not None and zero != receipt.get("canonical_zero_frame"):
+            raise SuiteRunError(
+                f"{case.case_id}: {LIGHTING_ZERO_FRAME_PARAM}={zero} conflicts with the receipt's "
+                f"canonical_zero_frame={receipt.get('canonical_zero_frame')}")
+        if override is not None and abs(float(override) - float(receipt.get("native_fps") or 0)) > 1e-6:
+            raise SuiteRunError(
+                f"{case.case_id}: candidate_fps_override={override} conflicts with the receipt's "
+                f"native_fps={receipt.get('native_fps')}")
+        return {"mapping": dict(receipt), "source": "receipt",
+                "native_fps_source": "receipt", "canonical_zero_frame_source": "receipt"}
+    mapping = derive_lighting_time_mapping(
+        candidate.candidate_video,
+        native_fps=float(override) if override is not None else None,
+        canonical_zero_frame=zero if zero is not None else 0,
+    )
+    return {"mapping": mapping, "source": "derived",
+            "native_fps_source": "candidate_fps_override" if override is not None else "container",
+            "canonical_zero_frame_source": LIGHTING_ZERO_FRAME_PARAM if zero is not None else "default"}
+
+
+def _normalize_lighting_orbit(
+    *, case: LiteCase, candidate: CandidateRow, output_root: Path,
+) -> tuple[Path, dict[str, Any]]:
+    """Cut the 10 s orbit window; return it with the mapping's provenance and the window report."""
+    from .normalization import normalize_lighting_window
+
+    lighting = resolve_lighting_time_mapping(case, candidate)
+    destination = _default_normalized_path(output_root, candidate)
+    # This small artifact must be verified/rebuilt for changed receipt/input,
+    # even when a previous candidate occupied the same output path.
+    lighting["window"] = normalize_lighting_window(
+        candidate.candidate_video, destination, time_mapping=dict(lighting["mapping"]))
+    return destination, lighting
+
+
 def _normalize_candidate(
     *,
     case: LiteCase,
@@ -236,21 +292,12 @@ def _normalize_candidate(
         return candidate.candidate_video
 
     from .normalization import (
-        derive_lighting_time_mapping, normalize_liquid_video, normalize_to_reference,
-        normalize_lighting_video, normalize_lighting_window,
+        normalize_liquid_video, normalize_to_reference, normalize_lighting_video,
     )
 
     destination = _default_normalized_path(output_root, candidate)
     if kind == "lighting_orbit":
-        mapping = candidate.params.get("lighting_time_mapping")
-        if mapping is None:
-            mapping = derive_lighting_time_mapping(candidate.candidate_video)
-        elif not isinstance(mapping, Mapping):
-            raise SuiteRunError(f"{case.case_id}: lighting_time_mapping must be a mapping")
-        # This small artifact must be verified/rebuilt for changed receipt/input,
-        # even when a previous candidate occupied the same output path.
-        normalize_lighting_window(candidate.candidate_video, destination, time_mapping=dict(mapping))
-        return destination
+        return _normalize_lighting_orbit(case=case, candidate=candidate, output_root=output_root)[0]
     if not destination.is_file():
         if kind == "reference":
             if case.reference_video is None:
@@ -547,12 +594,13 @@ def run_suite(
             f"{candidate.model}/{candidate.seed}: {result.status}"
             + (f" ({result.error})" if result.error else "")
         )
-        short = _short_candidate_note(case, result.input_contract)
-        if short is not None:
-            emit(
-                f"[wmeval-lite] warning {dimension.dimension_id}/{case.case_id}/"
-                f"{candidate.model}/{candidate.seed}: {short}"
-            )
+        for note in (_short_candidate_note(case, result.input_contract),
+                     _derived_time_mapping_note(result.input_contract)):
+            if note is not None:
+                emit(
+                    f"[wmeval-lite] warning {dimension.dimension_id}/{case.case_id}/"
+                    f"{candidate.model}/{candidate.seed}: {note}"
+                )
 
     if dry_run:
         return {
@@ -611,9 +659,14 @@ def _evaluate_item(
     except CandidateValidationError as exc:
         return CaseResult(status=STATUS_INVALID_CANDIDATE, error=str(exc))
 
-    candidate_video = _normalize_candidate(
-        case=case, candidate=candidate, output_root=output_root
-    )
+    lighting = None
+    if NORMALIZATION_TOKENS.get(str(protocol.get("candidate_normalization"))) == "lighting_orbit":
+        candidate_video, lighting = _normalize_lighting_orbit(
+            case=case, candidate=candidate, output_root=output_root)
+    else:
+        candidate_video = _normalize_candidate(
+            case=case, candidate=candidate, output_root=output_root
+        )
 
     _install_liquid_artifacts_if_needed(
         dimension=dimension, case=case, installed=installed_liquid_cases
@@ -631,10 +684,17 @@ def _evaluate_item(
     result.input_contract = input_contract(
         validated, normalization=str(protocol.get("candidate_normalization") or "none")
     )
-    if NORMALIZATION_TOKENS.get(str(protocol.get("candidate_normalization"))) == "lighting_orbit":
-        result.input_contract["lighting_time_mapping"] = (
-            "receipt" if candidate.params.get("lighting_time_mapping") is not None else "derived"
-        )
+    if lighting is not None:
+        mapping, window = lighting["mapping"], lighting["window"]
+        result.input_contract["lighting_time_mapping"] = lighting["source"]
+        result.input_contract["lighting_time_mapping_detail"] = {
+            "native_fps": mapping["native_fps"],
+            "native_fps_source": lighting["native_fps_source"],
+            "canonical_zero_frame": mapping["canonical_zero_frame"],
+            "canonical_zero_frame_source": lighting["canonical_zero_frame_source"],
+            "container_fps": round(float(window["source_fps"]), 6),
+            "retimed": bool(window["retimed"]),
+        }
     return result
 
 
@@ -702,6 +762,22 @@ def _short_candidate_note(case: LiteCase, contract: Mapping[str, Any] | None) ->
         f"({contract['candidate']['duration_sec']:.2f} s of {contract['reference']['duration_sec']:.2f} s); "
         "only the overlap is scored"
     )
+
+
+def _derived_time_mapping_note(contract: Mapping[str, Any] | None) -> str | None:
+    """Note for a lighting orbit scored without a receipt (see resolve_lighting_time_mapping)."""
+    if not contract or contract.get("lighting_time_mapping") != "derived":
+        return None
+    detail = contract.get("lighting_time_mapping_detail") or {}
+    note = (
+        f"lighting_time_mapping derived from the video: native_fps {detail.get('native_fps')} "
+        f"({detail.get('native_fps_source')}), canonical_zero_frame "
+        f"{detail.get('canonical_zero_frame')} ({detail.get('canonical_zero_frame_source')})"
+    )
+    if detail.get("canonical_zero_frame_source") == "default":
+        note += (f"; if the orbit does not start at the first frame, set {LIGHTING_ZERO_FRAME_PARAM} "
+                 "in model.yaml or pass a lighting_time_mapping in the candidate manifest")
+    return note
 
 
 def metric_status(status: str, metrics: Mapping[str, Any] | None) -> dict[str, str]:

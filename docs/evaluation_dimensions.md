@@ -1585,6 +1585,31 @@ Do cast shadows stay geometrically and temporally coherent with one light source
 
 - **Metrics:** Scene Retention ↑, Shadow Detection ↑, Multi-Object Sun Disagreement ↓, Shadow Direction Jitter ↓, Shadow Area Stability ↓, Shadow Shape Drift ↓
 - **Suite dimension & tooling:** `lighting_shading` — `shadow_consistency` module (GroundingDINO, SAM 2, Hu moments); reference-free
+- **Candidate timing:** the case `SunRisesAndSets/lighting_orbit_v2` scores exactly the ten-second orbit, located by the candidate's time mapping (below).
+
+#### Candidate time mapping (`lighting_time_mapping`)
+
+Lite cuts the native frames `[z, z + ceil(10 × native_fps))` from the candidate, places native frame `n` at `(n − z) / native_fps` seconds and samples exactly 120 frames at 12 fps by timestamp. Nothing is stretched or padded: a candidate with a variable frame rate, fewer frames, or a hash mismatch is invalid.
+
+| Field | Meaning |
+|---|---|
+| `schema_version` | `1` |
+| `native_fps` | Frames per second of the model's own timeline, i.e. the rate at which the commanded trajectory advanced during generation. Rational rates such as 30000/1001 are accepted. If the mp4 is tagged with a different constant rate, the frames are re-timed to `native_fps`. |
+| `canonical_zero_frame` (`z`) | Index of the first frame the model emits for trajectory time t = 0; earlier frames are context it re-emits rather than generates under the trajectory. `0` for image-to-video models whose first output frame is the conditioning image; `4` for Waypoint-1.5, which re-emits its four-frame seed block. |
+| `video_sha256` | SHA-256 of the exact candidate file; a re-encoded file needs a new mapping. |
+
+Where the mapping comes from, in order:
+
+1. **Receipt.** `params.lighting_time_mapping` in the candidate manifest (the model adapters write it into each generation receipt). It is authoritative; a `lighting_canonical_zero_frame` or `candidate_fps_override` that disagrees with it is an error.
+2. **Derived.** Otherwise Lite builds it from the video: `native_fps` from `candidate_fps_override` (manifest or `model.yaml` params, or the backend registry's `real_fps`), else the container's frame rate; `canonical_zero_frame` from `lighting_canonical_zero_frame` (manifest or `model.yaml` params), else `0`; `video_sha256` from the file itself. A model that does not start the orbit at its first frame, or that tags its mp4 with a rate other than its generation rate, must declare it:
+
+```yaml
+# <model_root>/model.yaml
+lighting_canonical_zero_frame: 4   # frames before the orbit's t = 0
+candidate_fps_override: 10         # generation rate, only if the mp4 tag differs
+```
+
+Every lighting row records `input_contract.lighting_time_mapping` (`receipt` or `derived`) and `input_contract.lighting_time_mapping_detail` (the values used, where each came from, the container fps, and whether the frames were re-timed). A derived mapping also prints a warning, and `aggregate_summary.json` counts the rows of each kind under `lighting_time_mapping_counts`.
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_shadow_consistency_eval.md</code>)</summary>

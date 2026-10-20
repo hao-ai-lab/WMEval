@@ -82,6 +82,8 @@ Instead of a directory tree you can pass a strict JSONL manifest with `--candida
 {"model":"my_model","case_id":"RacingCar/prompt_first","seed":"42","candidate_video":"/data/other.mp4","params":{"shadow_hud_preset":"genie"}}
 ```
 
+The lighting case scores exactly ten seconds of the orbit. If your model's output does not start the orbit at its first frame, or its mp4 is tagged with a rate other than its generation rate, declare `lighting_canonical_zero_frame` / `candidate_fps_override` in `<model_root>/model.yaml`; see [Candidate time mapping](docs/evaluation_dimensions.md#candidate-time-mapping-lighting_time_mapping).
+
 To compare the Table 4/7 cells with the paper baseline, export the rows and run the comparison:
 
 ```

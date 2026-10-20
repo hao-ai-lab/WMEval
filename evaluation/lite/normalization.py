@@ -5,6 +5,7 @@ import json
 import math
 import shutil
 import subprocess
+from fractions import Fraction
 from pathlib import Path
 
 # Single source of truth for the locked LiquidContainer normalization geometry.
@@ -18,6 +19,9 @@ LIQUID_NORM_FPS = 16
 # ffmpeg can hang on malformed inputs; bound every normalization call.
 DEFAULT_NORMALIZATION_TIMEOUT_SEC = 600.0
 LIGHTING_NORM_FPS = 12
+# Candidate params that only lighting-orbit normalization consumes (never runner kwargs).
+LIGHTING_ZERO_FRAME_PARAM = "lighting_canonical_zero_frame"
+LIGHTING_NORMALIZATION_PARAMS = frozenset({"lighting_time_mapping", LIGHTING_ZERO_FRAME_PARAM})
 
 
 class NormalizationError(RuntimeError):
@@ -25,20 +29,29 @@ class NormalizationError(RuntimeError):
 
 
 def derive_lighting_time_mapping(
-    source: str | Path, *, timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
+    source: str | Path, *, native_fps: float | None = None, canonical_zero_frame: int = 0,
+    timeout_sec: float = DEFAULT_NORMALIZATION_TIMEOUT_SEC,
 ) -> dict:
     """Time mapping for a candidate without a generation receipt.
 
-    The native fps is read from the video and the orbit is taken to start at
-    its first frame. normalize_lighting_window() still enforces a constant
+    ``native_fps`` defaults to the container's frame rate and
+    ``canonical_zero_frame`` to the first frame; callers pass the model's
+    declared values (``candidate_fps_override`` / ``lighting_canonical_zero_frame``)
+    when they differ. normalize_lighting_window() still enforces a constant
     frame rate and ten full seconds.
     """
-    fps = _probe(source, timeout_sec=timeout_sec)["fps"]
+    fps = native_fps if native_fps is not None else _probe(source, timeout_sec=timeout_sec)["fps"]
     if abs(fps - round(fps)) < 1e-9:
         fps = int(round(fps))
     with Path(source).open("rb") as handle:
         digest = hashlib.file_digest(handle, "sha256").hexdigest()
-    return {"schema_version": 1, "native_fps": fps, "canonical_zero_frame": 0, "video_sha256": digest}
+    return {"schema_version": 1, "native_fps": fps, "canonical_zero_frame": canonical_zero_frame,
+            "video_sha256": digest}
+
+
+def lighting_window_native_frames(native_fps: float) -> int:
+    """Native frames whose timestamps n / native_fps fall inside [0, 10) s."""
+    return math.ceil(10 * native_fps - 1e-6)
 
 
 def normalize_lighting_window(
@@ -47,8 +60,11 @@ def normalize_lighting_window(
 ) -> dict[str, float]:
     """Verified native timeline -> [0,10) at 12 fps, without playback stretch.
 
-    The generation receipt supplies a frozen frame offset and native FPS.
-    Reject short/VFR inputs before ffmpeg can conceal missing time by padding.
+    The time mapping (generation receipt, or derived) supplies the native frame
+    of the orbit's t=0 and the model's native fps. Native frame n is placed at
+    (n - canonical_zero_frame) / native_fps; when the container is tagged with
+    a different constant rate it is re-timed to native_fps, never stretched to
+    fit. Reject short/VFR inputs before ffmpeg can conceal missing time by padding.
     """
     source, destination = Path(source), Path(destination)
     if source.resolve() == destination.resolve():
@@ -65,25 +81,30 @@ def normalize_lighting_window(
     if time_mapping.get("video_sha256") != digest:
         raise NormalizationError("lighting time mapping does not match candidate video hash")
     current = _probe(source, timeout_sec=timeout_sec)
-    if abs(current["fps"] - fps) > 1e-6:
-        raise NormalizationError("native_fps differs from decoded video")
-    expected_native = 10 * fps
-    if abs(expected_native - round(expected_native)) > 1e-8:
-        raise NormalizationError("10 seconds must contain an integral native frame count")
-    required = offset + round(expected_native)
+    retime = abs(current["fps"] - fps) > 1e-6
+    required = offset + lighting_window_native_frames(fps)
     if current["frames"] < required:
-        raise NormalizationError(f"short lighting video: {current['frames']} native frames, need {required}")
+        raise NormalizationError(
+            f"short lighting video: {current['frames']} native frames, need {required} "
+            f"({offset} before the orbit + 10 s at {fps:g} fps)")
+    if retime:
+        # Frame index -> native time; the container's own rate is only checked for CFR.
+        native_rate = Fraction(fps).limit_denominator(100000)
+        timing = f"setpts=N/({native_rate.numerator}/{native_rate.denominator}*TB)"
+    else:
+        timing = "setpts=PTS-STARTPTS"
     try:
         result = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_frames",
                                  "-show_entries", "frame=best_effort_timestamp_time", "-of", "json", str(source)],
                                 check=True, capture_output=True, text=True, timeout=timeout_sec)
         frames = json.loads(result.stdout)["frames"]
         pts = [float(f["best_effort_timestamp_time"]) for f in frames[:required]]
-        if len(pts) != required or any(abs((p - pts[0]) - i / fps) > 2e-5 for i, p in enumerate(pts)):
+        step = 1 / current["fps"]
+        if len(pts) != required or any(abs((p - pts[0]) - i * step) > 2e-5 for i, p in enumerate(pts)):
             raise NormalizationError("lighting receipt requires a constant-rate native timeline")
         destination.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
-                        "-vf", f"trim=start_frame={offset}:end_frame={required},setpts=PTS-STARTPTS,"
+                        "-vf", f"trim=start_frame={offset}:end_frame={required},{timing},"
                         f"fps=fps={LIGHTING_NORM_FPS}:start_time=0:round=near",
                         "-frames:v", "120", "-an", "-c:v", "libx264", "-crf", "0",
                         "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(destination)],
@@ -93,7 +114,7 @@ def normalize_lighting_window(
         raise NormalizationError(f"lighting window normalization failed: {exc}") from exc
     if actual != {**current, "fps": 12.0, "frames": 120}:
         raise NormalizationError(f"lighting window has unexpected geometry/timeline: {actual}")
-    return actual
+    return {**actual, "source_fps": current["fps"], "retimed": retime}
 
 
 def normalize_lighting_video(
