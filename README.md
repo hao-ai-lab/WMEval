@@ -57,7 +57,7 @@ source .venv-gpu/bin/activate
 python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
 python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
 ```
-Add `--split full` to also fetch the 220 synthetic action trajectories ([below](#synthetic-trajectory-suite-test_full)). The download fetches the dataset commit this checkout was published with (`eval_sets/wmeval_lite_v1/DATASET_REVISION`), so a newer dataset version never breaks an older branch; `--revision <tag-or-commit>` overrides it. No token is needed (the dataset is public). `python tools/sync_lite_data.py status` reports which cases are present.
+Add `--split full` to also fetch the 220 synthetic action trajectories ([below](#synthetic-trajectory-suite-test_full)). The download fetches the dataset commit this checkout was published with (`eval_sets/wmeval_lite_v1/DATASET_REVISION`), so a newer dataset version never breaks an older branch; `--revision <tag-or-commit>` overrides it. No token is needed (the dataset is public). `python tools/sync_lite_data.py status` reports which cases are present. The case data is git-ignored, so checking out an older commit can delete or mismatch it; `git config core.hooksPath .githooks` enables hooks that warn after a checkout or pull when it needs a re-download.
 
 VLM-judged dimensions (`prompt_scene_consistency`, `physical_causality`, causal `lpips`) need an `OPENAI_API_KEY`; CV-based dimensions download pinned checkpoints on first use (see `experiments/tables_4_7/evaluator_assets.lock.json`).
 
