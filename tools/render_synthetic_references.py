@@ -45,8 +45,9 @@ Replay backends (Unity side on WorldModelBenchScenePrivate ``wmeval/synthetic-re
   ``camera_poses``; RacingCar prompt views: ``RacingCaptureBootstrap`` with frame poses.
   Poses = the core frame-0 camera yawed in place (first person) or about the
   character (third person) by the integrated ``yaw_rate_deg_s``.
-* camera_orbit: Editor batch method ``WMEvalOrbitReplay.Run`` (the core capture's
-  geometry, per-frame orbit phase), on the core scene revision 84a06a4.
+* camera_orbit: Editor batch method ``WMEvalOrbitReplay.Run`` (the core case's look-at
+  orbit geometry, per-frame orbit phase) on the scene file of revision 84a06a4, with the
+  native camera rig, sun and post-processing of the paper's SunRisesAndSets/lighting frame.
 * ego_vehicle: ``RacingCaptureBootstrap`` -> ``CarController.SetInput`` per frame.
 * cue_ball: ``BilliardCaptureBootstrap -wmeval-control-mode schedule`` (Shot() impulses).
 * ball_force: ``WMEvalReplayCapture rigidbody_force`` (AddForce with the scene's gain).
@@ -61,6 +62,10 @@ what its core case was recorded in. Both are prepared under ``runs/synthetic_uni
 
 ``selfcheck`` replays each physics family's core trajectory through the same backend
 and compares with the core reference video (``runs/synthetic_unity/_corecheck``).
+
+``core --case SunRisesAndSets/lighting`` renders a core case's own trajectory through its
+family backend (``runs/synthetic_unity/_core``); ``tools/build_lighting_case.py`` turns
+that render into the case's reference video and Unity ground truth.
 """
 from __future__ import annotations
 
@@ -271,6 +276,8 @@ def job_dir(row: dict[str, Any]) -> Path:
     sid = row["synthetic_id"]
     if sid.startswith("corecheck/"):
         return OUT / "_corecheck" / sid[len("corecheck/"):]
+    if sid.startswith("core/"):
+        return OUT / "_core" / sid[len("core/"):]
     assert sid.startswith("synthetic/")
     return OUT / sid[len("synthetic/"):]
 
@@ -292,6 +299,26 @@ def selfcheck_rows() -> list[dict[str, Any]]:
         art = f"cases/{case}/reference/artifacts"
         traj = yaml.safe_load((SUITE / art / "trajectory.yaml").read_text(encoding="utf-8"))
         rows.append({"synthetic_id": f"corecheck/{family}/{case.replace('/', '__')}", "family": family,
+                     "pattern": "core_trajectory", "conditioning_case": case, "path": art,
+                     "trajectory_id": traj["trajectory_id"], "duration_sec": float(traj["duration_sec"]),
+                     "control_hz": float(traj["control_hz"])})
+    return rows
+
+
+CORE_FAMILIES = {"SunRisesAndSets/lighting": "camera_orbit"}  # core case -> backend rendering its own trajectory
+
+
+def core_rows(cases: list[str] | None = None) -> list[dict[str, Any]]:
+    """The core cases' own trajectories as render rows (reference video + ground truth of the case)."""
+    import yaml
+
+    rows = []
+    for case, family in CORE_FAMILIES.items():
+        if cases and case not in cases:
+            continue
+        art = f"cases/{case}/reference/artifacts"
+        traj = yaml.safe_load((SUITE / art / "trajectory.yaml").read_text(encoding="utf-8"))
+        rows.append({"synthetic_id": f"core/{family}/{case.replace('/', '__')}", "family": family,
                      "pattern": "core_trajectory", "conditioning_case": case, "path": art,
                      "trajectory_id": traj["trajectory_id"], "duration_sec": float(traj["duration_sec"]),
                      "control_hz": float(traj["control_hz"])})
@@ -685,7 +712,7 @@ def detach(argv: list[str]) -> int:
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("command", choices=("list", "build", "run", "status", "selfcheck", "publish"))
+    p.add_argument("command", choices=("list", "build", "run", "status", "selfcheck", "publish", "core"))
     p.add_argument("--family", action="append")
     p.add_argument("--case", action="append", help="conditioning core case id")
     p.add_argument("--pattern", action="append")
@@ -739,6 +766,13 @@ def main(argv: list[str] | None = None) -> int:
             report.append(item)
         write_json(OUT / "_corecheck" / "selfcheck.json", {"updated": now(), "items": report})
         return 0
+    if args.command == "core":
+        # Render core cases' own trajectories (their reference video + Unity ground truth).
+        for r in core_rows(args.case):
+            res = run_one(r, force=True)
+            log(f"core {r['conditioning_case']} -> {res.get('status')} {res.get('error', '')} "
+                f"psnr0={((res.get('first_frame_check') or {}).get('psnr_db'))} dir={job_dir(r)}")
+        return 0
     if args.command == "build":
         done: set[str] = set()
         for r in chosen:
@@ -775,20 +809,43 @@ def main(argv: list[str] | None = None) -> int:
 
 
 # --------------------------------------------------------------------------- family backends
+# SunRisesAndSets/lighting: where the case's local orbit frame sits in the Unity scene, and how
+# the paper's conditioning frame (reference/ref.png) was rendered. Recovered by render-and-compare
+# against ref.png (single-frame renders, coarse grid + Nelder-Mead over the free 6-DoF camera,
+# then identified exactly): ref.png is the scene's own CameraOrbitAgent start view --
+# lookAtTarget = TrainingArea at Unity (0.3154, 1.28, 0.54422), cameraDistance 3, cameraYaw 45,
+# cameraPitch 20, the Main Camera's 60 deg vertical FOV, URP post-processing and the global
+# Volume (SampleSceneProfile: tonemapping, bloom, vignette) on -- with the sun after
+# DayAndNight's first 12 FixedUpdate steps (rotationSpeed 20 deg/s x 0.02 s: Euler x 63.4 ->
+# 68.2). That pose at 1280x1280 matches ref.png at 30.9 dB (free-camera refinement: +0.06 dB;
+# the scene's original sun 63.4 deg: 26.6 dB; post-processing off: ~21.4 dB; scene file of
+# 82c7d4c, larger table and extra props: ~22 dB). The camera looks at the TrainingArea pivot,
+# not the table axis (0.63 m away), so the orbit turns about that pivot: a look-at orbit about
+# the table axis through the frame-0 position scores 20.4 dB at frame 0.
+LIGHTING_NATIVE_UNITY = {"pivot_x": 0.3154, "pivot_z": 0.54422, "sun_euler_x": 68.2, "sun_euler_y": 330.0,
+                         "sun_euler_z": 0.0, "post_processing": 1.0, "volume": 1.0}
+
+
 def _orbit_prepare(doc: dict, row: dict, action: dict) -> None:
     import yaml
-    from evaluation.camera_orbit import orbit_poses  # noqa: F401  (validation of geometry)
+    from evaluation.camera_orbit import validate_orbit
 
     traj = yaml.safe_load((SUITE / row["path"] / "trajectory.yaml").read_text(encoding="utf-8"))
+    validate_orbit(traj)
     g = traj["geometry"]
+    if any(float(v) != 0.0 for v in g["origin_m"]):
+        raise ValueError("orbit replay expects origin_m = [0, 0, 0] (the local frame sits on the orbit axis)")
     times = np.arange(doc["frames"]) / doc["fps"]
     phase = np.full(times.shape, float(g["initial_phase_deg"]))
     for seg in traj["segments"]:
         dt = np.clip(times - float(seg["start_sec"]), 0, float(seg["end_sec"]) - float(seg["start_sec"]))
         phase += dt * float(seg["values"]["orbit_phase_rate_deg_s"])
     doc["frame_phase_deg"] = [float(v) for v in phase]
-    doc["param_names"] = ["radius_m", "eye_height_m"]
-    doc["param_values"] = [float(g["radius_m"]), float(g["eye_height_m"])]
+    doc["vertical_fov_deg"] = float(g["vertical_fov_deg"])
+    params = {"radius_m": float(g["radius_m"]), "eye_height_m": float(g["eye_height_m"]),
+              "look_at_height_m": float(g["look_at_m"][1]), **LIGHTING_NATIVE_UNITY}
+    doc["param_names"] = list(params)
+    doc["param_values"] = [float(v) for v in params.values()]
 
 
 def _orbit_export(raw: Path, art: Path, row: dict, spec: SceneSpec) -> dict[str, Any]:
@@ -812,8 +869,9 @@ def _orbit_export(raw: Path, art: Path, row: dict, spec: SceneSpec) -> dict[str,
         raise RuntimeError(f"Unity/C2W mismatch vs analytic orbit: {err}")
     np.save(art / "poses.npy", actual, allow_pickle=False)
     np.save(art / "intrinsics.npy", camera_intrinsics(traj, cal["width"], cal["height"]), allow_pickle=False)
-    for name in ("calibration.json", "frames.jsonl"):
-        shutil.copyfile(raw / name, art / name)
+    for name in ("calibration.json", "frames.jsonl", "scene_dependencies.json"):
+        if (raw / name).is_file():
+            shutil.copyfile(raw / name, art / name)
     return {"unity_c2w_max_abs_error": err, "pose_convention": "right_handed_y_up_opencv_c2w (Unity z reflected)"}
 
 
@@ -1150,13 +1208,14 @@ def register_specs() -> None:
             prepare=_yaw_pose_prepare(third, RACING_THIRD_POSE0 if third else None), export=_racing_export(False))
 
     # camera_orbit -------------------------------------------------------------
-    add("camera_orbit", ["SunRisesAndSets/lighting_orbit_v2"], project="GameScenes/SunRisesAndSets",
-        scene="Assets/WMEval/SampleScene_84a06a4.unity", product="SunRisesAndSets", fps=12, width=1024, height=1024,
+    add("camera_orbit", ["SunRisesAndSets/lighting"], project="GameScenes/SunRisesAndSets",
+        scene="Assets/WMEval/SampleScene_84a06a4.unity", product="SunRisesAndSets", fps=24, width=1280, height=1280,
         mode="orbit_phase", kind="editor", editor_method="WMEvalOrbitReplay.Run",
-        frames_override=lambda d: int(round(d * 12)) + 1,   # endpoint pose rendered, like the core (121)
-        encode_frames=lambda n: n - 1,                      # video carries 120 frames, like unity_orbit.mp4
-        asset_note="SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was "
-                   "recorded from; renders are identical with or without the project's later LFS assets",
+        runtime_args=["-wmeval-scene", "Assets/WMEval/SampleScene_84a06a4.unity"],
+        frames_override=lambda d: int(round(d * 24)) + 1,   # endpoint pose rendered too (241), closure check
+        encode_frames=lambda n: n - 1,                      # video carries 240 frames (10 s at 24 fps)
+        asset_note="SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's "
+                   "conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
         prepare=_orbit_prepare, export=_orbit_export)
 
     # ego_vehicle / cue_ball ---------------------------------------------------

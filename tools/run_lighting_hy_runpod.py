@@ -37,7 +37,7 @@ def main():
         parser.error('this resident native recipe requires one or two GPUs with at least 90GB each')
     conditioning = root / 'backend_inputs/hy-worldplay'
     prepare(case, conditioning, 'hy-worldplay')
-    parent = root / 'outputs/lighting_orbit_v2/HY-WorldPlay'
+    parent = root / 'outputs/lighting_orbit/HY-WorldPlay'
     runs = [{'seed': seed, 'output': str(parent / f'seed_{seed}')} for seed in (42, 1, 2, 3, 4)]
     if any((Path(run['output']) / 'receipt.json').exists() for run in runs):
         raise FileExistsError('preserve previous formal receipts; diagnose before any new batch')

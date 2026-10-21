@@ -14,7 +14,7 @@ must be declared, never hidden.
 - **Actions.** All 32 live cases carry a standardized, target-aware action
   (`trajectory.yaml` / `action.npz` / `actions.jsonl`; target declared in
   `action_backends.yaml`, and in `actions.json` where backends must be gated):
-  Table 4/7 cells (`camera`, `ego_vehicle`, `cue_ball`), lighting orbit (`camera`, #33),
+  Table 4/7 cells (`camera`, `ego_vehicle`, `cue_ball`), lighting (the paper's hold-ArrowLeft script plus a Unity camera orbit; not target-gated, paper protocol),
   causality (`rolling_ball`, exact) and fluid (`liquid_container`, reconstructed) (#34),
   ball control (`ball`, #35), prompt left turn (`camera`, #36), and the two Lite-only §1 cases
   (`character` / `camera`, exact reconstructions of their captures). Cases without
@@ -24,8 +24,8 @@ must be declared, never hidden.
 - **Frozen references.** Causality answers, prompt Unity scores (#36) and LPIPS contact
   events for BallRoller / BeamDomino / MirrorRollingBall (#35) and LiquidContainer (0
   consensus events) are frozen in the bundles. See `FROZEN_JUDGE_OUTPUTS.md`.
-- **Normalization.** 14 Table 4/7 cases `match_reference`, 4 liquid and 1 lighting token,
-  3 `beamdomino_native` (identity). 10 cases use the candidate as-is: BallRoller/ctrl and
+- **Normalization.** 14 Table 4/7 cases `match_reference`, 4 liquid,
+  3 `beamdomino_native` (identity). 11 cases use the candidate as-is: SunRisesAndSets/lighting (paper protocol), BallRoller/ctrl and
   MirrorRollingBall/lpips_collision by decision (paper parity, §2), the 6 prompt cases (judge
   input, low risk), and the 2 legacy §1 cases.
 - **Unsupported is reported, not scored.** Backends that cannot express a case's target
@@ -357,47 +357,39 @@ BeamDomino causal / causal_glancing / causal_direct_strike
 
 ## 6. Lighting & shading — `lighting_shading`
 
-**Owner:** Forrest Dai · **Active case:** SunRisesAndSets/lighting_orbit_v2.
+**Owner:** Forrest Dai · **Case:** SunRisesAndSets/lighting (the paper's native case; the only lighting case since 2026-10-20).
 
-The case ships a complete ten-second, two-metre camera orbit, explicit tabletop
-look-at target and fixed sun, with trajectory.yaml, action.npz, actions.jsonl,
-table_cell.json and verified Unity poses/closure. Native videos are timestamp
-sampled into exactly 120 frames at 12fps without padding or retiming.
+Scored exactly as in the paper: shadow_consistency, reference-free,
+candidate_normalization none, eval_fps 24, max_pairs 0, headline
+shadow_direction_jitter_deg_per_frame. The 30 paper rollouts (Project Genie,
+LingBot, Matrix-Game 2.0/3.0, HY-WorldPlay, Waypoint-1.5 x 5 seeds) reproduce all
+180 per-run metric values exactly (2026-09-15, L40S);
+baselines/lighting_paper_native.json keeps them with their native metadata. Hosted
+historical Genie runs have no recorded numeric generation seeds.
 
-LingBot, Matrix-Game3 and HY-WorldPlay are supported and each ships five first
-valid native rollouts (42,1,2,3,4), original generation receipts and relative
-candidate paths in baselines/lighting_orbit_v2. MG2/Waypoint lack a documented
-metric input conversion; Genie's hosted UI lacks native-frame action submission.
-These interfaces are explicitly N/A for the strict protocol, with source/timing
-evidence in experiments/lighting_orbit_v2/results/capability_audit.json.
-Generated appearance is not a support criterion. Five executed Genie exports
-and scores remain diagnostic and never enter the formal five-seed aggregate.
+2026-10-20: the case now also ships a Unity reference orbit
+(reference/unity_orbit.mp4, 10 s / 24 fps / 1280x1280) and its ground truth
+(trajectory.yaml camera_look_at_orbit, action.npz, actions.jsonl, poses.npy,
+intrinsics.npy, calibration.json, frames.jsonl, scene_dependencies.json,
+unity_qa.json), built by tools/build_lighting_case.py through
+tools/render_synthetic_references.py core. ref.png is the scene's CameraOrbitAgent
+start view (scene file of Unity revision 84a06a4, post-processing on, sun Euler x
+68.2); frame 0 matches it at 31 dB. The orbit turns that camera about its
+tabletop pivot (radius 2.819 m, eye 2.306 m, look-at 1.28 m, CCW, 10 s) -- not the
+prompt's ~2 m / 1.6 m, which the conditioning frame itself does not follow. The
+20 camera_orbit synthetic trajectories are bound to this case and rendered the
+same way. The score does not read the reference.
 
-2026-10-11 acceptance: on the pinned RTX PRO 6000/CUDA12.8 environment, all 15
-candidates recomputed through run_wmeval_lite.py, all 90 metric values exactly
-matched the original scores at 1e-6, and actual --resume preserved row hashes.
-Two independent LingBot/42 scores also matched the original. Correcting a stale
-derived lock stamp changed no evaluator input or score; the corrected stamp also
-passed actual resume. Reports: experiments/lighting_orbit_v2/results/same_gpu_verification/.
-The separate PRO 4500 audit records 21/90 small numerical differences and remains
-visible; exact cross-GPU equality is not claimed. Use the pinned hardware for
-strict fresh verification, or the bundled cached scores for portable exact replay.
+The explicit 2 m look-at-orbit case that replaced the native case from
+2026-10-11 to 2026-10-20 (lighting_orbit_v2, 120 frames at 12 fps, LingBot /
+Matrix-Game 3.0 / HY-WorldPlay pose inputs, pinned CUDA scoring stack) and the
+separate lighting_paper_native/ suite are gone; that protocol's baselines,
+capability audit and verification reports are kept as a historical record in
+experiments/lighting_orbit/ (README.md there).
 
-The portable archive contains the full case, fifteen videos, public scorer,
-relative candidate manifest, immutable asset/source/dependency locks and explicit
-fifteen expected jobs plus three N/A entries. Its builder runs from the public
-release_sources.json with no private scratch directory or old Pod. The source
-fingerprint and cached input hashes invalidate changed cases/videos/parameters.
-
-Historical SunRisesAndSets/lighting and its 30 native-paper results remain
-separate. Run the old case with --suite eval_sets/wmeval_lite_v1/lighting_paper_native;
-baselines/lighting_paper_native.json retains native metadata and all 180 metric
-values. Hosted historical Genie runs have no recorded numeric generation seeds.
-HF publication remains a separate action, not a release acceptance blocker here.
-
-- [x] **Standardized action:** one semantic metric look-at trajectory with explicit camera target; native pose compilers and audited N/A interfaces.
-- [x] **Common fps:** exactly ten native seconds / 120 timestamp-sampled frames at 12fps; no padded or retimed video.
-- [x] **Five-seed reproduction:**15/15 supported runs,90/90 strict pinned-GPU metrics, unchanged actual resume, portable data/scorer archive and source/asset/version pins.
+- [x] **Standardized action:** the paper's hold-ArrowLeft script and per-model records, plus a Unity camera_look_at_orbit through the conditioning frame.
+- [x] **Paper reproduction:** 180/180 per-run metrics of the paper's lighting table.
+- [x] **Unity reference:** frame 0 at 31 dB vs ref.png, loop closure, fixed sun, Unity/analytic pose agreement 3.6e-7.
 - [ ] Optional after release: ChessBoard/lighting and a separately defined moving-sun lighting_sunsweep case.
 
 ## 7. Prompt-scene consistency — `prompt_scene_consistency`

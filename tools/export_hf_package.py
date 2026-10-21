@@ -20,8 +20,8 @@ What ``export`` copies (all discovered, nothing hard-coded per case):
 
 * ``suite.yaml`` and every case bundle it lists under ``cases/``;
 * every *companion suite*: a direct subdirectory of the suite root holding
-  its own ``suite.yaml`` (e.g. ``lighting_paper_native/``), with the case
-  bundles that suite lists;
+  its own ``suite.yaml``, with the case bundles that suite lists (none ship
+  at present: the paper-native lighting suite was folded into the main suite);
 * ``human_alignment/`` and ``baselines/`` (frozen scores and rollouts that
   ship with the suite; ``--no-baselines`` drops the latter);
 * ``DATASET_CARD.md``, renamed to ``README.md`` (the Hub reads the card from

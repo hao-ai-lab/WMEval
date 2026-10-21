@@ -1,0 +1,57 @@
+# HISTORICAL (2026-10-11 .. 2026-10-20): per-backend capability review of the strict
+# 2 m / 10 s / 12 fps look-at-orbit protocol of the retired case
+# SunRisesAndSets/lighting_orbit_v2 (see README.md here). It was the trajectory_support
+# block of experiments/tables_4_7/action_backends.yaml; the live lighting case
+# (SunRisesAndSets/lighting, the paper-native protocol) is not gated by it.
+# Kept verbatim except for evidence paths, which now point into this directory.
+schema_version: 1
+# Full translation plus look-at is reviewed independently from Table 7 yaw.
+# Pending means incomplete work, never N/A or a model-quality rejection.
+trajectory_support:
+  lighting.camera.look_at_orbit_v2:
+    target: camera
+    backends:
+      unity:
+        status: supported
+        reason: Deterministic 121-frame capture verifies the complete orbit, fixed sun and static objects against analytic
+          C2W; endpoint and pixel closure evidence are in the case bundle.
+        source_revision: 84a06a422ae0a0d04153596e881c85be8d4ff3f1
+        evidence: experiments/lighting_orbit/calibration_assets/geometry_qa.json
+      lingbot_world_cam:
+        status: supported
+        reason: Pinned Cam source accepts per-frame C2W and intrinsics; all five formal seeds accepted the 161-pose complete
+          orbit and completed Lite scoring. Generation distortion remains measured model behavior.
+        source_revision: a43bec7f8091c83e9b30b16b912f6fc906236fa6
+        evidence: experiments/lighting_orbit/results/run_summary.json
+      matrix_game_2:
+        status: unsupported
+        reason: Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre
+          conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict
+          trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.
+        evidence: experiments/lighting_orbit/results/capability_audit.json
+      matrix_game_3:
+        status: supported
+        reason: The pinned native pose path receives the full analytic C2W orbit with a fixed basis and intrinsics conversion;
+          auxiliary keys use the audited native units. All five formal seeds and Lite scoring completed without response correction.
+        source_revision: 756776d516233027631008761d4d40ddaea3e23a
+        evidence: experiments/lighting_orbit/results/run_summary.json
+      waypoint:
+        status: unsupported
+        reason: Pinned native API accepts keyboard/mouse tokens, with no camera-pose/target channel or documented key-to-metre
+          conversion. Independent probes did not establish a verified conversion for the complete metric path. This strict
+          trajectory is N/A for the audited release interface; free navigation and generated-video quality are separate.
+        source_revision: b3f1e725b222679a517632918cc78bba0c9fa433
+        evidence: experiments/lighting_orbit/results/capability_audit.json
+      hy_worldplay:
+        status: supported
+        reason: Pinned native pose_to_input consumed 64 analytic C2W poses and K for 253 frames at 24 fps; all five formal
+          seeds and Lite scoring completed. Full action state loaded strictly, native four-step AR/torch_causal attention
+          and BF16 retained, endpoint held after 10 seconds.
+        source_revision: 1588e1336e842b03b0a7860c654ebd7c46bb065e
+        evidence: experiments/lighting_orbit/results/run_summary.json
+      project_genie:
+        status: unsupported
+        reason: Pinned hosted UI exposes wall-clock keys, not native-frame actions or a metric camera/target path. Five identical
+          input replays span 8.9583-10.1667 native seconds, and visible clocks include waiting. Strict frame-indexed metric
+          look-at orbit is N/A; all diagnostic exports/scores remain retained. Generated appearance is not an exclusion criterion.
+        evidence: experiments/lighting_orbit/results/capability_audit.json

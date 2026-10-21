@@ -12,7 +12,8 @@ the reference video's timing. Cases the model cannot express are listed as
 Output (``--output`` directory):
 
 * ``expected_jobs.json`` -- ``{"jobs": [...], "not_applicable": [...], ...}``
-  in the same spirit as ``baselines/lighting_orbit_v2/expected_jobs.json``;
+  in the same spirit as ``experiments/lighting_orbit/baselines/expected_jobs.json``
+  (the historical 2026-10 lighting-orbit baseline);
 * ``candidates.template.jsonl`` -- the candidate manifest the runner expects,
   with ``candidate_video`` set to ``<model-root>/<Scene>/<variant>/<seed>.mp4``.
 

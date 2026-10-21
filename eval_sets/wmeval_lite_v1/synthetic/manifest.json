@@ -2177,15 +2177,15 @@
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s00_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s00_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s00_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s00_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s00_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles counter-clockwise at 18 degrees per second for 3 seconds (54 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles counter-clockwise at 18 degrees per second for 3 seconds (54 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles counter-clockwise at 18 degrees per second for 3 seconds (54 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2195,7 +2195,7 @@
      "sec": 3.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2203,29 +2203,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s00_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s00_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s00_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s00_orbit",
    "files": {
-    "action.npz": "f1f5a30d0354acd16e71cf20f8388547e06cfb82f09cc24142e9d81f4b504c9a",
-    "actions.jsonl": "cd5968f1f5ab34e2a20916afbda60ef7f173ca1ddf6311413a03cd82f2366bcf",
-    "meta.json": "c6b4f072c6e63ea09931b0e4f6e4abe5b7100d4db7616e2d1b0d8cc575fc97f2",
-    "poses.npy": "5f80f517491eb64b1342ec7bcd8a7108f7677009c40a882ccb98a7a7e24ee93d",
-    "trajectory.yaml": "3b0317dd0912b35fb430111e99f5a7a473f6d981a0c337fd92201d36e894475f"
+    "action.npz": "ebafff44d01375b3b7b55edea88aac739d6622c779b12dbb5fe1388197db711b",
+    "actions.jsonl": "3dba978884cc69766505297bcc3069f35bd104c2a2d38d6307c5b965df05ff71",
+    "meta.json": "dd76ef387d528b23174503206f48267be2c369eff776231605169ae9840f6ae9",
+    "poses.npy": "d6a19f2e08b01a76b7cea2d2b2238a51f8e83e1c9dce02c27f89b255e93397fc",
+    "trajectory.yaml": "155597e16c0cda8592a5ba76bd3b86cd9a17cb288276a40f9aeb41f6566b9516"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s01_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s01_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s01_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s01_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s01_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles counter-clockwise at 72 degrees per second for 10 seconds (720 degrees of arc).",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles counter-clockwise at 72 degrees per second for 10 seconds (720 degrees of arc).",
    "action_description": "The camera circles counter-clockwise at 72 degrees per second for 10 seconds (720 degrees of arc).",
    "action_steps": [
     {
@@ -2235,7 +2235,7 @@
      "sec": 10.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2243,29 +2243,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s01_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s01_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s01_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s01_orbit",
    "files": {
-    "action.npz": "3fefd10ad65a2b6a83889020377f5d30573e9804813a8793e33f92cb99115320",
-    "actions.jsonl": "3ae08987430271b7c040c4b17993662b09c22cafd8ca8423751132cbbc65c5fe",
-    "meta.json": "049c9ad39f72a119af84325f0c5c058fa92f7707d8ddb18047356c833385b079",
-    "poses.npy": "a1c07e45c8f1d847ce1138da71ca1d2e7c7d920c839f50c8323c73c60f6ecc07",
-    "trajectory.yaml": "0fcf83f0e9566c93b4befd0332a6b8094955697d85fda675e0dfdbf1036d00be"
+    "action.npz": "2af90f907d7ccf5360418e75ab3c5b488237981abe14705ccd7dffd39c4d441e",
+    "actions.jsonl": "c1b3e996fa25506a1c60dc0333cc2a5ad51137f833f47193ceffaabdc8b40cc2",
+    "meta.json": "a43c2bb662e6075a5e436c88817bbb58ba80834158a385cba4d5d1c94a6c0166",
+    "poses.npy": "14e03a8029ba924f6728ebeac3df62ca38426cc323210fdcbf2b5db2cf2cf690",
+    "trajectory.yaml": "93a92c2272762362e434c4a0f6325553d248777e0f7d9fe306bbf56701bcb40e"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s02_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s02_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s02_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s02_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s02_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2275,7 +2275,7 @@
      "sec": 4.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2283,29 +2283,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s02_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s02_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s02_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s02_orbit",
    "files": {
-    "action.npz": "5f5264fadb78b613b793075f70c8f3dc22960d1a5f3cc88ab351b391ea837448",
-    "actions.jsonl": "a3bc01210332fbcf8dbe7460ab901d89a4ac376850011011edf4074d9c06d3f3",
-    "meta.json": "dd54ba61a0f7e40e042b384119aa9bc3ad43f12b45587ad3cc18f92d0e534f40",
-    "poses.npy": "6ef5f00cf5785d852ac376b66e20648387b5e0f8245f00276205a3c3e52748fb",
-    "trajectory.yaml": "e2b8bef74d8388e3ba0c3e807700ee699a89be8380b20781ed6d3f4d4d5397e9"
+    "action.npz": "60ff42fa435e587cbe4e6dcca4373a530bfe1d7b36117533b33ef3ebdd44c79a",
+    "actions.jsonl": "bf583a0ae62e76f85274069e2e47a4eb38ec6d5d1333af31d49fabc70c7ee722",
+    "meta.json": "bc3db8349d7114d06cca47819d740656dbbb11b5a5750c3c61a874f0786e5f25",
+    "poses.npy": "fe0d2762c1da2187a078b367f9dc3656a05fdf305d28a476f7b01ad7b6520c16",
+    "trajectory.yaml": "a78565222adb898bf42275ca3dc483b505206fc330138aa3b99aab8aa5479a52"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s03_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s03_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s03_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s03_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s03_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles counter-clockwise at 72 degrees per second for 5 seconds (360 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles counter-clockwise at 72 degrees per second for 5 seconds (360 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles counter-clockwise at 72 degrees per second for 5 seconds (360 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2315,7 +2315,7 @@
      "sec": 5.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2323,29 +2323,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s03_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s03_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s03_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s03_orbit",
    "files": {
-    "action.npz": "02d56458f1530fdbbf65b11a8e92ffbbfd0c002041e3f7be290379fa8665f9cd",
-    "actions.jsonl": "1b1cb5ba6dd3027f506748dd8c7f35cac219951d0cb1161729c9ab21226ba870",
-    "meta.json": "bc4e919e1d6b04611b72f239f10e5c19a318acc94875bb73e941e150f1168b3d",
-    "poses.npy": "2229eb9e2bf49f80aff66fded6438efd0914cd3a81e9c86841c1f03a86f696d6",
-    "trajectory.yaml": "66a45e0478a194c49a9784646221817faf37b1b99b10e991a2c81d3a9f6db3bb"
+    "action.npz": "f5c1e8e02f196856a17afa89173efc263234349a0d3af42ffcfa81bbb6dace53",
+    "actions.jsonl": "529a8f0e5e794f1a123ff12a1a3955a25c084c661bd0e167f193893b78a1f8c5",
+    "meta.json": "cc2f255fff156a768d10db4efac7312ae35e665c72442be2bcc889d1c9dac052",
+    "poses.npy": "d40361f8608f78b96f74aecdff854845a1824d1fe96429c602dbfef4badcbb9a",
+    "trajectory.yaml": "99687129fea3ce710d19d71dbf64335085cc796ab25b12f3c81996b549857365"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s04_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s04_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s04_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s04_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s04_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 2 seconds, then circles counter-clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 2 seconds, then circles counter-clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 2 seconds, then circles counter-clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2359,7 +2359,7 @@
      "sec": 4.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2367,29 +2367,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s04_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s04_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s04_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s04_pause_orbit",
    "files": {
-    "action.npz": "7978e2395a9fdc60db1b45771c6379fcd3cc4e99b267c61d58626396054a2625",
-    "actions.jsonl": "627c5870406c96df1f80a1206536eb0c99625775d2dbf6efcbcf4cb9b53c3e5e",
-    "meta.json": "c9bb33ee3603f04069818fb4a78feb562322c83762d6c0541384db114d0d23b6",
-    "poses.npy": "ce79bc09f50079fa7b3725f600c659fcd0d61eb4193409d761ffbf2f325469bc",
-    "trajectory.yaml": "57c32f94db2b459b79adb06bfa8f92b133a909e9d6181fd576834a3994957c93"
+    "action.npz": "a32119f313a41ceacc5e8c137076fcf3a693dde47ac02a94fd8037840d445746",
+    "actions.jsonl": "d1eec09f3606ea895a0c51f457ca58ed7b7159d682a553fcebb9f738400c12a9",
+    "meta.json": "844c1668cd698ee5846b297c79158eeb0f25a9df89510cec671f08d956f5b9fd",
+    "poses.npy": "e8ea5f2e16be37954b01f809f91f6264429132454f2b62d9e5ccbd155e43a82b",
+    "trajectory.yaml": "50ca228b9280ca589415cf7a81dc2b152a6458b5a80efc40ca6c8e0313e4a033"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s05_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s05_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s05_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s05_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s05_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 1.5 seconds, then circles clockwise at 45 degrees per second for 5 seconds (225 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 1.5 seconds, then circles clockwise at 45 degrees per second for 5 seconds (225 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 1.5 seconds, then circles clockwise at 45 degrees per second for 5 seconds (225 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2403,7 +2403,7 @@
      "sec": 5.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2411,29 +2411,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s05_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s05_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s05_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s05_pause_orbit",
    "files": {
-    "action.npz": "9b95bb66a30e5d6161d62412d6841ea90278506cbda597ea0477da1ed6967118",
-    "actions.jsonl": "4cff67d9c004594fd1b93a047c55eb35e281cda5ef1d9c8190247502f99f19b4",
-    "meta.json": "1ced416210fc98b8639aeb5be945007bb4c13fa2ddb89d05b5f2055d020b29f4",
-    "poses.npy": "dbbec142279561cbedde03d824846a820abad573b9543b1363316b13f27bad6a",
-    "trajectory.yaml": "94a5985db160148b415349fa62838702d0c91dae8b227e6acba8d061a4cc1fba"
+    "action.npz": "55a9ab721a317092ffa84f60d449830f1f7ee80d4a3a426bbff99b61b3f80b52",
+    "actions.jsonl": "502d7efaf5e2b899468cfe641860f1a5693a01e32c7da5db69c3e236ed14c251",
+    "meta.json": "17d67ae48b6b51ef08d983967003a6074008d86c55d112242bbda8ceb4756e9c",
+    "poses.npy": "6645c7d4a208daa3565fd219cf5e6b8ff4eb913dc451b692ce0b7abac6177458",
+    "trajectory.yaml": "246bc088c868ddffc44eff494c3a485f1a7cabea23cbf6d8f747763cb8f419b6"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s06_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s06_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s06_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s06_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s06_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 0.5 seconds, then circles clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 0.5 seconds, then circles clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 0.5 seconds, then circles clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2447,7 +2447,7 @@
      "sec": 2.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2455,29 +2455,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s06_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s06_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s06_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s06_pause_orbit",
    "files": {
-    "action.npz": "0dd154baa0a79207e95283454674796f79ae13ffbf2790aec4129025cb0d12fe",
-    "actions.jsonl": "b25a3c7bfba6a0da799e540656d58d968833c845dd26810871c2b96293f67c31",
-    "meta.json": "56471a2ac292b91f9420c3201667e00cfeb07cc29cd537313a7a2386326a6fee",
-    "poses.npy": "110adb1c43f49db2e6451f622a02998a899fd31bab037e8a67d0b24f8f084a6f",
-    "trajectory.yaml": "2bd8afceed5c71a309aef8c4c65a15d05ce532f6c994ce0eeab2eee6a452b818"
+    "action.npz": "91f47b5223f5727a063d8938f40cd443352272f90264214476439d9e1dca4fee",
+    "actions.jsonl": "3b2e5e5cd8262fa6a9fb19cdcd9501c5ef9ab85c089137b0e0879225f1d47891",
+    "meta.json": "6540ad8bd749a295830b2a697e83f6ce91d5090995f41f525a23a5674781f8ae",
+    "poses.npy": "73d18d068c1faac7fec3ccee8d871ecf53385ba0304b4d2c4826216c6fb2d272",
+    "trajectory.yaml": "b39da8f0573e18476a7d6f8719e78544c710e2634c0e875b39779892bcd78935"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s07_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s07_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s07_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s07_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s07_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 1 second, then circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 1 second, then circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 1 second, then circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2491,7 +2491,7 @@
      "sec": 2.5
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2499,29 +2499,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s07_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s07_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s07_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s07_pause_orbit",
    "files": {
-    "action.npz": "524b86f0059a0bea4217953580cfec990479952cdd2529813a24d7c04b782e37",
-    "actions.jsonl": "e5133a422fd63c2eef1cc51c777ba985782198fd753740ab65ecc94f0f4d1402",
-    "meta.json": "34569299fdf3e56414b7c1944ddb17a8dea1424f10e28a34fa49cf1568ab6738",
-    "poses.npy": "30afb1717b04b4d6c2f331683b1e83b480592a2383be0a13451854a08e6a0824",
-    "trajectory.yaml": "58db6ed8f8cf9e9b48e3a285286eb4a5b6de2b381241ccac84ab7e9ecf72a8bd"
+    "action.npz": "911f50f4a2afe53c08ee9c807a47cbc276583baacb3b403dd14d5da089fe2ff1",
+    "actions.jsonl": "46dba7e2e5cc3755013f6b4ac4e6a3106a7124f6abac172ee215f8085154b293",
+    "meta.json": "d5cd73cb75d50df1076a213a9cefb2916634f70cad9281475adadaebf002cb13",
+    "poses.npy": "31885199bd74f6ed688c739039d79a48d3280d0162395f280472dff66a23db32",
+    "trajectory.yaml": "695ca4981cb136a074fd669c26eff7b13630ed185732a89109622189ef55ece1"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s08_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s08_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s08_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s08_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s08_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles counter-clockwise at 54 degrees per second for 5 seconds (270 degrees of arc), then circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles counter-clockwise at 54 degrees per second for 5 seconds (270 degrees of arc), then circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles counter-clockwise at 54 degrees per second for 5 seconds (270 degrees of arc), then circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2537,7 +2537,7 @@
      "sec": 4.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2545,29 +2545,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s08_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s08_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s08_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s08_orbit",
    "files": {
-    "action.npz": "a5eee9c5a080064d17446ed1e6d0a8802d3111db5ac17d7b7748f339f4813504",
-    "actions.jsonl": "3af56570b4fd9395090abe01f6cb48744e46a97584171dd0b777e687750c0926",
-    "meta.json": "2f442de9ce5d4d43e880da1eb15ecdce17a5a2c7abb78cc34fdb838a17076af9",
-    "poses.npy": "c16df4927389a1e7c22e3c56fa909e90113e4ef1f2b404f9843d780288aa2237",
-    "trajectory.yaml": "ed7618fa833b3cb8572ab541388ab622e4b462d862600714d071c713f2fdc4a0"
+    "action.npz": "4c3ca003738425a743a395905b23046be7b9bf7258ea296355bc7622da7cc4fb",
+    "actions.jsonl": "2d817b991e18ce0ebe7c6e74c8d0abd6f66ae466d7a14e0d13644b0358b9cb91",
+    "meta.json": "8079ebe2478035739e6ad1f3607a22511b72c1337cb96de789ec4c14389cfa05",
+    "poses.npy": "47bec9a17f58914d81b7a2a66921837a50db2c9947faf06067ec0f5f5c9a48e6",
+    "trajectory.yaml": "d63e5cd45153664b809dfb3e7ee11b9ad01772ec52ced3e692bd251fd30d3ca3"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s09_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s09_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s09_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s09_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s09_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 0.5 seconds, then circles counter-clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 0.5 seconds, then circles counter-clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 0.5 seconds, then circles counter-clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2581,7 +2581,7 @@
      "sec": 2.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2589,29 +2589,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s09_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s09_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s09_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s09_pause_orbit",
    "files": {
-    "action.npz": "dfd840b3e1928c08e3973b3af0ddeb5afa2fbc441f0253dc4ed775426233accf",
-    "actions.jsonl": "a5a285d5673af3fa73770dbde1f2f4730d9b6d0ead730e043cf578b8947fec04",
-    "meta.json": "85804dfabdc62ab7cee840ff370d715283f3a3d520240be16d1a2f64f4f231e4",
-    "poses.npy": "5e77ca0640fd69b2bf24ac70c2fd623965052833bcaf10b2b899571b33259dd3",
-    "trajectory.yaml": "b4d2abaaf8462d26dc8f3c59c858a94c491207d9849dcc1ebff16bef5acdebad"
+    "action.npz": "8f917a2cab9acc3d3be70f862b1fd96419736df02cac18f0a4be66280a672872",
+    "actions.jsonl": "8ef4437046efc23d4fb857cb53d69af729e36533132e72ad9a1027f3cbec16f4",
+    "meta.json": "55a9c7ecc8deafe544e844615c3ce548cbb3b917e70a9b79c4a1b0517b4d0d04",
+    "poses.npy": "83a297cb6c99fb2399d7c8246a54d157e2fb0c689435a0d62d94042b0717fce8",
+    "trajectory.yaml": "ffa3acd7dec899413b8d8552dd75a467da234e7a2582b8bc8e1a5f99ab301a9c"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s10_orbit_pause",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s10_orbit_pause_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s10_orbit_pause",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s10_orbit_pause_v2",
    "family": "camera_orbit",
    "pattern": "s10_orbit_pause",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles clockwise at 9 degrees per second for 2 seconds (18 degrees of arc), then pauses for 1.5 seconds, then circles counter-clockwise at 54 degrees per second for 5 seconds (270 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles clockwise at 9 degrees per second for 2 seconds (18 degrees of arc), then pauses for 1.5 seconds, then circles counter-clockwise at 54 degrees per second for 5 seconds (270 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles clockwise at 9 degrees per second for 2 seconds (18 degrees of arc), then pauses for 1.5 seconds, then circles counter-clockwise at 54 degrees per second for 5 seconds (270 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2631,7 +2631,7 @@
      "sec": 5.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2639,29 +2639,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s10_orbit_pause/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s10_orbit_pause/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s10_orbit_pause",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s10_orbit_pause",
    "files": {
-    "action.npz": "82f95a775e725494a7dd00e4b44919207491010888a4fb5aebdfb09e1224cfc0",
-    "actions.jsonl": "8e55841a9e21eac89a506c44c1bc6381988f8a8d93bbb05b273dc1da15e0cbbd",
-    "meta.json": "097c6632246d2b6eda9341dbab2a706e3d5031310cd77e1b2d22329996cdd4a2",
-    "poses.npy": "94ef39584a9441f83efdb7437493bf8d05f2fc8b64ddf862c806780e4cf0c1fc",
-    "trajectory.yaml": "45f3466b97a989d43832f3a4b603092802f66c0d34970bf99426a27fec796851"
+    "action.npz": "46858905f10b308562a4a4154d71406e6d7045ac75a644849577373b306e210c",
+    "actions.jsonl": "c61389165c55907573a52a6e7e1af99ccc2a267c619eae8da456c8fb3c35a6de",
+    "meta.json": "55d79eec28848bf39c9d1c60600b31773b46a1b1a93195953601fa6c678e28a2",
+    "poses.npy": "a17ef5d03aa31693bd9236a44a3b10c25707d34485f290d84fed454990435f15",
+    "trajectory.yaml": "52197027608075b9f1b21a6d7e9cce4b6400ccf60b2cafdaea47118b784c8446"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s11_orbit_pause",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s11_orbit_pause_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s11_orbit_pause",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s11_orbit_pause_v2",
    "family": "camera_orbit",
    "pattern": "s11_orbit_pause",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then pauses for 1.5 seconds, then circles clockwise at 54 degrees per second for 4 seconds (216 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then pauses for 1.5 seconds, then circles clockwise at 54 degrees per second for 4 seconds (216 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then pauses for 1.5 seconds, then circles clockwise at 54 degrees per second for 4 seconds (216 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2681,7 +2681,7 @@
      "sec": 4.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2689,29 +2689,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s11_orbit_pause/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s11_orbit_pause/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s11_orbit_pause",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s11_orbit_pause",
    "files": {
-    "action.npz": "98ced90c7e15a9eca144ecae94859840813818132e9ecd8226563c05c9c24e12",
-    "actions.jsonl": "aa61ca5f07dc110c4b51c3361c6e88c90bfcfa8e8d90d918ed07e8078d18184b",
-    "meta.json": "ff7e6b3ae6b244d59af762cc27c6e10e7c540e87aec55d9d411d9a088bac37fd",
-    "poses.npy": "ce0daefd18a5ea283571d27345e555ae5c16f025745be3af1075ae2dcad8e059",
-    "trajectory.yaml": "aa0a6b39727ee52d7b610ecf961fcff4056b84293df6f1cc59c56c7d500a52ca"
+    "action.npz": "db505551657f58d8e442d9bd896d7a08e79f236d98317dfa088b4ebafa052b60",
+    "actions.jsonl": "6cd8b2e7c45b6f0e074ae42b81e92dc01e82a23f00a6e3c70b0ac972769dac06",
+    "meta.json": "f78a6f1cd0aecb87ac88b5a5d63847541400408f184d3215766e89d954370639",
+    "poses.npy": "a146761be1a6a2cca7bc300a038b8adc8ab5014000beac77c865e05dd7c02dec",
+    "trajectory.yaml": "79f5ee4813f9e41accfa3bc6395c958af9571984d229b2426ae1dde83c879274"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s12_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s12_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s12_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s12_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s12_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 1 second, then circles clockwise at 36 degrees per second for 2 seconds (72 degrees of arc), then circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 1 second, then circles clockwise at 36 degrees per second for 2 seconds (72 degrees of arc), then circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 1 second, then circles clockwise at 36 degrees per second for 2 seconds (72 degrees of arc), then circles counter-clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2731,7 +2731,7 @@
      "sec": 2.5
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2739,29 +2739,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s12_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s12_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s12_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s12_pause_orbit",
    "files": {
-    "action.npz": "5551106ed7e44ac00ca27e9510eeca15986dc94146ec088b53fcc7212ff92b02",
-    "actions.jsonl": "9102fbec905429ec7af4e8c3cd22844b37463d8b3099374e4af6016b904e7560",
-    "meta.json": "d90791b78cec85eab484acac255fb1dc0e32a85ad5e8c2fcb5e3f5f112e5dbc7",
-    "poses.npy": "4d3520a53d022d6a61feabb85c5def8f45508c2a8e18fcfb5786b6846ea108f6",
-    "trajectory.yaml": "c7788d543254e8ecc5dc159bba0ca8c5ca7c24e75417c40817f258e06a6c8ff8"
+    "action.npz": "94817224f5543a6b068b620f35565598bbde4c95c4722e8739ff676a1934819a",
+    "actions.jsonl": "5963f3729e2b8c1558f07789cb43e168d4f7c5faba68d9717d598e9fcdee49a0",
+    "meta.json": "789ce771b45a5e458d26d19f8711fb8e66185d46ab360cc04c9b2abbc3c47259",
+    "poses.npy": "d35cca26b5527f4cc6f2f6c8a7bc63bd0cd8337aaebd794e88553e89bf941219",
+    "trajectory.yaml": "fb4088d5ed5917385980f4a6b74f2ca71d3f181d03b10d66beddf982652df0ef"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s13_orbit_pause",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s13_orbit_pause_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s13_orbit_pause",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s13_orbit_pause_v2",
    "family": "camera_orbit",
    "pattern": "s13_orbit_pause",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles counter-clockwise at 45 degrees per second for 5 seconds (225 degrees of arc), then pauses for 1.5 seconds, then circles counter-clockwise at 54 degrees per second for 3 seconds (162 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles counter-clockwise at 45 degrees per second for 5 seconds (225 degrees of arc), then pauses for 1.5 seconds, then circles counter-clockwise at 54 degrees per second for 3 seconds (162 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles counter-clockwise at 45 degrees per second for 5 seconds (225 degrees of arc), then pauses for 1.5 seconds, then circles counter-clockwise at 54 degrees per second for 3 seconds (162 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2781,7 +2781,7 @@
      "sec": 3.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2789,29 +2789,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s13_orbit_pause/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s13_orbit_pause/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s13_orbit_pause",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s13_orbit_pause",
    "files": {
-    "action.npz": "c4fd572caf4ac57b33f726353eb8fcf752c7e6e3aca3191be72e88ebd83873bd",
-    "actions.jsonl": "56e8c2c77850f091d8b6fcf9340834da25dd8a4093c620ba174203bcfdacdb1a",
-    "meta.json": "7bae6377038e18a0e5e3ee7ce95d2dfb674337b485dbb75ca4b930765bc9bfd3",
-    "poses.npy": "bdb1e92d604de1b41dd3e1b2f6885ee0cf84e9abc6316e1c3ac1f115666bc4db",
-    "trajectory.yaml": "7b62e02835a5291029a52939c423a8f0ca3b64a04b907654a976302e5fca705c"
+    "action.npz": "61d9999dba1fac5fafe42c366b71c0f8e82ec7d291409f9befacd9edd2840133",
+    "actions.jsonl": "0d52929f912cd97a92e10569b5a9b13c15e942299a93cf8a927ca81ce87c4db8",
+    "meta.json": "e9a4e1130d5912e358d16929826db70f9b728db3a3a9f57434b567a2f6d609e6",
+    "poses.npy": "517fae9043a555c43458e57d452b8d801e815874670da7d77a9c6253d17bddd3",
+    "trajectory.yaml": "ede2169d8c57f53f5955efdfb931dbbe5aaa87582713a1b92978e67b49200c42"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s14_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s14_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s14_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s14_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s14_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 0.5 seconds, then circles clockwise at 45 degrees per second for 4 seconds (180 degrees of arc), then circles counter-clockwise at 36 degrees per second for 5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 0.5 seconds, then circles clockwise at 45 degrees per second for 4 seconds (180 degrees of arc), then circles counter-clockwise at 36 degrees per second for 5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 0.5 seconds, then circles clockwise at 45 degrees per second for 4 seconds (180 degrees of arc), then circles counter-clockwise at 36 degrees per second for 5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2831,7 +2831,7 @@
      "sec": 5.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2839,29 +2839,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s14_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s14_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s14_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s14_pause_orbit",
    "files": {
-    "action.npz": "6f33e50e405d55bf23433ed9ce5abf88cb42d48148ef797e911659f32e262d24",
-    "actions.jsonl": "2df40ab49e3d817cc3c8342a07c6c4bd5e669583154477de0941b8db53cd1b7f",
-    "meta.json": "7bd984120fda292f0669c1a208ec16d31dc789b3c66a958772cedc415e9d83b5",
-    "poses.npy": "11ccecf239c3a2447ddc52ef48128791a08cb98cd7e1f5f63f8f7186e14f84a5",
-    "trajectory.yaml": "4fc240dced14c585ab1f9160039569d7fd88de92f8d8dd64c99f634717d22abb"
+    "action.npz": "48d70eb54557e6b665fdd8df06fc83690098d0ccf745e14f8ee6d369b7c098f7",
+    "actions.jsonl": "6f3b9db6a5ba0fad1b28ad8932cd442c43691cfb516626b704f4889fafda8f0b",
+    "meta.json": "8dbe19b2f48b122f08d903d645a85f93baa11cab08bbfad2a7f2172cdb2e66ae",
+    "poses.npy": "622a13d32fd51a948ea55f505b1bd9a96cef9aa221cb6c2627876f320e2dc43e",
+    "trajectory.yaml": "c47634401ee7aeaeea41541bd5e37515abb1c271bae3f2654006e079d55c178f"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s15_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s15_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s15_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s15_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s15_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then circles counter-clockwise at 72 degrees per second for 5 seconds (360 degrees of arc), then circles clockwise at 27 degrees per second for 2.5 seconds (67.5 degrees of arc).",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then circles counter-clockwise at 72 degrees per second for 5 seconds (360 degrees of arc), then circles clockwise at 27 degrees per second for 2.5 seconds (67.5 degrees of arc).",
    "action_description": "The camera circles clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then circles counter-clockwise at 72 degrees per second for 5 seconds (360 degrees of arc), then circles clockwise at 27 degrees per second for 2.5 seconds (67.5 degrees of arc).",
    "action_steps": [
     {
@@ -2883,7 +2883,7 @@
      "sec": 2.5
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2891,29 +2891,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s15_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s15_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s15_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s15_orbit",
    "files": {
-    "action.npz": "400232566e42510a2948ef8c0225c2a6efd6069b7a13dc7f9ac3bcde71c23346",
-    "actions.jsonl": "112d09237a7f993c6ed206947348856e4e624d1809da61a96c5010e431e22e47",
-    "meta.json": "700f1e83f97668bfd15b6259436a8334f17fac31bd42b5711246a778927ad8cb",
-    "poses.npy": "56034d756e8652c39c9690ea3d8bae459fcf45997df1bb1f073b2604e1563cba",
-    "trajectory.yaml": "4dcad3936a3b701c6a427ac6eeca6a77eb613d9a935536ae44b298786988c09c"
+    "action.npz": "890e7031fb7e81f332039ee6f7adeeb15a695ed5e3242e850599305d11b86e4d",
+    "actions.jsonl": "e9c4f728fc19184ccf5652ecf1d1ccde27fd5b9a6a5aae54db8d496d948c423e",
+    "meta.json": "fc33bd5de9e4a88f76c71f8f765c695ad2cda2733ded638fade388bfd5efa931",
+    "poses.npy": "3840784ed2ea91121cb917748fcde0da20b20862813eecbbb3a34f48ca9f883b",
+    "trajectory.yaml": "79674252431f633041ab5313d60ab96485c669a3c1e762eb84259a4c585f7422"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s16_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s16_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s16_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s16_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s16_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 1.5 seconds, then circles clockwise at 36 degrees per second for 2 seconds (72 degrees of arc), then circles counter-clockwise at 45 degrees per second for 2.5 seconds (112.5 degrees of arc), then circles clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 1.5 seconds, then circles clockwise at 36 degrees per second for 2 seconds (72 degrees of arc), then circles counter-clockwise at 45 degrees per second for 2.5 seconds (112.5 degrees of arc), then circles clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 1.5 seconds, then circles clockwise at 36 degrees per second for 2 seconds (72 degrees of arc), then circles counter-clockwise at 45 degrees per second for 2.5 seconds (112.5 degrees of arc), then circles clockwise at 72 degrees per second for 2.5 seconds (180 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2939,7 +2939,7 @@
      "sec": 2.5
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -2947,29 +2947,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s16_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s16_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s16_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s16_pause_orbit",
    "files": {
-    "action.npz": "ca79b59989ed714f7770652834fea93f379d33f7325c6b7688430205ad82b27d",
-    "actions.jsonl": "9580c0313c7586f1af118ad9d49e5d9d85911a833b505f99c350f26b2049861a",
-    "meta.json": "ff362f9861075f5a5839a4b18718bdc4791b3e48ca8b225e96e40cd39ca99bc2",
-    "poses.npy": "14dcf0cff1a1101514a0b7304f929b456bf051cb48d0e0de6ae8e51a262a4b17",
-    "trajectory.yaml": "2f5a7e472a76662b2aab65cde91a2a24cf0f06b907a98b319dafdb7eed913112"
+    "action.npz": "a7e346ef3fb32713b220109f3f8ea5c2074fbe40b51893ad0d571c25030031f9",
+    "actions.jsonl": "3aeea2bdd45d02dbefe1c1b1871405051ffb202965de4c2fae5be47e25b8d7fb",
+    "meta.json": "4d578a344676ebb4fad93bcf5fcf50d3146cce6a0248089804a634839e6fd3a9",
+    "poses.npy": "799a8b735b821ef5936d35bb90ddfb34e21bbf280791e2f069b8062f2949a55c",
+    "trajectory.yaml": "d3314bd2b6a4c3a1820b0fb300316a846c1f0d278321c62bac08c484faf46890"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s17_orbit_pause",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s17_orbit_pause_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s17_orbit_pause",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s17_orbit_pause_v2",
    "family": "camera_orbit",
    "pattern": "s17_orbit_pause",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then circles counter-clockwise at 72 degrees per second for 1 second (72 degrees of arc), then pauses for 2 seconds, then circles clockwise at 45 degrees per second for 3 seconds (135 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then circles counter-clockwise at 72 degrees per second for 1 second (72 degrees of arc), then pauses for 2 seconds, then circles clockwise at 45 degrees per second for 3 seconds (135 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles clockwise at 72 degrees per second for 2 seconds (144 degrees of arc), then circles counter-clockwise at 72 degrees per second for 1 second (72 degrees of arc), then pauses for 2 seconds, then circles clockwise at 45 degrees per second for 3 seconds (135 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -2995,7 +2995,7 @@
      "sec": 3.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -3003,29 +3003,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s17_orbit_pause/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s17_orbit_pause/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s17_orbit_pause",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s17_orbit_pause",
    "files": {
-    "action.npz": "3888cfe38c8a948c21d99f459319db17dcf62aac9717c3991df6b492f05f1354",
-    "actions.jsonl": "cf7636c8af089be3048debf95a3f4df6725fbe3c08b919b695db30aa13cbf684",
-    "meta.json": "e6df620e806de1a9442c49d09b4357b88b60f47e4fd538bd0228fc43d366febc",
-    "poses.npy": "7db0daa3eaa67b993a8768d0aa984230bc1e98276b192c78e261cc6fb428ec78",
-    "trajectory.yaml": "37ae62a26a4c72b1b00ee265da97388e5c9b6f0ebcff75c24de1db44e082dfe2"
+    "action.npz": "95033afb683a38289b5ff341eacdd648bf6c4f02cf38b78def8ab072826cc41a",
+    "actions.jsonl": "e0ac2e13c00d7a8401308cb2c9294790c39c23117cc3349ebf1cd71be943be63",
+    "meta.json": "bfef9c815c74db9fd7ce4a95acf8ee7677ba3fd54d50ffcf48c89dfaecee3879",
+    "poses.npy": "d40fb0d62a5031e999daf1be4a1699dfa4b73ec6a50923ecc8ad973850255505",
+    "trajectory.yaml": "87724c84d7a31fab5d400621651bbf51831b3bb0b7d4c4d1901493684f331b01"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s18_orbit_pause",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s18_orbit_pause_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s18_orbit_pause",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s18_orbit_pause_v2",
    "family": "camera_orbit",
    "pattern": "s18_orbit_pause",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera circles clockwise at 45 degrees per second for 2 seconds (90 degrees of arc), then circles clockwise at 27 degrees per second for 1 second (27 degrees of arc), then pauses for 2 seconds, then circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera circles clockwise at 45 degrees per second for 2 seconds (90 degrees of arc), then circles clockwise at 27 degrees per second for 1 second (27 degrees of arc), then pauses for 2 seconds, then circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera circles clockwise at 45 degrees per second for 2 seconds (90 degrees of arc), then circles clockwise at 27 degrees per second for 1 second (27 degrees of arc), then pauses for 2 seconds, then circles clockwise at 72 degrees per second for 4 seconds (288 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -3051,7 +3051,7 @@
      "sec": 4.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -3059,29 +3059,29 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s18_orbit_pause/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s18_orbit_pause/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s18_orbit_pause",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s18_orbit_pause",
    "files": {
-    "action.npz": "13e477a6e0ecae478dfe05846b43f0f1d747b2bf86b09adcc4de4de0bdb824d7",
-    "actions.jsonl": "f6988b844ea488c8048370afca97742ed64ce7d79d21470e71183ddf8c96ced4",
-    "meta.json": "1238a11926f113849f8775ed0ea45a31f392e86591115e409d8f0894a9e4f2e6",
-    "poses.npy": "ed9d72d0f11329c092335a751affb024a8ed208e6352bf83571296343cd71a03",
-    "trajectory.yaml": "13fa0b74c28310dd5c3fe48d7ff46772e214e11b58c4615bdd4f92cb51630b18"
+    "action.npz": "be31477353d9da8192c0d4fbaebad4b1346d9d8542e5bc432e0ceb1182b060ca",
+    "actions.jsonl": "5e83111a8a9b4dab573af34c939c652444aef8f39eb8d51dcd27419ed1ea71bf",
+    "meta.json": "2b4d6c7000653e69dd522b2ef49e176d2a253a091843aa143c5b3bff6f029f9e",
+    "poses.npy": "fcd7f591c1aad893203e05ad7b07da3f1281be635820c8d774174546582f73ff",
+    "trajectory.yaml": "ff10585612129b28b923e28bb701ab7a8a730509183591c7fce740a1925571fc"
    }
   },
   {
    "schema_version": 2,
-   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s19_pause_orbit",
-   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting_orbit_v2.s19_pause_orbit_v2",
+   "synthetic_id": "synthetic/camera_orbit/SunRisesAndSets__lighting/s19_pause_orbit",
+   "trajectory_id": "synthetic.camera_orbit.sunrisesandsets_lighting.s19_pause_orbit_v2",
    "family": "camera_orbit",
    "pattern": "s19_pause_orbit",
    "action_target": "camera",
    "scene": "SunRisesAndSets",
-   "conditioning_case": "SunRisesAndSets/lighting_orbit_v2",
+   "conditioning_case": "SunRisesAndSets/lighting",
    "perspective": "first_person",
-   "prompt": "First-person viewpoint, eye height 1.6 metres above a wooden floor. No body or hands visible. The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the tabletop centre, with no head bobbing or roll. The table, chairs, red toaster, dark mug, white plate, white bowl, knife and tall table lamp remain static. One fixed bright sun lights the scene; its world direction, intensity and colour temperature remain constant throughout.\n\nThe camera pauses for 0.5 seconds, then circles clockwise at 72 degrees per second for 1 second (72 degrees of arc), then circles counter-clockwise at 72 degrees per second for 3 seconds (216 degrees of arc), then circles clockwise at 9 degrees per second for 1 second (9 degrees of arc), then stays in place until the end of the 10-second clip.",
+   "prompt": "First-person viewpoint at standing adult eye height, approximately 1.6 metres above the floor. No body, hands, or held items are visible in frame. The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down at the feet. Scene: on the table is a red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in the centre. Wooden ladder-back bar stools are arranged around the table. The floor is wooden planks. Lighting: a single bright morning sun shines from a fixed direction, low above the eastern horizon, casting long crisp directional shadows of the table, stools, lamp, and tabletop objects across the wooden floor. The sun does not move and the colour temperature does not change for the entire video.\n\nThe camera pauses for 0.5 seconds, then circles clockwise at 72 degrees per second for 1 second (72 degrees of arc), then circles counter-clockwise at 72 degrees per second for 3 seconds (216 degrees of arc), then circles clockwise at 9 degrees per second for 1 second (9 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_description": "The camera pauses for 0.5 seconds, then circles clockwise at 72 degrees per second for 1 second (72 degrees of arc), then circles counter-clockwise at 72 degrees per second for 3 seconds (216 degrees of arc), then circles clockwise at 9 degrees per second for 1 second (9 degrees of arc), then stays in place until the end of the 10-second clip.",
    "action_steps": [
     {
@@ -3107,7 +3107,7 @@
      "sec": 1.0
     }
    ],
-   "first_frame": "cases/SunRisesAndSets/lighting_orbit_v2/reference/ref.png",
+   "first_frame": "cases/SunRisesAndSets/lighting/reference/ref.png",
    "duration_sec": 10.0,
    "control_hz": 60,
    "dimensions": [
@@ -3115,16 +3115,16 @@
    ],
    "reference_status": "unity_rendered",
    "generator_version": 2,
-   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s19_pause_orbit/reference/reference.mp4",
+   "reference_video": "synthetic/camera_orbit/SunRisesAndSets__lighting/s19_pause_orbit/reference/reference.mp4",
    "reference_quality": "ok",
-   "reference_first_frame_psnr_db": 47.89,
-   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s19_pause_orbit",
+   "reference_first_frame_psnr_db": 30.945,
+   "path": "synthetic/camera_orbit/SunRisesAndSets__lighting/s19_pause_orbit",
    "files": {
-    "action.npz": "3d789b823f017fe5fd0147c838a239913f56ac8754eca9731113d888285ea84a",
-    "actions.jsonl": "c6101576858aef241987e557c6206740983522f52f2d00f0b8f2ec8cc82b3d65",
-    "meta.json": "8b762dfd172bee5d9736cff99e339ae14cc7c6cd8f665fba6d1fbd3a271257d7",
-    "poses.npy": "0c1183c6b207b07eab6930b2e3ea4f8a3289321674b2585808e43482a1d704e0",
-    "trajectory.yaml": "2b32717de9ffb6f8f4978a820d4403ba57da3c3d20a5c40b3a9fb4a1a908a1bb"
+    "action.npz": "7adcb051abc870913d0fc5882ff053b08e65861fe540e987937cf3ceb0c51c9d",
+    "actions.jsonl": "6db58b9f50dbed8e82ef4f9581dc1a4ee93df0027c68b2c463f978b95beb5fca",
+    "meta.json": "4f420727b68e1f0c2a4ec83eb2c28cd7eb8175b82d750e5f1e33aa967995b43b",
+    "poses.npy": "691dc79383d10c9b51b27567be39ad39c9a1a34a9b9d0fe2335fa0925fc402e4",
+    "trajectory.yaml": "5686b63ba3adb3a36f631072d2d2d127a0ed672b439cace972eae460d5fed378"
    }
   },
   {

@@ -41,7 +41,7 @@ def test_orbit_window_preserves_speed_and_discards_only_declared_padding(tmp_pat
              'video_sha256':hashlib.sha256(original).hexdigest()}
     normalized=_normalize_candidate(
         case=SimpleNamespace(protocol={'candidate_normalization':'lighting_orbit_10s_fps12'}),
-        candidate=SimpleNamespace(candidate_video=source,model='test',case_id='SunRisesAndSets/lighting_orbit_v2',
+        candidate=SimpleNamespace(candidate_video=source,model='test',case_id='Fixture/lighting_orbit',
                                   seed='42',params={'lighting_time_mapping':mapping}),output_root=tmp_path/'out')
     assert _probe(normalized,timeout_sec=30)=={'width':64,'height':48,'fps':12.,'frames':120}
     assert source.read_bytes()==original
@@ -72,7 +72,7 @@ def test_orbit_without_receipt_derives_mapping_from_the_video(tmp_path,source_fp
                    check=True,capture_output=True)
     normalized=_normalize_candidate(
         case=SimpleNamespace(protocol={'candidate_normalization':'lighting_orbit_10s_fps12'}),
-        candidate=SimpleNamespace(candidate_video=source,model='test',case_id='SunRisesAndSets/lighting_orbit_v2',
+        candidate=SimpleNamespace(candidate_video=source,model='test',case_id='Fixture/lighting_orbit',
                                   seed='42',params={}),output_root=tmp_path/'out')
     assert _probe(normalized,timeout_sec=30)=={'width':64,'height':48,'fps':12.,'frames':120}
 
@@ -85,7 +85,7 @@ def test_short_orbit_without_receipt_is_still_invalid(tmp_path):
     with pytest.raises(NormalizationError,match='short lighting video'):
         _normalize_candidate(
             case=SimpleNamespace(protocol={'candidate_normalization':'lighting_orbit_10s_fps12'}),
-            candidate=SimpleNamespace(candidate_video=source,model='test',case_id='SunRisesAndSets/lighting_orbit_v2',
+            candidate=SimpleNamespace(candidate_video=source,model='test',case_id='Fixture/lighting_orbit',
                                       seed='42',params={}),output_root=tmp_path/'out')
 
 
@@ -112,9 +112,9 @@ def _lumas(path):
 
 def _orbit(source,tmp_path,params):
     return _normalize_candidate(
-        case=SimpleNamespace(case_id='SunRisesAndSets/lighting_orbit_v2',
+        case=SimpleNamespace(case_id='Fixture/lighting_orbit',
                              protocol={'candidate_normalization':'lighting_orbit_10s_fps12'}),
-        candidate=SimpleNamespace(candidate_video=source,model='test',case_id='SunRisesAndSets/lighting_orbit_v2',
+        candidate=SimpleNamespace(candidate_video=source,model='test',case_id='Fixture/lighting_orbit',
                                   seed='42',params=params),output_root=tmp_path/'out')
 
 

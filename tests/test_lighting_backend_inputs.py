@@ -8,7 +8,12 @@ from tools.prepare_lighting_backend_inputs import prepare
 from evaluation.camera_orbit import orbit_poses
 import yaml
 
-CASE = Path(__file__).resolve().parents[1]/'eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2'
+CASE = Path(__file__).resolve().parents[1]/'eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting'
+
+
+def _position_at(seconds):
+    raw = yaml.safe_load((CASE/'reference/artifacts/trajectory.yaml').read_text())
+    return orbit_poses(raw, np.array([seconds]))[0, :3, 3]
 
 
 @pytest.mark.integration("case_data")
@@ -21,7 +26,7 @@ def test_lingbot_native_intrinsics_preserve_square_seed_fov(tmp_path):
     np.testing.assert_allclose(transformed[:2],624/(2*np.tan(np.pi/6)),rtol=1e-7)
     np.testing.assert_allclose(transformed[2:],[312,312])
     np.testing.assert_allclose(poses[0],poses[-1],atol=1e-6)
-    np.testing.assert_allclose(poses[40,:3,3],[2,1.6,0],atol=1e-6)
+    np.testing.assert_allclose(poses[40,:3,3],_position_at(2.5),atol=1e-6)
 
 
 @pytest.mark.integration("case_data")
@@ -31,7 +36,7 @@ def test_hy_latent_spacing_and_terminal_hold_are_not_time_stretched(tmp_path):
     rows=json.loads((tmp_path/'poses.json').read_text())
     assert len(rows)==64 and receipt['native_frames']==253
     assert times[15]==2.5 and times[60]==10 and times[-1]==10.5
-    np.testing.assert_allclose(np.array(rows['15']['extrinsic'])[:3,3],[2,1.6,0],atol=1e-7)
+    np.testing.assert_allclose(np.array(rows['15']['extrinsic'])[:3,3],_position_at(2.5),atol=1e-7)
     np.testing.assert_allclose(rows['60']['extrinsic'],rows['63']['extrinsic'],atol=1e-14)
     assert receipt['terminal_hold_after_sec']==10
 

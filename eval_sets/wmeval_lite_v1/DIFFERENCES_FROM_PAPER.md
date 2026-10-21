@@ -22,7 +22,7 @@ tables are frozen; nothing below changes a published value unless it says so.
 | Causality | `ball_force_v1`, exact (bit-for-bit the capture's `action.npy`) | None |
 | Fluid | `bottle_motion_v1`, nominal 12 Hz controller profile | The Unity capture stepped on wall-clock (~10 Hz); the legacy `action.npy` keeps that record |
 | Controllability / LPIPS | `ball` trajectories (BallRoller, MirrorRollingBall); BeamDomino shares the causality trajectory | None for scoring; `candidate_normalization: none` kept for paper parity |
-| Lighting | `lighting_orbit_v2` (fixed sun, 2 m look-at orbit) | The paper's native lighting protocol lives in `lighting_paper_native/` |
+| Lighting | `SunRisesAndSets/lighting`: the paper's case, prompt, `ref.png` and per-model action records (`actions.txt`: hold ArrowLeft 10 s), scored with the paper's reference-free protocol | None for scoring (all 180 per-run values of the paper's lighting table reproduce exactly). Added: a Unity reference orbit (`reference/unity_orbit.mp4` + ground truth) rendered from the same first frame; the score does not read it. Its camera is the frame's own (radius 2.82 m, eye height 2.31 m about a tabletop pivot), not the prompt's approximate 2 m / 1.6 m |
 
 ## Frozen judge outputs
 
@@ -42,6 +42,12 @@ tables are frozen; nothing below changes a published value unless it says so.
   `target_entity_validation_required` for Matrix-Game 2.0 object targets).
 - `kin_plane_calibration_json` is resolved for the Table 4 cases, so kinematics
   reports metric units.
+- The lighting case ships a Unity reference video and camera ground truth
+  (`trajectory.yaml` look-at orbit, `action.npz`, per-frame poses, intrinsics,
+  calibration, QA) that the paper never had; scoring is unchanged
+  (reference-free). The paper's Matrix-Game 2.0 SRR prints 68.76 in its table
+  while its per-seed data give 22.92 +/- 16.23 (a table typo; Lite reports the
+  per-seed value).
 
 ## Judge transport
 
