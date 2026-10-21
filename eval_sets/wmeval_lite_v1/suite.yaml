@@ -1,3 +1,9 @@
+# 2026-10-21: DATASET AUDIT (AUDIT.md, tools/audit_dataset.py). 17 core prompts corrected to
+# match their conditioning frames (DIFFERENCES_FROM_PAPER.md); BallRoller/ctrl's kinematics
+# cell now tracks the controlled white ball (kin_* artifacts from
+# tools/build_ballroller_kinematics_gt.py) instead of the static dome/cube described in the
+# 2026-08 notes below; synthetic trajectories screened against their Unity references
+# (synthetic/screening.json). ChessBoard/prompt_first (synthetic) drops character consistency.
 # 2026-10-20: ONE LIGHTING CASE. lighting_shading scores SunRisesAndSets/lighting,
 # the paper's native case, with the paper's protocol (shadow_consistency,
 # reference-free, candidate_normalization none, eval_fps 24, max_pairs 0,
@@ -1070,14 +1076,21 @@ synthetic:
         eoc_unity_object_diameters_json: null
         eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
     ChessBoard/prompt_first:
-      environment_object_consistency: &eoc_chess
+      # first person: the camera sits inside the (hidden) mannequin, so no character is
+      # visible and character consistency would score detector noise (2026-10-21 audit)
+      environment_object_consistency:
+        eoc_text_prompt: sphere.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    ChessBoard/prompt_third:
+      environment_object_consistency:
         eoc_text_prompt: sphere.
         eoc_character_prompt: person.
         eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
         eoc_unity_poses_npy: reference/artifacts/poses.npy
         eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
-    ChessBoard/prompt_third:
-      environment_object_consistency: *eoc_chess
     RacingCar/prompt_first:
       # first person: the car body is hidden, the roadside trees are the objects
       environment_object_consistency:

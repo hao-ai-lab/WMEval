@@ -12,8 +12,7 @@ prompt: 'Starting world must match the supplied BallRoller sketch frame: a compa
 
 
   The player controls only the white ball. Movement should feel like a responsive
-  rolling sphere with noticeable inertia, suitable for collecting pickups and weaving
-  around simple obstacles.'
+  rolling sphere with noticeable inertia, suitable for weaving around simple obstacles.'
 perspective: third_person
 modules:
 - control_motion
@@ -28,12 +27,18 @@ module_params:
     eoc_unity_poses_npy: reference/artifacts/poses_recovered.npy
     eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
   kinematics_mechanics:
-    kin_text_prompt: dome. cube.
-    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
-    kin_unity_poses_npy: reference/artifacts/poses_recovered.npy
-    kin_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
-    kin_unity_object_masses_json: reference/artifacts/object_masses.json
+    kin_text_prompt: white ball.
     kin_track_thresh: 0.3
+    kin_track_point: bbox_bottom_center
+    kin_depth_lift: false
+    kin_mechanics_estimator: aligned_peak_finite_difference
+    kin_event_alignment_tolerance_frames: 5
+    kin_event_min_neighbor_ratio: 0.5
+    kin_unity_object_transforms_json: reference/artifacts/kin_object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/kin_poses.npy
+    kin_unity_intrinsics_npy: reference/artifacts/kin_intrinsics.npy
+    kin_unity_object_masses_json: reference/artifacts/kin_object_masses.json
+    kin_plane_calibration_json: reference/artifacts/kin_plane_calibration.json
   lpips:
     lpips_reference_events_json: reference/artifacts/contact_events.json
 reference:
@@ -50,7 +55,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: 5cdfd5c2cb6576807ec8360e84f0b3ad50096bf9
-  evaluator_fingerprint: 6fc74c75ed86b20b83be1a26bb607b75
+  evaluator_fingerprint: 930db225399a700ae0773a29504a2281
   module_config: {}
   artifact_schema_versions: {}
   dependency_versions:

@@ -2,19 +2,20 @@ schema_version: 2
 case_id: SunRisesAndSets/lighting
 scene: SunRisesAndSets
 display_name: SunRisesAndSets lighting
-prompt: 'First-person viewpoint at standing adult eye height, approximately 1.6 metres
-  above the floor. No body, hands, or held items are visible in frame. The viewer
-  walks slowly and steadily counter-clockwise around a wooden round dining table at
-  a constant 2-metre radius from the table centre, completing one full loop over the
-  duration of the clip while continuously keeping the table centred in the field of
-  view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky,
-  no looking down at the feet. Scene: on the table is a red toaster, a small dark
-  mug, a white plate, a white bowl, a metal knife, and a tall white table lamp in
-  the centre. Wooden ladder-back bar stools are arranged around the table. The floor
-  is wooden planks. Lighting: a single bright morning sun shines from a fixed direction,
-  low above the eastern horizon, casting long crisp directional shadows of the table,
-  stools, lamp, and tabletop objects across the wooden floor. The sun does not move
-  and the colour temperature does not change for the entire video.'
+prompt: 'First-person viewpoint at a raised eye height, approximately 2.3 metres above
+  the floor, looking slightly down at the table. No body, hands, or held items are
+  visible in frame. The viewer walks slowly and steadily counter-clockwise around
+  a wooden round dining table at a constant radius of about 2.8 metres, completing
+  one full loop over the duration of the clip while continuously keeping the table
+  near the centre of the field of view. Smooth steady gait, no head bobbing, no jumping,
+  no looking up at the sky, no looking down at the feet. Scene: on the table is a
+  red toaster, a small dark mug, a white plate, a white bowl, a metal knife, and a
+  tall white table lamp near the edge of the tabletop. Two wooden ladder-back chairs
+  stand at the table. The floor is wooden planks. Lighting: a single bright sun shines
+  from a fixed direction, high in the sky (about 68 degrees above the horizon), casting
+  crisp directional shadows of the table, chairs, lamp, and tabletop objects onto
+  the tabletop and the wooden floor. The sun does not move and the colour temperature
+  does not change for the entire video.'
 perspective: first_person
 modules:
 - shadow_consistency
@@ -43,7 +44,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  evaluator_fingerprint: 7c0ed525700420d6842f4bcb8af14667
+  evaluator_fingerprint: b8f08fb5f27063ea3abf262f1047c7d0
   module_config: {}
   artifact_schema_versions:
     trajectory: 1

@@ -1,0 +1,501 @@
+{
+ "schema_version": 1,
+ "round": "final",
+ "items": 252,
+ "by_status": {
+  "ok": 112,
+  "review": 108,
+  "accepted": 32,
+  "problem": 0
+ },
+ "by_family": {
+  "core": {
+   "ok": 10,
+   "review": 16,
+   "accepted": 6,
+   "problem": 0
+  },
+  "ball_force": {
+   "ok": 15,
+   "review": 13,
+   "accepted": 0,
+   "problem": 0
+  },
+  "beam_domino": {
+   "ok": 2,
+   "review": 17,
+   "accepted": 6,
+   "problem": 0
+  },
+  "camera_orbit": {
+   "ok": 1,
+   "review": 12,
+   "accepted": 7,
+   "problem": 0
+  },
+  "camera_yaw": {
+   "ok": 26,
+   "review": 14,
+   "accepted": 5,
+   "problem": 0
+  },
+  "character": {
+   "ok": 4,
+   "review": 18,
+   "accepted": 2,
+   "problem": 0
+  },
+  "cue_ball": {
+   "ok": 11,
+   "review": 8,
+   "accepted": 6,
+   "problem": 0
+  },
+  "ego_vehicle": {
+   "ok": 26,
+   "review": 2,
+   "accepted": 0,
+   "problem": 0
+  },
+  "liquid_container": {
+   "ok": 17,
+   "review": 8,
+   "accepted": 0,
+   "problem": 0
+  }
+ },
+ "vlm_usage": {
+  "calls": 853,
+  "input_tokens": 5509249,
+  "output_tokens": 1333875,
+  "reasoning_tokens": 100486,
+  "cached_input_tokens": 179136
+ },
+ "problems": {},
+ "accepted": {
+  "BallRoller/ctrl": "the recording's realized key timing is slower than the commanded 2.96 s script (the ball is still driven until ~5.3 s); re-deriving it would change the paper-parity controllability actions -- documented in AUDIT.md",
+  "BeamDomino/causal": "paper recording; the cascade is verified from the Unity log and the recorded reference judge answers (csr_unity 100); the follow camera leaves the structure",
+  "ChessBoard/walk_third": "follow camera clips through foreground statues (scene rig, as recorded)",
+  "RacingCar/kinematics_third": "paper recording; the car ends against the barrier from 6.3 s",
+  "WanderingGarden/scene_360_out": "outward Table 7 view: the tree anchor is not in frame 0; lanterns/rocks are tracked",
+  "WanderingGarden/scene_perturb_out": "outward Table 7 view: the tree anchor is not in frame 0; lanterns/rocks are tracked",
+  "synthetic/beam_domino/BeamDomino__causal/s06_roll": "brief occlusion by the structure, a shape-specific (direct strike / glancing) chain judged against the canonical one, or <= 2 s of pushing after the ball leaves the platform (as in core BeamDomino/causal)",
+  "synthetic/beam_domino/BeamDomino__causal/s09_roll_wait": "brief occlusion by the structure, a shape-specific (direct strike / glancing) chain judged against the canonical one, or <= 2 s of pushing after the ball leaves the platform (as in core BeamDomino/causal)",
+  "synthetic/beam_domino/BeamDomino__causal/s10_roll": "brief occlusion by the structure, a shape-specific (direct strike / glancing) chain judged against the canonical one, or <= 2 s of pushing after the ball leaves the platform (as in core BeamDomino/causal)",
+  "synthetic/beam_domino/BeamDomino__causal/s11_wait_roll": "brief occlusion by the structure, a shape-specific (direct strike / glancing) chain judged against the canonical one, or <= 2 s of pushing after the ball leaves the platform (as in core BeamDomino/causal)",
+  "synthetic/beam_domino/BeamDomino__causal/s20_wait_roll": "brief occlusion by the structure, a shape-specific (direct strike / glancing) chain judged against the canonical one, or <= 2 s of pushing after the ball leaves the platform (as in core BeamDomino/causal)",
+  "synthetic/beam_domino/BeamDomino__causal/s22_roll_wait": "brief occlusion by the structure, a shape-specific (direct strike / glancing) chain judged against the canonical one, or <= 2 s of pushing after the ball leaves the platform (as in core BeamDomino/causal)",
+  "synthetic/camera_orbit/SunRisesAndSets__lighting/s01_orbit": "lighting is reference-free: the Unity orbit's cropped floor shadow is not scored",
+  "synthetic/camera_orbit/SunRisesAndSets__lighting/s05_pause_orbit": "lighting is reference-free: the Unity orbit's cropped floor shadow is not scored",
+  "synthetic/camera_orbit/SunRisesAndSets__lighting/s13_orbit_pause": "lighting is reference-free: the Unity orbit's cropped floor shadow is not scored",
+  "synthetic/camera_orbit/SunRisesAndSets__lighting/s14_pause_orbit": "lighting is reference-free: the Unity orbit's cropped floor shadow is not scored",
+  "synthetic/camera_orbit/SunRisesAndSets__lighting/s16_pause_orbit": "lighting is reference-free: the Unity orbit's cropped floor shadow is not scored",
+  "synthetic/camera_orbit/SunRisesAndSets__lighting/s17_orbit_pause": "lighting is reference-free: the Unity orbit's cropped floor shadow is not scored",
+  "synthetic/camera_orbit/SunRisesAndSets__lighting/s19_pause_orbit": "lighting is reference-free: the Unity orbit's cropped floor shadow is not scored",
+  "synthetic/camera_yaw/WanderingGarden__scene_360_out/s01_turn": "outward Table 7 view: the tree anchor is not in frame 0; lanterns/rocks are tracked",
+  "synthetic/camera_yaw/WanderingGarden__scene_360_out/s10_sweep": "outward Table 7 view: the tree anchor is not in frame 0; lanterns/rocks are tracked",
+  "synthetic/camera_yaw/WanderingGarden__scene_360_out/s19_turn": "outward Table 7 view: the tree anchor is not in frame 0; lanterns/rocks are tracked",
+  "synthetic/camera_yaw/WanderingGarden__scene_360_out/s28_hold_look_back": "outward Table 7 view: the tree anchor is not in frame 0; lanterns/rocks are tracked",
+  "synthetic/camera_yaw/WanderingGarden__scene_360_out/s37_look_back_sweep": "outward Table 7 view: the tree anchor is not in frame 0; lanterns/rocks are tracked",
+  "synthetic/character/ChessBoard__walk_third/s00_walk": "small mannequin behind statues: forward walking shows only as parallax, a jump can be occluded",
+  "synthetic/character/ChessBoard__walk_third/s23_walk_sprint_jump": "small mannequin behind statues: forward walking shows only as parallax, a jump can be occluded",
+  "synthetic/cue_ball/BilliardGame__kinematics_first/s04_wait_strike": "the yellow ball is in view for >= 1 s of its motion (ball-mounted camera with a fixed heading)",
+  "synthetic/cue_ball/BilliardGame__kinematics_first/s13_wait_strike_repeat": "the yellow ball is in view for >= 1 s of its motion (ball-mounted camera with a fixed heading)",
+  "synthetic/cue_ball/BilliardGame__kinematics_first/s15_wait_strike_repeat": "the yellow ball is in view for >= 1 s of its motion (ball-mounted camera with a fixed heading)",
+  "synthetic/cue_ball/BilliardGame__kinematics_first/s16_wait_strike_repeat": "the yellow ball is in view for >= 1 s of its motion (ball-mounted camera with a fixed heading)",
+  "synthetic/cue_ball/BilliardGame__kinematics_first/s18_wait_repeat_strike": "the yellow ball is in view for >= 1 s of its motion (ball-mounted camera with a fixed heading)",
+  "synthetic/cue_ball/BilliardGame__kinematics_first/s23_wait_strike_repeat": "the yellow ball is in view for >= 1 s of its motion (ball-mounted camera with a fixed heading)"
+ },
+ "round_1": {
+  "items": 252,
+  "by_status": {
+   "ok": 38,
+   "review": 47,
+   "accepted": 113,
+   "problem": 54
+  },
+  "by_family": {
+   "core": {
+    "ok": 8,
+    "review": 10,
+    "accepted": 6,
+    "problem": 8
+   },
+   "ball_force": {
+    "ok": 0,
+    "review": 0,
+    "accepted": 28,
+    "problem": 0
+   },
+   "beam_domino": {
+    "ok": 0,
+    "review": 0,
+    "accepted": 25,
+    "problem": 0
+   },
+   "camera_orbit": {
+    "ok": 0,
+    "review": 0,
+    "accepted": 20,
+    "problem": 0
+   },
+   "camera_yaw": {
+    "ok": 26,
+    "review": 11,
+    "accepted": 5,
+    "problem": 3
+   },
+   "character": {
+    "ok": 1,
+    "review": 14,
+    "accepted": 9,
+    "problem": 0
+   },
+   "cue_ball": {
+    "ok": 3,
+    "review": 2,
+    "accepted": 20,
+    "problem": 0
+   },
+   "ego_vehicle": {
+    "ok": 0,
+    "review": 0,
+    "accepted": 0,
+    "problem": 28
+   },
+   "liquid_container": {
+    "ok": 0,
+    "review": 10,
+    "accepted": 0,
+    "problem": 15
+   }
+  },
+  "problems": {
+   "BeamDomino/causal_direct_strike": [
+    "vlm:prompt_match: The promised full, readable physics chain is not retained in view: the structure and dominoes leave the frame by about 4.5 seconds, and most of the reference shows only the blue ball",
+    "vlm:reference_reliable: At approximately 4.9 seconds the controlled ball exits the finite floor into the empty surrounding space, and the camera follows it there for the rest of the clip instead of re"
+   ],
+   "BeamDomino/causal_glancing": [
+    "vlm:prompt_match: The claimed full-chain visibility is clearly violated: the camera follows the ball away from the domino scene by about 4.5 seconds.",
+    "vlm:prompt_match: The promised spreading domino cascade is never clearly exhibited; only a local tipped domino is visible before the scene leaves the frame.",
+    "vlm:reference_reliable: Around 5.0–5.8 seconds the blue ball exits the finite floor into the gray void, and the follow camera tracks it outside the authored play area for the remainder of the referenc",
+    "vlm:dimension:physical_causality: There is limited evidence of direct ball-to-domino causality, but no readable multistep chain or spreading cascade. The structure remains standing while visible, and "
+   ],
+   "BilliardGame/scene_360_out": [
+    "vlm:prompt_match: The prompt describes the initial view as facing away from the target and anchors, but the conditioning frame directly shows the table and all three designated balls."
+   ],
+   "BilliardGame/scene_perturb_out": [
+    "vlm:prompt_match: The claimed initial outward-facing view away from the target and anchors is contradicted by the conditioning frame, which looks toward the billiard table and clearly shows all three "
+   ],
+   "MirrorRollingBall/lpips_collision": [
+    "vlm:prompt_match: The specified low, near-floor camera is clearly contradicted by the elevated, distant overview.",
+    "vlm:prompt_match: The specified center-foreground mirror ball is instead a tiny object within the middle of the distant grid."
+   ],
+   "MirrorRollingBall/scene_360_out": [
+    "vlm:prompt_match: The claimed initial outward-facing orientation away from target objects and anchors conflicts with the conditioning frame: the chrome target is centered and numerous yellow-sphere an"
+   ],
+   "MirrorRollingBall/scene_perturb_out": [
+    "vlm:prompt_match: The initial view is described as facing away from the target objects and anchors, but it visibly centers the chrome target and looks across numerous yellow-sphere anchors."
+   ],
+   "SunRisesAndSets/lighting": [
+    "vlm:prompt_match: The table is not continuously centred: it drifts conspicuously toward opposite sides of the frame during the orbit.",
+    "vlm:prompt_match: The lamp is near the tabletop perimeter, not in the centre as stated.",
+    "vlm:prompt_match: The reference lighting is visibly more elevated than the claimed low-horizon sun, producing compact rather than long grazing shadows.",
+    "vlm:prompt_match: The lamp and small tabletop objects cast their clearly distinguishable shadows mainly onto the tabletop, not as long shadows across the wooden floor."
+   ],
+   "synthetic/camera_yaw/RacingCar__prompt_first/s25_sweep_turn_look_back": [
+    "vlm:action_match: Although the relative rotation sequence and timing appear consistent with the numerical commands, the camera never achieves the requested final directly-behind view. It stops diagona",
+    "vlm:prompt_match: The claim that the final turn looks directly behind is clearly contradicted by the held forward-left highway view. It also conflicts internally with the specified sequence: right 135"
+   ],
+   "synthetic/camera_yaw/RacingCar__prompt_first/s34_look_back_sweep_turn": [
+    "vlm:action_match: The numeric yaw sequence, directions, and approximate timing are followed, but the explicit instruction that the second turn ends looking directly behind is not performed: the leftwa",
+    "vlm:prompt_match: The prompt says the second leftward 180-degree turn looks directly behind, whereas the reference clearly ends that turn facing forward down the highway. A rightward 180-degree turn f"
+   ],
+   "synthetic/camera_yaw/RacingCar__prompt_third/s17_turn_look_back": [
+    "vlm:prompt_match: The promised final 'look directly behind' orientation is clearly absent: the camera holds a side-on view of the car. The prompt's own numerical sequence yields a net 270-degree turn,"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s00_drive": [
+    "vlm:prompt_match: The claimed abrupt road start, with no ground behind it and only open sky, is clearly absent: continuous pavement extends behind the car through the foreground. Consequently, the car",
+    "vlm:prompt_match: Minor: the highway is not entirely empty initially, because a red cube is visible slightly ahead and to the right of the car."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s01_wait_drive": [
+    "vlm:prompt_match: The claimed abrupt road beginning with only open sky behind it is absent: the conditioning frame clearly shows pavement extending behind the car to the foreground.",
+    "vlm:prompt_match: The car is not positioned exactly at the claimed physical start of the road; the road visibly continues behind its initial position.",
+    "vlm:prompt_match: Minor: the highway is not completely empty, because a red cube is visible ahead and to the right of the car during the initial portion."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s02_wait_drive": [
+    "vlm:prompt_match: The claimed abrupt, suspended road beginning with only sky behind it is absent: continuous asphalt and lane markings extend behind the car through the foreground.",
+    "vlm:prompt_match: The car is not visibly positioned exactly at the beginning of the road as claimed; it sits on a continuous road segment.",
+    "vlm:prompt_match: Minor: the description of an empty highway overlooks the red cube initially positioned just ahead and to the car's right."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s03_wait_drive_lane": [
+    "vlm:prompt_match: The claimed abrupt road start with open sky and no ground behind the car is clearly contradicted by continuous foreground pavement; the described suspended-road appearance is absent.",
+    "vlm:prompt_match: Minor: the highway is not completely empty, since an unmentioned red cube is visible ahead and to the right of the car."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s04_drive_steer": [
+    "vlm:action_match: The straight-driving and sharp-right-turn phases occur in the requested order and at approximately the requested times, but the final coasting phase is cut short by contact with the ",
+    "vlm:prompt_match: The claimed abrupt, suspended road start with only sky behind it is absent: asphalt and lane markings visibly extend behind the car, so it is not shown parked at such a starting edge",
+    "vlm:prompt_match: Minor: the highway is not completely empty, since a red cube is visible above the roadway just ahead and to the right of the car.",
+    "vlm:prompt_match: The promised final coasting motion is replaced by a barrier stop around 6.2 seconds and a stationary ending.",
+    "vlm:reference_reliable: The commanded turn brings the car into the right roadside barrier around 6.2 seconds, leaving it stopped nose-first against the barrier for the rest of the clip and defeating t"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s05_drive_brake": [
+    "vlm:prompt_match: The claimed abrupt road start, with the car exactly at its edge and only open sky behind it, conflicts with the continuous pavement visibly extending behind the car.",
+    "vlm:prompt_match: Minor: the highway is not entirely empty initially, since an unmentioned red cube is visible above the roadway to the car's right and slightly ahead."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s06_drive_lane": [
+    "vlm:action_match: The right-steering phase becomes a cross-road turn toward the barrier rather than a completed right lane change.",
+    "vlm:action_match: The car stops near the barrier before the requested coasting phase and remains stationary for roughly the final five seconds.",
+    "vlm:prompt_match: The described abrupt road start with only sky behind it is absent: asphalt extends behind the car across the foreground, so the car is not at the described road edge.",
+    "vlm:prompt_match: The supposedly empty highway contains a red cube near the car's right side in the initial frames; this is a minor mismatch.",
+    "vlm:prompt_match: Instead of completing a right lane change over three seconds, the car turns almost perpendicular to the highway and stops facing the right barrier.",
+    "vlm:prompt_match: The claimed final coasting is not exhibited: the car remains stationary near the barrier from about 5 seconds onward.",
+    "vlm:reference_reliable: The replay ends in a stopped/stuck outcome near the right roadside barrier, with the car facing across the road and essentially no further motion from about 5 seconds to the en"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s07_drive_steer": [
+    "vlm:action_match: The straight-drive and sharp-right-turn phases occur in the requested order and approximately on time, but the final coasting phase is obstructed: the car reaches the right barrier a",
+    "vlm:prompt_match: The claimed abrupt road start with only sky behind the car is absent: continuous asphalt extends behind the car throughout the conditioning frame, contradicting its placement exactly",
+    "vlm:prompt_match: The supposedly empty highway contains a red cube beside the car; this is a minor scene-description mismatch.",
+    "vlm:prompt_match: Instead of coasting through the remainder of the clip, the car stops against the roadside barrier and stays there for approximately five seconds.",
+    "vlm:reference_reliable: The commanded turn takes the car into the roadside barrier, where it becomes stuck or blocked for approximately the final half of the clip. This prevents an unobstructed refere"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s08_wait_drive_brake": [
+    "vlm:prompt_match: The claimed abrupt road beginning with no ground behind it is clearly contradicted: asphalt extends behind the stationary car to the bottom of the conditioning frame.",
+    "vlm:prompt_match: The car is not visibly parked at a suspended road edge as described; the visible roadway and verges continue through the foreground.",
+    "vlm:prompt_match: Minor: the highway is not completely empty, because a red cube is visible to the car's right during the initial portion of the clip."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s09_wait_drive_lane": [
+    "vlm:action_match: The wait, straight acceleration, and onset of right steering follow the requested ordering and approximate timing, but the rightward maneuver ends at the roadside barrier with the ca",
+    "vlm:action_match: The commanded final coast is not visibly performed: the car and scenery remain stationary throughout the final second.",
+    "vlm:prompt_match: The claimed abrupt road beginning with only sky behind it is absent; asphalt visibly extends behind the car, contradicting both the suspended-road appearance and the claim that the c",
+    "vlm:prompt_match: The highway is not entirely empty: an unmentioned red cube appears ahead and to the right of the car. This is a minor discrepancy.",
+    "vlm:prompt_match: The described right lane change instead carries the car across several lanes to the right barrier, where it stops before 9 seconds.",
+    "vlm:prompt_match: The claimed final coast is contradicted by the stationary ending.",
+    "vlm:reference_reliable: After approaching the right barrier around 8.1 seconds, the car stops and remains stuck or stationary beside it through the end. The exact contact is not clearly resolved, but "
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s10_wait_drive_steer": [
+    "vlm:action_match: The wait, straight drive, and sharp left turn occur in the requested order and at approximately the requested times, but the final four-second coasting phase is cut short by a barrie",
+    "vlm:prompt_match: Major: Instead of coasting through the final interval, the car reaches the left barrier and remains stopped there for the remainder of the clip.",
+    "vlm:prompt_match: Minor: The highway is described as empty, but a red cube is visibly present ahead and to the right in the initial scene.",
+    "vlm:reference_reliable: The commanded left turn carries the car into the left roadside barrier around 6.3 seconds, where it remains stopped against the barrier through 9.97 seconds, truncating the int"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s11_drive_brake": [
+    "vlm:prompt_match: The claimed abrupt road start with open sky and no ground behind it is clearly absent: asphalt and lane markings continue behind the car throughout the foreground.",
+    "vlm:prompt_match: The car is not positioned at the described starting edge of the road.",
+    "vlm:prompt_match: Minor: the highway is not completely empty, since a bright red cube is visible above the roadway to the car's right."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s12_drive_lane": [
+    "gt:car_stuck: throttle on but speed < 0.3 m/s for 1.9 s",
+    "vlm:action_match: The commanded second left lane change at approximately 7–9 seconds has no visible effect.",
+    "vlm:action_match: The final commanded coasting is absent: the car and scenery appear stationary from approximately 7.4 seconds through the end.",
+    "vlm:prompt_match: The claimed abrupt road start with only sky behind the car is clearly contradicted by continuous foreground asphalt and lane markings; the car is not at the described road edge.",
+    "vlm:prompt_match: Minor: the highway is not entirely empty, since a red cube is present just ahead and to the right in the opening view.",
+    "vlm:prompt_match: The claimed moderate left lane change during approximately 7–9 seconds is never exhibited.",
+    "vlm:prompt_match: The claimed final coasting motion is never exhibited.",
+    "vlm:reference_reliable: The replay appears to stall or freeze near the left barrier from approximately 7.4 seconds onward: the car, lane markings, and scenery remain unchanged despite further steering"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s13_wait_drive_brake_lane": [
+    "vlm:action_match: The commanded left lane change at approximately 4–6 seconds is not performed: the car makes a small heading excursion and correction while remaining near the double center lines.",
+    "vlm:prompt_match: The claimed abrupt road beginning with only sky behind the car is clearly absent; continuous asphalt extends behind it through the foreground.",
+    "vlm:prompt_match: The described suspended-road appearance and parking position exactly at its beginning do not match the visible continuous roadway.",
+    "vlm:prompt_match: The promised sharp left lane change is replaced by a small heading excursion and correction without entering a left lane.",
+    "vlm:prompt_match: Minor: the highway is not completely empty, because a red cube is visible ahead and to the right of the car."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s14_drive_steer_lane": [
+    "gt:car_stuck: throttle on but speed < 0.3 m/s for 1.6 s",
+    "vlm:action_match: The sharp-left phase becomes a turn into the left roadside barrier, with the car stopped by approximately 4.4–4.8 seconds instead of completing a 3-second lane change.",
+    "vlm:action_match: The final commanded coasting phase has no visible motion; the car remains stationary at the barrier through the end.",
+    "vlm:prompt_match: The claimed abrupt road start with only sky behind the car is contradicted by continuous pavement in the foreground; a suspended road is never exhibited.",
+    "vlm:prompt_match: The car is not visibly positioned at a road start as described.",
+    "vlm:prompt_match: The otherwise empty highway contains a conspicuous red cube beside and slightly ahead of the car; this is a minor scene mismatch.",
+    "vlm:prompt_match: The stated sharp-left lane change instead ends with the car facing the left barrier and stopped.",
+    "vlm:prompt_match: The stated final coasting motion is never exhibited.",
+    "vlm:reference_reliable: The vehicle reaches the left barrier around 4.4–4.8 seconds and remains apparently stuck or blocked there for the remainder of the clip, preventing completion of the commanded "
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s15_wait_drive_brake_lane": [
+    "vlm:prompt_match: The claimed abrupt road start at the car, with only sky and no ground behind it, is clearly contradicted by continuous asphalt and lane markings behind the car in the conditioning fr",
+    "vlm:prompt_match: The described suspended-in-space road layout is never exhibited.",
+    "vlm:prompt_match: The car is not visibly parked exactly at the road's beginning: roadway extends behind its initial position.",
+    "vlm:prompt_match: Minor: the supposedly empty highway contains a conspicuous red cube just ahead and to the right of the car."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s16_wait_drive_lane_steer": [
+    "vlm:prompt_match: The claimed abrupt, suspended road beginning with only sky behind it is clearly absent: asphalt extends behind the car across the foreground, with grassy terrain and trees bordering ",
+    "vlm:prompt_match: The car is not visibly positioned at the described road beginning or start line; it starts on continuous roadway without a visible start marker.",
+    "vlm:prompt_match: Minor: the claimed empty highway contains a red cube just ahead and to the right of the car."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s17_drive_brake_lane": [
+    "vlm:action_match: The left steering produces a sustained turn across the roadway into the left barrier area, not a completed lane change aligned with the highway.",
+    "vlm:action_match: The final coasting phase is absent: the car remains stationary from approximately 7 seconds to the end.",
+    "vlm:prompt_match: The described abrupt road start with open sky behind it is absent; continuous asphalt extends behind the car in the conditioning frame, contradicting the suspended-road appearance an",
+    "vlm:prompt_match: Minor: the highway is not entirely empty, as a red cube is visible on the adjacent roadway to the car's right.",
+    "vlm:prompt_match: The commanded left lane change instead ends with the car angled toward the left barrier after crossing multiple lanes.",
+    "vlm:prompt_match: The claimed final coasting motion is contradicted by the stationary ending.",
+    "vlm:reference_reliable: The car reaches the left roadside barrier at an oblique heading and appears stuck there from roughly 7 seconds through the end, preventing the requested maneuver and coasting c",
+    "vlm:reference_reliable: Minor: the red cube visibly floats above the roadway without an apparent support."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s18_drive_lane_steer": [
+    "vlm:action_match: The straight, right-steering, and left-steering phases occur in the requested order and at approximately the requested times, but the final coasting phase is interrupted by the car r",
+    "vlm:prompt_match: The claimed abrupt road start with open sky behind the car is clearly absent: pavement extends behind the car throughout the conditioning frame.",
+    "vlm:prompt_match: The car is not positioned at the described physical beginning of the road.",
+    "vlm:prompt_match: Minor: the supposedly empty highway contains a visible red cube ahead and to the right of the car.",
+    "vlm:prompt_match: The described coast through the end is replaced by a stop at the left barrier at about 6 seconds, followed by roughly four stationary seconds.",
+    "vlm:reference_reliable: The sustained left turn takes the car across the roadway into the left roadside barrier, where it stops and remains pinned or stationary for approximately the final four second"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s19_wait_drive_brake_lane": [
+    "vlm:prompt_match: The claimed abrupt road start with only open sky behind it is clearly absent: continuous pavement and lane markings extend behind the stationary car to the bottom of the conditioning",
+    "vlm:prompt_match: The car is not visibly parked at a road-start edge, and no start line is shown.",
+    "vlm:prompt_match: Minor: the highway is not completely empty, because a red cube is visible ahead and to the right of the car."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s20_drive_brake_lane": [
+    "vlm:action_match: The requested right-lane change is not completed: after an initial rightward turn, the car countersteers left and subsequently crosses the center lines into the left-side lanes rathe",
+    "vlm:prompt_match: The claimed abrupt, suspended road start with only sky behind it is clearly absent: asphalt extends behind the car throughout the conditioning frame.",
+    "vlm:prompt_match: The car is not positioned at a visible road starting edge as claimed.",
+    "vlm:prompt_match: The reference does not complete the described right-lane change; the maneuver leaves the car heading left across the highway.",
+    "vlm:prompt_match: Minor: the highway is not entirely empty because a red cube is visible ahead and to the right."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s21_drive_lane_steer": [
+    "vlm:prompt_match: The claimed abrupt road start, open sky behind it and car parked exactly at that edge are clearly contradicted: pavement and lane markings extend behind the car throughout the condit",
+    "vlm:prompt_match: Minor: the highway is not literally empty ahead of the car, because a red cube is visible just ahead and to its right."
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s22_drive_lane_brake": [
+    "gt:car_stuck: throttle on but speed < 0.3 m/s for 2.0 s",
+    "vlm:action_match: The left maneuver becomes a sweep toward the roadside barrier and a stop by about 5.5 seconds, rather than a completed lane change.",
+    "vlm:action_match: The car is stationary before the 6–7 second braking interval, leaving no visible hard-braking response at the commanded time.",
+    "vlm:action_match: The commanded right lane change during 7–9 seconds never occurs, and no coasting motion appears afterward.",
+    "vlm:prompt_match: The described abrupt road start with only sky behind it is absent: pavement extends behind the car throughout the conditioning-frame foreground, contradicting the claimed starting-ed",
+    "vlm:prompt_match: The highway is not entirely empty: a red cube is visible just ahead and to the right of the car; this is a minor scene-description mismatch.",
+    "vlm:prompt_match: The left steering maneuver ends near the barrier without completing the described lane change.",
+    "vlm:prompt_match: Hard braking at 6–7 seconds is not visibly exhibited because the car has already stopped.",
+    "vlm:prompt_match: The right lane change at 7–9 seconds and final coasting motion are never exhibited.",
+    "vlm:reference_reliable: After approaching the left barrier, the car remains stuck or stationary from approximately 5.5 seconds to the end despite the subsequent commanded right lane change; the later "
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s23_wait_drive_steer_lane": [
+    "gt:car_stuck: throttle on but speed < 0.3 m/s for 3.8 s",
+    "vlm:action_match: The initial wait, straight drive, and first right turn occur in the requested order and approximate time windows, but the car reaches the right barrier around 6 seconds.",
+    "vlm:action_match: The commanded left lane change during 6–8 seconds and final right-steering maneuver during 8–10 seconds have no visible effect; the car remains stuck at the barrier.",
+    "vlm:prompt_match: The claimed abrupt road beginning with open sky behind the car is contradicted by continuous foreground pavement; the car is not parked at a visible road edge.",
+    "vlm:prompt_match: The supposedly empty highway includes a red cube above the roadway to the right of the car, a minor scene-content discrepancy.",
+    "vlm:prompt_match: The promised sharp left lane change is never exhibited: the car stops at the right barrier instead.",
+    "vlm:prompt_match: The promised final two-second right-steering maneuver is never exhibited: the car remains stationary.",
+    "vlm:reference_reliable: The car reaches the right barrier around 6 seconds and remains stuck there for roughly the last four seconds despite further steering and throttle commands. No clear wall penet"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s24_wait_drive_lane_steer": [
+    "vlm:action_match: The initial pause, straight drive, and successive rightward maneuvers are visible, but the car reaches the right barrier and stops by roughly 7.7 seconds, interrupting the commanded ",
+    "vlm:action_match: The final 8.5–10 second coasting segment has no visible motion.",
+    "vlm:prompt_match: The claimed abrupt road beginning with open sky and no ground behind the car is contradicted by continuous pavement behind it in the conditioning frame.",
+    "vlm:prompt_match: The car is not visibly at the road's beginning or a start line; it sits on continuous longitudinal road markings.",
+    "vlm:prompt_match: Minor: the supposedly empty highway contains an unmentioned red cube over the roadway near the car.",
+    "vlm:prompt_match: The sharp-right segment is interrupted by a stop at the roadside barrier before its stated duration is complete.",
+    "vlm:prompt_match: The claimed final coasting motion is never exhibited; the car remains stationary through the end.",
+    "vlm:reference_reliable: The vehicle reaches the right roadside barrier around 6.6–7 seconds and becomes stuck or stopped there by roughly 7.7 seconds, remaining effectively motionless for the rest of "
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s25_drive_lane_brake": [
+    "gt:car_stuck: throttle on but speed < 0.3 m/s for 2.0 s",
+    "vlm:action_match: The right maneuver becomes a turn across several lanes toward the barrier, not a completed right lane change.",
+    "vlm:action_match: Visible motion stops by approximately 4.8 seconds, leaving no distinct visible hard-braking phase during the commanded 5–7 second interval.",
+    "vlm:action_match: The commanded left lane change at 7–9 seconds never occurs, and there is no visible coasting at 9–10 seconds.",
+    "vlm:prompt_match: The claimed abrupt road start with only sky behind it is absent: continuous pavement is visible behind the car, contradicting its placement exactly at that edge.",
+    "vlm:prompt_match: The highway is not completely empty: an unmentioned red cube is visible to the right and slightly ahead of the car. This is a minor scene discrepancy.",
+    "vlm:prompt_match: The described right lane change instead ends with the car facing nearly across the highway near the right barrier.",
+    "vlm:prompt_match: The described left lane change and final coasting are never exhibited.",
+    "vlm:reference_reliable: The car becomes stationary near the right barrier while facing across the lanes by approximately 4.8 seconds and remains in an essentially unchanged scene for the rest of the c"
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s26_drive_brake_steer_lane": [
+    "gt:car_stuck: throttle on but speed < 0.3 m/s for 1.7 s",
+    "vlm:action_match: The commanded 7–9 second left lane change is not performed: the car reaches the left barrier around 7 seconds and remains stuck there.",
+    "vlm:action_match: The final coasting phase has no visible travel; the car remains stationary through the end.",
+    "vlm:prompt_match: The claimed abrupt road start with only sky behind it is clearly contradicted by continuous asphalt extending behind the car in the conditioning frame.",
+    "vlm:prompt_match: The car is not positioned at a visible road start, and the scene does not exhibit the described suspended-road appearance.",
+    "vlm:prompt_match: The claimed 7–9 second left lane change and final coasting are not exhibited; the car instead stops at the left barrier.",
+    "vlm:prompt_match: Minor: the description of an empty highway omits a conspicuous red cube above the roadway beside the car.",
+    "vlm:reference_reliable: The car drives into the left roadside barrier around 7 seconds and remains effectively stuck through the end, preventing the remaining commanded motion from being evaluated as "
+   ],
+   "synthetic/ego_vehicle/RacingCar__kinematics_third/s27_wait_drive_lane_steer": [
+    "gt:car_stuck: throttle on but speed < 0.3 m/s for 2.3 s",
+    "vlm:action_match: The second rightward maneuver carries the car to the roadside barrier, where it stops around 7.0–7.4 seconds instead of completing the described lane change.",
+    "vlm:action_match: The commanded sharp left turn at approximately 8–9.5 seconds produces no visible movement or rotation.",
+    "vlm:action_match: The final coasting phase is not exhibited; the car remains stopped at the barrier.",
+    "vlm:prompt_match: The claimed abrupt road beginning with only sky behind it is clearly absent: asphalt extends behind the car throughout the foreground.",
+    "vlm:prompt_match: The car is not visibly positioned at the beginning of the road or a start line.",
+    "vlm:prompt_match: Minor: the supposedly empty highway contains an unmentioned red cube above the roadway near the car.",
+    "vlm:prompt_match: The second right lane change instead ends with the car stopped facing the roadside barrier around 7 seconds.",
+    "vlm:prompt_match: The stated sharp left turn is never visibly exhibited.",
+    "vlm:prompt_match: The stated final coast is never visibly exhibited.",
+    "vlm:reference_reliable: The car reaches the right roadside barrier around 7 seconds and remains stuck or immobilized there through the end, including during the commanded powered left turn."
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s00_rest_shake": [
+    "vlm:action_match: Although the rest–motion–rest timing broadly matches, the motion is not translation-only: the bottle visibly develops a pitched, foreshortened pose during shaking and retains it duri",
+    "vlm:prompt_match: The explicit claim that the bottle never rotates is contradicted by the depthwise pitching visible during approximately 3–8 seconds and retained afterward.",
+    "vlm:prompt_match: The visible ground shadow is soft-edged rather than the distinctly hard contact shadow described; this is minor."
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s03_rest_jolt": [
+    "vlm:reference_reliable: The family specifies a fixed side camera, but around 1–1.5 seconds the floor moves substantially rightward while the bottle remains essentially centered. This is visible camera"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s05_rest_shake": [
+    "vlm:dimension:fluid_mechanics: The bottle and liquid are visible, but the shake interval does not show clearly resolved alternating liquid sloshing. The dominant liquid response is a pale surface that"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s08_rest_chirp_jolt": [
+    "vlm:reference_reliable: The reference does not maintain the family's specified fixed side camera. During shaking, the checkerboard flows and changes perspective while the bottle stays almost locked in"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s11_rest_jolt_chirp": [
+    "vlm:action_match: The bottle rotates markedly around 10–11 seconds despite the explicit translation-only constraint.",
+    "vlm:action_match: The prescribed 8-second accelerating shake is not sustained: the bottle and floor appear essentially stationary from about 11.8 seconds through the remainder of the intended shaking ",
+    "vlm:action_match: The initial jolt is visible only through relative floor motion and liquid response; its forward-right direction cannot be confirmed from these frames.",
+    "vlm:prompt_match: The explicit claim that the bottle never rotates is contradicted by its pronounced diagonal orientation after approximately 10–11 seconds.",
+    "vlm:prompt_match: The described accelerating left-right shake lasting 8 seconds is replaced by an apparently fixed tilted pose partway through that interval.",
+    "vlm:prompt_match: The final unsupported, elevated bottle pose contradicts the stated normal downward gravity during rest.",
+    "vlm:prompt_match: Minor: the initial shadow is soft-edged and extends leftward rather than being a hard shadow directly beneath the bottle.",
+    "vlm:reference_reliable: After tipping, the bottle remains diagonally suspended with its base visibly above the floor through the final rest interval, without support or a gravity-driven fall."
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s12_rest_chirp_shake": [
+    "vlm:action_match: The reference does not preserve the required translation-only, nonrotating bottle pose: by about 2.2 seconds the neck is visibly foreshortened and the cap has dropped relative to the",
+    "vlm:action_match: The floor moves beneath a nearly screen-centered bottle while the distant background remains stable, indicating apparent camera tracking rather than the family's specified fixed side",
+    "vlm:prompt_match: The explicit statement that the bottle never rotates is contradicted by the substantial apparent depth-wise pitch developing around 2.2 seconds and persisting through the later frame",
+    "vlm:prompt_match: Minor: the visible ground shadow is soft and extends leftward, rather than being a distinctly hard contact shadow directly beneath the bottle.",
+    "vlm:reference_reliable: The bottle acquires a persistent apparent pitched pose despite the family's nonrotating translation constraint.",
+    "vlm:reference_reliable: The apparent tracking of the bottle, evidenced by moving floor markers and nearly fixed bottle framing, violates the stated fixed-camera setup."
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s13_rest_slide_shake": [
+    "vlm:reference_reliable: The reference violates the family's fixed-side-camera setup: the bottle remains locked at essentially identical screen coordinates and scale while the checkerboard moves during"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s15_rest_shake_slide": [
+    "vlm:action_match: The replay introduces clear bottle rotation despite the explicit translation-only constraint: a slight lean develops during shaking and a much larger lean appears around 11–12 second",
+    "vlm:action_match: The checkerboard moves while the bottle remains nearly screen-centered, indicating camera tracking rather than the family's specified fixed-camera replay. This obscures the commanded",
+    "vlm:prompt_match: The claim that the bottle never rotates is clearly contradicted by its changing inclination and sustained leftward tilt.",
+    "vlm:prompt_match: Minor: the visible floor shadow is soft and extends leftward, rather than matching the described hard shadow directly beneath the object.",
+    "vlm:reference_reliable: The translation-only reference develops substantial uncommanded rotation and remains tilted during the final rest.",
+    "vlm:reference_reliable: During the long final rest, the liquid surface remains visibly oblique with the tilted bottle rather than settling to a horizontal free surface, making the equilibrium fluid be"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s16_rest_jolt_chirp": [
+    "vlm:reference_reliable: The reference is inconsistent with the family's fixed side camera: during both the jolt and shaking, the bottle's cap, sides, and base remain essentially fixed in screen positi"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s17_rest_chirp_slide": [
+    "vlm:action_match: The broad rest–shake–rest–slide–rest timing is present, but the bottle does not visibly retain its original upright rigid configuration during the translation-only sequence: its neck",
+    "vlm:prompt_match: The red cap shown initially is no longer clearly rendered in its original configuration from approximately 2.2 seconds onward.",
+    "vlm:prompt_match: The bottle's substantial change in visible neck/top height relative to its nearly unchanged base contradicts the requirement that it remain rigid and upright without rotation.",
+    "vlm:reference_reliable: The red-capped long-neck silhouette changes substantially around 2.2 seconds and does not clearly return to its initial configuration; the frames do not establish whether this ",
+    "vlm:reference_reliable: The checkerboard moves while the bottle remains nearly fixed in screen position and size, indicating apparent tracking or ground-plane movement rather than the family's specifi"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s18_rest_shake_chirp_slide": [
+    "vlm:reference_reliable: The reference does not follow the family's fixed-side-camera setup: the bottle remains at essentially identical screen coordinates and scale while the marked floor shifts benea"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s19_rest_shake_jolt": [
+    "vlm:action_match: The translation-only constraint is clearly violated: the bottle changes from upright to a persistent leftward lean by approximately 2.94 seconds.",
+    "vlm:action_match: The sampled frames show motion during the expected phases, but are too sparse to validate the commanded shake frequencies and exact directions.",
+    "vlm:prompt_match: The explicit statement that the bottle never rotates is contradicted by its visible change from vertical to left-leaning during the first shake interval."
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s20_rest_slide_chirp_jolt": [
+    "vlm:prompt_match: The bottle pitches in depth during the initial slide, visibly shortening its projected upper silhouette and changing the cap's orientation, contradicting the explicit requirement tha",
+    "vlm:prompt_match: Minor: the visible ground shadow is softer and more laterally extended than the claimed hard shadow directly beneath the bottle.",
+    "vlm:reference_reliable: The reference does not maintain the family's translation-only bottle constraint: the bottle visibly pitches during the forward slide.",
+    "vlm:reference_reliable: The floor moves beneath a nearly screen-centered bottle, indicating following-camera behavior rather than the fixed side camera specified in the family notes."
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s23_rest_chirp_shake_jolt": [
+    "vlm:reference_reliable: The reference does not exhibit the family's specified fixed side camera: during the shake and jolt intervals, the checkerboard moves substantially while the bottle remains almo"
+   ],
+   "synthetic/liquid_container/LiquidContainer__fluid_rest/s24_rest_chirp_slide": [
+    "vlm:reference_reliable: The reference does not use the family's specified fixed side camera: the bottle remains locked at the same screen position while the checkerboard translates beneath it during b"
+   ]
+  }
+ }
+}

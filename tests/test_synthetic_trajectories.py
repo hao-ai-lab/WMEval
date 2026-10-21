@@ -100,16 +100,45 @@ def test_descriptions_match_actions_and_are_diverse() -> None:
         fam = families[r["family"]]
         # text first: the prompt ends with the action description, which parses back into the steps
         assert r["prompt"].endswith("\n\n" + r["action_description"])
-        assert gen.parse_description(fam["grammar"], r["action_description"], fam["duration"]) == r["action_steps"]
+        grammar = gen.grammar_for(fam, r["conditioning_case"])
+        assert gen.parse_description(grammar, r["action_description"], fam["duration"]) == r["action_steps"]
         for old, _ in gen.SCENE_EDITS.get(r["conditioning_case"], []):
             assert old not in r["prompt"], f"{r['synthetic_id']} still describes the core case's action"
     for name, fam in families.items():
-        plans = [r["action_steps"] for r in rows if r["family"] == name]
-        signals = np.stack([gen.control_signal(fam, plan) for plan in plans]).astype(float)
+        plans = [(r["action_steps"], r["conditioning_case"]) for r in rows if r["family"] == name]
+        signals = np.stack([gen.control_signal(fam, plan, case) for plan, case in plans]).astype(float)
         assert len({s.tobytes() for s in signals}) == len(plans), f"{name}: duplicate action sequences"
-        dist = np.sqrt(((signals[:, None] - signals[None]) ** 2).mean(-1)) / np.sqrt((signals ** 2).mean())
+        if fam.get("signal_hold_sec"):
+            # impulse families (one-step strikes): relative to the pair's own energy, since a
+            # single strike's held signal is small against the family RMS
+            energy = (signals ** 2).mean(-1)
+            dist = np.sqrt(((signals[:, None] - signals[None]) ** 2).mean(-1) / ((energy[:, None] + energy[None]) / 2))
+        else:
+            dist = np.sqrt(((signals[:, None] - signals[None]) ** 2).mean(-1)) / np.sqrt((signals ** 2).mean())
         np.fill_diagonal(dist, np.inf)
         assert dist.min() > 0.25, f"{name}: two action sequences are near-duplicates ({dist.min():.2f})"
+
+
+def test_ball_force_directions_are_named_from_the_camera() -> None:
+    # Same controls, camera-relative words: BallRoller's camera looks along world +X, so a
+    # world +Z push ("vertical" > 0) moves the ball screen-left.
+    fam = next(f for f in gen.families() if f["family"] == "ball_force")
+    world = [{"kind": "push", "dir": "forward", "strength": "full", "sec": 1.0}]
+    shown = gen.shown_plan(fam, "BallRoller/ctrl", world)
+    assert shown[0]["dir"] == "left"
+    g = gen.grammar_for(fam, "BallRoller/ctrl")
+    assert g.compile(shown) == fam["grammar"].compile(world)
+    assert g.describe(shown, 6.0).startswith("As seen from the camera, the ball is pushed left")
+
+
+def test_screening_swaps_only_rejected_plans() -> None:
+    fam = next(f for f in gen.families() if f["family"] == "cue_ball")
+    index = [f["family"] for f in gen.families()].index("cue_ball")
+    base = gen.select_plans(fam, index)
+    swapped = gen.select_plans(fam, index, [{"plan": base[3]}, {"plan": base[7]}])
+    assert len(swapped) == len(base)
+    assert [k for k, (a, b) in enumerate(zip(base, swapped)) if a != b] == [3, 7]
+    assert base[3] not in swapped and base[7] not in swapped
 
 
 def test_parse_rejects_text_that_does_not_match_the_steps() -> None:
