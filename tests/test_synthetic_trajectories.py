@@ -148,3 +148,16 @@ def test_dataset_revision_is_pinned() -> None:
 
     rev = pinned_revision()
     assert rev is not None and len(rev) == 40 and all(c in "0123456789abcdef" for c in rev)
+
+
+def test_index_metadata_when_run_as_a_script() -> None:
+    # `python tools/sync_lite_data.py upload` has tools/ (not the repo root) on sys.path;
+    # the index must still resolve evaluation.* metadata such as action_target.
+    import subprocess
+    import sys
+
+    code = ("import sys; sys.path.insert(0, sys.argv[1]); import sync_lite_data as s; "
+            "print(sum(r['action_target'] is not None for r in s.build_index()))")
+    out = subprocess.run([sys.executable, "-I", "-c", code, str(ROOT / "tools")],
+                         capture_output=True, text=True, check=True).stdout.strip()
+    assert int(out) > 0

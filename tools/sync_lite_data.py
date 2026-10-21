@@ -24,6 +24,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:  # run as a script: the index metadata imports evaluation.*
+    sys.path.insert(0, str(ROOT))
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 DEFAULT_REPO = "lmgame/WMEval-Lite"
 CHECKSUMS = "checksums.sha256"
