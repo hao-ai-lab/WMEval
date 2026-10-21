@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "unity_repo": "kunqianut/WorldModelBenchScenePrivate",
-  "unity_repo_rev": "61492bc+wt",
+  "unity_repo_rev": "66dfb28+wt",
   "weak_first_frame_threshold_db": 20.0,
   "count": 220,
   "references": {
     "synthetic/ball_force/BallRoller__ctrl/s00_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "c3e5c775dfb1eba174abc8b31251e3972b54066c689d3f8e798dd174d2da0f90",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "ca0d89cbad6910c350363fd8fb6b033fe3f734a44037917a1663df5c3f6a8d18",
@@ -38,6 +39,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s02_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "80da4f3b59bce1ac5fef85f99df0b7ba37e237c26c3c08b4095e499b8f13d058",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "cf72644b35f974275602cd76d38973ebf5f04f12de1b56b988ad979c692c1059",
@@ -68,6 +70,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s04_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "8b9b6eb04a78f5f898a92efa54c90e84b83fe0688dc8bc58b4ae2fb7807db6e5",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "764bef912e9355fd24661df67f31ae0c87a19c784308bfab18157da803ca498f",
@@ -98,6 +101,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s06_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "3c48da13f8fb0b0467705c44b495edd2aee21eed690a93806e8becef2344400d",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "3ac7d5ec10aa7e03e7babaa1cac0617af6254c7b7baaa2720d0353c090bc2565",
@@ -128,6 +132,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s08_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "0303c9dd0ed812a16610134de9128a51edf3fd7913f65101bb5617cf76f1ae3e",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "fbdfd10cb7862ad8e2c51dff8b7de9e446db40c897a840aec1b496d761022761",
@@ -158,6 +163,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s10_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "d7fc573c78a083d8bd376db8a0605fb4cf49c70eacc4bda8761d21ab46e07a6e",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "942135f476aff0d80e4b4de260db20b05c953b7891d735b6ef6b3446a0bedbb9",
@@ -188,6 +194,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s12_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "afa12746bcabf4536052fc895023ea9faca1722845f389cd7825c00016d2918e",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "abd0f3680c3b0aa14b4e7f23f6a21f8f1d08ddb08bf2ee3dafa93ac290293dcd",
@@ -218,6 +225,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s14_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "82f542a0dca24c6c37bd264713bfe2ac6aa5d82ed31e21ecfdca0dfec25b13f7",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "4585df0b8e6f2f53648871ab034b560b0ca9fab2b52a79de246149b3497d7437",
@@ -248,6 +256,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s16_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "fa69be77fa1428415bd5f98c3a04004db0338f3af131909698f70366dd49095e",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "cd9cba203b0230d3e5d2e911977d259fed355a3923ebca1608a763c51eee9676",
@@ -278,6 +287,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s18_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "aaaf4b65b87f8181ac3a9a73a1e8cf4f9d49474b1873afbd740943a74a115c32",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "8a7b1de7d32450002007890354d394181faf9dc88dfdeef8ec626a2888a97643",
@@ -308,6 +318,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s20_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "8d2e56cf533a491dddbac5b92a77bdf4511ad5eb9a83146235fdb12b006fe3e6",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "1d2917e5402a77929b62406c6f995419e0976a1783a0cb436670e49d0ae1e57c",
@@ -338,6 +349,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s22_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "e61c0e07b526a3b16468a495fe8c8d6428397fc907cba75b8c50db20b2b5d542",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "7e86d86a56956009df86b9019fc73daa67db1d7fecc44cca46935861c07f1278",
@@ -368,6 +380,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s24_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "c7d466580bcbebc5b7232a3f59beedfcb45bf01a50d3bf67e48bebd9eef5f2e1",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "38313bbc46aaec5e82057d8d117900a82c2bc9278ae14adb6d6f3037ba24f6c8",
@@ -398,6 +411,7 @@
     "synthetic/ball_force/BallRoller__ctrl/s26_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "2d91d198533551a1dd6d54e901730c2a0b892ad2ef23f548b5df6996cd9f45ea",
         "reference/artifacts/intrinsics.npy": "57325ea5a06e16efe36308beb997b23eae12214f6f2b7f0d4ca04580b2bdc6cd",
         "reference/artifacts/object_masses.json": "b4651f4909faf6795a6eff8a880c05775aed0b1c96bca360cf59345ddd6fa778",
         "reference/artifacts/object_transforms.json": "ab345ce64b204a7f899c8083bd415dd6757c2d735539df0a4cced0a797c76d13",
@@ -428,6 +442,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s01_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "0053c80a3a8cf8d52fb3f89de60816c8a3a940b30b84019dfac3f7e2302607f2",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "f24e843c8f6f0cb5a83dbad1c80a75b58bfc8b78948171c07dab1d9eb0817607",
@@ -458,6 +473,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s03_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "3f6b8931cbbcab6ed7f570db76125d834417c842f5541f8af7deee6fc6aa775d",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "35732f9a912e6f49000d273e426dbd785b8cf8e1ca106e76fe01b03371e0b6b8",
@@ -488,6 +504,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s05_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "d791d39ff082c05f794357a63c7b1c94071100416c22603e0a0f420c8593a1cd",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "93a1dedfbc69b6f0d82acb6f603c2893c30c820f93a9ca24b122ecc4953fd16a",
@@ -518,6 +535,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s07_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "482164f2f8be364ad36625265121fe32aeaa6cefc1c00be90c4c285ac8e16e14",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "ef5905257000e84000c5323f4e0114636823bdfd1ab5cb8fb6d2570ad51bf6f4",
@@ -548,6 +566,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s09_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "22e609f93568d8c64ea4f373cd4f5b60958351409aabd950abae720b60c5f61f",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "166398a27a273c85787c92585686cd1ea86723cb8ced8a136af89c7229eb6e7c",
@@ -578,6 +597,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s11_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "7dec540e7aedb5957beb787b788f3be53bc7b402bcc8000f61cfcfacab9f7371",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "d2b258453c7b2f87edd8c5fd0c5bb67a1c817fd3e592207806c13a82d71cad22",
@@ -608,6 +628,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s13_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "60960034ace7b08539ab935a5dfa605778bf476337ed794ffb0422cdec7c92b8",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "74822883ed23ed4e602c094b52d356d1efd02387cff95a86e183ec048a92dc1a",
@@ -638,6 +659,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s15_roll_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "19a198850bac4ef04847fd1d0b466dbace8e25db5d97931fed60f17fe918fb18",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "e122127f7263c867d4ea1517dc03e0291234cdd594f66f7130694813811fbbd7",
@@ -668,6 +690,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s17_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "ff9eec26391005c42ec06f59edf3fc972e64b4eb22d2bc534e9511bf0f21286e",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "570ebf5eea033d4ccba7bd0e302089ed1edbf01c2bcf381d904433345617ddde",
@@ -698,6 +721,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s19_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "f5b6f7b00fa04d3dc39186397b39a40062777dce4dd3cf00b361e23ea7aec8ad",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "8bc288baf40f1011478fd3da6fadb8d64b9d8196a144973a83b0639b45341773",
@@ -728,6 +752,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s21_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "c29cdb75fc7d9ff7a417f6495684cc09d4c1d6266dc64900903796d7b5165468",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "4409b9ffcdb5877716f5daed3d78391d8ff8f4e7f9b2b01bf0f11e5c310550e9",
@@ -758,6 +783,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s23_push": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "3580f862b841aa0ebd6aaeafd1d23cbebf438244a1bb04f09fc63da75829fe2f",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "69b758d8afe8ca7339fd7aa49620038b7e094c864ed6caf1c9d810cb0caf8c31",
@@ -788,6 +814,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s25_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "0cf14f5e9fa601556f4889fad62439bf32ae7b47e3e1e60290ed613c47d46430",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "faf6c15c9d6997a1d72fdd5ee38e7dfff6b2e565920b252200351637d477c608",
@@ -818,6 +845,7 @@
     "synthetic/ball_force/MirrorRollingBall__lpips_collision/s27_push_roll": {
       "video": "reference/reference.mp4",
       "files": {
+        "reference/artifacts/contact_events.json": "bea3ff9fee95508f4261a10f5bc4d42acaa7cd9fc758b0befac65daaada15601",
         "reference/artifacts/intrinsics.npy": "ac4d7f0ab3a85b08961dd5db410c89fcf5224c14dbdb27e4813f7aa7f59c3e4c",
         "reference/artifacts/object_masses.json": "afa9d6cd1d96e896360dca5698535a9fefc6a0cb6e58b85e78ebf9859de0f51b",
         "reference/artifacts/object_transforms.json": "29d213755d1f0a370ea2a36da19e7965789e858515bef153f740a5038eb50ea4",
@@ -849,10 +877,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "8a1d33c27cc8f9d4524556e37022ac28e99fb8ab4ae09e30743101f820101d9a",
+        "reference/artifacts/contact_events.json": "abafb87e76acc4a00b2f77f05aa92854bc0ff85a8fbcf5c76d1c16e8d7958193",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "56b5f3e0a1aa50b8e0bfb24937f6b0e501e35879af03b9176d5201a4add39bf8",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "30401aeba81d14a51eb7fdd34acdd655375937b1d05e0555256343e0985d7c5d",
         "reference/artifacts/poses.npy": "33342c74f357461ce51c42bceb944a818a5d6916177f1f1c132ce42deb6453b7",
+        "reference/artifacts/qa_dataset.json": "529310b63bc4d77c1faa808d555b25be3811410000bdc3979f11d7364b0ba28a",
         "reference/artifacts/unity_gt.json": "cbef3c96005ef86f60cbadfc1f1d6e086954087da89898c12066737c78d89f5e",
         "reference/capture.json": "878997f5f42c19ca20a24a166b449f48ab18902a969db71ac07cc78651014a77",
         "reference/ref.png": "bd912ce6f8ede5b3d83360ee279b01dc1a11761b2fabdb6f921fde1e6a9bf40e",
@@ -880,10 +911,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "0695a071490b5a2d1d6a417cb024f7580d764e262e9fd2487c375c4e0f438ef2",
+        "reference/artifacts/contact_events.json": "89b137dc644cf4735bac990fc4140f9da6d3e7d5a4890d1743f6e329b0e09ba8",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "a81d336f60d07819c0ede6430e671ee2e05abd7c2d07d73a4e4c789a224642b7",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "bae15a78876059257cfa984549d60fa0cf347b424ea952278f903810cb017989",
         "reference/artifacts/poses.npy": "a5013bbb40806da35ec5dcaf84e93abb88527b8795bb89ae6a47618047062a8a",
+        "reference/artifacts/qa_dataset.json": "696126fe95869830072173e4582c09db85c9a3949468862c982b3bb628b3a89c",
         "reference/artifacts/unity_gt.json": "5891efe7cd838eae3969ee187cc75682e87e6973f98296b49a01d9f005c98a1e",
         "reference/capture.json": "89a417f42df081953eeadca37947f9d94520057a6987287057129f39809020a3",
         "reference/ref.png": "61b9ed71c09c3e8217f96b7805fd914b929324ef9fcde69a74997dc58d4efab8",
@@ -911,10 +945,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "62be44a94d7b2311a5a6c28aabbbaec603d72e7a24478bf97fb9c21e8faa28f6",
+        "reference/artifacts/contact_events.json": "93624b6f08d298d1ed3c23728dc2b1451260f3ab82e87274130aa21aefd31b0e",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "ea03422eef010c7cf743871e877a17aa2dbd8d9da409df8527f0f76ec3d7d6fb",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "de7b9f4fd63b3e7677b9f027d1bc1e606e36517f29c088135114b3ed9caeff4d",
         "reference/artifacts/poses.npy": "90adb08b66c5c855a869008bd60fc2e70b500fb282c695258483701d2ae995b1",
+        "reference/artifacts/qa_dataset.json": "7133597c012b80d1e37a9625e16befc0d61e217a7e8030e981c47d7cb1520ecb",
         "reference/artifacts/unity_gt.json": "25d197447a5f4719895622267dbe077fa981423b684ec874add1ef6b138acb4c",
         "reference/capture.json": "ce3260154d5fe76b25b271012b7644f75933ada4fe4acdf7c51e06fe884d0470",
         "reference/ref.png": "1dc9c9ce0782432302352b1a602eb6316416063277744c7a76bc7576d555ba2f",
@@ -942,10 +979,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "3aa9911e3a475e119ef4c49e08bac08e187a623f2c199db77923d9af799e589d",
+        "reference/artifacts/contact_events.json": "d9c3ea9da4e0fafa9027ff5e1a48c144f9c3907cfd242e18c571fe240fb5c998",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "14fb4b05545d4628172c6906cb49d901827dd6b1e4e68b313516d18b4670f5d1",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "f041bfc5b203d9900dd7b4979abd57fae22d600c41da513348f3c6b0bd09746c",
         "reference/artifacts/poses.npy": "0047610956887fd36feac816bd67dbd3fb6afccf1960431972d47f63be715df1",
+        "reference/artifacts/qa_dataset.json": "99eaef619440b96c938939f68262c6b7e4ece4c2fa53cb70ea86d832f25c5557",
         "reference/artifacts/unity_gt.json": "3ea12480f0382659f500301a9cc0fcff25a3eec88f236f3c95bf9a63f322fd82",
         "reference/capture.json": "8a63dd5f3ba2be1fd664c6c45bcd059f088c2efd22f471569a08c4bb6ed546dd",
         "reference/ref.png": "e00e9d9b3d26e4a08211ea62ae0f9cabf7a0bdfd60a4974a768753e12651c331",
@@ -973,10 +1013,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "63a3da7cfd672c5bebb1f5d16d2c400d506aa13064be32341d4a8b62e4b65afd",
+        "reference/artifacts/contact_events.json": "03e811cd986c6411d2c216c4adfe8bf345a31aebb9d68a862de7446d7d6a6683",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "d8733c15a178b04419997d744554ed58efef0c6c554d84d38dcd69e5ebce8a3e",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "2af3f69bf9bb6687dacbc7a1394409f65346be1987ee22545c20b0635019c484",
         "reference/artifacts/poses.npy": "9eb2cbfbbb6558f89bddfe14c4ef89b0b46dcb0a4df37701c4a7aac843573199",
+        "reference/artifacts/qa_dataset.json": "1c3b4690c54cbfee453dd4fdb39b9c6a2e735adbb308dc2f3c0476af697a831d",
         "reference/artifacts/unity_gt.json": "c692c35d42364c4844bd525200361343520aa850a3b7447aed1262b9a52947e6",
         "reference/capture.json": "a781fac3a3fc9150a89c9a187476534b843fcabd4e896dcf20cbef659d4f799c",
         "reference/ref.png": "2f67c24c3c28f4084875a1266b223591cf1f682aec368c77bfb31ca3e28db434",
@@ -1004,10 +1047,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "959ea7402a7ccd498a6a42a4df28d3c380beab359af90f19a83c45bc3df65f64",
+        "reference/artifacts/contact_events.json": "1042b24094e94f19bc4ecf596b819e5214425e5a9dc009f487baab4c3a230a8b",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "ed412ceb962607ca4b47bfec5d2c977d35a8b476d945b075af640c109404bea4",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "1d44dee93828a8b463bca3d7d7d0c45bebda1ec9e79f2a21f4d5b47da5f251f2",
         "reference/artifacts/poses.npy": "3287cd7e24ca17cd885b5bb7cb4764b45d1fe98b3e76e78193129e9207506d0d",
+        "reference/artifacts/qa_dataset.json": "c3e36b45f04ef6dd0c9d501a36daa53fee274f3b65a4a358518cddd3c10ffd81",
         "reference/artifacts/unity_gt.json": "25d10efc8725cf4a1ef1dfd4fca6b93e17ce1a33e7718d721f9c8ae2d4a4bd7c",
         "reference/capture.json": "8220a31c07c4ecbe606d7d20b113e2b9ac5d1f962a6f12b07ba18dfe156589b8",
         "reference/ref.png": "ce50a7fabde83538ec90d306fbf1fd236a7aecc9ec46a7203365967d0c65da40",
@@ -1035,10 +1081,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "71b6baf8549a96d7c99f127b1efce5f415ff50e3a324cca382cc5f7267cd68ac",
+        "reference/artifacts/contact_events.json": "55dee39ef285fa810565ab04f62ea4da4baf37685a76b5b59ac91a54f6586c8a",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "3a4afd59e5b8518baebeb0ad0aba624ac6be62e063b588b1133ef2bdad8cb66f",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "05d5a99fc3aadc52d331a5b35064039aa06ea6dad2cd09f5f4597a8fd1cc6c6c",
         "reference/artifacts/poses.npy": "7174388719653209258ad925225c22209d28f1852df3cfbfa413cc6245f5c93e",
+        "reference/artifacts/qa_dataset.json": "ee683839df0bdf4f87718ffd22a10b0587d175ae8480492c31e581b52ed4b1a8",
         "reference/artifacts/unity_gt.json": "3af9dee375d8d54445bffdc21b53106f720439917191bbcd3f9f57dc07ddbd85",
         "reference/capture.json": "7e1ad6d619f938d0f9b4c335efe41477f2aa45bd050ac9df66414f0daf43ef32",
         "reference/ref.png": "a9bc9ba752c6c7cee5a2e45eb4c791befad63c0a9fd80e5129f5073d710c265e",
@@ -1066,6 +1115,7 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "67bc313cc494a44ecb9dfbfc292be67d0107bad56e48772c4a81d5d5434ff478",
+        "reference/artifacts/contact_events.json": "81f02859f4219e438b75c1a9548fed2d32c445019b2f958300d394070252d8ad",
         "reference/artifacts/dimension_applicability.json": "923da478e3600a0ebb702f86c7ca7d5cf4bef3a590735c760a1a589a47e513d8",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
@@ -1098,10 +1148,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "4fce92dd9787f063bbee411378c15fc05402ee135bb6a3223ad9974a455c5b86",
+        "reference/artifacts/contact_events.json": "7439eb08a7891ecdb093beb35dbc724e2b363bf5bde074c0dd2f35d038190afd",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "836a68a766424139f9d4677be391371eb339c2a964f6c01a08d0b2ba6cd63ad5",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "4b3872e821a67c57ae5d21b3024dff2480a3415ec4def172e1682848d51e0bf4",
         "reference/artifacts/poses.npy": "fb67980e258e03bab67b402b14e45b454c8ab53c1d5c5ac29b561f7cdd927586",
+        "reference/artifacts/qa_dataset.json": "de488c94193d7acbc49acef62e287edd04e67284c836fead058184fa607f8074",
         "reference/artifacts/unity_gt.json": "6b51df9bbe195d6d190065956256ea826c1c4c975a5b26d11ac1e09d26f011b4",
         "reference/capture.json": "29bfe186302840fa3b6d47673ef5f74feb174bc2c57c4f4b773ddef48fd520b1",
         "reference/ref.png": "169186a9687a97a6c03d9815198268cbf3c284e8456c10f1309582d5252cb8c8",
@@ -1129,10 +1182,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "c4754732aaf49d94ac69cd410c0567530cd46727518e68d5fd96d5313cd3e85f",
+        "reference/artifacts/contact_events.json": "f63083bf47aa656f27de22999bc870406acd6a3a03819d2cd9e6febb19aed586",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "b4e4e169ae95117294a1a5a27ae1ed879d66bd9008a3df863be2f1a99bcdd734",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "f301a14198ecfaf496058b2fc08b57e5a46fdf794dc11af9510b45215be4255d",
         "reference/artifacts/poses.npy": "6da7aa126bd3d97414c0d9262a233c838f5d4b366b9efebc21d9284e5480c3f3",
+        "reference/artifacts/qa_dataset.json": "af361e737c4f75a0723d53d98894340b1876417198e696098e3fed62f5dd09e5",
         "reference/artifacts/unity_gt.json": "32a4bcc616530f60377b0909d837b97650ed88990c7b7b07282bdb915cdde6c2",
         "reference/capture.json": "38f71cfc5b249b2582a9137ba47cf1437a7ad6cdc48b2a942728d3cc1856352c",
         "reference/ref.png": "7f2468625bf2237ee3b932c80a2b7b91947824fe8857329e1ad829bcb071cdfc",
@@ -1160,6 +1216,7 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "83e1d202651a1b1a404f4de8ae9bbb0f783dfbd21d40958f0297294c1a8ce368",
+        "reference/artifacts/contact_events.json": "62b822a6b84c0f5d431fec0455810973e502a6267598b4fd7a8c0b5fc22d5c6f",
         "reference/artifacts/dimension_applicability.json": "923da478e3600a0ebb702f86c7ca7d5cf4bef3a590735c760a1a589a47e513d8",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
@@ -1192,10 +1249,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "38791e600cfe0fd0ddffb9f5f8553356f934f8eee4a28937515380c32994c7ba",
+        "reference/artifacts/contact_events.json": "2db8d41fa1610627bfb8bffa5c354eb85dca5bd9c16714e5b965129e03e846e1",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "5a0e67d86ff0b5c73e8137e828c4c3f5e64b78e2a8ff87ee8c89c3cc9a419854",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "faa5baa684c6cab2cec536670b8734d40f67483d7b15a4e70d4bfe378cacdc70",
         "reference/artifacts/poses.npy": "289dfc95fb8ce94943ee228c91b28ef6728665fe46e6db5df3e1143817ab2b8a",
+        "reference/artifacts/qa_dataset.json": "a19a66fdab169ad73189331c7161c9c6c24b37682e2b3896e742c1747683c436",
         "reference/artifacts/unity_gt.json": "1aaf4499b4c6ee56299f035187dfe3b5e92ccf9dc575d1dcf302ead01aaec5e4",
         "reference/capture.json": "5b28ebc25be1f543615fbd200c606b5e23626862a11a950d111e3ccb9d3bdf6d",
         "reference/ref.png": "620c279f92c248151412533d9f9ce49c56e5a21ac141a37aa44c77458c997819",
@@ -1223,6 +1283,7 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "870dd29d2fc63f6c4eb4d270064fc0a024fe4163ec53b46cdd8ebe7d20d339d6",
+        "reference/artifacts/contact_events.json": "1923cb22a35c045a92f2972aad170c592d3111d080d7645a39bacb5f1179cf85",
         "reference/artifacts/dimension_applicability.json": "a00a455599c70487abef89789af17f6a81d1890e5cbf28efc3af20bd88a61971",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
@@ -1255,10 +1316,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "f1d887f75f206f31d4aa982f31e9bc88a5377ea9284707449c884f45f093fc42",
+        "reference/artifacts/contact_events.json": "bc4608ebbc76057167a392ea622078e43c203bd31b114aedd6ab802119962bc7",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "b6b605fa535941f17c6c1eb8a6cdf0238d447c52ce50773ef23fe5e9d24a3ac6",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "8d1dccebf61c18cbc19bc035b1026a0dd093a5b8504bc99758dc2ce15f5e18fb",
         "reference/artifacts/poses.npy": "01efa9c92a79f0cc65eeefa62cc405a23022729e285d4cd7f556d0ac71be2776",
+        "reference/artifacts/qa_dataset.json": "3b711d0226514388c25fabf7e3e5896994f41c51cd0b60ee6a680e1b3b2d8d2d",
         "reference/artifacts/unity_gt.json": "5c6094dcf6c5456311bf29dda0cea7be9348573f39b3608151e8c31e224b3b49",
         "reference/capture.json": "8625f987a777e61954f422b313d6f424faf0b556b84d96c940a590309a5b41db",
         "reference/ref.png": "b810b1ff7624051841a26c7dcf9598e253e609c567b70ae4b026dbdf350325f8",
@@ -1286,10 +1350,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "c55e9531e98c4d62ec09bf577a7ef0e2c931c2f9547c3eb38bb4b28adb232913",
+        "reference/artifacts/contact_events.json": "4adde9f4bd842968c6ab6720e885fe0cc386c6693cb26f61e5dd4c4f2359bb5a",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "6802811f0eee9ee5bdb404929c41bc80c3061ea6c7b78473d0dac63abf393b8f",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "a1e3ab92f63ad933d0799f83778057ef482584a0684b00b65f6ff9e45b9683da",
         "reference/artifacts/poses.npy": "21947c9c641fa221806ad26973342d6660340780d8fdbec6e3125d86b07a3e75",
+        "reference/artifacts/qa_dataset.json": "e2dc512d6c4e21d63a84ae13f080fdef7dccb20be678d69eb80b0e59d3ae7e27",
         "reference/artifacts/unity_gt.json": "38dfd593b610d4411aa43b168cca32e5a910626f1f5b4c5a91ef97129589cd45",
         "reference/capture.json": "b30d0e2feafa4b49ac697b4e700d02880bcba8fa65f8edaa2b9836c6d4f823a6",
         "reference/ref.png": "9a07767d1ed8de01a8d37ff9b05a3e7f7a62d38d9309ecb97661318f6a002d20",
@@ -1317,6 +1384,7 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "947d7e9f3e8b2798683a39fea578eea3db6fcb17160f2795bbece22ffc24856a",
+        "reference/artifacts/contact_events.json": "81ea7ae167ba37d09f5fec0a813fe6969e8cb9d71edd261873f74f964f3dc5a7",
         "reference/artifacts/dimension_applicability.json": "a00a455599c70487abef89789af17f6a81d1890e5cbf28efc3af20bd88a61971",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
@@ -1349,10 +1417,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "da947038164048a08b3f730bfba084978869a77c62595cb6abc53b153c593134",
+        "reference/artifacts/contact_events.json": "65ff9e6e4157a4fe0255aef34d91ea90edf740c94d2d7a98826123a06290bad5",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "81d3eb4338b35c506de2373ba48d58bf87fe61286abedd6229424f0ea8b428aa",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "d8fdcf717864eefda1c87a72d43f9a764dcea5bee73490f1706a56afb070b2f6",
         "reference/artifacts/poses.npy": "f8ac4f5c3160af4cb3affa83f55416a7a31b9155e133116dc10fa23c0ca6343e",
+        "reference/artifacts/qa_dataset.json": "979e016b185b6877954cf5257358cb6a6d23e1f85f247a1417b105cd6e93c2d5",
         "reference/artifacts/unity_gt.json": "23d3370e55db3130af0a49aef05ffcaf1a0354a42a898ad91add7d473275be4c",
         "reference/capture.json": "34fdd6046df371f8441f35ec6d1a06def04bec27256339070486649262f1bba7",
         "reference/ref.png": "c62872602dc85d3ed668e13aee6deff962ac4ae0f635f3b8ead93064149a9512",
@@ -1380,10 +1451,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "b6f95865798d416f2f9d66f85550867300547e40e7beec7d8dc210ba01246823",
+        "reference/artifacts/contact_events.json": "aaa8bae736e7219be7e837c2bc8cf488c21e1556a7ff51280a919e58f025a1af",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "428716d89e3449c37967994f727432c2337d4fd857dbf0b5f0a41c5bab9abd2b",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "60142d13158d8871666cfca418a99f63b4c03326110eed7bd386add1808309f0",
         "reference/artifacts/poses.npy": "bc4b0828f81bbde92a91686bd4fa68f73651a28df41a1403030891a7a83edb51",
+        "reference/artifacts/qa_dataset.json": "f48a1033d37465acd087f44c41f9702bbc45f46366d0c40d7cd14020f6b87387",
         "reference/artifacts/unity_gt.json": "5c03c917556cfa7105ca4e33e87317bad638ed015a70b300806a0b1753452c83",
         "reference/capture.json": "3d435f11f5612ca0e31c85d977c1139296a2b574afd43514090c4987025f239f",
         "reference/ref.png": "c8811feea5d9ff875d81797b7fccda0292d7fd342c51761787183790fb683de9",
@@ -1411,10 +1485,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "15fc9c5b18f59384bd305e4fe241bd64b2c9bbc226e794c63ba98b7921b341a5",
+        "reference/artifacts/contact_events.json": "ca7d0cb9057b897d5af2ea7026de27aa761d43196d51f1901ee4d0a9dde034a1",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "c91d5f45b9e054cdd53525b7e9276b15d88785875c9656545d2f23a35dcb04e9",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "a44c0cb684d5a115b233c82aaa598b22e47309c0b519beb30e9918fdade945bd",
         "reference/artifacts/poses.npy": "6cc6520d4f63b492e5adddd272427ee7502efbd27f68bcecb67d987225556766",
+        "reference/artifacts/qa_dataset.json": "488afabaaf9a1d5c3567f30534c776626be6bbe2240034d43aebd0c4ef75ddf4",
         "reference/artifacts/unity_gt.json": "670c3fafa1ec978523c9b4419ed4f476a0b2ba4a35f7021237b275757027c010",
         "reference/capture.json": "e6404c8309d3f4a3602113646d46f8af9e62b4a4431f1a0cdf57bc279d846737",
         "reference/ref.png": "9e196b2012fd74a4ef4033f30e6eeeadf1f73e36acb5453ca59f3ad7a6748da8",
@@ -1442,10 +1519,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "fec766b78c3527ecd6e8ba341949090a81a58c26e10fc12a2aaba6580e808630",
+        "reference/artifacts/contact_events.json": "e87e3482e6ea8f0f2f84d2e62cda901071f8c1df3e2c799ca55331a317427042",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "484cfb6a76e63526060b81b0e3685611282dd62ef1a90f76d88514348964f492",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "ff5f9e6458efce2e174f18420dd77052b32c68a98622cfa83fb3364c01bd5fb9",
         "reference/artifacts/poses.npy": "937a9b66e8656ee175b10a0bfed35651a6c5b350eb5060c9f8ae20f82d5da9e2",
+        "reference/artifacts/qa_dataset.json": "b904c21e3a4d3dad48d66345c377ca983c310bf2b008d92342ee65c20185a691",
         "reference/artifacts/unity_gt.json": "1f545f78a34712b6d1a7c73b3a3ebda445bafa5bf2bafe43ce32bd9e9cf753e1",
         "reference/capture.json": "ea200a599db01b5cff5da2c5282cf0793b6d5c3233580b796fb6951d8c12765a",
         "reference/ref.png": "c5964210f006cd86de78741d045b0409d318b6ee94c907e82fe9a288339df601",
@@ -1473,6 +1553,7 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "ccf57e326e87891951789ed29348fa8a884476466022e0bb0c2737e6d22a7e1e",
+        "reference/artifacts/contact_events.json": "11aac51b08df96c93b3c1224f98903e334c7c1ca0ca4ee8d589f4f0707ec8f7b",
         "reference/artifacts/dimension_applicability.json": "a00a455599c70487abef89789af17f6a81d1890e5cbf28efc3af20bd88a61971",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
@@ -1505,10 +1586,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "d263ba0d445e2117140ee7ca81f4051e099b7d9674660bd54021be0c54b23e60",
+        "reference/artifacts/contact_events.json": "e68dd0bb4b0a820be1f145411820de384f932efac51c5d8c9b4ecc0b3713242b",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "6d63469a4251dda7f32fa71236392cdb17d763113eb0f604c58ef2fb4ffa8a3a",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "2985e3a07c502af278623f5f8a1f928d3688adc7db0baf094918fee76f785477",
         "reference/artifacts/poses.npy": "5b0562f46becb4845b9c4072e9bd92a197a98a74c63bf48bac8da28eea8661cb",
+        "reference/artifacts/qa_dataset.json": "6dce0666e0104b6bc1e3853ecfae46270be35b39360f981a3e05e113f3ca54e2",
         "reference/artifacts/unity_gt.json": "49a4ac1bd2d504d8a1844d3ee7c46faf4f79441888c774ca6bbd5043533dc938",
         "reference/capture.json": "f0c1d2e3d79f37acdd2b8c5eb29fdbf010b02c3d65858bcf049daf6f16a1bba6",
         "reference/ref.png": "bf28defdd6cbb4b68262a39974425b33f9156d9887861693b355b2b4037736a2",
@@ -1536,10 +1620,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "c4b63e6c06f9b79779b49de7d05351257d867b8b58c3f90a77dc9b3c9a13c49c",
+        "reference/artifacts/contact_events.json": "83726719dad2c1070a295c9aa374355b916cbf90d3e442ae992af10649a60fb0",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "86b0d174eab99d8787cf0a9dbc58c7bbb9d11e6acc935d465ca643b46271d6f3",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "2b1698adf0f46195c703e700e94da1e37464a69fae34ba341c17170cb08c2aed",
         "reference/artifacts/poses.npy": "151489b241703c3872740109119653e00ebedd1dcf553834edc255dd9ef2fe2e",
+        "reference/artifacts/qa_dataset.json": "45b12065e197f5bf100b646fea1e53b39514ca3a89c2f62614d1ce4b0f2303d1",
         "reference/artifacts/unity_gt.json": "a6ed931a31e301add3e9d09084588ff866c20b2428eca738941573cc319967bb",
         "reference/capture.json": "a16477f4388964916558f63857f37a196e5e60ab96f0af2be9f22f75d43ca696",
         "reference/ref.png": "cd82138f1342421a536881ee468cd56f9ccd3621ca30151b601b684ffd8300ae",
@@ -1567,10 +1654,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "e9c4aa7e9fd8b1e9ecda26933e0c1241beb9a462bfe8b6527b656f30143c0c4f",
+        "reference/artifacts/contact_events.json": "915174b6527173bc556df97cf9f67d3658a46911e03dea951f92aee63be3d18a",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "7c68942d8d29e86568df7c218dffd4c4020075c679f71df15f1ba59d72422948",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "ef14abe38f51dab4b25f8ba734367bd376c4becb2cc1f2996c0029aee6efeb53",
         "reference/artifacts/poses.npy": "6d4a6c4e270dcc90d9014bbe3c28760cac401b83a166a67c2bb94750258bcce1",
+        "reference/artifacts/qa_dataset.json": "7dc6163e2296ca979dde6d711f2488244da8ea629d9ecb628b4e4f69120e5096",
         "reference/artifacts/unity_gt.json": "d412462740bf91bde45a5b72a67df1f0796a40a696d2820594020af63b087fc4",
         "reference/capture.json": "1456609af41790d0a0668bd0bb92b38e89e700a9eb9d659544a5dd3793aba74b",
         "reference/ref.png": "6ae1c4b8d568162afc7abb11041538389583105a1ab87609dfbc6a475b32f1b8",
@@ -1598,10 +1688,13 @@
       "video": "reference/reference.mp4",
       "files": {
         "reference/artifacts/causal_segments.json": "5e5186609a694158c0d1ddd8e9b270fb34e16ac69ae1661f04eaa877e345674d",
+        "reference/artifacts/contact_events.json": "7f6d211b375175af8b34e98327c033c97282adb1519bb4f2f5f0ba0718d52b5f",
         "reference/artifacts/intrinsics.npy": "a82e2bb9fafd14512f31edccaf57a9caeff025a68b8ff0dec851ad15edb8774a",
+        "reference/artifacts/judge_answers.json": "d93082d19f6aec73eb1c6d3fe924cccce841e2753eb4ece3ce92f236235982f8",
         "reference/artifacts/object_masses.json": "43704eb6ee480bfa6d7d08bb94e07c9e0a7edbefb19f7c5e781630f59a17df7c",
         "reference/artifacts/object_transforms.json": "cea8e5466fe1ac99a934b8997d8bbde4e0765a1f212d628ba0b2745498ceabcd",
         "reference/artifacts/poses.npy": "22311d9b33937ce2eff76409060b2c164d43e86b197766705726d2878297c1a4",
+        "reference/artifacts/qa_dataset.json": "bc2a7768d0eaf999bb25637ab6b69af4389e607dcd2dc73d47eac12d9bb16e14",
         "reference/artifacts/unity_gt.json": "92633c2c8a47c34d45b6d29b299005ad309aec9c9a70f98c9bf751f48bf2a9dc",
         "reference/capture.json": "d2b9993708f666ab432db2be48b1059a18ef0ad4a6ba0505f5353a2a378c3c0e",
         "reference/ref.png": "3567b1318a1fb4a6dc6d2c40fb3321de2177159b9ab55c9a1720314f5d3fa501",
@@ -2211,6 +2304,7 @@
         "reference/artifacts/intrinsics.npy": "5529ce26fe370a129c8f97ba3afc9139024b0824407b83d7a87429da8199f542",
         "reference/artifacts/object_transforms.json": "a4fc0589c7ccaa03884bec44fd34826e6b9955cc1cebc9bb9a150c27f4f2f734",
         "reference/artifacts/poses.npy": "50b9dc47169a0158e0bef607c2842042b4ccdbe3ac96a4d2dbfe4c4f712f5268",
+        "reference/artifacts/rubrics/BilliardGame/openai_gpt-5-4_v0.json": "690f51062a7799e860b1811f95486843a3e976965d9d9d6daabbac0fdae92082",
         "reference/artifacts/unity_gt.json": "6e5f1b919d5ccde54120c08554a965b3b3928aa140c62d83045c9b47f6001d58",
         "reference/capture.json": "d32352fd1f4212ffd25c98d80b7ba3ba58435fb499d503fc2fbdccb7d09b864d",
         "reference/ref.png": "2b1448e6861aa51a8ca0148933e5e1c3df56db303110c299176ab5c808b34222",
@@ -2240,6 +2334,7 @@
         "reference/artifacts/intrinsics.npy": "5529ce26fe370a129c8f97ba3afc9139024b0824407b83d7a87429da8199f542",
         "reference/artifacts/object_transforms.json": "a4fc0589c7ccaa03884bec44fd34826e6b9955cc1cebc9bb9a150c27f4f2f734",
         "reference/artifacts/poses.npy": "7f0ccc3ae173d0936c12a7d64c0b96220304489b66ab69d8355315326bbc98de",
+        "reference/artifacts/rubrics/BilliardGame/openai_gpt-5-4_v0.json": "690f51062a7799e860b1811f95486843a3e976965d9d9d6daabbac0fdae92082",
         "reference/artifacts/unity_gt.json": "40ec68721c6b2df104b98c964e7c94540e670f55ae32dd131db6899c4a0d9025",
         "reference/capture.json": "d1c6506a2b47219abb33924a385274060767772fe4036900c75a6e71304516ad",
         "reference/ref.png": "2b1448e6861aa51a8ca0148933e5e1c3df56db303110c299176ab5c808b34222",
@@ -2269,6 +2364,7 @@
         "reference/artifacts/intrinsics.npy": "5529ce26fe370a129c8f97ba3afc9139024b0824407b83d7a87429da8199f542",
         "reference/artifacts/object_transforms.json": "a4fc0589c7ccaa03884bec44fd34826e6b9955cc1cebc9bb9a150c27f4f2f734",
         "reference/artifacts/poses.npy": "45677e9c32c159144672a894a5c7160882f5db13833d296f728d09b3eb180b67",
+        "reference/artifacts/rubrics/BilliardGame/openai_gpt-5-4_v0.json": "690f51062a7799e860b1811f95486843a3e976965d9d9d6daabbac0fdae92082",
         "reference/artifacts/unity_gt.json": "5832748f7dafdf4d3e4290cd725697aeed410744eadd82bb041ca2ff9c550694",
         "reference/capture.json": "0b83e0f973d78e0de7512a79c0b7fd74dd17be82ddfeef752a030cd2a7e59b87",
         "reference/ref.png": "2b1448e6861aa51a8ca0148933e5e1c3df56db303110c299176ab5c808b34222",
@@ -2298,6 +2394,7 @@
         "reference/artifacts/intrinsics.npy": "5529ce26fe370a129c8f97ba3afc9139024b0824407b83d7a87429da8199f542",
         "reference/artifacts/object_transforms.json": "a4fc0589c7ccaa03884bec44fd34826e6b9955cc1cebc9bb9a150c27f4f2f734",
         "reference/artifacts/poses.npy": "5de783cbca61f7f301be44c3fc5289b90ee3d1250f8bac208db9da591895ff87",
+        "reference/artifacts/rubrics/BilliardGame/openai_gpt-5-4_v0.json": "690f51062a7799e860b1811f95486843a3e976965d9d9d6daabbac0fdae92082",
         "reference/artifacts/unity_gt.json": "d8af06f253f777f1a7751de1b2c2aebdf1614a5f3388b2e1000eb45f4c1e44df",
         "reference/capture.json": "90a3c4e9c6fcde7564e2f2db584bbc06875b3e176a1350b791dee2e01574e395",
         "reference/ref.png": "2b1448e6861aa51a8ca0148933e5e1c3df56db303110c299176ab5c808b34222",
@@ -2327,6 +2424,7 @@
         "reference/artifacts/intrinsics.npy": "5529ce26fe370a129c8f97ba3afc9139024b0824407b83d7a87429da8199f542",
         "reference/artifacts/object_transforms.json": "a4fc0589c7ccaa03884bec44fd34826e6b9955cc1cebc9bb9a150c27f4f2f734",
         "reference/artifacts/poses.npy": "40d52b75151fd9b4973e4c4996bd0983a374b968e47a66bef5550a677421c0cb",
+        "reference/artifacts/rubrics/BilliardGame/openai_gpt-5-4_v0.json": "690f51062a7799e860b1811f95486843a3e976965d9d9d6daabbac0fdae92082",
         "reference/artifacts/unity_gt.json": "5c6a7eb93aabad96c8c16e86bca0bb1e5c6e42f781c36828e23151ca2e6f0e68",
         "reference/capture.json": "81b10ee476cdfa8ea2cf677e7380e0f0af728fb9a286120cfb8e03a444740e7e",
         "reference/ref.png": "2b1448e6861aa51a8ca0148933e5e1c3df56db303110c299176ab5c808b34222",
@@ -3226,6 +3324,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "5b9e7b574877e1943b16d57d54c1bdf6da98aca9659caeda3e9963ccb3bdbd70",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "ac72970a15c34a2419025fabaf4dfc62a00d9c0178c45169077e7c8357d8979b",
         "reference/artifacts/unity_capture_log.json": "115fafd92a597057f804aa9ee6fb432e46bb9d81e5c8a09eb93e70dda67ed8ea",
         "reference/capture.json": "c6642dcf1bbefea5adb8c884d5db9ae72e2a3a0ebdf456c816a0996281aab2f7",
         "reference/ref.png": "94181e31304c955d4b1b2aa22a5cf4b6779483983843afc4ca4aefa652fcd40c",
@@ -3255,6 +3354,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "b8a931e27e052c5ccedc80a44d749993b606066dbcdeed3c17b3c7b8270dbc10",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "ac72970a15c34a2419025fabaf4dfc62a00d9c0178c45169077e7c8357d8979b",
         "reference/artifacts/unity_capture_log.json": "8e62cea3d9d35933dec1fc226a9bdbbe9b84f3cbb93a2de622847a87bfb0eb08",
         "reference/capture.json": "8aa9889ef1a241af2f7a0e3d42808d076f2fa86244e87440f3c436d99c390428",
         "reference/ref.png": "b6e59eaf5712f3b99577469e1dd49f7b8ba0fb54aea290d12ba2a12c42cde4f7",
@@ -3284,6 +3384,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "0d6cc5a93b9da31506fde7238e7984c82494b308c988bd9db8ca0f7c659c2c51",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "ac72970a15c34a2419025fabaf4dfc62a00d9c0178c45169077e7c8357d8979b",
         "reference/artifacts/unity_capture_log.json": "e0c66cf4acad35f80f5b05f1f4b2644f75b31f9e4bd2c64f65f05869d47805de",
         "reference/capture.json": "e55bc20c63fb43c83f5e799bc72fd6c203a49016f89e3350a29c86b2a45f5d4d",
         "reference/ref.png": "7cc95ba4f41cfe7d0c7fdf86e8084c5e717fca8fab669b4ef77b5828f40ee730",
@@ -3313,6 +3414,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "32337bb8618894fc64710c3e99b3b4dd16c8ddc80af9038aa85ca694487cfa2a",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "ac72970a15c34a2419025fabaf4dfc62a00d9c0178c45169077e7c8357d8979b",
         "reference/artifacts/unity_capture_log.json": "07b73ab85653b986506103bb9b08bcf57b6cd64e1dd9e64a8128afc7ee0f7da4",
         "reference/capture.json": "eb250a45a13ef30f2f15d3b52d1b095b0cb94a3da4dbba95afec6b3b1c7fd525",
         "reference/ref.png": "83ca4fb9a1f8eda31acfed78e27a32e9ae59c31270a0c90e8c057e09ee70aaf2",
@@ -3342,6 +3444,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "e905cad4a730666541a40c1ad041f669c31a39de3e5655f054d1b9d378797611",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "ac72970a15c34a2419025fabaf4dfc62a00d9c0178c45169077e7c8357d8979b",
         "reference/artifacts/unity_capture_log.json": "20ea75bbb134afdeab46883375c842aa6130dbe779f264852059cd509f8e80ff",
         "reference/capture.json": "252fe8e5279c1bdc169b1f0f4efa57480b2eab26adc86a6df4686b7790eef8f2",
         "reference/ref.png": "379e59050734a6191afc32c7a3307b620c39e755eb9fb6617f060aad0a5c1e3c",
@@ -3371,6 +3474,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "d5c25dfc47b04fd0c4aaf72abb0a545310926d4555724299788f22416b0294e1",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "95325f3bf70c208e916d39e65d2c9d0e8375ded1f41eec507d86dca6c1ce06da",
         "reference/artifacts/unity_capture_log.json": "7db7cf4070bdade4b032c8cdb15756db9bace7cca268d811d38b086f68b25542",
         "reference/capture.json": "39b58c6f3ce4bc10f4a4ccebcbaa351c45a3bc6cdf53bba9eed20f51547189d0",
         "reference/ref.png": "0f5bd16c90cd79ae6b71b7e5b121d7bf6e57239f8fe30af84ec0d61faf174eb6",
@@ -3400,6 +3504,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "4cfd4cd44cfe5f1f66cc18a9c8f450949d51e4c01f43e7b204c5fdd9e18db618",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "95325f3bf70c208e916d39e65d2c9d0e8375ded1f41eec507d86dca6c1ce06da",
         "reference/artifacts/unity_capture_log.json": "d0de5cf36b61bd8400ae42bd2309845666cf87683bf3f634d7ec15e9532751ef",
         "reference/capture.json": "f74569fba262d68bf355558102256ca146fcf510005a1ac757143a6a9691624a",
         "reference/ref.png": "c1e81ce4095f1447177b8273d5454db3af3e8ba007df7b903ce36cfff899d653",
@@ -3429,6 +3534,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "345c27a85885debf37e35c94a9f4a78ea59da2e45ce1665d880fe0c4eac1161c",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "95325f3bf70c208e916d39e65d2c9d0e8375ded1f41eec507d86dca6c1ce06da",
         "reference/artifacts/unity_capture_log.json": "21c0d86a33857cfcaf2cce0a76487b454cab467133f0865e33dd26396407d7af",
         "reference/capture.json": "5edd31c7292e0b51ed3163ed810bc59120ba70aa298d6efc4e09ffb757d04561",
         "reference/ref.png": "5c0987467d4b0813b947753afd9e1f861908121445e1c57c2936b6bbb392fccd",
@@ -3458,6 +3564,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "42c40ae6dc6aa5f78a25b9e8e99b3ea1895921575c8112a72b381515c1c38224",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "95325f3bf70c208e916d39e65d2c9d0e8375ded1f41eec507d86dca6c1ce06da",
         "reference/artifacts/unity_capture_log.json": "46d82999df95609fc5c1bc693bb3f34c271f3578124f50db2e5ad4387b29ae04",
         "reference/capture.json": "5ce872b0729a08da7116081064109a58859fae809b3c19f086f5127801bd0d58",
         "reference/ref.png": "8396c61b0a0a6906bc0a82f42a1d79896f3d865f76f651a31e00e3bc13c9d787",
@@ -3487,6 +3594,7 @@
         "reference/artifacts/intrinsics.npy": "b30a63f7ee1c97adcc919c4be5eac8df36ac40f7640410413b1da3c1330282fa",
         "reference/artifacts/object_transforms.json": "0075ff16a64546a751d94c0e3c1f5ad4c97ec9010b7d47f5037034b611392d9e",
         "reference/artifacts/poses.npy": "4c1af53a16acef8245761243fd267ca2e334c6e8a0fb2b17a8cd17f8d87d9684",
+        "reference/artifacts/rubrics/WanderingGarden/openai_gpt-5-4_v0.json": "95325f3bf70c208e916d39e65d2c9d0e8375ded1f41eec507d86dca6c1ce06da",
         "reference/artifacts/unity_capture_log.json": "411af784dcc5d8c0efeca84700add770b4315460dff831756c90355cb0ad539d",
         "reference/capture.json": "0cce6c85cc1a4f4cd3c3847f255bb0f80bc767ca3f88fa7531d06f8f28f4c8a3",
         "reference/ref.png": "5bf63c3554d573b2d27099a2ed89e607aa4fad816c42d12563949700b0f242f8",
