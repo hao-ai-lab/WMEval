@@ -162,7 +162,9 @@ def build_index(root: Path = SUITE_ROOT) -> list[dict]:
                         "perspective": case.get("perspective"),
                         "prompt": case.get("prompt"),
                         "conditioning_case": case_id,
-                        "reference_video": rel(ref.get("video")),
+                        # the declared reference video, else the Unity video the bundle ships even when
+                        # its metrics are reference-free (prompt-only cases), so every row links one
+                        "reference_video": rel(ref.get("video")) or _bundled_video(case_dir, rel_dir),
                         "first_frame": rel(ref.get("first_frame") or ref.get("video")),
                         "trajectory": rel("reference/artifacts/trajectory.yaml") if (art / "trajectory.yaml").is_file() else None,
                         "candidate_normalization": (case.get("protocol") or {}).get("candidate_normalization"),
@@ -172,6 +174,11 @@ def build_index(root: Path = SUITE_ROOT) -> list[dict]:
                     row["suites"].append(suite_name)
                 row["dimensions"].append(dim if suite_name == "wmeval_lite_v1" else f"{dim} (paper-native)")
     return sorted(rows.values(), key=lambda r: r["case_id"] + ("~" if r["suites"] != ["wmeval_lite_v1"] else ""))
+
+
+def _bundled_video(case_dir: Path, rel_dir: str) -> str | None:
+    videos = sorted((case_dir / "reference").glob("*.mp4"))
+    return f"{rel_dir}/reference/{videos[0].name}" if videos else None
 
 
 def _declared_target(artifacts: Path) -> str | None:

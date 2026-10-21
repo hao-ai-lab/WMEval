@@ -50,10 +50,10 @@ dataset_info:
 configs:
   - config_name: default
     data_files:
-      - split: test_core
-        path: test_core.jsonl
       - split: test_full
         path: test_full.jsonl
+      - split: test_core
+        path: test_core.jsonl
 ---
 
 # WMEval Lite (v1)
@@ -79,10 +79,8 @@ or help from the maintainers.
 
 ## Dataset structure
 
-The viewer shows two splits:
+The viewer shows two splits and opens on `test_full`:
 
-- `test_core` (33 rows): the curated WMEval Lite v1 cases, each with a Unity
-  reference rendering. The paper's numbers come from this split.
 - `test_full` (253 rows): `test_core` plus 220 synthetic action trajectories
   under `synthetic/` (camera yaw, look-at orbit, vehicle, cue ball, rolling ball,
   beam-domino ball, bottle motion, character). Each is built text first: an action
@@ -103,6 +101,8 @@ The viewer shows two splits:
   as the core cases: LPIPS contact events, CausalStep QA and recorded reference
   answers, liquid masks and flow, rubrics); their aggregate is reported apart
   from the core headline, with `reference_quality` on every row.
+- `test_core` (33 rows): the curated WMEval Lite v1 cases, each with a Unity
+  reference rendering. The paper's numbers come from this split.
 
 Each row links to its first frame, trajectory and reference video.
 
