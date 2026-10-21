@@ -5,9 +5,9 @@ display_name: MirrorRollingBall table7 360_out
 prompt: A third-person view of a reflective chrome sphere among many glossy yellow
   spheres on a light-colored ground enclosed by low gray walls in bright daylight.
   The chrome sphere is the persistent target character. The initial Unity conditioning
-  view is outward-facing away from the scene's designated target objects and anchors.
-  From that orientation, the camera performs the controlled full 360-degree camera
-  rotation used by the paper.
+  view is the paper's outward-condition start; the chrome sphere is in the centre
+  of the view, surrounded by yellow spheres. From that orientation, the camera performs
+  the controlled full 360-degree camera rotation used by the paper.
 perspective: third_person
 modules:
 - environment_object_consistency
@@ -36,7 +36,7 @@ module_params:
     eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: dc4dc3535f6b5094b183b6f7e2e48861
+  evaluator_fingerprint: 4f09144e3f790a907dd0df95fd386988
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}

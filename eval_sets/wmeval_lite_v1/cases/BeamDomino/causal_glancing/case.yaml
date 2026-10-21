@@ -6,10 +6,10 @@ prompt: 'Starting world must match the BeamDomino Unity scene from a third-perso
   follow camera: a blue controllable ball on the floor in the foreground, a small
   three-pillar structure with a triangular roof directly ahead, a gold ball resting
   on top of the roof, and a radial ring of dominoes arranged around the structure
-  beyond it. Keep the layout clean and readable so the full physics chain is visible
-  in one shot. Preserve the authored camera feeling of the Unity scene rather than
-  switching to first-person or a cinematic orbit: the camera follows from behind and
-  above the blue ball throughout.
+  beyond it. Keep the layout clean and readable. Preserve the authored camera feeling
+  of the Unity scene rather than switching to first-person or a cinematic orbit: the
+  camera follows from behind and above the blue ball throughout, also after the ball
+  has passed the structure and runs off the edge of the floating platform.
 
 
   The player controls the blue floor ball. After a brief pause it rolls forward with
@@ -47,6 +47,6 @@ evaluator_lock:
     opencv-python-headless: 5.0.0.93
     pillow: 12.3.0
     lock_source: tools/lock_case_dependencies.py
-  evaluator_fingerprint: 9445611a804db1f6d44f36b33e168d41
+  evaluator_fingerprint: f0f2eb10e94d948f1dd122035282b7d4
   module_config: {}
   release_id: wmeval-lite-v1

@@ -5,9 +5,9 @@ display_name: BilliardGame table7 360_out
 prompt: A carom-billiard table contains a white cue ball, a yellow ball, and a red
   ball on dark gray felt bordered by light rails with diamond sight markers. The white
   cue ball is the persistent target object. The initial Unity conditioning view is
-  outward-facing away from the scene's designated target objects and anchors. From
-  that orientation, the camera performs the controlled full 360-degree camera rotation
-  used by the paper.
+  the paper's outward-condition start, seen from the far side of the room by the black-and-white
+  wall painting; the table and all three balls are in view. From that orientation,
+  the camera performs the controlled full 360-degree camera rotation used by the paper.
 perspective: third_person
 modules:
 - environment_object_consistency
@@ -32,7 +32,7 @@ module_params:
     eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: 050e09a71a828d2355c337eb39fa6a65
+  evaluator_fingerprint: 366fad7f3225bb342b3b83dbe9897d3b
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}

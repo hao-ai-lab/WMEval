@@ -4,11 +4,13 @@ scene: RacingCar
 display_name: RacingCar table4 third
 prompt: "A very wide, straight highway under a clear blue sky, with dark roadside\
   \ barriers, green grass, and long rows of tall trees on both sides. The road begins\
-  \ abruptly at a starting point, with no ground behind it\u2014only open sky, as\
-  \ if the road is suspended in space. A yellow sports car with two black racing stripes\
-  \ is parking exactly at the start of the road, centered in the frame, viewed from\
-  \ behind. The car faces forward into the long empty highway. Bright daytime lighting,\
-  \ clean and minimal environment. The character is the yellow sports car"
+  \ abruptly at a starting point behind the camera, with no ground behind it\u2014\
+  only open sky, as if the road is suspended in space. A yellow sports car with two\
+  \ black racing stripes is parked on the road a short distance ahead of its starting\
+  \ edge, centered in the frame, viewed from behind. The car faces forward into the\
+  \ long empty highway; a small red cube hovers above the road to the right of the\
+  \ car. Bright daytime lighting, clean and minimal environment. The character is\
+  \ the yellow sports car"
 perspective: third_person
 modules:
 - kinematics_mechanics
@@ -39,7 +41,7 @@ module_params:
     kin_plane_calibration_json: reference/artifacts/plane_calibration.json
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: 0eec8e0ee88fb704536d8088515725bc
+  evaluator_fingerprint: 69107e53eb47c9b9d41d8ffea0d09698
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}

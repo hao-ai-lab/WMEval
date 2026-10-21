@@ -10,16 +10,16 @@ prompt: 'A photorealistic outdoor daytime scene. The viewpoint is roughly at wai
   vista: turquoise ocean horizon on the left, low coastal vegetation in the middle
   distance, and a row of white apartment buildings on the right. The sky is bright,
   partly cloudy, with blue skies and bright cumulus clouds. Lighting is soft, natural
-  daylight from above and slightly to the right, casting a hard contact shadow on
-  the floor directly under any object placed at the center of frame. Standard Earth
-  gravity, downward. No people, no other props, no UI overlays, no text, no watermarks.
+  daylight from above and slightly to the right, casting a soft shadow on the floor
+  to the left of any object placed at the center of frame. Standard Earth gravity,
+  downward. No people, no other props, no UI overlays, no text, no watermarks.
 
 
   A clear glass long-neck beer bottle with a glossy red cap, standing upright at the
   center of the frame. The bottle is 50% full of an opaque, dark liquid (cola-colored).
   The empty upper half is made of transparent glass, with subtle specular reflections
-  of the sky. The bottle is rigid and behaves as a physical object: it rotates in
-  response to control inputs but does not deform.
+  of the sky. The bottle is rigid and behaves as a physical object: it stays upright,
+  never rotates and does not deform.
 
 
   The bottle is not commanded to move at all for the entire clip: no strafe, no jump,
@@ -45,7 +45,7 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  evaluator_fingerprint: 48824d12d86319879575b19f11f00c9e
+  evaluator_fingerprint: 894f8fa350c2f5290da69a2301d5fd2b
   module_config:
     liquid:
       normalization_fps: 16.0

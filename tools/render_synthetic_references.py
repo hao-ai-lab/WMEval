@@ -287,6 +287,10 @@ SELFCHECK_FAMILIES = {  # family -> core case whose own trajectory is replayed t
     "ball_force": "BallRoller/ctrl", "ball_force_mirror": "MirrorRollingBall/lpips_collision",
     "beam_domino": "BeamDomino/causal", "liquid_container": "LiquidContainer/fluid_rest",
     "character": "ChessBoard/walk_third",
+    # the liquid profiles with motion (fluid_rest alone cannot validate the bottle physics)
+    "liquid_container:step_hold": "LiquidContainer/fluid_step_hold",
+    "liquid_container:impulse_decay": "LiquidContainer/fluid_impulse_decay",
+    "liquid_container:chirp_strafe": "LiquidContainer/fluid_chirp_strafe",
 }
 
 
@@ -295,7 +299,7 @@ def selfcheck_rows() -> list[dict[str, Any]]:
 
     rows = []
     for fam, case in SELFCHECK_FAMILIES.items():
-        family = fam.replace("_mirror", "")
+        family = fam.split(":")[0].replace("_mirror", "")
         art = f"cases/{case}/reference/artifacts"
         traj = yaml.safe_load((SUITE / art / "trajectory.yaml").read_text(encoding="utf-8"))
         rows.append({"synthetic_id": f"corecheck/{family}/{case.replace('/', '__')}", "family": family,
@@ -1256,10 +1260,18 @@ def register_specs() -> None:
         export=_generic_export(target_label="FloorBall", masses={}))
 
     # liquid_container ---------------------------------------------------------
-    add("liquid_container", ["LiquidContainer/fluid_rest"], project="GameScenes/LiquidContainer",
+    add("liquid_container", ["LiquidContainer/fluid_rest", "LiquidContainer/fluid_step_hold",   # the last three
+        "LiquidContainer/fluid_impulse_decay", "LiquidContainer/fluid_chirp_strafe"],      # for selfcheck only
+        project="GameScenes/LiquidContainer",
         scene="Assets/Scenes/LiquidContainer.unity", product="LiquidContainer", fps=30, width=1280, height=720,
         mode="bottle_input", first_frame_ref="reference/reference.mp4", post_encode=_liquid_post,
-        prepare=_generic_prepare(target="Bottle"), export=_generic_export(target_label="bottle"))
+        # freeze_rotation / use_gravity (2026-10-21 dataset audit): with the committed scene's
+        # Rigidbody (no rotation constraints, gravity off) a bottle sliding along the camera
+        # axis is tipped ~52 deg by floor friction and stays tipped, and an upward input leaves
+        # it hovering; the core recordings stay upright and fall back after the jump. The
+        # core-trajectory self-checks (selfcheck --family liquid_container) compare both.
+        prepare=_generic_prepare(target="Bottle", params={"freeze_rotation": 1, "use_gravity": 1}),
+        export=_generic_export(target_label="bottle"))
 
     # character ----------------------------------------------------------------
     # walk_third was recorded from the April scene on a machine that only had the Feb-era LFS
