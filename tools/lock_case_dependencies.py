@@ -26,9 +26,9 @@ reach.  Two consequences, both deliberate:
   ``synthetic_use_depth``; the openai SDK for lpips only for the causal VLM
   sampling modes; depth models for kinematics only with ``kin_depth_lift``.
 
-A non-empty lock that this tool did not write (no ``lock_source`` entry --
-e.g. the hardware-pinned ``SunRisesAndSets/lighting_orbit_v2`` lock) is left
-untouched unless ``--force`` is passed.  The tool is idempotent: a second run
+A non-empty lock that this tool did not write (no ``lock_source`` entry, e.g.
+a hand-written hardware-pinned lock) is left untouched unless ``--force`` is
+passed.  The tool is idempotent: a second run
 in the same environment changes nothing.  Changed cases are re-authored with
 ``tools/build_lite_case.py`` (checksums + evaluator fingerprint) unless
 ``--no-rebuild`` is given.

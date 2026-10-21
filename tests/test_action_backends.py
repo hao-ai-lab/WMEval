@@ -142,12 +142,17 @@ def test_held_sampling_zeroes_controls_after_the_trajectory_ends() -> None:
 
 
 def test_complete_orbit_support_is_independent_of_yaw_target_support(tmp_path):
+    # The archived whole-trajectory review of the retired strict look-at orbit,
+    # grafted onto the live registry: per-trajectory decisions override target support.
     orbit={'trajectory_id':'lighting.camera.look_at_orbit_v2','kind':'camera_look_at_orbit','target':'camera'}
-    assert action_backends.require_support('lingbot_world_cam',orbit)=='camera'
+    raw=yaml.safe_load(action_backends.REGISTRY_PATH.read_text())
+    archived=yaml.safe_load((action_backends.ROOT/'experiments/lighting_orbit/trajectory_support.yaml').read_text())
+    raw['trajectory_support']=archived['trajectory_support']
+    reviewed=tmp_path/'reviewed.yaml';reviewed.write_text(yaml.safe_dump(raw))
+    assert action_backends.require_support('lingbot_world_cam',orbit,path=reviewed)=='camera'
     assert action_backends.support_status('matrix_game_2','camera') is not None
     with pytest.raises(action_backends.UnsupportedAction,match='metric'):
-        action_backends.require_support('matrix_game_2',orbit)
-    raw=yaml.safe_load(action_backends.REGISTRY_PATH.read_text())
+        action_backends.require_support('matrix_game_2',orbit,path=reviewed)
     decision=raw['trajectory_support'][orbit['trajectory_id']]['backends']['matrix_game_2']
     decision.update(status='pending_calibration',reason='Test conversion is not audited yet.')
     pending=tmp_path/'pending.yaml';pending.write_text(yaml.safe_dump(raw))

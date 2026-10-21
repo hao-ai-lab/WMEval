@@ -40,8 +40,8 @@ repository keeps the generator, the manifest and references.json.
 Sign conventions follow the core trajectories and the browser key rules:
 positive yaw / steer / lateral / x is to the right, positive forward / y is
 away from the camera, and a positive orbit rate is counter-clockwise (the core
-``lighting_orbit_v2`` runs at +36 deg/s and its prompt calls that
-counter-clockwise).
+``SunRisesAndSets/lighting`` reference orbit runs at +36 deg/s and its prompt
+calls that counter-clockwise).
 """
 from __future__ import annotations
 
@@ -616,12 +616,14 @@ SCENE_EDITS: dict[str, list[tuple[str, str]]] = {
     "WanderingGarden/scene_360_in": [_360],
     "WanderingGarden/scene_360_out": [_360],
     "BilliardGame/scene_360_in": [_360],
-    "SunRisesAndSets/lighting_orbit_v2": [(
-        "Move counter-clockwise around the round wooden table at a constant 2-metre radius, completing one full "
-        "circle in exactly 10 seconds, continuously looking at the tabletop centre. Constant speed, no head bobbing "
-        "or roll.",
-        "The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the "
-        "tabletop centre, with no head bobbing or roll.")],
+    "SunRisesAndSets/lighting": [(
+        "The viewer walks slowly and steadily counter-clockwise around a wooden round dining table at a constant "
+        "2-metre radius from the table centre, completing one full loop over the duration of the clip while "
+        "continuously keeping the table centred in the field of view. Smooth steady gait, no head bobbing, no "
+        "jumping, no looking up at the sky, no looking down at the feet.",
+        "The viewer stays on a circle around a wooden round dining table, continuously keeping the table in the "
+        "field of view. Smooth steady gait, no head bobbing, no jumping, no looking up at the sky, no looking down "
+        "at the feet.")],
     "BeamDomino/causal": [(
         "After a brief pause it rolls straight forward into the nearest front-right pillar, then takes no further "
         "steering. Expected chain: the ball rolls, strikes a supporting pillar, the roof tips and the gold ball "
@@ -662,7 +664,7 @@ def families() -> list[dict[str, Any]]:
          "channels": {"yaw_rate_deg_s": {"kind": "continuous", "min": -360.0, "max": 360.0, "unit": "deg_per_sec"}},
          "keys": GENIE_YAW, "grammar": camera_yaw_grammar(),
          "dimensions": ["environment_object_consistency", "prompt_scene_consistency"]},
-        {"family": "camera_orbit", "target": "camera", "cases": ["SunRisesAndSets/lighting_orbit_v2"], "count": 20,
+        {"family": "camera_orbit", "target": "camera", "cases": ["SunRisesAndSets/lighting"], "count": 20,
          "duration": 10.0, "hz": 60, "orbit": True, "grammar": camera_orbit_grammar(), "dimensions": ["lighting_shading"]},
         {"family": "ego_vehicle", "target": "ego_vehicle", "cases": ["RacingCar/kinematics_third"], "count": 28,
          "duration": 10.0, "hz": 30, "channels": {"steer": cont(), "throttle": cont(), "brake": boolean},

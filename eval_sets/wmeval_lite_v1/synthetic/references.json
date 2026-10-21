@@ -1718,24 +1718,25 @@
         "build_hash": "02cf08d572664f8600f4cbdbcabb0493fec2490075ff20cfc50d3d7ae090a02c"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s00_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s00_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "05c84746f800dc92549ed915a9eda52355ce39aada96e2b803be9ab01e906eab",
-        "reference/artifacts/frames.jsonl": "7cb75915d74b34674287005ffc39c76fbf485ae8c7cbd072a9ad31416c858825",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "197194155f34b1054c1ba78411a353681fa8bd344d0d438ab0f728e2014ff1c3",
-        "reference/capture.json": "2242f78b627315d3f4b702f5c311eea4fd2aa81df0e9b0f34df273ebb7571275",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "0ea9e65c61fee9d55267a2d582e0a7905a65b53ff807638094bc94a5384e8d78",
-        "reference/schedule.json": "b5056df7c08a865d2680eeb271a5255d72bdb984bcbd4442da8d115cc3cb309a"
+        "reference/artifacts/calibration.json": "7c21e6eaae2ed66a0ed332a243af0e3b8a8e760b059464bf225a31e905e34945",
+        "reference/artifacts/frames.jsonl": "51896f1f0fc58564bbb0f6f0b546aa689f5ff417d1d1e50e377896c494674f4f",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "faed0ca98bce3768f2c4379de87cff4ba2e66a191faf6f3427b1df8e0dd1ac88",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "9af56ea94599ca7b38314e0885f1e1166c236e3626ec27f8613bb3e06f7e9b47",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "0ea156d33a4a3a61bbe7d9f3d1891c9d0623cf2fe7f1d472fdc092cfdd6440bf",
+        "reference/schedule.json": "5e3f4b5fba14ec7af6cb5fce69eb9e2b2a1701d3fc8869ace0a775a693b478ab"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1743,28 +1744,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s01_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s01_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "20d040f7206699a3f81e3867649694bdb4817af423c901a8d9f9fcdf9ce04bb6",
-        "reference/artifacts/frames.jsonl": "56f5a6b59f073bdacd2c0fedd56efce013e6ac1476feaf441111fff8739bf17d",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "b83645d18f91600bb9ff6c92201fc93dbfdfc2b6fc174856fe16168995ed188a",
-        "reference/capture.json": "f37a1eadddacca52b91ba1663292b5090706a1939917eaaf815420b2d4fa4cdb",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "d931c3c1daa2360846abd921ed504207de5a30f5cf36a0dd7a7b632271780784",
-        "reference/schedule.json": "d17a6ecaf8fed009b5063abf456753d7845df723ecc7b4580132f01c6a294372"
+        "reference/artifacts/calibration.json": "79eb5e73526e6ef1ee660f00f4fcc3e5a81c6f5c828ff9db67314ba00a1eefcf",
+        "reference/artifacts/frames.jsonl": "9a3b11af58ca3eeeceeacb6b8d70fb5a447aea1efebbad6a5bfe2e5d36b8a721",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "c60eb5e95ed42f0250f891b999cb070f5137c9344d234dc5af627a1f8eb301b5",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "548f2dbb4bdee4c17c99dd42c68001b27bb7f9ef20a9f3ae6b6e4626c5bdbe80",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "8cf50362230795d1a60d49b12122e80af460f58e68644daf46883918a87e274c",
+        "reference/schedule.json": "5486c5b59518c1037b5e2acbac27f738325eea2e986b8b4c69592286d48b2ca0"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1772,28 +1774,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s02_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s02_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "048610a79f607939deef75e0f23984d814db9aef707ab33789c0b1d1ab88ce67",
-        "reference/artifacts/frames.jsonl": "9875985d41c879f9bf8be396efe34da399a4e1e111f69cfdfd02b0e4f833d73d",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "ec02370bdcd913d6cbcb7050ec053904861a254fc5b50b13a200b03ec35e1a3e",
-        "reference/capture.json": "a386b8a17171c429b758887ec1d227632ae3657809155bc923267b384c7ada81",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "91d250674c782f9eca4fa4356380e5ced0a154d0ff82a80339d3127a815162ce",
-        "reference/schedule.json": "1d2094feb1ec72cc62fd79802a00afe58115a2ccd9910731a839537c9c7786a6"
+        "reference/artifacts/calibration.json": "6e67979ce9748ec5b7029a50c1fcce61b3035f1707f27e9b8790433a9172df8a",
+        "reference/artifacts/frames.jsonl": "8c056e835daa4cc84cd7dc0ea7bda424ee3ed5bee3aae7ddb8f5cd78003931ca",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "112d1874082c1b38e12bf42b84619cf5d52761b3477440410dd356899d284a53",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "e45df65a0c8ca881f066e85a3b0531060db24a4cfe20b1a86d9161c7699602c6",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "7bf8de111ce8a7acf13d81658a80d47adc3b63de84c8d9712101ec112ea5005e",
+        "reference/schedule.json": "b2faf99d606b4d7e9731341697dcfebd4a143f2c746e3ee6d87a49a7e57477d8"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1801,28 +1804,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s03_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s03_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "1b3deebdb9a8d94089f5f133c8bbeaf1b72f31ac9d4e256ce43b3dff48ba9798",
-        "reference/artifacts/frames.jsonl": "8a74140c013abed30aaf20610a29cefaf7ae21ee4e266fb942e4f8538f51a308",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "f1f552e9af5873e269a12a0d41ba7d970e413d623a7d34d9b6b289635fe1a01c",
-        "reference/capture.json": "75ce05a9082c94ba4ffcfc7c5f599afe7c397438430a645d39c7fa161175519c",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "c9c95faf25a2d13ecc77e6cceff2e4e91828d411e691e8367aeb5a730978a791",
-        "reference/schedule.json": "e434a2c29f5f9f7a349e19e4cc0a7bbd14c0fa05c67fca8a56e674cc6385247c"
+        "reference/artifacts/calibration.json": "d10cc0ed97bf787a3f6983f449126b9156088badff657d8fbbaef05a68865e0d",
+        "reference/artifacts/frames.jsonl": "509909a473fae14c8ef619224786a7b9234fc63508f2db68ba9bff1ffe424fdd",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "5eecd96515e5d4858bb17aa882333180f45a8ae1965fe978392cb21d42fc905d",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "7f66643165b08c1418f58cea1671026479e05992f456e9d81e6a1e473d780191",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "7aa8e974533a5796af3012bad9f4fccce2f8aff964266732c370745af3002028",
+        "reference/schedule.json": "8cf85fbcb978c7bb43d26618150b3d853c083118b6e15913837b9f8e8e2555b7"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1830,28 +1834,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s04_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s04_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "fd616bebfed2ffa83850e62e3a90a27960d7a2990e00c018ac7efd59bc643c2c",
-        "reference/artifacts/frames.jsonl": "b2e611592876fc76a2ee3f6937a12ff8d7d476fcfc4de5512c13a17e3d4c42e5",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "d1332de1b3e98972f27041ef34e7aaff5de17378883bba1b5c693db92abb5038",
-        "reference/capture.json": "9c10bdec726ef424494c26d3f40bf430b050182015fa433d5f59eeb2dd16cceb",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "d63cee413348d2035cbd4a2d03debf8bb554e5a77aa74b01b9e77baa1511dd58",
-        "reference/schedule.json": "4765e08f83a24c122e7b4f6a961ef7f6d52b7087f589f336bd19ba7f48060fa7"
+        "reference/artifacts/calibration.json": "a9ed4cee42885bc772e4d263c90e1ba11bf06e8bf8a17ff97463a3a6aa1f5397",
+        "reference/artifacts/frames.jsonl": "7ac3483b2fa00b24c3c59e7f44724e3e6255f6da24d89ba6732737097b452e70",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "ac46a1b7bdf45dec1b8a3595f6dbf4f7c8e7639d1539a790ccaf0fd955ad5349",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "aabaf2a8b86021c7cc3dfaf1db7d9dea0a4bfaf434c4b75ec4594c001523ab27",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "8f473b7d4d42e15c4f0a14b176d29af86e65d84e90d02852be7076c396fc0db5",
+        "reference/schedule.json": "a0f3a5b4ed32eaf529470e209fdeb6b88b6ca43f80e9346f2cd8ae6e7e8eddfd"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1859,28 +1864,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s05_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s05_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "d9a19263a7fba02700a48f260ee24e1de38ee512d3834f2c4be570306d08ad29",
-        "reference/artifacts/frames.jsonl": "2e33d60c249fef203a25298b9374db19dccb12c593ed6c6d55e803dba9b956d8",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "0f1465cccd0178294c35889c658bcddc5dbf87fca42a857e21048f9e99ac5db1",
-        "reference/capture.json": "ecc1d4f56c5de4bf937632e220a4f34886826c1f90d4f9f8ee9b996a23d62fd6",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "132208c89271366a7f3026b185249eef456a90ff77e4ed47359ea8992b693316",
-        "reference/schedule.json": "2e72a72cb1be67523313bf233c412a6e1a83fcb18a8dd820da3a118f1b215404"
+        "reference/artifacts/calibration.json": "2f302738081007fd0e7f33573eca4e168be0e0088fb3aefcef954aafdacab82a",
+        "reference/artifacts/frames.jsonl": "f743ae0042c13430d92558534ec120a7f5bd5de4a6e836fd62611b5a6a5231f8",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "15a14c8c4453e4738ab3f2d2589856f5e467dccf1abf74a5934b4baf3dcf8efa",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "f437824b722e56cb77520f8f4b49dd488be3e51d4b3d0dc479f988757bd2f579",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "70cb7d0510022447355c53b1e080c1db98728498ef2814a9dd49a6a6b8c3f090",
+        "reference/schedule.json": "af4ce3876de840a7ad22a1b3cdb2dd844ff4916ec6ab692159c29af47bad5ffa"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1888,28 +1894,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s06_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s06_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "ed01214facb2de486aef1135ae78c0e08596797d7c09cf4335fecf99f490f780",
-        "reference/artifacts/frames.jsonl": "314e047d59f6bd8a3d9c7f736e05526775f4476326bd07ac19a4a58da9bd85e4",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "cb4f70e5fdd6dea971be7f7bcc2ec4418d57df05165e91d66cbb79e06e35cc3e",
-        "reference/capture.json": "55ccf5add070841f76cee2fb177774d340f6160dc40e8b57dbd4e1c31af0de6b",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "407b95beaec11da1ae26998b3877bdf1265f7b93a4612e9e54926f53cf02c275",
-        "reference/schedule.json": "80d51b317e070cff47496a6068ef5761d8bfac86435cabf705c5822725fe1152"
+        "reference/artifacts/calibration.json": "801c36215dd448d02de06b9045acf73d0b60505168f8c87111ee5e285633d69d",
+        "reference/artifacts/frames.jsonl": "d53d5dceb4c5aab8a7d44c9b3bdfb3c2f68a83d609e06f9a033b225d272e473a",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "258db3d3a73b56f67891da99f16789fd4579310dbcc81b7d18ff55e9974e7eb1",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "d5dfd9b0a126a0e7f2dbb42061edbf20b83aa0788e02b00a0a8e36b1e79bf18b",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "bd9ec08999d4d038f00df74f5c6c1cc2c4c60df6989908892a59b554b83476e9",
+        "reference/schedule.json": "5e8fa00963c999be1e29d4d0ca02870c0d2582f1ed1e73cbcb61cab1314c9ff3"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1917,28 +1924,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s07_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s07_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "6cbba99accc0322a4a77e8d97095703023f8862731fea066a58734a39b83fb5d",
-        "reference/artifacts/frames.jsonl": "eb28be65b79bb97e94a08598681b6d9f603605b0b5c2ee9a5d2a9c745a45eb67",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "35149b2a670cd7be0ec8a7a802f2592505474fb27383833e0edcf7763cd68ab0",
-        "reference/capture.json": "bf75254b7e73dbf6a2268665ebfa7ce49cf3d1b72e2d536879197321d6285186",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "934771a1981c005634a501b7d6a53c928de297f2ecc4dad027d4128c9df61c58",
-        "reference/schedule.json": "2030c49d55d7bc0a846cd95f5a2fbd60c0e39d3e647274b088db68ec76c824e3"
+        "reference/artifacts/calibration.json": "7d85dcb4c1dd07ec09133eef718d9d8ba230f46e85d68822f04c564feb5bd8cc",
+        "reference/artifacts/frames.jsonl": "8e1ab4cac799fffb5b11ab72799fd2887cd088cbdcbc6f905e150c466310417a",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "4761ff8dd09d3d0710c351c73b6c83f8a81b9cd332f77373611e477c294e0409",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "823ff0e59f707b16798c77a0f8e32aae76cefc06f195cd595fc4127f032a62d9",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "c29c8b605fbe2487aa8fa953778dc3c7acd611372ecb3f951694c7815c336c28",
+        "reference/schedule.json": "682b3ea132504dc47ada9f18cd3215896dc3e90e34751e3ca14e8da328e75ac4"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1946,28 +1954,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s08_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s08_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "e260d685043e01aed3d0bc0973a6ee69e00a479b728337b3acf337d36e54aa51",
-        "reference/artifacts/frames.jsonl": "bd968aeafc6efa4bd72cbf93a199d135794b7ce80557521cd7040270c3e79d7c",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "3ee97a0b1491dcf3a0a3d584f4e205da9fa26d737220cb3fb7e41d0911fb8e8b",
-        "reference/capture.json": "f91df83052f8cc40c25e4e368258d23b01476b5963d179ff006f61fc29a54d79",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "890e6a7a72d0d51025005a3a62105e4d375304bab06c46a7f1244f79164149e0",
-        "reference/schedule.json": "1b04d7dbce4eaec053e6b860bc9821ba074875ae201e4373fdbaa6d42fbb4d54"
+        "reference/artifacts/calibration.json": "1bc2abe6770d02846554494e3fb37b78b797dee2656548af07e2c2a7dbdc270b",
+        "reference/artifacts/frames.jsonl": "8fc821df7ea050dbc353ec964b2aba7d40a3fc60e4a29b1554daf5799df5c7d4",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "bd7985889beec9c87cab25a9ce75b343df37b223901285a4994aac1b809e1136",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "6a665fdcc75faf5cb27a6fd19f9f6bf5e9de70cfbf299e6851685b1ee039b41c",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "d2fc4e5eb90927c76012cfe80de505b03c7bf4984d64a77d33906b44a670927e",
+        "reference/schedule.json": "d9cf0a06c8ffc843bd8b149671786f7c62d8707939de94820cef82558e271363"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -1975,28 +1984,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s09_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s09_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "eb163279bb84357588e1e8163bb22b79b460074c9e3320023e5c4001829cc6bd",
-        "reference/artifacts/frames.jsonl": "581543948f56d6aec6db1293f3cca2c8333b7c55d1519d7ced860d4a2be50027",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "f4696bea33097a308ce77cae3a002bf40ef15ed01e075dfc864b4ead7a899371",
-        "reference/capture.json": "73156960610db6b0952b28b796564f03d7b3d45524b87ac99ddba6ea45f6dacf",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "f8c19908deebf981fca2e77c648de24ce42b3843860b56df1bfcf3573c428d65",
-        "reference/schedule.json": "70bc6705a0e1ac602e44df5e67ee49119b325d967f96222f34ca645f8374628f"
+        "reference/artifacts/calibration.json": "e9ffd9f3566d5ddb30f682e5c3c976ca4000ae490976a9aeed52aefd80fe7977",
+        "reference/artifacts/frames.jsonl": "fc112db6cba378bfc2b698dcce8df2896c6fa67c69b721e4afc878ab5286c1e4",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "246dd6156457cf7950c5dd4eccbcb2e6e4b8a1b6ef60cfb90848f58f2a883d5d",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "dcd7af3203a3531385a9dfc3b3d9d973bcc622ae25026ac81aecf9899f3a047e",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "61557c0a0cb5910ff640e76efcc6426a462019d03a6a6435cd3b915afc5598f6",
+        "reference/schedule.json": "e9ddf5c826ff76d74fd845e664e099497d339458e72cf2ad2853a75f2ec6c831"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2004,28 +2014,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s10_orbit_pause": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s10_orbit_pause": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "3fc326f679b18ecdcc55b3afd1f7543adac705f23d58eb7bbb8a48a31e5a0201",
-        "reference/artifacts/frames.jsonl": "8100fbadbbbb18bcadfd849453a7b7a9296b35e4dc3bce387608518fe7bbb097",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "b8a948d6e4f4633dbccf27ce7b8807a5311fe3f68586f1fc70e294ad05738e0e",
-        "reference/capture.json": "0dd8974c86ad0e87192cd547aafc77323592f8d6c3f4ab7a77291a056507cc40",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "5bb48a2a249e07faf968ff6f68872ddda6bfd2d97bfec9659ad71de5108e8486",
-        "reference/schedule.json": "7177f64e71b1331ae15d595fc5931e2783b73cfa666574dec29132840a754409"
+        "reference/artifacts/calibration.json": "e72be15fab50ce76f336c8f11673dd1427c7716e3799192ea1433bdfea3d813d",
+        "reference/artifacts/frames.jsonl": "5fc2d74ce14ceb53f62326856b7aebbf0bd096a4e4c092e550c45713afcf3710",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "a2f62976e539d691e96a14e794feb649415b17bb7837cca081877dd3af89a843",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "b19e3bf230d9a60f77dd7bf69dde6ef447824e51da9ba5d00e0c20e9034e8d09",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "8d2bbb7c8dbc28871cc78aca162537b041f338f4392b5508fff377e192e12069",
+        "reference/schedule.json": "11e5b9b5dba55c130f1874842086135b55616bb57712df8814774f1f7e7caf65"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2033,28 +2044,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s11_orbit_pause": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s11_orbit_pause": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "6953d58bb6ee00d9535414c9079d9e3bcb421b0ac609210c18100a34f138ca5d",
-        "reference/artifacts/frames.jsonl": "91f4a0dd7b205d12c6999bae98857e95d714fcc336452f3dace4e925f11b0ef1",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "f1d2f2001b20ccb7b5366fd1327b40465e3913ed1888f55cbc6f336877dc6619",
-        "reference/capture.json": "611a3fbfc6547ea003bc743c17fae222fbd416f3198ddc2a5326a896509a1b24",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "96d25784011761c03163d27709fdd52961e71bef78c820e22a22ae6968e449e2",
-        "reference/schedule.json": "c287ae72fb40ccdddf85681acfde2a252293801ff1f61db7ada4afa6487b8a7e"
+        "reference/artifacts/calibration.json": "6a76c59dc28da0c5210a3450e185ddbfce40259bed6d4ab3acb7cdbb95bedc7a",
+        "reference/artifacts/frames.jsonl": "e0418f2ce18e46aba4b1940fca4a06a79b3cc1fb09bec50942cda9459c1a6140",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "52c8fe47c7ebcce02f090d1febe519d5c26db18e8257c9aed75233079bb45988",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "5143abf13305c20f18048c341cdd4facd5bf5d15b5b537d63cc1e2af3640182e",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "f23bc785bf5f1f9bb39b57ce4c63b305223933976ddb772d5d4cd49486b69acd",
+        "reference/schedule.json": "68bb50ad4a403304d6f968beb3a00790971dbd69d2bec6b5d2b6ad874886b933"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2062,28 +2074,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s12_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s12_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "c697633d4def4b5f8f6f02577e3f2828cffb471d67c83ea6e02e3de393ce3ed9",
-        "reference/artifacts/frames.jsonl": "bca61737f4898103d701963dffc2c9256dfd4df0da221fd38a90c9522123b59b",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "7daac3afb9bc7f6079a65c28de10242956d49a333d1a424d1cbc20b4f3f40f5e",
-        "reference/capture.json": "71d47071eb952acc10060243eaeab997b96c5d420a5b274ca690f60d748c89b5",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "0fa67cbb881de6de8fecf35b1ac36fa0947f5b0178903b54f53e1d2ff8a15f73",
-        "reference/schedule.json": "d040c7aecfa6f776ddf4e4f2f6c2df18e158e5d602b830cabd486c13752722a6"
+        "reference/artifacts/calibration.json": "ed7d7d0b973eb492e67d22485bc0bddabca7c4a88cef5a29b6483897dc370b0c",
+        "reference/artifacts/frames.jsonl": "f37f289f0e160ed2d8821ed57d4e66b4715e2b2725d4a7db81c67c73ba426307",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "5002145d24c24be38ba20d85a2407b241c934777c354fa42d8e0e9d74dba43db",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "e9459bf0caa48451936ddc9785e7a29c45004b9092d88bf1a41ca5192b570139",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "cc8e08590c52f7a1eeab7dbf32be1f01d3afa2574938aed18721a82de0bdc9b9",
+        "reference/schedule.json": "1af8edcfcbad08791b79ce703485a09f68c8859cfb38bec25697288f24cf9924"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2091,28 +2104,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s13_orbit_pause": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s13_orbit_pause": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "17c161722e2c5a3e5d9576ffbbb7f279f79baf6ae278fd58dd4636d5b161f615",
-        "reference/artifacts/frames.jsonl": "5ee2a4f533105650facb3f7985d7c6db320edf0e0cafe0ab49de3d5de25bbfca",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "c5362d6473a022f291e873fb8ad97708a44f92f2b6e4a3e594a1d5ab1e585180",
-        "reference/capture.json": "368faabd64895187a20f0ed78fa397610f6d2bda49dfeea62ed8007a7e4e072c",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "59c810777a75979dbe462d19d0af36798164748a6dfe0d1be5f57d9b73a60c46",
-        "reference/schedule.json": "2b73dd219d11d04d62a1cf6031aceda82bbb440c3dd9038c177f23bd59bec74a"
+        "reference/artifacts/calibration.json": "c55d0cf96149d0e9c8814f7322697cdc7c375ea347223acfcf44e0580699de5e",
+        "reference/artifacts/frames.jsonl": "394d4fa217ea9f843e9c22318d7ecfac4b07188b87567c01fa916bfe75228b98",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "2c5503901b9125cd5278377528bb60a08b15ed8358aca24083c0c37d306344cb",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "88398b2fb2b950c3b95ed9d7af9556e8235a1a7ebe4638a27ded202a76621377",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "92b76f13150d1c26cf1768409b516f7e9ed960bc39a4c76524c00ad4ea78299c",
+        "reference/schedule.json": "871621331e845a603d69c906c3b29425f095a89fb7f03fb5e9e7845193dad5ec"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2120,28 +2134,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s14_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s14_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "dff37fe407a4d5f2bf2966e952dfa4a5abe23b18ea0604b5972a348e86a9b994",
-        "reference/artifacts/frames.jsonl": "2e7633fdfdae687cb7ac9c5c1302e8d6321b551e18f276539284e685aa28f6e4",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "bdae7b065a3d7675c866ccf379d23ccd546bcec71a6ff8a56c11f0fa34a918ae",
-        "reference/capture.json": "38152f18d7c73fe37bcc55e1f8629a73977a887ef0e3908d624b25bd68fb593c",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "afde635c4ed9d11eb2272214146acff4ab127273b3da8a84c0ca4c1cc299fc0b",
-        "reference/schedule.json": "1dcb98a25e71082dba94d9722156fd6146be9666abf4c97691c687c9da39e80c"
+        "reference/artifacts/calibration.json": "ee31b7e543fc935ffbc78bd3bf7588b8c4370a1bba1359eeca3cb784a3a44ec0",
+        "reference/artifacts/frames.jsonl": "17b6677983f4254e7d4f06dddb0a535fe1bbafd4a1fabbe3b739dca8f6fa4c1d",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "8353f498d311a2d980ecfac164aacdc44a1730e957a5eec274394ca8e31aa475",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "b6e67ce1becbbde2a9b139403c2afd3cdec8b987d9a0caf00783b7e041308d7f",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "b0d855b26d07f1aab04ebe7628e67c4c063f906bcd1e58e35068301477ab5c96",
+        "reference/schedule.json": "87050f9ea789ea14f6e0391bd17a292f51b514f08f193919ab7e3f2e4ae1e393"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2149,28 +2164,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s15_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s15_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "a446635dce24ce3e6120064e2869e02bc54ea834f1455485cd735588a19a2f5e",
-        "reference/artifacts/frames.jsonl": "22ba942414379ade79e001558edca951c90b1bf359bbd870d9e4d5ae13a7dbe8",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "ce652552a2438dbab90c4dc7b6c567ec1d8687c238949e66c395d12b291fa334",
-        "reference/capture.json": "58c0dadc9b5913a24ad4a8e888da36bf131bf0585c2447fb29eee057a1a40e59",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "b9b013a98338a30febf62e89aeff4399e5a934de84cea905ae8955a22d7f4db9",
-        "reference/schedule.json": "001942627d2b4c992bdf72337401f100700503b9f4554f2fb28452a48846e162"
+        "reference/artifacts/calibration.json": "87e60e403cefe83283b42261ee068a3ed500c35415cfe6bd91580899f2ff001e",
+        "reference/artifacts/frames.jsonl": "f64845509502d22184a31105b705847d35644ff3f39d7eab6f07fd50bec9aa26",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "0b7c79faf46c05a8ca96a218f0c87b8e048e0da3681eaa9bbb2be6d85784e175",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "9a8aee117e8da5bcc677e08f59bd3805807770bb105775d5373c4202c9385aab",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "20f3f9cd9a0261a457cc3c15b798edcbcefbd37150da63c070675c336ec32c6c",
+        "reference/schedule.json": "d26fbd48dbe245702ba046b23734592971be1d3ad8c8d3c4f981ff06ebe24018"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2178,28 +2194,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s16_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s16_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "60c46a1f7e12a4935e8d32b2b4088d0aa5985451525d6f4962b7a397530261e8",
-        "reference/artifacts/frames.jsonl": "f835b257a06a06ca915386f8d2199683a14c13ad47dddcefd9244ccc9456e95b",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "6788e0cc75606d9ef6df277f2b0f4e03a4e65604b7ff2fb1375e598c616379d2",
-        "reference/capture.json": "3fd27a65c0e00832eb7521bc979fd4ce956fa9cee272715a23f7ceab2088141a",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "58e090c6728017f6cbdf91604146fe12d50bd2370a236ed5d483b4cfc86fd066",
-        "reference/schedule.json": "0fe282c14c87d67523266d49911046a5f0a147a7d00d677784d118b3a7754905"
+        "reference/artifacts/calibration.json": "a23cca560d0e62185479f3789d1a4b3315108ccb025698051ed06fbd507998f0",
+        "reference/artifacts/frames.jsonl": "7098b23e7a59d33620329b563a50ae1f496bff87f53e49b2a04de73d53c1a012",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "ce40c5c07c75433df6822b650f810ddb4dda66e21fc04b73242e568141526698",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "75505aa1b1a5c548bf7ab1fd7c4af118bd127f7502f9d72162339144701eace3",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "f36423f1c056055e74198b351424734927c0e6915107ce87b1624b7abc761b50",
+        "reference/schedule.json": "4a556201c787ffcecf91a83844c2ceb229583f80c12e7ae0511b6f14a28da44c"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2207,28 +2224,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s17_orbit_pause": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s17_orbit_pause": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "128d0ecbfdbf95d078d4a0f907fcc685fb281a5f8cb725b40b16d36b2cb8295f",
-        "reference/artifacts/frames.jsonl": "54be3b5f1ca1c5f474e13b7777b57144fe7c2a1b67a306cf8ad957696b62b5d8",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "fb147a5dad2274f8b48830b545676035be078280021a89e7666016ed6f519a2d",
-        "reference/capture.json": "c9d8f7774459db6e965610d0f0802ac6b5908e064298f58db89ebf0f687af7a3",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "975dd5ab1dc1a8607925e4bd56765a3226ec7c4778294b0e2e609e39f625b1f1",
-        "reference/schedule.json": "789a8379fd67c9e804d7da3d4d07951f370d1a38779c99a4412876cb96ad9e4a"
+        "reference/artifacts/calibration.json": "f7df83b41cc4820aba9bde0e4c9da018c6e6b181906b3dcf085e06ea076c0197",
+        "reference/artifacts/frames.jsonl": "c46885fe5aa15f9c6e93251661481b1f2f7eed5dbbc3b9853ecba32fce0f1360",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "edbbcfff9d14d044bfcb9c077d86ef93a05cb61fbff69ae42e6e55f2e41d1d47",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "ece30601ce416eecc458fb139c240496f24a791f09c301a35b818e391772e7a7",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "c411c2f348acc677887c4660f83b2dfefd894734d71cc793cdc96c042118b26f",
+        "reference/schedule.json": "af79fc3102129dafd22d1d6e27d5c35a37709e8960287e4de78b05c06d315a1d"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2236,28 +2254,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s18_orbit_pause": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s18_orbit_pause": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "dcbe12073ebdc3b1e53da845471670d092065e849699317752b52553b2c8a7cb",
-        "reference/artifacts/frames.jsonl": "f8b83672f2852f55d6f6e8c74c76fb07a3da18d4f52c7b66b702998b848e3c1b",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "4a70da86616d171a0f7e4c67c7c14500c197143354b2da53e851eebe1dedee4e",
-        "reference/capture.json": "f6ec77a1366e2385cc29f21eeef0c9a4357a958dcdfe409bee36c8526a86a1c1",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "8a2f7534bcc90b6b453e060f1a3e475a0a8cbf980e2371b6a5064d4b0fa732e0",
-        "reference/schedule.json": "4056a8b1e62c4c1b0e68c9f5c640052ebcd9fd8c01495fca6bab5033b780ffd5"
+        "reference/artifacts/calibration.json": "ea9269e4724eca65596ccd294d815d15e1dff2ba0200b4c33d0280904714e06e",
+        "reference/artifacts/frames.jsonl": "ce69ecf1e98fcaca7383c5d406d15bb156a556cd430cc925aff1ced48eaf3c69",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "f87ecf49514972d04016376b6be777fd3b9fafe8fe34d0ce876fd77ce2def560",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "fecee6ab289f85657da8954e39b99e8abc4add4e9e37e9e9e31bbacad1923600",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "efef1adfb7b3b30ad7f7ee2674fdfa211c48befa8ecc23ffabac2867280ca94b",
+        "reference/schedule.json": "c29432ec22ce293a3d9c4418634db3c83545277ff8a9da21410c03ac808f1835"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2265,28 +2284,29 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
-    "synthetic/camera_orbit/SunRisesAndSets__lighting_orbit_v2/s19_pause_orbit": {
+    "synthetic/camera_orbit/SunRisesAndSets__lighting/s19_pause_orbit": {
       "video": "reference/reference.mp4",
       "files": {
-        "reference/artifacts/calibration.json": "bcf6d7851b4144b76ad0e4a52026c8ed4d55e94b7f1ef81aadacb51e8de2711d",
-        "reference/artifacts/frames.jsonl": "8d2a775ad64b32fea2803492708efd43a99288361368ab501eeb043efc1a9079",
-        "reference/artifacts/intrinsics.npy": "d7e1e879f11b985669c75f2667ee0bbfcd91a3cb845a75074aa013933c567ad9",
-        "reference/artifacts/poses.npy": "a5eaab2d0d445b4ec8587832c2d2de5092170abfe9d77d57b701df247458e7ad",
-        "reference/capture.json": "0296b9428296b76360bec0f6a104ce3089998764d01c4f693913d657085e9ed5",
-        "reference/ref.png": "3b9115569c705e8b80b97c7069799bd1f48506cb162c4aaf188457b1b5472c89",
-        "reference/reference.mp4": "703882874847f98e3959064372193bc42105029c4a90d0446db44bece2743cb4",
-        "reference/schedule.json": "217c12531e738a5bb318cb5bf30c2be32a7dcc4486d65d20688bb74290592077"
+        "reference/artifacts/calibration.json": "446fa5bafcaff1047d36753a84dbd4645301088cbb15393206c3f9dadb85bdb0",
+        "reference/artifacts/frames.jsonl": "48e4424f95d4dddd3537ab37a473f4efa3959f2c77b2e96a0971b0295e78c6c4",
+        "reference/artifacts/intrinsics.npy": "7116a2769945e985caa0e2fde40e43e2276410e7b2f8272b11afe298ded5f41f",
+        "reference/artifacts/poses.npy": "de5e6ccfc96889dac4e946b931daa16007128c9fffd0b9b3d794c1e492fd50f3",
+        "reference/artifacts/scene_dependencies.json": "7e80e9ad44c5ec01dcb3b4cce8d652128c5553b38f597e6a36bdba95b8af033f",
+        "reference/capture.json": "6f2a5ddcca9ee439316d00b070a39dcfb816c12239df1cd2eaee79bf4a6b0a3c",
+        "reference/ref.png": "8113099e70ba5caef461abc0eb1464034fff75d4be07e3156a43facddaca8a77",
+        "reference/reference.mp4": "eca2b9550f9b49e7fe99c853bc6529554bed484793a6b12fcae65b08c0c3c3d9",
+        "reference/schedule.json": "300e4a36fcb9d1c33d115fcd356051e479fb1efa0dc0e28ea4d4b9ab12192173"
       },
-      "fps": 12,
-      "width": 1024,
-      "height": 1024,
-      "frames": 120,
+      "fps": 24,
+      "width": 1280,
+      "height": 1280,
+      "frames": 240,
       "duration_sec": 10.0,
-      "first_frame_psnr_db": 47.89,
+      "first_frame_psnr_db": 30.945,
       "quality": "ok",
       "unity": {
         "scene_project": "GameScenes/SunRisesAndSets",
@@ -2294,8 +2314,8 @@
         "replay_mode": "orbit_phase",
         "source_rev": null,
         "lfs_rev": null,
-        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision the core orbit was recorded from; renders are identical with or without the project's later LFS assets",
-        "build_hash": "editor:6000.3.7f1:ed9e990+wt"
+        "asset_note": "SunRisesAndSets scene file pinned to 84a06a4 (2026-02-17), the revision of the paper's conditioning frame; native CameraOrbitAgent rig, sun Euler x 68.2, post-processing on",
+        "build_hash": "editor:6000.3.7f1:66dfb28+wt"
       }
     },
     "synthetic/camera_yaw/BilliardGame__scene_360_in/s02_sweep": {

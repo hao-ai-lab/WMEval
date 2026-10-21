@@ -212,7 +212,7 @@ def check_runtime_imports(
     return rows
 
 
-LIGHTING_DOC = "docs/evaluation_dimensions.md#reproducing-the-published-lighting-scores"
+LIGHTING_DOC = "docs/evaluation_dimensions.md#sam2-cuda-extension"
 
 
 def _import_sam2_extension() -> None:
@@ -236,7 +236,7 @@ def check_lighting_sam2_extension(
     except Exception as exc:  # missing, or built against another torch
         return [Row(WARN, "sam2 CUDA extension",
                     f"sam2._C not importable ({type(exc).__name__}): SAM2 skips mask hole filling, so "
-                    f"lighting scores differ from the published ones; rebuild SAM2 as in {LIGHTING_DOC} "
+                    f"lighting scores can differ from GPU runs that have it; rebuild SAM2 as in {LIGHTING_DOC} "
                     "[lighting_shading]")]
     return [Row(PASS, "sam2 CUDA extension", "sam2._C importable [lighting_shading]")]
 

@@ -27,8 +27,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 DEFAULT_REPO = "lmgame/WMEval-Lite"
 CHECKSUMS = "checksums.sha256"
-# Case data lives under each case's reference/ directory; every suite (including the
-# paper-native lighting suite, via `cases_root: ../cases`) uses the shared cases/ tree.
+# Case data lives under each case's reference/ directory; every suite (a companion suite
+# via `cases_root: ../cases`) uses the shared cases/ tree.
 DATA_PATTERNS = ["cases/*/*/reference/**"]
 # test_full adds the synthetic trajectory suite (tools/generate_synthetic_trajectories.py).
 SYNTHETIC_PATTERNS = ["synthetic/*/*/*/**"]
@@ -172,7 +172,7 @@ def build_index(root: Path = SUITE_ROOT) -> list[dict]:
                     }
                 if suite_name not in row["suites"]:
                     row["suites"].append(suite_name)
-                row["dimensions"].append(dim if suite_name == "wmeval_lite_v1" else f"{dim} (paper-native)")
+                row["dimensions"].append(dim if suite_name == "wmeval_lite_v1" else f"{dim} ({suite_root.name})")
     return sorted(rows.values(), key=lambda r: r["case_id"] + ("~" if r["suites"] != ["wmeval_lite_v1"] else ""))
 
 

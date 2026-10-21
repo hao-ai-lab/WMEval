@@ -20,10 +20,21 @@ modules:
 - shadow_consistency
 reference:
   first_frame: reference/ref.png
+  video: reference/unity_orbit.mp4
   checksums: reference/checksums.sha256
   artifacts:
     actions_file: reference/artifacts/actions.txt
     per_model_actions: reference/artifacts/actions_per_model.json
+    trajectory: reference/artifacts/trajectory.yaml
+    action_npz: reference/artifacts/action.npz
+    camera_pose_samples: reference/artifacts/actions.jsonl
+    camera_poses: reference/artifacts/poses.npy
+    camera_intrinsics: reference/artifacts/intrinsics.npy
+    compile_manifest: reference/artifacts/compile_manifest.json
+    scene_calibration: reference/artifacts/calibration.json
+    unity_frames: reference/artifacts/frames.jsonl
+    scene_dependencies: reference/artifacts/scene_dependencies.json
+    unity_qa: reference/artifacts/unity_qa.json
 protocol:
   candidate_normalization: none
   min_duration_sec: 1.0
@@ -32,10 +43,24 @@ protocol:
 evaluator_lock:
   release_id: wmeval-lite-v1
   code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
-  evaluator_fingerprint: 00505b0ad29673de1106e3fa2b13933b
+  evaluator_fingerprint: 7c0ed525700420d6842f4bcb8af14667
   module_config: {}
-  artifact_schema_versions: {}
-  dependency_versions: {}
+  artifact_schema_versions:
+    trajectory: 1
+    action_npz: 1
+    camera_pose_samples: 1
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    sam2: 1.1.0
+    torch: 2.14.1
+    transformers: 5.18.0
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    asset:sam2: 2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318
+    lock_source: tools/lock_case_dependencies.py
 module_params:
   shadow_consistency:
     shadow_text_prompt: table. chair. lamp.

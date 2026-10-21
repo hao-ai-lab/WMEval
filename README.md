@@ -51,7 +51,7 @@ source .venv/bin/activate
 bash scripts/bootstrap_tables_4_7_gpu.sh
 source .venv-gpu/bin/activate
 ```
-   This environment runs every dimension. To reproduce the published lighting scores, score `lighting_shading` in a separate environment built from the lighting lock (Python 3.12, torch 2.8, SAM2 with its CUDA extension); see [Reproducing the published lighting scores](docs/evaluation_dimensions.md#reproducing-the-published-lighting-scores).
+   This environment runs every dimension, lighting included (the paper's lighting table is reproduced exactly; see [Published lighting scores](docs/evaluation_dimensions.md#published-lighting-scores)).
 3. Download the case data and validate the suite. The repository holds each case's metadata (`case.yaml` and the checksum manifest); the case data itself (reference videos, conditioning frames, action trajectories and other artifacts) is hosted on the Hugging Face Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite):
 ```
 python tools/sync_lite_data.py download        # writes cases/*/reference/ and verifies every checksum
@@ -85,7 +85,7 @@ Instead of a directory tree you can pass a strict JSONL manifest with `--candida
 {"model":"my_model","case_id":"RacingCar/prompt_first","seed":"42","candidate_video":"/data/other.mp4","params":{"shadow_hud_preset":"genie"}}
 ```
 
-The lighting case scores exactly ten seconds of the orbit. If your model's output does not start the orbit at its first frame, or its mp4 is tagged with a rate other than its generation rate, declare `lighting_canonical_zero_frame` / `candidate_fps_override` in `<model_root>/model.yaml`; see [Candidate time mapping](docs/evaluation_dimensions.md#candidate-time-mapping-lighting_time_mapping).
+The lighting case (`SunRisesAndSets/lighting`, the paper's native case) scores the candidate as supplied, reference-free, exactly as in the paper; set your model's `shadow_hud_preset` (e.g. `lingbot`, `mg2`, `mg3`, `genie`) in `<model_root>/model.yaml` or the manifest `params` if it draws a HUD; see [Lighting & Shading](docs/evaluation_dimensions.md#lighting--shading).
 
 To compare the Table 4/7 cells with the paper baseline, export the rows and run the comparison:
 
@@ -153,12 +153,12 @@ python tools/prepare_lingbot_table7_inputs.py     # LingBot Base Cam poses/intri
 
 ### Synthetic Trajectory Suite (test_full)
 
-The curated cases form the `test_core` split (33 rows). The `test_full` split adds **220 synthetic action trajectories** (253 rows in total), built text first: each starts as an action description (a short sequence of steps from a per-target vocabulary, e.g. *"the camera turns left at 30 degrees per second for 2 seconds (60 degrees in total), then holds still until the end of the 10-second clip"*), which becomes the second half of its prompt and is compiled into the action sequence (a schema-v1 `trajectory.yaml`). The first half of the prompt is the scene description of a core case, which also supplies the conditioning frame and action target; steps start from that case's initial state, so the core conditioning frame stays valid. Steps are sampled with a fixed seed, and each family keeps only distinct, mutually far-apart action sequences, balanced across step types and step counts.
+The curated cases form the `test_core` split (32 rows). The `test_full` split adds **220 synthetic action trajectories** (252 rows in total), built text first: each starts as an action description (a short sequence of steps from a per-target vocabulary, e.g. *"the camera turns left at 30 degrees per second for 2 seconds (60 degrees in total), then holds still until the end of the 10-second clip"*), which becomes the second half of its prompt and is compiled into the action sequence (a schema-v1 `trajectory.yaml`). The first half of the prompt is the scene description of a core case, which also supplies the conditioning frame and action target; steps start from that case's initial state, so the core conditioning frame stays valid. Steps are sampled with a fixed seed, and each family keeps only distinct, mutually far-apart action sequences, balanced across step types and step counts.
 
 | Family | Target | Trajectories | Step vocabulary (core case) |
 | --- | --- | --- | --- |
 | `camera_yaw` | camera | 45 | turn, hold, sweep and back, look behind (5 on each of 9 scene views) |
-| `camera_orbit` | camera | 20 | circle clockwise / counter-clockwise, pause (`SunRisesAndSets/lighting_orbit_v2`) |
+| `camera_orbit` | camera | 20 | circle clockwise / counter-clockwise, pause (`SunRisesAndSets/lighting`) |
 | `ego_vehicle` | ego_vehicle | 28 | drive, steer, lane change, brake, coast (`RacingCar/kinematics_third`) |
 | `cue_ball` | cue_ball | 25 | single or repeated strikes in 8 directions at 3 strengths, waits (`BilliardGame/kinematics_first`) |
 | `ball_force` | ball | 28 | pushes in 8 directions at 2 strengths, free rolling (14 each on `BallRoller`, `MirrorRollingBall`) |
@@ -179,6 +179,7 @@ python tools/render_synthetic_references.py build             # replay players (
 python tools/render_synthetic_references.py run --detach      # render every trajectory, resumable, in the background
 python tools/render_synthetic_references.py publish           # copy into synthetic/*/reference/ + synthetic/references.json
 python tools/generate_synthetic_trajectories.py               # fold reference status into meta.json / manifest
+python tools/build_lighting_case.py                           # SunRisesAndSets/lighting's own Unity reference video + ground truth
 ```
 
 Each trajectory directory `synthetic/<family>/<Scene>__<variant>/<pattern>/` holds `trajectory.yaml`, the compiled `action.npz` (plus `poses.npy` for orbits), the Project Genie program `actions.jsonl` and `meta.json` (prompt, action description and steps, first frame, target dimensions). `expected_jobs.py` applies the same action-target gate as the core cases and writes candidates to `<model_root>/synthetic/<family>/<Scene>__<variant>/<pattern>/<seed>.mp4`. Each trajectory also has a Unity reference in its `reference/` folder (video, frame 0, Unity ground truth, capture record), rendered by replaying the same actions in the core case's Unity scene; `synthetic/references.json` lists every reference file's checksum, how closely its frame 0 matches the core conditioning frame, and which scene revision and assets it was rendered from. References whose frame 0 differs visibly from the core frame (below 20 dB PSNR) are marked `reference_quality: weak_first_frame`.

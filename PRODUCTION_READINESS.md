@@ -6,9 +6,9 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 
 ## Snapshot
 
-- 34 validated case bundles across 8 dimensions.
-- 32 cases have native machine-readable trajectories; 2 rely on supplemental reconstructions.
-- Project Genie backend readiness: `{"native_executable_ready": 32, "supplemental_executable_ready": 1, "unsupported_action_space": 1}`.
+- 33 validated case bundles across 8 dimensions.
+- 32 cases have native machine-readable trajectories; 1 rely on supplemental reconstructions.
+- Project Genie backend readiness: `{"native_executable_ready": 32, "supplemental_executable_ready": 1}`.
 - Open gaps by severity: `{"critical": 0, "high": 8, "low": 3, "medium": 5}`.
 - Open gaps by release priority: `{"P0": 4, "P1": 7, "P2": 5}`.
 
@@ -19,7 +19,7 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 | `lpips` | partial | 7 | 7 / 0 | 7/7 | `beamdomino_native`, `liquid_832x464_16fps`, `none` | 0 / 0 / 0 |
 | `action_controllability` | partial | 3 | 3 / 0 | 3/3 | `beamdomino_native`, `none` | 0 / 1 / 0 |
 | `prompt_scene_consistency` | partial | 6 | 6 / 0 | 6/6 | `none` | 0 / 2 / 0 |
-| `lighting_shading` | ready | 1 | 1 / 0 | 0/1 | `lighting_orbit_10s_fps12` | 0 / 0 / 2 |
+| `lighting_shading` | ready | 1 | 1 / 0 | 1/1 | `none` | 0 / 0 / 2 |
 | `environment_object_consistency` | partial | 16 | 16 / 0 | 16/16 | `match_reference`, `none` | 1 / 1 / 0 |
 | `kinematics_mechanics` | partial | 3 | 3 / 0 | 3/3 | `match_reference`, `none` | 0 / 2 / 0 |
 | `physical_causality` | partial | 3 | 3 / 0 | 3/3 | `beamdomino_native` | 0 / 1 / 0 |
@@ -31,8 +31,8 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
   Remediation: Resolved: all 32 live cases bundle a versioned trajectory.yaml (time base, channels, units) with compiled action.npz / actions.jsonl, and every trajectory id declares its target entity in action_backends.yaml; supplemental controls were migrated into the bundles.
 - **P0 / HIGH — `candidate_normalization`:** Most non-liquid cases use candidate_normalization none even when metrics compare candidate frame f with reference frame f.
   Remediation: Every row records input_contract (candidate vs. reference fps, size, frames, duration) and flags unnormalized rows outside the reference spec. Normalization is not added where it would change paper-parity scores; decide per case before adding it.
-- **P0 / HIGH — `dependency_lock_content`:** Live case evaluator locks have dependency_versions but empty artifact_schema_versions, and the non-lighting locks describe the macOS environment only.
-  Remediation: dependency_versions are filled for every live case (tools/lock_case_dependencies.py, macOS venv; lighting keeps its CUDA lock). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set.
+- **P0 / HIGH — `dependency_lock_content`:** Live case evaluator locks have dependency_versions but empty artifact_schema_versions, and they describe the macOS environment only.
+  Remediation: dependency_versions are filled for every live case (tools/lock_case_dependencies.py, macOS venv). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set.
 - **P0 / HIGH — `external_model_artifacts`:** Candidate-side VLM judging depends on a hosted provider snapshot; model weights are pinned.
   Remediation: Checkpoints are pinned with revisions and sha256 (evaluator_assets.lock.json) and checked by tools/preflight_lite.py; reference-side judgments are frozen fixtures. Remaining: candidate-side hosted judging depends on the provider's model snapshot.
 - **P0 / MEDIUM — `result_status_schema`:** Metric availability, primary source, tracked-label coverage, and diagnostic-only status are not represented uniformly across dimensions.

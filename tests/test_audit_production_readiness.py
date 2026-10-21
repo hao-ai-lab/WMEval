@@ -9,9 +9,9 @@ def test_production_readiness_manifest_covers_live_suite() -> None:
     assert report["status"] == "valid"
     assert report["manifest_errors"] == []
     assert report["summary"]["dimension_count"] == 8
-    assert report["summary"]["case_count"] == 34
+    assert report["summary"]["case_count"] == 33
     assert report["summary"]["native_trajectory_case_count"] == 32
-    assert report["summary"]["supplemental_trajectory_case_count"] == 2
+    assert report["summary"]["supplemental_trajectory_case_count"] == 1
     assert report["summary"]["open_priority_counts"] == {
         "P0": 4,
         "P1": 7,
@@ -49,8 +49,7 @@ def test_production_readiness_report_surfaces_portability_gaps() -> None:
     assert rows["fluid_mechanics"]["project_genie_executable_cases"] == 4
     assert rows['lighting_shading']['readiness'] == 'ready'
     assert rows['lighting_shading']['evaluator_lock_nonempty_case_counts']['dependency_versions'] == 1
-    # Every live case now carries a dependency lock: lighting_orbit_v2's
-    # hand-pinned GPU environment, every other case written by
+    # Every live case carries a dependency lock written by
     # tools/lock_case_dependencies.py.
     assert all(
         row["evaluator_lock_nonempty_case_counts"]["dependency_versions"] == row["case_count"]

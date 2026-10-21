@@ -30,7 +30,7 @@ DEPENDENCIES = {'torch':'2.8.0', 'flash-attn':'2.8.3', 'transformers':'4.51.3',
 
 def run_batch(args, root, source, model, case, adapter, hardware, dependencies, deadline):
     """Keep weights resident while native generate resets seed-local state."""
-    parent = root/'outputs/lighting_orbit_v2/LingBot'
+    parent = root/'outputs/lighting_orbit/LingBot'
     pending = []
     for seed in args.seeds:
         output = parent/f'seed_{seed}'
@@ -149,7 +149,7 @@ def main() -> None:
         remaining=(deadline-datetime.now(timezone.utc)).total_seconds()
         if remaining<=60:
             raise TimeoutError('generation deadline reached; release the Pod')
-        output=root/'outputs/lighting_orbit_v2/LingBot'/f'seed_{seed}'
+        output=root/'outputs/lighting_orbit/LingBot'/f'seed_{seed}'
         output.mkdir(parents=True,exist_ok=True)
         receipt_path=output/'receipt.json'
         video=output/'video.mp4'
