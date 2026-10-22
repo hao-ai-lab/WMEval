@@ -340,7 +340,10 @@ def test_robust_mechanics_onset_alignment_and_detector_gap():
     # a detector gap across the launch is not mistaken for a late onset
     gappy = {f: p for f, p in gt.items() if not 14 <= f <= 24}
     row = kr.robust_mechanics(gappy, gt, 30.0, mass_kg=1.0, alignment_tolerance_frames=5)
-    assert row["temporal_offset_frames"] == 0
+    # The onset sits on the speed-threshold boundary, so float differences across
+    # platforms can move it by one frame; an 11-frame gap read as a late onset would
+    # shift it by several frames.
+    assert abs(row["temporal_offset_frames"]) <= 1
     assert row["robust_error_rate_pct"] < 1.0
 
 
