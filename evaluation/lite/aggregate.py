@@ -299,6 +299,35 @@ def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(mechanical_summary, Mapping):
         exact_match_pct = _numeric(mechanical_summary.get("exact_match_pct"))
         error_rate_pct = _numeric(mechanical_summary.get("error_rate_pct"))
+    # Non-headline additions (2026-10-21; evaluation/modules/kinematics_robust.py):
+    # candidate-camera FDE/DTW and robust mechanics. The module already withholds
+    # them (None) when its camera estimate is unreliable or a required label is
+    # untracked.
+    extended = result.get("extended_kinematics")
+    ext_summary = extended.get("summary") if isinstance(extended, Mapping) else None
+    if not isinstance(ext_summary, Mapping):
+        ext_summary = {}
+    ext_reliable = ext_summary.get("reliable")
+    extended_metrics = {
+        name: _numeric(ext_summary.get(name))
+        for name in (
+            "fde_m_ego_mean",
+            "dtw_m_ego_mean",
+            "robust_error_rate_pct",
+            "robust_momentum_error_pct",
+            "robust_energy_error_pct",
+            "peak_speed_error_pct",
+            "contact_dp_error_pct",
+        )
+    }
+    extended_metrics["ego_lift_reliable"] = (
+        None if ext_reliable is None else (1.0 if ext_reliable else 0.0)
+    )
+    extended_metrics["ego_camera_moving"] = (
+        None
+        if ext_summary.get("lifting") is None
+        else (1.0 if ext_summary.get("lifting") == "candidate_camera_ground_plane" else 0.0)
+    )
     return {
         "fde_px_mean": _mean(fde_values),
         "dtw_px_mean": _mean(dtw_values),
@@ -311,6 +340,7 @@ def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
         "tracked_required_label_count": tracked_count,
         "scored_required_label_count": scored_count,
         "missing_required_label_count": missing_count,
+        **extended_metrics,
     }
 
 
