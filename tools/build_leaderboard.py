@@ -1,38 +1,57 @@
 #!/usr/bin/env python3
-"""Composite WMEval leaderboard from per-cell headline values.
+"""WMEval leaderboard: per-dimension rankings aggregated into an overall ranking.
 
-Scoring (no cross-metric normalization is invented):
+Method (no cross-metric normalization is invented; only ranks are combined):
 
-* Within a dimension, every pair of models is compared on each (cell, metric)
-  both report; the better value wins (ties count half). A model's dimension
-  score is its pairwise win rate x 100 over those comparisons.
-* The composite is the mean of the model's dimension scores over the dimensions
-  where it has at least one comparison; ``coverage`` says how many. Dimensions
-  where a model is N/A (unsupported, or not run) never count against it, and a
-  dimension with a single scored model contributes no comparison.
-* The core composite averages only the core dimensions (scored for at least
-  ``--core-min-models`` models) and is reported only for models covering all of
-  them, so it compares like with like.
+1. Cell ranks. Within a dimension, models are ranked separately on every
+   (cell, metric) the paper reports for it (plus any Lite-only metric listed in
+   LITE_METRICS), respecting the metric's direction. Two models that cannot be
+   separated share the rank: with per-seed values on both sides (Lite runs, >= 2
+   samples each) the seeds are bootstrapped and the pair is a tie unless one
+   ordering holds in >= 95% of resamples; otherwise (paper mean +/- std over n
+   generations) a two-sided Welch t-test at alpha = 0.05 decides, and a
+   single-sample value is tested against the other model's spread (prediction
+   interval). Rank = 1 + #models significantly better + 0.5 x #models tied, which
+   is the averaged rank of a tie group. A model N/A on a (cell, metric) is not
+   ranked there, and a (cell, metric) with one model has no comparison.
+2. Dimension rank = mean of the model's (cell, metric) ranks (lower = better),
+   re-ranked to 1..n among the models ranked in that dimension (equal means
+   share the averaged rank).
+3. Overall. Each dimension rank becomes a percentile, (n - rank) / (n - 1):
+   1.0 best ... 0.0 worst among the n models ranked there; a single-model
+   dimension contributes no comparison. Overall score = mean percentile over the
+   dimensions the model is ranked in; coverage = those dimensions / 8. The
+   like-for-like score uses only the dimensions every listed model is ranked in.
 
-Inputs: ``experiments/leaderboard/paper_scores.yaml`` (paper tables) plus
-optional Lite results for extra models (``--lite name=per_case_results.jsonl``),
-mapped onto the same cells (seed means of completed rows).
+Inputs: ``experiments/leaderboard/paper_scores.yaml`` (paper tables, mean +/- std)
+plus Lite results for extra models (``--lite name=per_case_results.jsonl``,
+repeatable; later files override earlier ones on the same dimension/case/seed,
+and a case the latest run marks ``unsupported`` is N/A for that model). Lite
+results are mapped onto the paper cells for all eight dimensions.
 
     python tools/build_leaderboard.py \\
         --lite odyssey=reports/wmeval_lite/odyssey/per_case_results.jsonl \\
+        --lite odyssey=reports/wmeval_lite/odyssey_lpips/per_case_results.jsonl \\
+        --lite odyssey=reports/wmeval_lite/odyssey_judge/per_case_results.jsonl \\
+        --lite odyssey=reports/wmeval_lite/odyssey_v2/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_v2_prompt/per_case_results.jsonl \\
+        --lite odyssey=reports/wmeval_lite/odyssey_v2_lighting_native/per_case_results.jsonl \\
         --output reports/leaderboard
 """
 from __future__ import annotations
 
 import argparse
 import json
+import math
+import zlib
 from collections import defaultdict
-from itertools import combinations
+from dataclasses import dataclass
 from pathlib import Path
-from statistics import mean
+from statistics import mean, stdev
 
+import numpy as np
 import yaml
+from scipy import stats
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PAPER = ROOT / "experiments/leaderboard/paper_scores.yaml"
@@ -45,141 +64,443 @@ SHORT = {
     "kinematics_mechanics": "Kinematics", "fluid_mechanics": "Fluid", "physical_causality": "Causality",
     "lighting_shading": "Lighting", "prompt_scene_consistency": "Prompt", "lpips": "cLPIPS",
 }
+ALPHA = 0.05            # Welch / prediction-interval test level
+BOOT_CONFIDENCE = 0.95  # bootstrap: an ordering must hold in this share of resamples
+BOOT_RESAMPLES = 4000
 
-# Lite case/metric -> paper cell/metric. Character consistency merges In/Out as the paper does.
+# Kinematics metrics: paper metric (or a Lite-only metric) -> (Lite key, direction).
+# A Lite-only metric added here is ranked among the models that report it (paper rows
+# are N/A on it), e.g. add  "fde_ego": ("fde_m_ego", "lower"),  to include ego-frame FDE.
+KINEMATICS_METRICS = {
+    "dtw": ("dtw_m_mean", "lower"),
+    "fde": ("fde_m_mean", "lower"),
+    "exact_match": ("exact_match_pct", "higher"),
+    "error_rate": ("error_rate_pct", "lower"),
+}
+
+# Lite per-case metric key for every leaderboard metric, by target dimension.
+LITE_METRICS: dict[str, dict[str, tuple[str, str]]] = {
+    "environment_object_consistency": {
+        "depth": ("depth_absrel_pct", "lower"), "dist": ("pairwise_distance_mae_pct", "lower"),
+        "char": ("character_consistency_pct", "higher"),
+    },
+    "kinematics_mechanics": KINEMATICS_METRICS,
+    "action_controllability": {
+        "rel_epe": ("relative_epe_dynamic_mean_raw", "lower"),
+        "cos": ("cosine_similarity_dynamic_mean_raw", "higher"),
+        "syn_cos": ("synthetic_mean_flow_cosine", "higher"),
+        "syn_epe": ("synthetic_pixel_epe_mean", "lower"),
+    },
+    # Causal rows only: a generation with no matched event has lpips_causal_mean None (the
+    # paper excludes such generations), never the temporal fallback.
+    "lpips": {"clpips": ("lpips_causal_mean", "lower")},
+    "physical_causality": {
+        "csr": ("csr_wm", "higher"), "d_amcl": ("amcl_delta", "lower"), "d_mcl": ("mcl_delta", "lower"),
+        "d_ws": ("ws_delta", "lower"), "d_dua": ("dua_delta", "lower"), "d_icra": ("icra_delta", "lower"),
+    },
+    "fluid_mechanics": {
+        "d_sigma_a": ("mask_area_std_normalized_delta", "lower"),
+        "d_a_dot": ("mask_area_drift_per_sec_abs_delta", "lower"),
+        "d_theta": ("surface_tilt_residual_deg_abs_delta", "lower"),
+        "l1": ("spectral_l1", "lower"),
+        "lpips": ("lpips_mean", "lower"),  # whole-frame LPIPS from the lpips rows on LiquidContainer
+    },
+    "lighting_shading": {
+        "scene_retention": ("scene_retention_rate_pct", "higher"),
+        "shadow_detection": ("shadow_detection_rate_pct", "higher"),
+        "mosd": ("multi_object_sun_disagreement_deg", "lower"),
+        "sdj": ("shadow_direction_jitter_deg_per_frame", "lower"),
+        "area_stability": ("shadow_area_stability_pct", "lower"),
+        "shape_drift": ("shadow_shape_drift", "lower"),
+    },
+    "prompt_scene_consistency": {
+        "env": ("env_score", "higher"), "obj": ("obj_score", "higher"), "overall": ("overall_score", "higher"),
+    },
+}
+
+# Lite case -> paper cell.
 _SCENES = {"WanderingGarden": "garden", "BilliardGame": "billiard", "MirrorRollingBall": "mirror"}
 _PROMPT = {"ChessBoard": "chessboard", "MirrorRollingBall": "mirror", "RacingCar": "racing_car"}
-LIGHTING_KEYS = {
-    "scene_retention_rate_pct": "scene_retention", "shadow_detection_rate_pct": "shadow_detection",
-    "multi_object_sun_disagreement_deg": "mosd", "shadow_direction_jitter_deg_per_frame": "sdj",
-    "shadow_area_stability_pct": "area_stability", "shadow_shape_drift": "shape_drift",
-}
+_KINEMATICS = {"RacingCar/kinematics_third": "racing_car/third", "BilliardGame/kinematics_first": "billiard/first"}
+_RAFT = {"BallRoller/ctrl": "ball_roller", "BeamDomino/causal": "beam_domino",
+         "MirrorRollingBall/lpips_collision": "mirror_ball"}
+
+
+def _routes(dimension: str, case_id: str) -> list[tuple[str, str, set[str] | None]]:
+    """(target dimension, paper cell, metrics allowed or None = all) for one Lite row."""
+    scene, _, variant = case_id.partition("/")
+    if dimension == "environment_object_consistency" and scene in _SCENES and variant.startswith("scene_"):
+        name = variant[len("scene_"):]                                   # perturb_in, 360_out, ...
+        geometry = {"dist"} if scene == "MirrorRollingBall" else {"depth", "dist"}  # no Mirror depth in the paper
+        out = [(dimension, f"{_SCENES[scene]}/{name}", geometry)]
+        if scene != "WanderingGarden":                                   # In/Out merged, as in the paper
+            out.append((dimension, f"{_SCENES[scene]}/{name.rsplit('_', 1)[0]}", {"char"}))
+        return out
+    if dimension == "prompt_scene_consistency" and scene in _PROMPT and variant.startswith("prompt_"):
+        return [(dimension, f"{_PROMPT[scene]}/{variant[len('prompt_'):]}", None)]
+    if dimension == "lighting_shading" and case_id == "SunRisesAndSets/lighting":   # the paper-native case only
+        return [(dimension, "sun_rises_and_sets", None)]
+    if dimension == "kinematics_mechanics" and case_id in _KINEMATICS:
+        return [(dimension, _KINEMATICS[case_id], None)]
+    if dimension == "action_controllability" and case_id in _RAFT:
+        return [(dimension, _RAFT[case_id], None)]
+    if dimension == "lpips" and case_id in _RAFT:
+        return [(dimension, _RAFT[case_id], None)]
+    if dimension == "lpips" and scene == "LiquidContainer":
+        return [("fluid_mechanics", "pooled", {"lpips"})]
+    if dimension == "fluid_mechanics" and scene == "LiquidContainer":
+        return [(dimension, "pooled", {"d_sigma_a", "d_a_dot", "d_theta", "l1"})]
+    if dimension == "physical_causality" and scene == "BeamDomino" and variant.startswith("causal"):
+        return [(dimension, "beam_domino", None)]                        # pooled over the 3 shapes
+    return []
 
 
 def lite_cells(rows: list[dict]) -> dict[str, dict[str, dict[str, list[float]]]]:
-    """dimension -> cell -> metric -> values (one per completed seed row)."""
-    out: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    """dimension -> cell -> metric -> samples (one per completed case x seed row).
+
+    Later rows override earlier ones on the same (dimension, case, seed); a case whose
+    latest rows include ``unsupported`` is dropped (the model cannot express it).
+    """
+    latest: dict[tuple[str, str, str], dict] = {}
     for row in rows:
-        if row.get("status") != "completed":
+        latest[(row["dimension"], row["case_id"], str(row.get("seed")))] = row
+    unsupported = {(d, c) for (d, c, _), r in latest.items() if r.get("status") == "unsupported"}
+    out: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for (dim, case, _), row in sorted(latest.items()):
+        if row.get("status") != "completed" or (dim, case) in unsupported:
             continue
-        dim, case, metrics = row["dimension"], row["case_id"], row.get("metrics") or {}
-        scene, variant = case.split("/")
-        def put(cell, metric, value):
-            if isinstance(value, (int, float)) and value == value:
-                out[dim][cell][metric].append(float(value))
-        if dim == "environment_object_consistency" and scene in _SCENES and variant.startswith("scene_"):
-            name = variant[len("scene_"):]                      # perturb_in, 360_out, ...
-            cell = f"{_SCENES[scene]}/{name}"
-            if scene != "MirrorRollingBall":                     # the paper reports no Mirror depth
-                put(cell, "depth", metrics.get("depth_absrel_pct"))
-            put(cell, "dist", metrics.get("pairwise_distance_mae_pct"))
-            if scene != "WanderingGarden":
-                put(f"{_SCENES[scene]}/{name.rsplit('_', 1)[0]}", "char", metrics.get("character_consistency_pct"))
-        elif dim == "prompt_scene_consistency" and scene in _PROMPT:
-            view = "first" if variant.endswith("first") else "third"
-            put(f"{_PROMPT[scene]}/{view}", "overall", metrics.get("overall_score"))
-        elif dim == "lighting_shading" and scene == "SunRisesAndSets":
-            for key, metric in LIGHTING_KEYS.items():
-                put("sun_rises_and_sets", metric, metrics.get(key))
+        metrics = row.get("metrics") or {}
+        for target, cell, allowed in _routes(dim, case):
+            for metric, (key, _direction) in LITE_METRICS[target].items():
+                value = metrics.get(key)
+                if (allowed is None or metric in allowed) and isinstance(value, (int, float)) \
+                        and not isinstance(value, bool) and math.isfinite(value):
+                    out[target][cell][metric].append(float(value))
     return out
 
 
-def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]] = frozenset(),
-          core_min_models: int = 5) -> dict:
+@dataclass(frozen=True)
+class Entry:
+    mean: float
+    std: float | None   # sample std; None when unknown or n < 2
+    n: int
+    samples: tuple[float, ...] | None = None   # per-seed values (Lite)
+    source: str = "paper"
+
+    @classmethod
+    def from_paper(cls, value, n: int) -> "Entry":
+        if isinstance(value, (list, tuple)):
+            return cls(float(value[0]), None if len(value) < 2 or value[1] is None else float(value[1]), n)
+        return cls(float(value), None, n)
+
+    @classmethod
+    def from_samples(cls, values: list[float], source: str = "lite") -> "Entry":
+        return cls(mean(values), stdev(values) if len(values) > 1 else None, len(values), tuple(values), source)
+
+
+def _spread_known(e: Entry) -> bool:
+    return e.std is not None and e.n >= 2
+
+
+def summary_test_p(a: Entry, b: Entry) -> float:
+    """Two-sided p-value that a and b differ, from mean/std/n only."""
+    if a.mean == b.mean:
+        return 1.0
+    if _spread_known(a) and _spread_known(b):
+        va, vb = a.std ** 2 / a.n, b.std ** 2 / b.n
+        if va + vb == 0:
+            return 0.0
+        df = (va + vb) ** 2 / ((va ** 2 / (a.n - 1)) + (vb ** 2 / (b.n - 1)))
+        return float(2 * stats.t.sf(abs(a.mean - b.mean) / math.sqrt(va + vb), df))
+    if _spread_known(a) or _spread_known(b):
+        # One single-sample value against the other model's spread (prediction interval).
+        ref, one = (a, b) if _spread_known(a) else (b, a)
+        if ref.std == 0:
+            return 0.0
+        t = abs(one.mean - ref.mean) / (ref.std * math.sqrt(1 + 1 / ref.n))
+        return float(2 * stats.t.sf(t, ref.n - 1))
+    return 0.0  # no spread on either side: the means decide
+
+
+def compare(a: Entry, b: Entry, higher: bool, key: str = "") -> tuple[int, str]:
+    """+1 if a is significantly better, -1 if b is, 0 if they tie; plus the test used."""
+    sign = 1.0 if higher else -1.0
+    if a.samples and b.samples and len(a.samples) > 1 and len(b.samples) > 1:
+        rng = np.random.default_rng(zlib.crc32(key.encode()))
+        sa = rng.choice(a.samples, (BOOT_RESAMPLES, len(a.samples))).mean(axis=1)
+        sb = rng.choice(b.samples, (BOOT_RESAMPLES, len(b.samples))).mean(axis=1)
+        diff = sign * (sa - sb)
+        share = float((diff > 0).mean() + 0.5 * (diff == 0).mean())
+        if share >= BOOT_CONFIDENCE:
+            return 1, "bootstrap"
+        if share <= 1 - BOOT_CONFIDENCE:
+            return -1, "bootstrap"
+        return 0, "bootstrap"
+    method = "welch" if _spread_known(a) and _spread_known(b) else (
+        "prediction" if _spread_known(a) or _spread_known(b) else "means")
+    if summary_test_p(a, b) >= ALPHA:
+        return 0, method
+    return (1 if sign * (a.mean - b.mean) > 0 else -1), method
+
+
+def rank_cell(entries: dict[str, Entry], higher: bool, key: str = "") -> tuple[dict[str, float], list[list[str]]]:
+    """Rank = 1 + #significantly better + 0.5 x #tied (the averaged rank of a tie group)."""
+    models = sorted(entries)
+    better = defaultdict(int)
+    tied = defaultdict(int)
+    ties = []
+    for i, a in enumerate(models):
+        for b in models[i + 1:]:
+            outcome, _ = compare(entries[a], entries[b], higher, f"{key}|{a}|{b}")
+            if outcome > 0:
+                better[b] += 1
+            elif outcome < 0:
+                better[a] += 1
+            else:
+                tied[a] += 1
+                tied[b] += 1
+                ties.append([a, b])
+    return {m: 1 + better[m] + 0.5 * tied[m] for m in models}, ties
+
+
+def averaged_ranks(scores: dict[str, float], lower_is_better: bool = True) -> dict[str, float]:
+    """1..n ranks of the scores; exactly equal scores share the averaged rank."""
+    order = sorted(scores, key=lambda m: (scores[m] if lower_is_better else -scores[m], m))
+    out, i = {}, 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and math.isclose(scores[order[j + 1]], scores[order[i]], abs_tol=1e-9):
+            j += 1
+        for m in order[i:j + 1]:
+            out[m] = (i + 1 + j + 1) / 2
+        i = j + 1
+    return out
+
+
+def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]] = frozenset()) -> dict:
     dims = paper["dimensions"]
     models = {k: dict(v) for k, v in paper["models"].items()}
-    values: dict = {d: {c: {m: dict(per) for m, per in cell.items()} for c, cell in spec["cells"].items()}
-                    for d, spec in dims.items()}
+    directions: dict[str, dict[str, str]] = {}
+    values: dict = {}
+    for dim, spec in dims.items():
+        directions[dim] = dict(spec["metrics"])
+        n = int(spec.get("n", 5))
+        values[dim] = {c: {m: {model: Entry.from_paper(v, n) for model, v in per.items() if (model, dim) not in exclude}
+                           for m, per in cell.items()} for c, cell in spec["cells"].items()}
+    for dim, metrics in LITE_METRICS.items():   # Lite-only metrics (e.g. new kinematics ones)
+        if dim in directions:
+            for metric, (_, direction) in metrics.items():
+                if directions[dim].setdefault(metric, direction) != direction:
+                    raise ValueError(f"{dim}.{metric}: paper direction {directions[dim][metric]} != Lite {direction}")
     for model, rows in lite.items():
-        models.setdefault(model, {"display": model.replace("_", " ").title(), "note": "Lite runs"})
+        models.setdefault(model, {"display": model.replace("_", " ").title(), "note": "WMEval Lite runs"})
         for dim, cells in lite_cells(rows).items():
-            if dim not in values:
+            if dim not in values or (model, dim) in exclude:
                 continue
             for cell, metrics in cells.items():
+                if cell not in values[dim]:      # only the cells the paper defines
+                    continue
                 for metric, vals in metrics.items():
-                    if metric in dims[dim]["metrics"] and (model, dim) not in exclude:
-                        values[dim].setdefault(cell, {}).setdefault(metric, {})[model] = mean(vals)
+                    values[dim][cell].setdefault(metric, {})[model] = Entry.from_samples(vals)
 
-    scores: dict = {m: {} for m in models}
     detail: dict = {}
     for dim in DIMENSION_ORDER:
-        if dim not in dims:
+        if dim not in values:
             continue
-        directions = dims[dim]["metrics"]
-        wins: dict = defaultdict(float)
-        games: dict = defaultdict(int)
+        cell_ranks: dict[str, list[float]] = defaultdict(list)
+        cells_out: dict = {}
+        present = set()
         for cell, metrics in values[dim].items():
             for metric, per in metrics.items():
-                higher = directions[metric] == "higher"
-                for a, b in combinations(sorted(per), 2):
-                    va, vb = per[a], per[b]
-                    games[a] += 1
-                    games[b] += 1
-                    if va == vb:
-                        wins[a] += 0.5
-                        wins[b] += 0.5
-                    elif (va > vb) == higher:
-                        wins[a] += 1
-                    else:
-                        wins[b] += 1
-        scored = {m for cell in values[dim].values() for per in cell.values() for m in per}
-        detail[dim] = {"models_scored": sorted(scored), "comparisons": {m: games[m] for m in scored}}
-        for m in scored:
-            scores[m][dim] = round(100.0 * wins[m] / games[m], 1) if games[m] else None
+                if not per:
+                    continue
+                present.update(per)
+                higher = directions[dim][metric] == "higher"
+                ranks, ties = rank_cell(per, higher, f"{dim}|{cell}|{metric}") if len(per) > 1 else ({}, [])
+                for m, r in ranks.items():
+                    cell_ranks[m].append(r)
+                cells_out.setdefault(cell, {})[metric] = {
+                    "direction": directions[dim][metric],
+                    "values": {m: {"mean": round(e.mean, 6), "std": None if e.std is None else round(e.std, 6),
+                                   "n": e.n, "source": e.source, "rank": ranks.get(m)} for m, e in sorted(per.items())},
+                    "ties": ties,
+                }
+        mean_rank = {m: mean(r) for m, r in cell_ranks.items()}
+        dim_rank = averaged_ranks(mean_rank)
+        if not dim_rank and len(present) == 1:   # single-model dimension: shown, never counted
+            dim_rank = {next(iter(present)): 1.0}
+        n_ranked = len(dim_rank)
+        detail[dim] = {
+            "table": dims[dim].get("table"),
+            "models_present": sorted(present),
+            "models_ranked": sorted(dim_rank, key=lambda m: (dim_rank[m], m)),
+            "comparable": n_ranked >= 2,
+            "mean_cell_rank": {m: round(v, 4) for m, v in mean_rank.items()},
+            "rank_pairs": {m: len(r) for m, r in cell_ranks.items()},
+            "rank": dim_rank,
+            "percentile": {m: round((n_ranked - r) / (n_ranked - 1), 4) for m, r in dim_rank.items()} if n_ranked >= 2 else {},
+            "cells": cells_out,
+        }
 
-    core = [d for d in DIMENSION_ORDER if d in detail and len(detail[d]["models_scored"]) >= core_min_models]
+    ranked_dims = {m: [d for d in detail if m in detail[d]["percentile"]] for m in models}
+    listed = [m for m in models if ranked_dims[m]]
+    shared = [d for d in detail if detail[d]["comparable"] and listed and all(m in detail[d]["percentile"] for m in listed)]
+
+    def score(m: str, dims_used: list[str]) -> float | None:
+        vals = [detail[d]["percentile"][m] for d in dims_used if m in detail[d]["percentile"]]
+        return round(mean(vals), 4) if vals else None
+
+    overall = {m: score(m, ranked_dims[m]) for m in models}
+    like = {m: score(m, shared) for m in listed} if shared else {}
+    overall_rank = averaged_ranks({m: s for m, s in overall.items() if s is not None}, lower_is_better=False)
+    like_rank = averaged_ranks(like, lower_is_better=False) if like else {}
     board = []
-    for m, per in scores.items():
-        covered = {d: s for d, s in per.items() if s is not None}
-        core_scores = [per[d] for d in core if per.get(d) is not None]
+    for m in models:
         board.append({
             "model": m,
             "display": models[m]["display"],
-            "composite": round(mean(covered.values()), 1) if covered else None,
-            "core_composite": round(mean(core_scores), 1) if core and len(core_scores) == len(core) else None,
-            "coverage": len(covered),
-            "dimension_scores": per,
+            "overall_rank": overall_rank.get(m),
+            "overall_score": overall[m],
+            "coverage": len(ranked_dims[m]),
+            "like_for_like_rank": like_rank.get(m),
+            "like_for_like_score": like.get(m),
+            "dimension_ranks": {d: {"rank": detail[d]["rank"][m], "of": len(detail[d]["rank"]),
+                                    "percentile": detail[d]["percentile"].get(m)}
+                                for d in detail if m in detail[d]["rank"]},
             "note": models[m].get("note"),
         })
-    board.sort(key=lambda r: (r["composite"] is None, -(r["composite"] or 0), -r["coverage"]))
-    return {"schema_version": 1, "method": __doc__.split("\n\n")[1], "core_dimensions": core,
-            "excluded": sorted(f"{m}:{d}" for m, d in exclude), "leaderboard": board, "dimensions": detail}
+    board.sort(key=lambda r: (r["overall_rank"] is None, r["overall_rank"] or 0, -r["coverage"], r["display"]))
+    return {
+        "schema_version": 2,
+        "method": __doc__.split("\n\n")[1] + "\n\n" + "\n\n".join(__doc__.split("\n\n")[2:5]),
+        "tests": {"alpha": ALPHA, "bootstrap_confidence": BOOT_CONFIDENCE, "bootstrap_resamples": BOOT_RESAMPLES},
+        "num_dimensions": len(DIMENSION_ORDER),
+        "like_for_like_dimensions": shared,
+        "excluded": sorted(f"{m}:{d}" for m, d in exclude),
+        "leaderboard": board,
+        "dimensions": detail,
+    }
 
 
-def markdown(report: dict) -> str:
+def _decimals(v: float) -> int:
+    text = repr(float(v))
+    return 3 if "e" in text else min(3, len(text.partition(".")[2]))
+
+
+def _row_places(values: dict) -> int | None:
+    """Decimals of a (cell, metric) row: the finest precision transcribed from the paper."""
+    paper = [x for v in values.values() if v["source"] == "paper" for x in (v["mean"], v["std"]) if x is not None]
+    return max(map(_decimals, paper)) if paper else None
+
+
+def _fmt_value(v: dict, places: int | None) -> str:
+    """Mean ± std with shared decimals (row precision; by magnitude for Lite-only rows)."""
+    if places is None:
+        size = abs(v["mean"])
+        places = 1 if size >= 10 else 2 if size >= 1 else 3
+    text = f"{v['mean']:.{places}f}"
+    return text if v["std"] is None else f"{text}±{v['std']:.{places}f}"
+
+
+def _rank(r: float) -> str:
+    return f"{r:g}"
+
+
+def markdown(report: dict, command: str | None = None) -> str:
     dims = [d for d in DIMENSION_ORDER if d in report["dimensions"]]
-    head = "| Rank | Model | Composite | Core | Coverage | " + " | ".join(SHORT[d] for d in dims) + " |"
-    lines = [head, "|" + "---|" * (5 + len(dims))]
-    rank = 0
+    n_dims = report["num_dimensions"]
+    display = {r["model"]: r["display"] for r in report["leaderboard"]}
+    lines = ["# WMEval leaderboard", "",
+             "Per-dimension ranks from every (cell, metric) the paper reports, with statistical ties "
+             "(seed bootstrap at 95% for per-seed Lite values, Welch t-test at α = 0.05 for paper mean ± std); "
+             "dimension rank = mean cell rank, re-ranked. Overall = mean of the dimension-rank percentiles "
+             "(1 = best, 0 = worst among the models ranked in that dimension) over the dimensions a model is ranked in. "
+             "Cells show rank/of; `—` not ranked (N/A or not run); `1/1*` single-model dimension (no comparison, not counted).",
+             "", "## Overall", "",
+             "| Rank | Model | Score | Coverage | " + " | ".join(SHORT[d] for d in dims) + " |",
+             "|" + "---|" * (4 + len(dims))]
     for row in report["leaderboard"]:
-        rank += 1 if row["composite"] is not None else 0
         cells = []
         for d in dims:
-            s = row["dimension_scores"].get(d, "absent")
-            cells.append("—" if s == "absent" else ("single" if s is None else f"{s:.0f}"))
-        lines.append(f"| {rank if row['composite'] is not None else '–'} | {row['display']} | "
-                     f"{row['composite'] if row['composite'] is not None else '–'} | "
-                     f"{row['core_composite'] if row['core_composite'] is not None else '–'} | {row['coverage']}/{len(dims)} | "
-                     + " | ".join(cells) + " |")
+            dr = row["dimension_ranks"].get(d)
+            cells.append("—" if dr is None else (f"{_rank(dr['rank'])}/{dr['of']}" + ("*" if dr["of"] < 2 else "")))
+        score = "–" if row["overall_score"] is None else f"{row['overall_score']:.3f}"
+        rank = "–" if row["overall_rank"] is None else _rank(row["overall_rank"])
+        lines.append(f"| {rank} | {row['display']} | {score} | {row['coverage']}/{n_dims} | " + " | ".join(cells) + " |")
+
+    shared = report["like_for_like_dimensions"]
+    lines += ["", "## Like-for-like", ""]
+    if not shared:
+        lines.append("No dimension ranks every listed model.")
+    else:
+        lines += [f"Only the dimensions every listed model is ranked in: {', '.join(SHORT[d] for d in shared)}.", "",
+                  "| Rank | Model | Score | " + " | ".join(SHORT[d] for d in shared) + " |",
+                  "|" + "---|" * (3 + len(shared))]
+        rows = sorted((r for r in report["leaderboard"] if r["like_for_like_rank"] is not None),
+                      key=lambda r: (r["like_for_like_rank"], r["display"]))
+        for row in rows:
+            cells = [f"{_rank(row['dimension_ranks'][d]['rank'])}/{row['dimension_ranks'][d]['of']}" for d in shared]
+            lines.append(f"| {_rank(row['like_for_like_rank'])} | {row['display']} | "
+                         f"{row['like_for_like_score']:.3f} | " + " | ".join(cells) + " |")
+
+    lines += ["", "## Per dimension", "",
+              "Each cell: mean ± std (paper: over its n generations; Lite: over seeds, bare value = one sample) "
+              "and the (cell, metric) rank after the tie test. ↑/↓ = higher/lower is better."]
+    for d in dims:
+        det = report["dimensions"][d]
+        order = det["models_ranked"] + [m for m in det["models_present"] if m not in det["rank"]]
+        summary = " · ".join(f"{_rank(det['rank'][m])}. {display[m]}" for m in det["models_ranked"])
+        if not det["comparable"]:
+            summary = f"single model ({', '.join(display[m] for m in det['models_present'])}) — no comparison"
+        lines += ["", f"### {SHORT[d]} — {summary}", "", f"Source: {str(det['table']).rstrip('.')}.", "",
+                  "| Cell · metric | " + " | ".join(display[m] for m in order) + " |",
+                  "|" + "---|" * (1 + len(order))]
+        for cell, metrics in det["cells"].items():
+            for metric, info in metrics.items():
+                arrow = "↑" if info["direction"] == "higher" else "↓"
+                places = _row_places(info["values"])
+                cells = []
+                for m in order:
+                    v = info["values"].get(m)
+                    if v is None:
+                        cells.append("")
+                        continue
+                    text = _fmt_value(v, places)
+                    cells.append(text + (f" ·{_rank(v['rank'])}" if v["rank"] is not None else ""))
+                lines.append(f"| {cell} · {metric} {arrow} | " + " | ".join(cells) + " |")
+        if det["comparable"]:
+            lines.append("| **Dimension rank** (mean cell rank) | " + " | ".join(
+                f"**{_rank(det['rank'][m])}** ({det['mean_cell_rank'][m]:.2f})" if m in det["rank"] else "—"
+                for m in order) + " |")
+    if command:
+        lines += ["", f"Generated with `{command}`."]
     return "\n".join(lines) + "\n"
+
+
+def load_lite(specs: list[str]) -> dict[str, list[dict]]:
+    lite: dict[str, list[dict]] = defaultdict(list)
+    for spec in specs:
+        name, path = spec.split("=", 1)
+        lite[name].extend(json.loads(line) for line in Path(path).read_text().splitlines() if line.strip())
+    return dict(lite)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--paper", type=Path, default=DEFAULT_PAPER)
-    parser.add_argument("--lite", action="append", default=[], help="model=per_case_results.jsonl (repeatable)")
+    parser.add_argument("--lite", action="append", default=[], help="model=per_case_results.jsonl (repeatable; later wins)")
     parser.add_argument("--exclude", action="append", default=[], help="model:dimension to leave out (repeatable)")
-    parser.add_argument("--core-min-models", type=int, default=5)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
     paper = yaml.safe_load(args.paper.read_text(encoding="utf-8"))
-    lite: dict[str, list[dict]] = defaultdict(list)
-    for spec in args.lite:
-        name, path = spec.split("=", 1)
-        lite[name].extend(json.loads(line) for line in Path(path).read_text().splitlines() if line.strip())
     exclude = {tuple(spec.split(":", 1)) for spec in args.exclude}
-    report = build(paper, dict(lite), exclude=exclude, core_min_models=args.core_min_models)
-    text = markdown(report)
+    report = build(paper, load_lite(args.lite), exclude=exclude)
+    command = "python tools/build_leaderboard.py " + " ".join(
+        [f"--lite {s}" for s in args.lite] + [f"--exclude {s}" for s in args.exclude]
+        + ([f"--output {args.output}"] if args.output else []))
+    report["inputs"] = {"paper": str(args.paper.relative_to(ROOT) if args.paper.is_relative_to(ROOT) else args.paper),
+                        "lite": args.lite}
+    text = markdown(report, command)
     if args.output:
         args.output.mkdir(parents=True, exist_ok=True)
         (args.output / "leaderboard.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")

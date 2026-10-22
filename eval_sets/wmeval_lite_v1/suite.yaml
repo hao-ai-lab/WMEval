@@ -1,3 +1,20 @@
+# 2026-10-21: KINEMATICS EXTRAS (non-headline; headline fde_m_mean and the Eq. 12/13
+# error_rate_pct / exact_match_pct are unchanged). evaluation/modules/kinematics_robust.py adds
+# to kinematics_mechanics: fde_m_ego_mean / dtw_m_ego_mean (lower better) -- when the Unity
+# camera moves (RacingCar chase camera, BilliardGame cue-ball camera; decided from poses.npy)
+# candidate pixels are lifted through the candidate video's OWN ground-plane camera motion
+# (LK features below the horizon, RANSAC homography inliers, keyframes every 0.5 s chained to
+# frame 0 as a 2D rigid ground motion, metric scale from the plane calibration's frame-0
+# anchors); static cameras keep the Unity-camera lifting. The legacy lifting is blind to a
+# follow camera (ego_vehicle self vs other-trajectory FDE: 1.00 vs 1.00 m median); the new
+# one gives 0.14 vs 22.6 m. Rows whose camera estimate fails the gates (left/right split
+# consistency, inliers, coverage, and the case's Unity-reference floor) report null and
+# ego_lift_reliable 0 -- currently every Project Genie RacingCar run and all of BilliardGame /
+# cue_ball. robust_error_rate_pct, peak_speed_error_pct, contact_dp_error_pct (lower better):
+# Savitzky-Golay (0.27 s) speed curves over the span where GT speed > 30 % of peak,
+# normalised by the peak GT momentum/energy (self 1.1 % vs negatives 45 % on ego_vehicle,
+# 4.4 vs 30 % on cue_ball; legacy Eq. 13 self floor 29-80 %). Tables and gates:
+# docs/evaluation_dimensions.md (Kinematics & Mechanics, "Extended metrics").
 # 2026-10-21: DATASET AUDIT (AUDIT.md, tools/audit_dataset.py). 17 core prompts corrected to
 # match their conditioning frames (DIFFERENCES_FROM_PAPER.md); BallRoller/ctrl's kinematics
 # cell now tracks the controlled white ball (kin_* artifacts from
@@ -847,7 +864,7 @@ dimensions:
       - character_consistency_pct
   kinematics_mechanics:
     display_name: Kinematics & Mechanics
-    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction against timestamp-matched Unity trajectories. For calibrated planar Table-4 captures, candidate contact points are mapped into Unity X/Z metres by camera-ray/plane intersection; FDE and path-normalized DTW are reported in metres, with raw pixel diagnostics retained. Simulator-exported mass and a bounded, persistence-gated alignment of peak physical events feed momentum and kinetic energy using the paper''s one-step finite difference. Error Rate is the sole headline mechanics metric. Visual anchors remain a camera-divergence QA signal and do not redefine metric scale. Non-planar legacy Lite cases without plane calibration retain their prior pixel/depth diagnostic behavior.'
+    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction against timestamp-matched Unity trajectories. For calibrated planar Table-4 captures, candidate contact points are mapped into Unity X/Z metres by camera-ray/plane intersection; FDE and path-normalized DTW are reported in metres, with raw pixel diagnostics retained. Simulator-exported mass and a bounded, persistence-gated alignment of peak physical events feed momentum and kinetic energy using the paper''s one-step finite difference. Error Rate is the sole headline mechanics metric. Visual anchors remain a camera-divergence QA signal and do not redefine metric scale. Non-planar legacy Lite cases without plane calibration retain their prior pixel/depth diagnostic behavior. Non-headline extras (2026-10-21): fde_m_ego_mean/dtw_m_ego_mean lift through the candidate video''s own ground-plane camera motion when the Unity camera moves (static cameras keep the Unity-camera lifting), withheld when the camera estimate is unreliable; robust_error_rate_pct, peak_speed_error_pct and contact_dp_error_pct compare Savitzky-Golay-smoothed speed curves over the moving span, normalised by the object''s peak GT value.'
     evaluator: registry
     requires_reference: true
     modules:
@@ -868,6 +885,14 @@ dimensions:
       - error_rate_pct
       - fde_px_mean
       - dtw_px_mean
+      # 2026-10-21, non-headline (all lower = better; see the dated kinematics
+      # note at the top of this file): candidate-camera-lifted FDE/DTW and
+      # robust mechanics from evaluation/modules/kinematics_robust.py
+      - fde_m_ego_mean
+      - dtw_m_ego_mean
+      - robust_error_rate_pct
+      - peak_speed_error_pct
+      - contact_dp_error_pct
   physical_causality:
     display_name: Physical Causality
     description: >-
