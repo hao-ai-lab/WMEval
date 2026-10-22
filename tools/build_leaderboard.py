@@ -43,6 +43,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 import zlib
 from collections import defaultdict
 from dataclasses import dataclass
@@ -54,6 +55,8 @@ import yaml
 from scipy import stats
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:  # run as a script: the action-target gate imports evaluation.*
+    sys.path.insert(0, str(ROOT))
 DEFAULT_PAPER = ROOT / "experiments/leaderboard/paper_scores.yaml"
 DIMENSION_ORDER = (
     "environment_object_consistency", "action_controllability", "kinematics_mechanics",
@@ -155,6 +158,17 @@ def _routes(dimension: str, case_id: str) -> list[tuple[str, str, set[str] | Non
     return []
 
 
+def _gated_out(case_id: str, model: str) -> bool:
+    """True when today's action-target gate marks ``model`` unsupported for ``case_id``.
+
+    Older Lite rows can predate the gate (e.g. a camera-only model scored on a car or
+    ball case); they must not count, even when no newer run re-marked the case."""
+    from evaluation.lite.action_support import unsupported_reason
+
+    artifacts = ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id / "reference/artifacts"
+    return bool(model) and artifacts.is_dir() and unsupported_reason(artifacts, model) is not None
+
+
 def lite_cells(rows: list[dict]) -> dict[str, dict[str, dict[str, list[float]]]]:
     """dimension -> cell -> metric -> samples (one per completed case x seed row).
 
@@ -169,6 +183,8 @@ def lite_cells(rows: list[dict]) -> dict[str, dict[str, dict[str, list[float]]]]
     for (dim, case, _), row in sorted(latest.items()):
         if row.get("status") != "completed" or (dim, case) in unsupported:
             continue
+        if _gated_out(case, str(row.get("model") or "")):
+            continue  # the model cannot express this case's action target under the current gate
         metrics = row.get("metrics") or {}
         for target, cell, allowed in _routes(dim, case):
             for metric, (key, _direction) in LITE_METRICS[target].items():
