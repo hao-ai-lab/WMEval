@@ -2,6 +2,8 @@
 
 Detailed pipeline, metrics, flags and interpretation notes for each WMEval Lite dimension. The summary table is in the [README](../README.md#evaluation-dimensions).
 
+> **Judge noise floor (judge-scored dimensions).** Prompt-Scene Consistency, Physical Causality and causal LPIPS call a sampled `gpt-5.4` judge, so the same video scores differently on every run. Measured by re-judging the same videos (`tools/measure_judge_floor.py`; per-case numbers in [`SELF_MATCH_BOUNDS.md`](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#judge-scored-dimensions-2026-10-22), machine-readable in `eval_sets/wmeval_lite_v1/judge_noise_floor.json`): prompt `overall_score` moves by 0.02–0.04 (std) per call on ChessBoard / MirrorRollingBall and 0.04–0.08 on RacingCar, so 5-seed means closer than 0.02–0.10 (case-dependent MDD_5) are not separable; glancing CSR moves by ±17 points per 5-pass run; causal LPIPS is judge-stable on the reference (std ≤ 0.011) but BeamDomino/causal scores 0.34 against itself and MirrorRollingBall/lpips_collision pairs events ~7 s apart, both from the frozen reference event sets. The NVIDIA gateway and direct OpenAI agree within that noise.
+
 ### Environment Object & Character Consistency
 
 Do objects, spatial relations and character identity persist as the camera moves away and returns?
@@ -1092,6 +1094,7 @@ Does an action propagate through a multi-stage causal chain (rolling → impact 
 
 - **Metrics:** Causal Success Rate ↑, AMCL/MCL, weighted score, DUA, ICRA — reported as deltas from the Unity reference judged the same way
 - **Suite dimension & tooling:** `physical_causality` — CausalStep protocol with a VLM judge (repeated passes); `tools/evaluate_world_model_causal_step.py`
+- **Judge noise:** Unity-as-candidate csr_delta is 0 ± 0 on canonical / direct-strike and -4 ± 17 on glancing per 5-pass run. See [SELF_MATCH_BOUNDS.md](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#physical-causality-csr_delta-lower-is-better-unity-side--recorded-fixture).
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_causal_step_eval.md</code>)</summary>
@@ -1858,6 +1861,7 @@ Does the rollout match its scene description, for both environment and foregroun
 
 - **Metrics:** Environment ↑, Object ↑, Overall ↑ rubric scores (ρ = 0.90 with human ratings)
 - **Suite dimension & tooling:** `prompt_scene_consistency` — dual-agent rubric generation + unified VLM judge; rubrics are committed inside each case bundle
+- **Judge noise:** per-call std 0.02–0.08 on `overall_score`; the Unity reference itself scores 0.83–0.89 on RacingCar and 0.75–0.86 on WanderingGarden synthetics (rubric ceiling). See [SELF_MATCH_BOUNDS.md](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#prompt-scene-consistency-overall_score-higher-is-better).
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_consistency_vlm_judge.md</code>)</summary>
@@ -2298,6 +2302,7 @@ How perceptually close is the rollout to the reference around matched contact ev
 
 - **Metrics:** Causal LPIPS ↓ (offsets −2…+2 around chronologically matched events), temporal LPIPS ↓ as a separate fallback
 - **Suite dimension & tooling:** `lpips` — `tools/evaluate_world_model_lpips.py`
+- **Judge noise / floor:** self-match 0.0005 (BallRoller), 0.027 (MirrorRollingBall, events mis-paired ~7 s apart) and 0.34 (BeamDomino/causal, frozen reference events miss the pillar strike); judge-sampling std ≤ 0.011. See [SELF_MATCH_BOUNDS.md](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#lpips-causal-reference-events-frozen-candidate-events-judged-live).
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_lpips_eval.md</code>)</summary>
