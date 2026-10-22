@@ -183,3 +183,14 @@ def test_markdown_renders_overall_like_for_like_and_dimension_tables() -> None:
     assert "1/1*" in text
     assert "### cLPIPS — 1. A · 2. B" in text
     assert "| k · x ↓ | 0.10±0.01 ·1 | 0.20±0.01 ·2 |" in text
+
+
+def test_lite_rows_for_cases_the_model_cannot_express_are_dropped() -> None:
+    # A camera-only model's old kinematics rows predate the action-target gate; they
+    # must not rank it on kinematics even though no newer run re-marked the case.
+    from tools.build_leaderboard import lite_cells
+
+    row = {"dimension": "kinematics_mechanics", "case_id": "RacingCar/kinematics_third", "seed": "run0",
+           "status": "completed", "model": "odyssey", "metrics": {"fde_m_mean": 0.9, "dtw_m_mean": 0.5}}
+    assert "kinematics_mechanics" not in lite_cells([row])
+    assert "kinematics_mechanics" in lite_cells([{**row, "model": "project_genie"}])
