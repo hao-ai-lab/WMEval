@@ -148,6 +148,11 @@ image = (
             "**/.DS_Store",
             ".env",
             ".env.example",
+            # local-only state: browser profiles with sign-in cookies, agent worktrees
+            ".local",
+            ".local/**",
+            ".claude",
+            ".claude/**",
             "WorldModelBenchScenePrivate",
             "WorldModelBenchScenePrivate/**",
             "reports",
