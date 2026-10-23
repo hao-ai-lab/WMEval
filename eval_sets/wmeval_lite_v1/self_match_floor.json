@@ -1,0 +1,117 @@
+{
+ "source": "SELF_MATCH_BOUNDS.md (Unity reference scored against itself)",
+ "environment_object_consistency": {
+  "BallRoller/ctrl": {
+   "depth": 61.8,
+   "dist": 60.4,
+   "dist_measurable": true,
+   "permanence": 100.0,
+   "char": 100.0
+  },
+  "BilliardGame/scene_360_in": {
+   "depth": 22.9,
+   "dist": 9.1,
+   "dist_measurable": true,
+   "permanence": 100.0,
+   "char": 77.3
+  },
+  "BilliardGame/scene_360_out": {
+   "depth": 22.2,
+   "dist": 38.9,
+   "dist_measurable": true,
+   "permanence": 100.0,
+   "char": 85.3
+  },
+  "BilliardGame/scene_perturb_in": {
+   "depth": 22.6,
+   "dist": 36.0,
+   "dist_measurable": true,
+   "permanence": 100.0,
+   "char": 100.0
+  },
+  "BilliardGame/scene_perturb_out": {
+   "depth": 29.3,
+   "dist": 7.4,
+   "dist_measurable": true,
+   "permanence": 100.0,
+   "char": 100.0
+  },
+  "ChessBoard/walk_third": {
+   "depth": 42.1,
+   "dist": null,
+   "dist_measurable": false,
+   "permanence": 100.0,
+   "char": 43.3
+  },
+  "MirrorRollingBall/scene_360_in": {
+   "depth": 44.5,
+   "dist": 37.3,
+   "dist_measurable": true,
+   "permanence": 56.2,
+   "char": 56.7
+  },
+  "MirrorRollingBall/scene_360_out": {
+   "depth": 44.5,
+   "dist": 21.6,
+   "dist_measurable": true,
+   "permanence": 56.8,
+   "char": 56.3
+  },
+  "MirrorRollingBall/scene_perturb_in": {
+   "depth": 42.1,
+   "dist": 33.2,
+   "dist_measurable": false,
+   "permanence": 52.8,
+   "char": 100.0
+  },
+  "MirrorRollingBall/scene_perturb_out": {
+   "depth": 34.8,
+   "dist": 31.7,
+   "dist_measurable": false,
+   "permanence": 53.7,
+   "char": 100.0
+  },
+  "RacingCar/prompt_third": {
+   "depth": 12.7,
+   "dist": null,
+   "dist_measurable": false,
+   "permanence": 100.0,
+   "char": null
+  },
+  "WanderingGarden/scene_360_in": {
+   "depth": 93.0,
+   "dist": 41.9,
+   "dist_measurable": false,
+   "permanence": 20.5,
+   "char": null
+  },
+  "WanderingGarden/scene_360_out": {
+   "depth": 138.5,
+   "dist": 52.9,
+   "dist_measurable": false,
+   "permanence": 20.0,
+   "char": null
+  },
+  "WanderingGarden/scene_first": {
+   "depth": 25.3,
+   "dist": 34.8,
+   "dist_measurable": false,
+   "permanence": 4.5,
+   "char": null
+  },
+  "WanderingGarden/scene_perturb_in": {
+   "depth": 222.2,
+   "dist": 31.2,
+   "dist_measurable": false,
+   "permanence": 22.5,
+   "char": null
+  },
+  "WanderingGarden/scene_perturb_out": {
+   "depth": 87.5,
+   "dist": 84.9,
+   "dist_measurable": false,
+   "permanence": 37.6,
+   "char": null
+  }
+ }
+}

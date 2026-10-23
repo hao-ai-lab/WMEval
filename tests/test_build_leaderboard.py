@@ -62,8 +62,10 @@ def test_na_partial_coverage_single_model_dimension_and_like_for_like() -> None:
     report = build(paper, {})
     lp = report["dimensions"]["lpips"]
     assert lp["mean_cell_rank"] == {"a": 1.5, "b": 2.0, "c": 2.0}
-    assert lp["rank"] == {"a": 1.0, "b": 2.5, "c": 2.5}
-    assert lp["percentile"] == {"a": 1.0, "b": 0.25, "c": 0.25}
+    # Pairwise: a beats b and b beats c on k1; a and c split k1/k2, so they tie.
+    assert lp["rank"] == {"a": 1.5, "b": 2.0, "c": 2.5}
+    assert lp["dimension_ties"] == [["a", "c"]]
+    assert lp["percentile"] == {"a": 0.75, "b": 0.5, "c": 0.25}
     assert lp["cells"]["k3"]["x"]["values"]["b"]["rank"] is None
 
     pc = report["dimensions"]["physical_causality"]
@@ -72,15 +74,15 @@ def test_na_partial_coverage_single_model_dimension_and_like_for_like() -> None:
     rows = _rows(report)
     assert rows["a"]["coverage"] == 2                      # causality (single model) is not counted
     assert rows["a"]["dimension_ranks"]["physical_causality"] == {"rank": 1.0, "of": 1, "percentile": None}
-    assert rows["a"]["overall_score"] == pytest.approx(0.5)  # mean(1.0 lpips, 0.0 prompt)
-    assert rows["b"]["overall_score"] == pytest.approx(0.625)
+    assert rows["a"]["overall_score"] == pytest.approx(0.375)  # mean(0.75 lpips, 0.0 prompt)
+    assert rows["b"]["overall_score"] == pytest.approx(0.75)
     assert rows["c"]["overall_score"] == pytest.approx(0.25) and rows["c"]["coverage"] == 1
     assert [r["model"] for r in report["leaderboard"]] == ["b", "a", "c"]
     assert rows["b"]["overall_rank"] == 1
 
     # Like-for-like: only lpips ranks every listed model (c has no prompt score).
     assert report["like_for_like_dimensions"] == ["lpips"]
-    assert rows["a"]["like_for_like_rank"] == 1 and rows["b"]["like_for_like_rank"] == 2.5
+    assert rows["a"]["like_for_like_rank"] == 1 and rows["b"]["like_for_like_rank"] == 2
 
 
 def test_overall_uses_ranks_not_raw_scores() -> None:
@@ -194,3 +196,32 @@ def test_lite_rows_for_cases_the_model_cannot_express_are_dropped() -> None:
            "status": "completed", "model": "odyssey", "metrics": {"fde_m_mean": 0.9, "dtw_m_mean": 0.5}}
     assert "kinematics_mechanics" not in lite_cells([row])
     assert "kinematics_mechanics" in lite_cells([{**row, "model": "project_genie"}])
+
+
+def test_dimension_ties_when_cell_ranks_split() -> None:
+    # a wins one cell and loses the other to b; c is last everywhere.
+    paper = _paper({"lpips": {"metrics": {"x": "lower"}, "cells": {
+        "k1": {"x": {"a": [0.1, 0.0], "b": [0.2, 0.0], "c": [0.9, 0.0]}},
+        "k2": {"x": {"a": [0.3, 0.0], "b": [0.2, 0.0], "c": [0.9, 0.0]}},
+        "k3": {"x": {"a": [0.1, 0.0], "b": [0.1, 0.0], "c": [0.9, 0.0]}},
+    }}})
+    lp = build(paper, {}, floors={})["dimensions"]["lpips"]
+    assert lp["dimension_ties"] == [["a", "b"]]
+    assert lp["rank"] == {"a": 1.5, "b": 1.5, "c": 3.0}
+
+
+def test_cells_at_or_below_the_self_match_floor_are_not_ranked() -> None:
+    floors = {"environment_object_consistency": {
+        "WanderingGarden/scene_360_in": {"depth": 93.0, "dist": 41.9, "dist_measurable": False},
+        "BilliardGame/scene_360_in": {"depth": 22.0, "dist": 7.0, "dist_measurable": True},
+    }}
+    paper = _paper({"environment_object_consistency": {"metrics": {"depth": "lower", "dist": "lower"}, "cells": {
+        "garden/360_in": {"depth": {"a": [80.0, 0.0], "b": [120.0, 0.0]}, "dist": {"a": [30.0, 0.0], "b": [60.0, 0.0]}},
+        "billiard/360_in": {"depth": {"a": [50.0, 0.0], "b": [20.0, 0.0]},      # spread 30 > floor 22
+                            "dist": {"a": [10.0, 0.0], "b": [14.0, 0.0]}},      # spread 4 < floor 7
+    }}}, models=("a", "b"))
+    eoc = build(paper, {}, floors=floors)["dimensions"]["environment_object_consistency"]
+    assert set(eoc["floor_excluded"]) == {"garden/360_in · depth", "garden/360_in · dist", "billiard/360_in · dist"}
+    assert "not measurable" in eoc["floor_excluded"]["garden/360_in · dist"]
+    assert eoc["rank"] == {"a": 2.0, "b": 1.0}             # decided by Billiard depth alone
+    assert eoc["cells"]["garden/360_in"]["depth"]["values"]["a"]["rank"] is None

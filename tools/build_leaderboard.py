@@ -14,9 +14,15 @@ Method (no cross-metric normalization is invented; only ranks are combined):
    interval). Rank = 1 + #models significantly better + 0.5 x #models tied, which
    is the averaged rank of a tie group. A model N/A on a (cell, metric) is not
    ranked there, and a (cell, metric) with one model has no comparison.
-2. Dimension rank = mean of the model's (cell, metric) ranks (lower = better),
-   re-ranked to 1..n among the models ranked in that dimension (equal means
-   share the averaged rank).
+   A (cell, metric) below its measurement floor is shown but not ranked: the
+   Unity reference scored against itself (``self_match_floor.json``, from
+   SELF_MATCH_BOUNDS.md) has an error at least the spread of the model values,
+   or pairwise distance is not measurable on the reference at all.
+2. Dimension rank, with the same tie rule one level up. For each pair of models,
+   the differences of their ranks on the (cell, metric)s both are ranked on are
+   bootstrapped; the pair is ordered only if one mean rank is lower in >= 95% of
+   resamples. Dimension rank = 1 + #models significantly better + 0.5 x #ties
+   (the mean cell rank is reported alongside).
 3. Overall. Each dimension rank becomes a percentile, (n - rank) / (n - 1):
    1.0 best ... 0.0 worst among the n models ranked there; a single-model
    dimension contributes no comparison. Overall score = mean percentile over the
@@ -36,6 +42,7 @@ results are mapped onto the paper cells for all eight dimensions.
         --lite odyssey=reports/wmeval_lite/odyssey_v2/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_v2_prompt/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_v2_lighting_native/per_case_results.jsonl \\
+        --lite odyssey=reports/wmeval_lite/odyssey_eoc_5seed_merged/per_case_results.jsonl \\
         --output reports/leaderboard
 """
 from __future__ import annotations
@@ -293,7 +300,81 @@ def averaged_ranks(scores: dict[str, float], lower_is_better: bool = True) -> di
     return out
 
 
-def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]] = frozenset()) -> dict:
+FLOORS_PATH = ROOT / "eval_sets/wmeval_lite_v1/self_match_floor.json"
+_CELL_SCENE = {"garden": "WanderingGarden", "billiard": "BilliardGame", "mirror": "MirrorRollingBall"}
+DIM_TIE_RESAMPLES = 4000
+DIM_TIE_CONFIDENCE = 0.95
+
+
+def _floor_cases(cell: str) -> list[str]:
+    scene, _, view = cell.partition("/")
+    if scene not in _CELL_SCENE:
+        return []
+    views = [view] if view.endswith(("_in", "_out")) else [f"{view}_in", f"{view}_out"]   # char cells pool In/Out
+    return [f"{_CELL_SCENE[scene]}/scene_{v}" for v in views]
+
+
+def below_floor(dim: str, cell: str, metric: str, per: dict, floors: dict) -> str | None:
+    """Why a (cell, metric) cannot separate models, or None.
+
+    The Unity reference scored against itself gives the metric's own measurement error
+    (SELF_MATCH_BOUNDS.md). When that error is at least the whole spread of model values,
+    no two models differ by more than the metric's noise."""
+    table = floors.get(dim) or {}
+    cases = [table[c] for c in _floor_cases(cell) if c in table]
+    if not cases or metric not in ("depth", "dist", "char") or len(per) < 2:
+        return None
+    if metric == "dist" and not all(c.get("dist_measurable") for c in cases):
+        return "pairwise distance is not measurable on the Unity reference itself"
+    vals = [c.get(metric) for c in cases]
+    if any(v is None for v in vals):
+        return None
+    floor = sum(vals) / len(vals)
+    noise = 100.0 - floor if metric == "char" else floor        # char is a consistency %, higher is better
+    means = [e.mean for e in per.values()]
+    spread = max(means) - min(means)
+    if noise >= spread:
+        return f"Unity self-match error ({noise:.1f}) is at least the spread of model values ({spread:.1f})"
+    return None
+
+
+def dimension_ranks(ranks_by_key: dict[str, dict[tuple, float]], seed: int = 0) -> tuple[dict[str, float], list[list[str]]]:
+    """Dimension rank = 1 + #models significantly better + 0.5 x #ties, from paired cell ranks.
+
+    For each pair, the (cell, metric) comparisons both are ranked on are bootstrapped; the
+    pair is ordered only when one mean rank is lower in >= DIM_TIE_CONFIDENCE of resamples."""
+    import numpy as np
+
+    models = sorted(ranks_by_key)
+    rng = np.random.default_rng(seed)
+    better = {m: 0 for m in models}
+    tie = {m: 0 for m in models}
+    ties: list[list[str]] = []
+    for i, a in enumerate(models):
+        for b in models[i + 1:]:
+            keys = sorted(set(ranks_by_key[a]) & set(ranks_by_key[b]))
+            if not keys:
+                continue
+            d = np.array([ranks_by_key[a][k] - ranks_by_key[b][k] for k in keys])
+            idx = rng.integers(0, len(d), size=(DIM_TIE_RESAMPLES, len(d)))
+            means = d[idx].mean(axis=1)
+            p_a = float((means < 0).mean())
+            p_b = float((means > 0).mean())
+            if p_a >= DIM_TIE_CONFIDENCE:
+                better[b] += 1
+            elif p_b >= DIM_TIE_CONFIDENCE:
+                better[a] += 1
+            else:
+                tie[a] += 1
+                tie[b] += 1
+                ties.append([a, b])
+    return {m: 1.0 + better[m] + 0.5 * tie[m] for m in models}, ties
+
+
+def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]] = frozenset(),
+          floors: dict | None = None) -> dict:
+    if floors is None:
+        floors = json.loads(FLOORS_PATH.read_text(encoding="utf-8")) if FLOORS_PATH.is_file() else {}
     dims = paper["dimensions"]
     models = {k: dict(v) for k, v in paper["models"].items()}
     directions: dict[str, dict[str, str]] = {}
@@ -324,25 +405,32 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
         if dim not in values:
             continue
         cell_ranks: dict[str, list[float]] = defaultdict(list)
+        ranks_by_key: dict[str, dict[tuple, float]] = defaultdict(dict)
         cells_out: dict = {}
+        floor_excluded: dict = {}
         present = set()
         for cell, metrics in values[dim].items():
             for metric, per in metrics.items():
                 if not per:
                     continue
                 present.update(per)
+                reason = below_floor(dim, cell, metric, per, floors)
+                if reason:
+                    floor_excluded[f"{cell} · {metric}"] = reason
                 higher = directions[dim][metric] == "higher"
-                ranks, ties = rank_cell(per, higher, f"{dim}|{cell}|{metric}") if len(per) > 1 else ({}, [])
+                ranks, ties = rank_cell(per, higher, f"{dim}|{cell}|{metric}") if len(per) > 1 and not reason else ({}, [])
                 for m, r in ranks.items():
                     cell_ranks[m].append(r)
+                    ranks_by_key[m][(cell, metric)] = r
                 cells_out.setdefault(cell, {})[metric] = {
                     "direction": directions[dim][metric],
                     "values": {m: {"mean": round(e.mean, 6), "std": None if e.std is None else round(e.std, 6),
                                    "n": e.n, "source": e.source, "rank": ranks.get(m)} for m, e in sorted(per.items())},
                     "ties": ties,
+                    **({"floor_excluded": reason} if reason else {}),
                 }
         mean_rank = {m: mean(r) for m, r in cell_ranks.items()}
-        dim_rank = averaged_ranks(mean_rank)
+        dim_rank, dim_ties = dimension_ranks(ranks_by_key) if len(ranks_by_key) > 1 else ({}, [])
         if not dim_rank and len(present) == 1:   # single-model dimension: shown, never counted
             dim_rank = {next(iter(present)): 1.0}
         n_ranked = len(dim_rank)
@@ -353,6 +441,8 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
             "comparable": n_ranked >= 2,
             "mean_cell_rank": {m: round(v, 4) for m, v in mean_rank.items()},
             "rank_pairs": {m: len(r) for m, r in cell_ranks.items()},
+            "dimension_ties": dim_ties,
+            "floor_excluded": floor_excluded,
             "rank": dim_rank,
             "percentile": {m: round((n_ranked - r) / (n_ranked - 1), 4) for m, r in dim_rank.items()} if n_ranked >= 2 else {},
             "cells": cells_out,
@@ -429,7 +519,9 @@ def markdown(report: dict, command: str | None = None) -> str:
     lines = ["# WMEval leaderboard", "",
              "Per-dimension ranks from every (cell, metric) the paper reports, with statistical ties "
              "(seed bootstrap at 95% for per-seed Lite values, Welch t-test at α = 0.05 for paper mean ± std); "
-             "dimension rank = mean cell rank, re-ranked. Overall = mean of the dimension-rank percentiles "
+             "cells below their Unity self-match floor are shown but not ranked; "
+             "dimension rank = 1 + #better + 0.5 × #tied, where a pair is ordered only if its paired cell ranks "
+             "favour one model in ≥ 95% of bootstrap resamples. Overall = mean of the dimension-rank percentiles "
              "(1 = best, 0 = worst among the models ranked in that dimension) over the dimensions a model is ranked in. "
              "Cells show rank/of; `—` not ranked (N/A or not run); `1/1*` single-model dimension (no comparison, not counted).",
              "", "## Overall", "",
@@ -483,11 +575,18 @@ def markdown(report: dict, command: str | None = None) -> str:
                         continue
                     text = _fmt_value(v, places)
                     cells.append(text + (f" ·{_rank(v['rank'])}" if v["rank"] is not None else ""))
-                lines.append(f"| {cell} · {metric} {arrow} | " + " | ".join(cells) + " |")
+                floor = " (below floor, not ranked)" if info.get("floor_excluded") else ""
+                lines.append(f"| {cell} · {metric} {arrow}{floor} | " + " | ".join(cells) + " |")
         if det["comparable"]:
             lines.append("| **Dimension rank** (mean cell rank) | " + " | ".join(
                 f"**{_rank(det['rank'][m])}** ({det['mean_cell_rank'][m]:.2f})" if m in det["rank"] else "—"
                 for m in order) + " |")
+            if det["dimension_ties"]:
+                lines += ["", "Tied at the dimension level: " + "; ".join(
+                    f"{display[a]} = {display[b]}" for a, b in det["dimension_ties"]) + "."]
+        if det["floor_excluded"]:
+            lines += ["", "Below measurement floor: " + "; ".join(
+                f"{k} ({why})" for k, why in det["floor_excluded"].items()) + "."]
     if command:
         lines += ["", f"Generated with `{command}`."]
     return "\n".join(lines) + "\n"
