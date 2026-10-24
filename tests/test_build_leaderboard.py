@@ -225,3 +225,25 @@ def test_cells_at_or_below_the_self_match_floor_are_not_ranked() -> None:
     assert "not measurable" in eoc["floor_excluded"]["garden/360_in · dist"]
     assert eoc["rank"] == {"a": 2.0, "b": 1.0}             # decided by Billiard depth alone
     assert eoc["cells"]["garden/360_in"]["depth"]["values"]["a"]["rank"] is None
+
+
+def test_skipped_dimension_is_left_out_of_ranks_and_coverage() -> None:
+    paper = _paper({
+        "lpips": {"metrics": {"x": "lower"}, "cells": {"k": {"x": {"a": [0.1, 0.0], "b": [0.9, 0.0]}}}},
+        "fluid_mechanics": {"metrics": {"y": "lower"}, "cells": {"k": {"y": {"a": [0.9, 0.0], "b": [0.1, 0.0]}}}},
+    }, models=("a", "b"))
+    report = build(paper, {}, floors={}, skip_dimensions=frozenset({"lpips"}))
+    assert "lpips" not in report["dimensions"] and report["skipped_dimensions"] == ["lpips"]
+    assert report["num_dimensions"] == 7
+    assert [r["model"] for r in report["leaderboard"]] == ["b", "a"]
+
+
+def test_readme_section_replaces_only_the_marked_block(tmp_path) -> None:
+    paper = _paper({"fluid_mechanics": {"metrics": {"y": "lower"}, "cells": {"k": {"y": {"a": [0.9, 0.0], "b": [0.1, 0.0]}}}}},
+                   models=("a", "b"))
+    readme = tmp_path / "README.md"
+    readme.write_text(f"intro\n{bl.README_START}\nold table\n{bl.README_END}\nrest\n", encoding="utf-8")
+    bl.write_readme(readme, bl.readme_section(build(paper, {}, floors={})))
+    text = readme.read_text(encoding="utf-8")
+    assert text.startswith("intro\n") and text.endswith("\nrest\n") and "old table" not in text
+    assert "| 1 | **B** |" in text and text.count(bl.README_START) == 1
