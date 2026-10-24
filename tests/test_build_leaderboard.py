@@ -270,3 +270,21 @@ def test_dropped_model_leaves_every_dimension() -> None:
     assert [r["model"] for r in report["leaderboard"]] == ["a", "c"] and report["dropped_models"] == ["b"]
     assert not report["dimensions"]["fluid_mechanics"]["comparable"]          # a alone: shown, not counted
     assert report["excluded"] == []
+
+
+def test_shared_ranks_are_whole_numbers_and_unsupported_models_tie_last() -> None:
+    paper = _paper({
+        "lighting_shading": {"metrics": {"z": "lower"}, "cells": {
+            "k1": {"z": {"a": [0.1, 0.0], "b": [0.5, 0.0], "c": [0.9, 0.0]}},
+            "k2": {"z": {"a": [0.1, 0.0], "b": [0.5, 0.0], "c": [0.9, 0.0]}}}},
+        "fluid_mechanics": {"metrics": {"y": "lower"}, "cells": {"k": {"y": {"a": [0.1, 0.0]}}}},
+    })
+    report = bl.apply_shared_ranks(build(paper, {}, floors={}))
+    rows = _rows(report)
+    assert rows["a"]["dimension_ranks"]["lighting_shading"] == {"rank": 1, "of": 3, "supported": True, "percentile": 1.0}
+    assert rows["c"]["dimension_ranks"]["lighting_shading"]["rank"] == 3
+    fluid = {m: rows[m]["dimension_ranks"]["fluid_mechanics"] for m in "abc"}
+    assert fluid["a"]["rank"] == 1 and fluid["a"]["percentile"] == 1.0        # beats both unsupported models
+    assert fluid["b"] == {"rank": 2, "of": 3, "supported": False, "percentile": 0.0} == fluid["c"]
+    assert [r["model"] for r in report["leaderboard"]] == ["a", "b", "c"]
+    assert all(isinstance(r["overall_rank"], int) for r in report["leaderboard"])
