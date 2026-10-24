@@ -295,5 +295,13 @@ def test_lighting_note_when_only_sun_disagreement_is_kept() -> None:
         "s": {"mosd": {"a": [60.0, 1.0], "b": [98.0, 1.0]}, "sdj": {"a": [9.0, 1.0], "b": [1.0, 1.0]}}}}}, models=("a", "b"))
     skip = frozenset(("lighting_shading", m) for m in bl.LIGHTING_SECONDARY)
     report = build(paper, {}, floors={}, skip_metrics=skip)
-    assert bl.sun_disagreement_only(report) and "sun disagreement only" in bl.readme_section(report)
+    assert bl.sun_disagreement_only(report) and "sun disagreement" in bl.readme_section(report)
     assert report["dimensions"]["lighting_shading"]["rank"] == {"a": 1.0, "b": 2.0}
+
+
+def test_one_metric_per_dimension_note_names_each_metric() -> None:
+    paper = _paper({"fluid_mechanics": {"metrics": {"d_theta": "lower", "l1": "lower"}, "cells": {
+        "k": {"d_theta": {"a": [1.0, 0.1], "b": [9.0, 0.1]}, "l1": {"a": [9.0, 0.1], "b": [1.0, 0.1]}}}}}, models=("a", "b"))
+    report = build(paper, {}, floors={}, skip_metrics=frozenset({("fluid_mechanics", "l1")}))
+    assert bl.ranking_metrics(report) == {"fluid_mechanics": ["d_theta"]}
+    assert "each dimension is ranked on one metric: Fluid, surface-tilt error" in bl.readme_section(report)
