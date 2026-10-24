@@ -288,3 +288,12 @@ def test_shared_ranks_are_whole_numbers_and_unsupported_models_tie_last() -> Non
     assert fluid["b"] == {"rank": 2, "of": 3, "supported": False, "percentile": 0.0} == fluid["c"]
     assert [r["model"] for r in report["leaderboard"]] == ["a", "b", "c"]
     assert all(isinstance(r["overall_rank"], int) for r in report["leaderboard"])
+
+
+def test_lighting_note_when_only_sun_disagreement_is_kept() -> None:
+    paper = _paper({"lighting_shading": {"metrics": {"mosd": "lower", "sdj": "lower"}, "cells": {
+        "s": {"mosd": {"a": [60.0, 1.0], "b": [98.0, 1.0]}, "sdj": {"a": [9.0, 1.0], "b": [1.0, 1.0]}}}}}, models=("a", "b"))
+    skip = frozenset(("lighting_shading", m) for m in bl.LIGHTING_SECONDARY)
+    report = build(paper, {}, floors={}, skip_metrics=skip)
+    assert bl.sun_disagreement_only(report) and "sun disagreement only" in bl.readme_section(report)
+    assert report["dimensions"]["lighting_shading"]["rank"] == {"a": 1.0, "b": 2.0}
