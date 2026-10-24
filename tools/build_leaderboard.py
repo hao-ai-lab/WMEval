@@ -43,7 +43,8 @@ results are mapped onto the paper cells for all eight dimensions.
         --lite odyssey=reports/wmeval_lite/odyssey_v2_prompt/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_v2_lighting_native/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_eoc_5seed_merged/per_case_results.jsonl \\
-        --skip-dimension lpips --skip-dimension physical_causality --drop-model hy_worldplay \\
+        --lite odyssey=reports/wmeval_lite/odyssey_ctrl_gtraft/gtraft_only.jsonl \\
+        --skip-dimension lpips --skip-dimension physical_causality --drop-model hy_worldplay --rank-style shared \\
         --skip-metric environment_object_consistency:depth --skip-metric environment_object_consistency:dist \\
         --output reports/leaderboard --readme README.md
 """
@@ -181,7 +182,8 @@ def lite_cells(rows: list[dict]) -> dict[str, dict[str, dict[str, list[float]]]]
     """dimension -> cell -> metric -> samples (one per completed case x seed row).
 
     Later rows override earlier ones on the same (dimension, case, seed); a case whose
-    latest rows include ``unsupported`` is dropped (the model cannot express it).
+    latest rows include ``unsupported`` is dropped (the model cannot express it). A row
+    carrying ``gate_override`` (a reason) is counted although the action gate rejects it.
     """
     latest: dict[tuple[str, str, str], dict] = {}
     for row in rows:
@@ -191,7 +193,7 @@ def lite_cells(rows: list[dict]) -> dict[str, dict[str, dict[str, list[float]]]]
     for (dim, case, _), row in sorted(latest.items()):
         if row.get("status") != "completed" or (dim, case) in unsupported:
             continue
-        if _gated_out(case, str(row.get("model") or "")):
+        if not row.get("gate_override") and _gated_out(case, str(row.get("model") or "")):
             continue  # the model cannot express this case's action target under the current gate
         metrics = row.get("metrics") or {}
         for target, cell, allowed in _routes(dim, case):
@@ -340,7 +342,8 @@ def below_floor(dim: str, cell: str, metric: str, per: dict, floors: dict) -> st
     return None
 
 
-def dimension_ranks(ranks_by_key: dict[str, dict[tuple, float]], seed: int = 0) -> tuple[dict[str, float], list[list[str]]]:
+def dimension_ranks(ranks_by_key: dict[str, dict[tuple, float]], seed: int = 0
+                    ) -> tuple[dict[str, float], list[list[str]], dict[str, list[str]]]:
     """Dimension rank = 1 + #models significantly better + 0.5 x #ties, from paired cell ranks.
 
     For each pair, the (cell, metric) comparisons both are ranked on are bootstrapped; the
@@ -352,6 +355,7 @@ def dimension_ranks(ranks_by_key: dict[str, dict[tuple, float]], seed: int = 0) 
     better = {m: 0 for m in models}
     tie = {m: 0 for m in models}
     ties: list[list[str]] = []
+    beats: dict[str, list[str]] = {m: [] for m in models}
     for i, a in enumerate(models):
         for b in models[i + 1:]:
             keys = sorted(set(ranks_by_key[a]) & set(ranks_by_key[b]))
@@ -364,13 +368,15 @@ def dimension_ranks(ranks_by_key: dict[str, dict[tuple, float]], seed: int = 0) 
             p_b = float((means > 0).mean())
             if p_a >= DIM_TIE_CONFIDENCE:
                 better[b] += 1
+                beats[a].append(b)
             elif p_b >= DIM_TIE_CONFIDENCE:
                 better[a] += 1
+                beats[b].append(a)
             else:
                 tie[a] += 1
                 tie[b] += 1
                 ties.append([a, b])
-    return {m: 1.0 + better[m] + 0.5 * tie[m] for m in models}, ties
+    return {m: 1.0 + better[m] + 0.5 * tie[m] for m in models}, ties, beats
 
 
 def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]] = frozenset(),
@@ -380,6 +386,8 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
     if floors is None:
         floors = json.loads(FLOORS_PATH.read_text(encoding="utf-8")) if FLOORS_PATH.is_file() else {}
     dims = paper["dimensions"]
+    gate_overrides = sorted({(m, str(row.get("dimension"))) for m, rows in lite.items() if m not in drop_models
+                             for row in rows if row.get("gate_override") and row.get("status") == "completed"})
     models = {k: dict(v) for k, v in paper["models"].items() if k not in drop_models}
     lite = {k: v for k, v in lite.items() if k not in drop_models}
     exclude = set(exclude) | {(m, d) for m in drop_models for d in DIMENSION_ORDER}
@@ -440,7 +448,7 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
                     **({"floor_excluded": reason} if reason else {}),
                 }
         mean_rank = {m: mean(r) for m, r in cell_ranks.items()}
-        dim_rank, dim_ties = dimension_ranks(ranks_by_key) if len(ranks_by_key) > 1 else ({}, [])
+        dim_rank, dim_ties, dim_beats = dimension_ranks(ranks_by_key) if len(ranks_by_key) > 1 else ({}, [], {})
         if not dim_rank and len(present) == 1:   # single-model dimension: shown, never counted
             dim_rank = {next(iter(present)): 1.0}
         n_ranked = len(dim_rank)
@@ -452,6 +460,7 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
             "mean_cell_rank": {m: round(v, 4) for m, v in mean_rank.items()},
             "rank_pairs": {m: len(r) for m, r in cell_ranks.items()},
             "dimension_ties": dim_ties,
+            "dimension_beats": dim_beats,
             "floor_excluded": floor_excluded,
             "rank": dim_rank,
             "percentile": {m: round((n_ranked - r) / (n_ranked - 1), 4) for m, r in dim_rank.items()} if n_ranked >= 2 else {},
@@ -496,7 +505,9 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
         "skipped_dimensions": [d for d in DIMENSION_ORDER if d in skip_dimensions],
         "skipped_metrics": sorted(f"{d}:{m}" for d, m in skip_metrics),
         "dropped_models": sorted(drop_models),
-        "model_names": {k: v.get("display", k) for k, v in paper["models"].items()},
+        "gate_overrides": [f"{m}:{d}" for m, d in gate_overrides],
+        "model_names": {**{k: v.get("display", k) for k, v in paper["models"].items()},
+                        **{r["model"]: r["display"] for r in board}},
         "leaderboard": board,
         "dimensions": detail,
     }
@@ -520,6 +531,40 @@ def _fmt_value(v: dict, places: int | None) -> str:
         places = 1 if size >= 10 else 2 if size >= 1 else 3
     text = f"{v['mean']:.{places}f}"
     return text if v["std"] is None else f"{text}±{v['std']:.{places}f}"
+
+
+def apply_shared_ranks(report: dict) -> dict:
+    """Whole-number shared ranks; unsupported models ranked tied last; score = share of models beaten.
+
+    Per dimension, every listed model is placed: a ranked model's rank is 1 + the number of
+    models significantly ahead of it (tied models share a rank), and a model the dimension
+    cannot evaluate is tied last and marked unsupported. A model's dimension score is the
+    share of the other models it significantly beats, counting every unsupported model as
+    beaten; an unsupported model scores 0. Overall = mean over all dimensions shown."""
+    rows = {r["model"]: r for r in report["leaderboard"]}
+    models = list(rows)
+    n = len(models)
+    for dim, det in report["dimensions"].items():
+        ranked = list(det["rank"])
+        beats = det.get("dimension_beats", {})
+        unsupported = [m for m in models if m not in ranked]
+        for m in ranked:
+            ahead = sum(m in beats.get(o, []) for o in ranked if o != m)
+            rows[m]["dimension_ranks"][dim] = {"rank": 1 + ahead, "of": n, "supported": True,
+                                               "percentile": round((len(beats.get(m, [])) + len(unsupported)) / (n - 1), 4)}
+        for m in unsupported:
+            rows[m]["dimension_ranks"][dim] = {"rank": 1 + len(ranked), "of": n, "supported": False, "percentile": 0.0}
+    for r in rows.values():
+        vals = [v["percentile"] for v in r["dimension_ranks"].values()]
+        r["overall_score"] = round(sum(vals) / len(vals), 4)
+        r["coverage"] = sum(v["supported"] for v in r["dimension_ranks"].values())
+    for r in rows.values():
+        r["overall_rank"] = 1 + sum(o["overall_score"] > r["overall_score"] for o in rows.values())
+        r["like_for_like_rank"] = r["like_for_like_score"] = None
+    report["leaderboard"] = sorted(rows.values(), key=lambda r: (r["overall_rank"], r["display"]))
+    report["like_for_like_dimensions"] = []
+    report["rank_style"] = "shared"
+    return report
 
 
 def label(report: dict, dim: str) -> str:
@@ -623,18 +668,32 @@ def readme_section(report: dict) -> str:
     """Compact overall table for the repository README."""
     dims = [d for d in DIMENSION_ORDER if d in report["dimensions"]]
     n_dims = report["num_dimensions"]
-    lines = [README_START, "",
-             "| Rank | Model | Score ↑ | Coverage | " + " | ".join(label(report, d) for d in dims) + " |",
-             "|" + "---|" * (4 + len(dims))]
+    shared = report.get("rank_style") == "shared"
+    head = "| Rank | Model | Score ↑ | " + ("" if shared else "Coverage | ")
+    lines = [README_START, "", head + " | ".join(label(report, d) for d in dims) + " |",
+             "|" + "---|" * ((3 if shared else 4) + len(dims))]
     for row in report["leaderboard"]:
         cells = []
         for d in dims:
             dr = row["dimension_ranks"].get(d)
-            cells.append("—" if dr is None else f"{_rank(dr['rank'])}/{dr['of']}" + ("*" if dr["of"] < 2 else ""))
+            if shared:
+                cells.append(f"{dr['rank']}/{dr['of']}" + ("" if dr["supported"] else " ‡"))
+            else:
+                cells.append("—" if dr is None else f"{_rank(dr['rank'])}/{dr['of']}" + ("*" if dr["of"] < 2 else ""))
         score = "–" if row["overall_score"] is None else f"{row['overall_score']:.3f}"
         rank = "–" if row["overall_rank"] is None else _rank(row["overall_rank"])
-        lines.append(f"| {rank} | **{row['display']}** | {score} | {row['coverage']}/{n_dims} | " + " | ".join(cells) + " |")
-    lines += ["",
+        cov = "" if shared else f" {row['coverage']}/{n_dims} |"
+        lines.append(f"| {rank} | **{row['display']}** | {score} |{cov} " + " | ".join(cells) + " |")
+    if shared:
+        lines += ["",
+                  "Models are ranked separately in each dimension, on the metrics the paper reports for it, scene by scene. "
+                  "A model's rank is 1 + the number of models significantly better than it (bootstrap over seeds or Welch "
+                  "t-test per metric, then a paired bootstrap over scene ranks), so models that cannot be told apart share "
+                  "a rank. ‡ = not supported: the model's interface cannot express that dimension's actions; it is ranked "
+                  "tied last. Score = mean over dimensions of the share of the other models a model significantly beats "
+                  "(unsupported models count as beaten and score 0)."]
+    else:
+        lines += ["",
               "Models are ranked separately in each dimension, on the metrics the paper reports for it, scene by scene. "
               "Models that cannot be told apart share a rank (bootstrap over seeds or Welch t-test per metric, then a paired "
               "bootstrap over scene ranks per dimension), and metrics whose Unity self-match error is as large as the spread "
@@ -650,6 +709,10 @@ def readme_section(report: dict) -> str:
     dropped = [report.get("model_names", {}).get(m, m) for m in report.get("dropped_models", [])]
     if dropped:
         notes.append(", ".join(dropped) + (" is" if len(dropped) == 1 else " are") + " left out")
+    for spec in report.get("gate_overrides", []):
+        m, d = spec.split(":", 1)
+        notes.append(f"{label(report, d)} for {report.get('model_names', {}).get(m, m)}, which can only move the camera, uses "
+                     "Ground Truth RAFT alone, as for Waypoint-1.5 in the paper")
     if character_only(report):
         notes.append("object and character consistency is ranked on character identity only (depth and pairwise-distance "
                      "geometry are left out)")
@@ -687,17 +750,22 @@ def main(argv: list[str] | None = None) -> int:
                         help="leave one metric out of a dimension's ranking (repeatable)")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--readme", type=Path, help="also rewrite the leaderboard section of this README")
+    parser.add_argument("--rank-style", choices=("averaged", "shared"), default="averaged",
+                        help="shared: whole-number shared ranks, unsupported models tied last (apply_shared_ranks)")
     args = parser.parse_args(argv)
     paper = yaml.safe_load(args.paper.read_text(encoding="utf-8"))
     exclude = {tuple(spec.split(":", 1)) for spec in args.exclude}
     report = build(paper, load_lite(args.lite), exclude=exclude, skip_dimensions=frozenset(args.skip_dimension),
                    skip_metrics=frozenset(tuple(spec.split(":", 1)) for spec in args.skip_metric),
                    drop_models=frozenset(args.drop_model))
+    if args.rank_style == "shared":
+        report = apply_shared_ranks(report)
     command = "python tools/build_leaderboard.py " + " ".join(
         [f"--lite {s}" for s in args.lite] + [f"--exclude {s}" for s in args.exclude]
         + [f"--skip-dimension {d}" for d in args.skip_dimension]
         + [f"--skip-metric {m}" for m in args.skip_metric]
         + [f"--drop-model {m}" for m in args.drop_model]
+        + ([f"--rank-style {args.rank_style}"] if args.rank_style != "averaged" else [])
         + ([f"--output {args.output}"] if args.output else [])
         + ([f"--readme {args.readme}"] if args.readme else []))
     report["inputs"] = {"paper": str(args.paper.relative_to(ROOT) if args.paper.is_relative_to(ROOT) else args.paper),
