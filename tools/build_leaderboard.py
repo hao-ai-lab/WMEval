@@ -43,7 +43,9 @@ results are mapped onto the paper cells for all eight dimensions.
         --lite odyssey=reports/wmeval_lite/odyssey_v2_prompt/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_v2_lighting_native/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_eoc_5seed_merged/per_case_results.jsonl \\
-        --skip-dimension lpips --output reports/leaderboard --readme README.md
+        --skip-dimension lpips \\
+        --skip-metric environment_object_consistency:depth --skip-metric environment_object_consistency:dist \\
+        --output reports/leaderboard --readme README.md
 """
 from __future__ import annotations
 
@@ -372,7 +374,8 @@ def dimension_ranks(ranks_by_key: dict[str, dict[tuple, float]], seed: int = 0) 
 
 
 def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]] = frozenset(),
-          floors: dict | None = None, skip_dimensions: frozenset[str] = frozenset()) -> dict:
+          floors: dict | None = None, skip_dimensions: frozenset[str] = frozenset(),
+          skip_metrics: frozenset[tuple[str, str]] = frozenset()) -> dict:
     order = [d for d in DIMENSION_ORDER if d not in skip_dimensions]
     if floors is None:
         floors = json.loads(FLOORS_PATH.read_text(encoding="utf-8")) if FLOORS_PATH.is_file() else {}
@@ -400,6 +403,10 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
                     continue
                 for metric, vals in metrics.items():
                     values[dim][cell].setdefault(metric, {})[model] = Entry.from_samples(vals)
+
+    for dim, metric in skip_metrics:                # left out of every cell before ranking
+        for metrics in values.get(dim, {}).values():
+            metrics.pop(metric, None)
 
     detail: dict = {}
     for dim in order:
@@ -485,6 +492,7 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
         "like_for_like_dimensions": shared,
         "excluded": sorted(f"{m}:{d}" for m, d in exclude),
         "skipped_dimensions": [d for d in DIMENSION_ORDER if d in skip_dimensions],
+        "skipped_metrics": sorted(f"{d}:{m}" for d, m in skip_metrics),
         "leaderboard": board,
         "dimensions": detail,
     }
@@ -510,6 +518,13 @@ def _fmt_value(v: dict, places: int | None) -> str:
     return text if v["std"] is None else f"{text}±{v['std']:.{places}f}"
 
 
+def label(report: dict, dim: str) -> str:
+    skipped = set(report.get("skipped_metrics", []))
+    if dim == "environment_object_consistency" and {f"{dim}:depth", f"{dim}:dist"} <= skipped:
+        return "Character"
+    return SHORT[dim]
+
+
 def _rank(r: float) -> str:
     return f"{r:g}"
 
@@ -527,7 +542,7 @@ def markdown(report: dict, command: str | None = None) -> str:
              "(1 = best, 0 = worst among the models ranked in that dimension) over the dimensions a model is ranked in. "
              "Cells show rank/of; `—` not ranked (N/A or not run); `1/1*` single-model dimension (no comparison, not counted).",
              "", "## Overall", "",
-             "| Rank | Model | Score | Coverage | " + " | ".join(SHORT[d] for d in dims) + " |",
+             "| Rank | Model | Score | Coverage | " + " | ".join(label(report, d) for d in dims) + " |",
              "|" + "---|" * (4 + len(dims))]
     for row in report["leaderboard"]:
         cells = []
@@ -543,8 +558,8 @@ def markdown(report: dict, command: str | None = None) -> str:
     if not shared:
         lines.append("No dimension ranks every listed model.")
     else:
-        lines += [f"Only the dimensions every listed model is ranked in: {', '.join(SHORT[d] for d in shared)}.", "",
-                  "| Rank | Model | Score | " + " | ".join(SHORT[d] for d in shared) + " |",
+        lines += [f"Only the dimensions every listed model is ranked in: {', '.join(label(report, d) for d in shared)}.", "",
+                  "| Rank | Model | Score | " + " | ".join(label(report, d) for d in shared) + " |",
                   "|" + "---|" * (3 + len(shared))]
         rows = sorted((r for r in report["leaderboard"] if r["like_for_like_rank"] is not None),
                       key=lambda r: (r["like_for_like_rank"], r["display"]))
@@ -562,7 +577,7 @@ def markdown(report: dict, command: str | None = None) -> str:
         summary = " · ".join(f"{_rank(det['rank'][m])}. {display[m]}" for m in det["models_ranked"])
         if not det["comparable"]:
             summary = f"single model ({', '.join(display[m] for m in det['models_present'])}) — no comparison"
-        lines += ["", f"### {SHORT[d]} — {summary}", "", f"Source: {str(det['table']).rstrip('.')}.", "",
+        lines += ["", f"### {label(report, d)} — {summary}", "", f"Source: {str(det['table']).rstrip('.')}.", "",
                   "| Cell · metric | " + " | ".join(display[m] for m in order) + " |",
                   "|" + "---|" * (1 + len(order))]
         for cell, metrics in det["cells"].items():
@@ -603,7 +618,7 @@ def readme_section(report: dict) -> str:
     dims = [d for d in DIMENSION_ORDER if d in report["dimensions"]]
     n_dims = report["num_dimensions"]
     lines = [README_START, "",
-             "| Rank | Model | Score ↑ | Coverage | " + " | ".join(SHORT[d] for d in dims) + " |",
+             "| Rank | Model | Score ↑ | Coverage | " + " | ".join(label(report, d) for d in dims) + " |",
              "|" + "---|" * (4 + len(dims))]
     for row in report["leaderboard"]:
         cells = []
@@ -614,7 +629,7 @@ def readme_section(report: dict) -> str:
         rank = "–" if row["overall_rank"] is None else _rank(row["overall_rank"])
         lines.append(f"| {rank} | **{row['display']}** | {score} | {row['coverage']}/{n_dims} | " + " | ".join(cells) + " |")
     lines += ["",
-              "Models are ranked separately in each dimension, on every metric the paper reports for it, scene by scene. "
+              "Models are ranked separately in each dimension, on the metrics the paper reports for it, scene by scene. "
               "Models that cannot be told apart share a rank (bootstrap over seeds or Welch t-test per metric, then a paired "
               "bootstrap over scene ranks per dimension), and metrics whose Unity self-match error is as large as the spread "
               "between models are not ranked. Score = mean dimension percentile (1 = best, 0 = worst among the models ranked "
@@ -622,8 +637,12 @@ def readme_section(report: dict) -> str:
               "ranked; `—` means the model cannot express that dimension's actions or was not run; `*` a single-model "
               "dimension, not counted."]
     skipped = [SHORT[d] for d in report.get("skipped_dimensions", [])]
+    notes = [f"{', '.join(skipped)} is not included"] if skipped else []
+    if label(report, "environment_object_consistency") == "Character":
+        notes.append("object and character consistency is ranked on character identity only (depth and pairwise-distance "
+                     "geometry are left out)")
     lines += ["", "Generated by `tools/build_leaderboard.py` from `experiments/leaderboard/paper_scores.yaml` and the "
-              "Lite results of models scored after the paper" + (f"; {', '.join(skipped)} is not included" if skipped else "")
+              "Lite results of models scored after the paper" + ("; " + "; ".join(notes) if notes else "")
               + ". Its `--output` report lists every per-metric value and rank."]
     return "\n".join(lines + ["", README_END])
 
@@ -651,15 +670,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--exclude", action="append", default=[], help="model:dimension to leave out (repeatable)")
     parser.add_argument("--skip-dimension", action="append", default=[], choices=DIMENSION_ORDER,
                         help="leave a dimension out of the leaderboard entirely (repeatable)")
+    parser.add_argument("--skip-metric", action="append", default=[], metavar="DIMENSION:METRIC",
+                        help="leave one metric out of a dimension's ranking (repeatable)")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--readme", type=Path, help="also rewrite the leaderboard section of this README")
     args = parser.parse_args(argv)
     paper = yaml.safe_load(args.paper.read_text(encoding="utf-8"))
     exclude = {tuple(spec.split(":", 1)) for spec in args.exclude}
-    report = build(paper, load_lite(args.lite), exclude=exclude, skip_dimensions=frozenset(args.skip_dimension))
+    report = build(paper, load_lite(args.lite), exclude=exclude, skip_dimensions=frozenset(args.skip_dimension),
+                   skip_metrics=frozenset(tuple(spec.split(":", 1)) for spec in args.skip_metric))
     command = "python tools/build_leaderboard.py " + " ".join(
         [f"--lite {s}" for s in args.lite] + [f"--exclude {s}" for s in args.exclude]
         + [f"--skip-dimension {d}" for d in args.skip_dimension]
+        + [f"--skip-metric {m}" for m in args.skip_metric]
         + ([f"--output {args.output}"] if args.output else [])
         + ([f"--readme {args.readme}"] if args.readme else []))
     report["inputs"] = {"paper": str(args.paper.relative_to(ROOT) if args.paper.is_relative_to(ROOT) else args.paper),

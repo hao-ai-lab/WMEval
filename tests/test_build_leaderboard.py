@@ -247,3 +247,17 @@ def test_readme_section_replaces_only_the_marked_block(tmp_path) -> None:
     text = readme.read_text(encoding="utf-8")
     assert text.startswith("intro\n") and text.endswith("\nrest\n") and "old table" not in text
     assert "| 1 | **B** |" in text and text.count(bl.README_START) == 1
+
+
+def test_skipped_metric_is_left_out_of_the_dimension_rank() -> None:
+    paper = _paper({"environment_object_consistency": {"metrics": {"depth": "lower", "char": "higher"}, "cells": {
+        "billiard/360": {"char": {"a": [90.0, 0.0], "b": [10.0, 0.0]}},
+        "billiard/360_in": {"depth": {"a": [90.0, 0.0], "b": [10.0, 0.0]}},
+    }}}, models=("a", "b"))
+    both = build(paper, {}, floors={})["dimensions"]["environment_object_consistency"]
+    assert both["rank"] == {"a": 1.5, "b": 1.5}                      # one win each
+    report = build(paper, {}, floors={}, skip_metrics=frozenset({("environment_object_consistency", "depth"),
+                                                                 ("environment_object_consistency", "dist")}))
+    eoc = report["dimensions"]["environment_object_consistency"]
+    assert eoc["rank"] == {"a": 1.0, "b": 2.0} and "billiard/360_in" not in eoc["cells"]
+    assert bl.label(report, "environment_object_consistency") == "Character"
