@@ -260,4 +260,13 @@ def test_skipped_metric_is_left_out_of_the_dimension_rank() -> None:
                                                                  ("environment_object_consistency", "dist")}))
     eoc = report["dimensions"]["environment_object_consistency"]
     assert eoc["rank"] == {"a": 1.0, "b": 2.0} and "billiard/360_in" not in eoc["cells"]
-    assert bl.label(report, "environment_object_consistency") == "Character"
+    assert bl.character_only(report) and bl.label(report, "environment_object_consistency") == "Consistency"
+
+
+def test_dropped_model_leaves_every_dimension() -> None:
+    paper = _paper({"fluid_mechanics": {"metrics": {"y": "lower"}, "cells": {"k": {"y": {"a": [0.1, 0.0], "b": [0.9, 0.0]}}}},
+                    "lighting_shading": {"metrics": {"z": "lower"}, "cells": {"k": {"z": {"a": [0.1, 0.0], "b": [0.5, 0.0], "c": [0.9, 0.0]}}}}})
+    report = build(paper, {}, floors={}, drop_models=frozenset({"b"}))
+    assert [r["model"] for r in report["leaderboard"]] == ["a", "c"] and report["dropped_models"] == ["b"]
+    assert not report["dimensions"]["fluid_mechanics"]["comparable"]          # a alone: shown, not counted
+    assert report["excluded"] == []
