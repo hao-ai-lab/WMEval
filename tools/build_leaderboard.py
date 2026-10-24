@@ -45,6 +45,8 @@ results are mapped onto the paper cells for all eight dimensions.
         --lite odyssey=reports/wmeval_lite/odyssey_eoc_5seed_merged/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_ctrl_gtraft/gtraft_only.jsonl \\
         --skip-dimension lpips --skip-dimension physical_causality --drop-model hy_worldplay --rank-style shared \\
+        --skip-metric lighting_shading:scene_retention --skip-metric lighting_shading:shadow_detection \\
+        --skip-metric lighting_shading:sdj --skip-metric lighting_shading:area_stability --skip-metric lighting_shading:shape_drift \\
         --skip-metric environment_object_consistency:depth --skip-metric environment_object_consistency:dist \\
         --output reports/leaderboard --readme README.md
 """
@@ -571,6 +573,13 @@ def label(report: dict, dim: str) -> str:
     return SHORT[dim]
 
 
+LIGHTING_SECONDARY = ("scene_retention", "shadow_detection", "sdj", "area_stability", "shape_drift")
+
+
+def sun_disagreement_only(report: dict) -> bool:
+    return {f"lighting_shading:{m}" for m in LIGHTING_SECONDARY} <= set(report.get("skipped_metrics", []))
+
+
 def character_only(report: dict) -> bool:
     dim = "environment_object_consistency"
     return {f"{dim}:depth", f"{dim}:dist"} <= set(report.get("skipped_metrics", []))
@@ -713,6 +722,9 @@ def readme_section(report: dict) -> str:
         m, d = spec.split(":", 1)
         notes.append(f"{label(report, d)} for {report.get('model_names', {}).get(m, m)}, which can only move the camera, uses "
                      "Ground Truth RAFT alone, as for Waypoint-1.5 in the paper")
+    if sun_disagreement_only(report):
+        notes.append("lighting is ranked on multi-object sun disagreement only (whether the shadows of different objects "
+                     "agree on one sun)")
     if character_only(report):
         notes.append("object and character consistency is ranked on character identity only (depth and pairwise-distance "
                      "geometry are left out)")
