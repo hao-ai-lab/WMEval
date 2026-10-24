@@ -320,3 +320,14 @@ def test_exact_ranks_order_by_mean_scene_rank_without_ties() -> None:
     assert light["a"]["percentile"] == 1.0 and light["c"]["percentile"] == 0.0
     assert rows["b"]["dimension_ranks"]["fluid_mechanics"] == {"rank": 2, "of": 3, "supported": False, "percentile": 0.0}
     assert [r["overall_rank"] for r in report["leaderboard"]] == [1, 2, 3] and report["rank_style"] == "exact"
+
+
+def test_skipped_cell_leaves_the_dimension_ranking() -> None:
+    paper = _paper({"kinematics_mechanics": {"metrics": {"fde": "lower"}, "cells": {
+        "racing_car/third": {"fde": {"a": [9.4, 2.0], "b": [29.7, 0.2]}},
+        "billiard/first": {"fde": {"a": [0.83, 0.5], "b": [0.45, 0.01]}}}}}, models=("a", "b"))
+    both = bl.apply_exact_ranks(build(paper, {}, floors={}))
+    assert {r["model"]: r["dimension_ranks"]["kinematics_mechanics"]["rank"] for r in both["leaderboard"]} == {"a": 1, "b": 1}
+    report = bl.apply_exact_ranks(build(paper, {}, floors={}, skip_cells=frozenset({("kinematics_mechanics", "billiard/first")})))
+    assert {r["model"]: r["dimension_ranks"]["kinematics_mechanics"]["rank"] for r in report["leaderboard"]} == {"a": 1, "b": 2}
+    assert "Kinematics is ranked on RacingCar (third person) only" in bl.readme_section(report)

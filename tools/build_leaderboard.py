@@ -49,6 +49,7 @@ results are mapped onto the paper cells for all eight dimensions.
         --skip-metric lighting_shading:scene_retention --skip-metric lighting_shading:shadow_detection \\
         --skip-metric lighting_shading:sdj --skip-metric lighting_shading:area_stability --skip-metric lighting_shading:shape_drift \\
         --skip-metric kinematics_mechanics:dtw --skip-metric kinematics_mechanics:robust_error \\
+        --skip-cell kinematics_mechanics:billiard/first \\
         --skip-metric fluid_mechanics:d_sigma_a --skip-metric fluid_mechanics:d_a_dot --skip-metric fluid_mechanics:l1 \\
         --skip-metric fluid_mechanics:lpips --skip-metric prompt_scene_consistency:env --skip-metric prompt_scene_consistency:obj \\
         --skip-metric environment_object_consistency:depth --skip-metric environment_object_consistency:dist \\
@@ -387,7 +388,8 @@ def dimension_ranks(ranks_by_key: dict[str, dict[tuple, float]], seed: int = 0
 
 def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]] = frozenset(),
           floors: dict | None = None, skip_dimensions: frozenset[str] = frozenset(),
-          skip_metrics: frozenset[tuple[str, str]] = frozenset(), drop_models: frozenset[str] = frozenset()) -> dict:
+          skip_metrics: frozenset[tuple[str, str]] = frozenset(), drop_models: frozenset[str] = frozenset(),
+          skip_cells: frozenset[tuple[str, str]] = frozenset()) -> dict:
     order = [d for d in DIMENSION_ORDER if d not in skip_dimensions]
     if floors is None:
         floors = json.loads(FLOORS_PATH.read_text(encoding="utf-8")) if FLOORS_PATH.is_file() else {}
@@ -423,6 +425,8 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
     for dim, metric in skip_metrics:                # left out of every cell before ranking
         for metrics in values.get(dim, {}).values():
             metrics.pop(metric, None)
+    for dim, cell in skip_cells:                    # a scene left out of a dimension's ranking
+        values.get(dim, {}).pop(cell, None)
 
     detail: dict = {}
     for dim in order:
@@ -510,6 +514,7 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
         "excluded": sorted(f"{m}:{d}" for m, d in exclude if m not in drop_models),
         "skipped_dimensions": [d for d in DIMENSION_ORDER if d in skip_dimensions],
         "skipped_metrics": sorted(f"{d}:{m}" for d, m in skip_metrics),
+        "skipped_cells": sorted(f"{d}:{c}" for d, c in skip_cells),
         "dropped_models": sorted(drop_models),
         "gate_overrides": [f"{m}:{d}" for m, d in gate_overrides],
         "model_names": {**{k: v.get("display", k) for k, v in paper["models"].items()},
@@ -621,6 +626,8 @@ def apply_exact_ranks(report: dict) -> dict:
 def label(report: dict, dim: str) -> str:
     return SHORT[dim]
 
+
+CELL_NAMES = {"racing_car/third": "RacingCar (third person)", "billiard/first": "BilliardGame (first person)"}
 
 METRIC_NAMES = {
     "syn_cos": "Synthetic-RAFT flow cosine (does the motion follow the commanded direction)",
@@ -797,6 +804,10 @@ def readme_section(report: dict) -> str:
         notes.append(f"{label(report, d)} for {report.get('model_names', {}).get(m, m)}, which can only move the camera, uses "
                      "Ground Truth RAFT alone, as for Waypoint-1.5 in the paper")
     per_dim = ranking_metrics(report)
+    for d in sorted({spec.split(":", 1)[0] for spec in report.get("skipped_cells", [])}, key=DIMENSION_ORDER.index):
+        if d in report["dimensions"]:
+            kept = [CELL_NAMES.get(c, c) for c in report["dimensions"][d]["cells"]]
+            notes.append(f"{label(report, d)} is ranked on {' and '.join(kept)} only")
     if all(len(ms) == 1 for ms in per_dim.values()):
         notes.append("each dimension is ranked on one metric: " + "; ".join(
             f"{label(report, d)}, {METRIC_NAMES.get(ms[0], ms[0])}" for d, ms in per_dim.items() if d in dims))
@@ -837,6 +848,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--skip-dimension", action="append", default=[], choices=DIMENSION_ORDER,
                         help="leave a dimension out of the leaderboard entirely (repeatable)")
     parser.add_argument("--drop-model", action="append", default=[], help="leave a model out of the leaderboard (repeatable)")
+    parser.add_argument("--skip-cell", action="append", default=[], metavar="DIMENSION:CELL",
+                        help="leave one scene (cell) out of a dimension's ranking (repeatable)")
     parser.add_argument("--skip-metric", action="append", default=[], metavar="DIMENSION:METRIC",
                         help="leave one metric out of a dimension's ranking (repeatable)")
     parser.add_argument("--output", type=Path)
@@ -849,7 +862,8 @@ def main(argv: list[str] | None = None) -> int:
     exclude = {tuple(spec.split(":", 1)) for spec in args.exclude}
     report = build(paper, load_lite(args.lite), exclude=exclude, skip_dimensions=frozenset(args.skip_dimension),
                    skip_metrics=frozenset(tuple(spec.split(":", 1)) for spec in args.skip_metric),
-                   drop_models=frozenset(args.drop_model))
+                   drop_models=frozenset(args.drop_model),
+                   skip_cells=frozenset(tuple(spec.split(":", 1)) for spec in args.skip_cell))
     if args.rank_style == "shared":
         report = apply_shared_ranks(report)
     elif args.rank_style == "exact":
@@ -859,6 +873,7 @@ def main(argv: list[str] | None = None) -> int:
         + [f"--skip-dimension {d}" for d in args.skip_dimension]
         + [f"--skip-metric {m}" for m in args.skip_metric]
         + [f"--drop-model {m}" for m in args.drop_model]
+        + [f"--skip-cell {c}" for c in args.skip_cell]
         + ([f"--rank-style {args.rank_style}"] if args.rank_style != "averaged" else [])
         + ([f"--output {args.output}"] if args.output else [])
         + ([f"--readme {args.readme}"] if args.readme else []))
