@@ -84,8 +84,7 @@ BOOT_RESAMPLES = 4000
 KINEMATICS_METRICS = {
     "dtw": ("dtw_m_mean", "lower"),
     "fde": ("fde_m_mean", "lower"),
-    "exact_match": ("exact_match_pct", "higher"),
-    "error_rate": ("error_rate_pct", "lower"),
+    "robust_error": ("robust_error_rate_pct", "lower"),
 }
 
 # Lite per-case metric key for every leaderboard metric, by target dimension.
@@ -212,7 +211,8 @@ class Entry:
 
     @classmethod
     def from_paper(cls, value, n: int) -> "Entry":
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, (list, tuple)):         # [mean, std] or [mean, std, n] (n overrides the table's)
+            n = int(value[2]) if len(value) > 2 else n
             return cls(float(value[0]), None if len(value) < 2 or value[1] is None else float(value[1]), n)
         return cls(float(value), None, n)
 

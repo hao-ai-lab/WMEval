@@ -108,7 +108,7 @@ def test_lite_mapping_covers_all_dimensions() -> None:
         _row("environment_object_consistency", "MirrorRollingBall/scene_360_in", "run0",
              {"depth_absrel_pct": 5.0, "pairwise_distance_mae_pct": 7.0}),
         _row("kinematics_mechanics", "RacingCar/kinematics_third", "run0",
-             {"dtw_m_mean": 0.5, "fde_m_mean": 0.9, "exact_match_pct": 0.0, "error_rate_pct": 8.0}),
+             {"dtw_m_mean": 0.5, "fde_m_mean": 0.9, "robust_error_rate_pct": 8.0}),
         _row("action_controllability", "BeamDomino/causal", "run0", {"relative_epe_dynamic_mean_raw": 0.3}),
         _row("lpips", "BallRoller/ctrl", "run0", {"lpips_causal_mean": None, "lpips_temporal_fallback_mean": 0.7}),
         _row("lpips", "MirrorRollingBall/lpips_collision", "run0", {"lpips_causal_mean": 0.6}),
@@ -124,7 +124,7 @@ def test_lite_mapping_covers_all_dimensions() -> None:
     assert out["environment_object_consistency"]["billiard/360_in"] == {"depth": [10.0], "dist": [20.0]}
     assert out["environment_object_consistency"]["billiard/360"]["char"] == [80.0, 60.0]   # In/Out merged
     assert "depth" not in out["environment_object_consistency"]["mirror/360_in"]           # paper has no Mirror depth
-    assert out["kinematics_mechanics"]["racing_car/third"]["error_rate"] == [8.0]
+    assert out["kinematics_mechanics"]["racing_car/third"]["robust_error"] == [8.0]
     assert out["action_controllability"]["beam_domino"]["rel_epe"] == [0.3]
     assert "ball_roller" not in out["lpips"]                                              # temporal fallback excluded
     assert out["lpips"]["mirror_ball"]["clpips"] == [0.6]

@@ -38,12 +38,12 @@ dimensions:
       mirror/perturb:       {char: {project_genie: [99.9, 0.2], lingbot_world: [51.3, 21.9], matrix_game_3: [14.8, 19.7], matrix_game_2: [48.3, 3.5]}}
       mirror/360:           {char: {project_genie: [84.9, 20.9], lingbot_world: [65.0, 12.7], matrix_game_3: [4.7, 2.5], matrix_game_2: [6.7, 2.8]}}
   kinematics_mechanics:
-    table: main-physical_laws.tex (tab:worldmodel_physical_laws, the active RacingCar 3P / BilliardGame 1P table); DTW/FDE in metres
+    table: main-physical_laws.tex (tab:worldmodel_physical_laws, the active RacingCar 3P / BilliardGame 1P table); DTW/FDE in metres. RacingCar trajectories in road coordinates (evaluation/modules/road_trajectory.py); robust_error = mean momentum/energy error over the motion span, % of reference peak. Genie RacingCar n = 4 (one run fails the reliability gate); MG2 RacingCar robust error N/A (the car leaves the view before the reference car moves).
     n: 5
-    metrics: {dtw: lower, fde: lower, exact_match: higher, error_rate: lower}
+    metrics: {dtw: lower, fde: lower, robust_error: lower}
     cells:
-      racing_car/third: {dtw: {project_genie: [2.19, 0.01], matrix_game_2: [1.88, 0.22]}, fde: {project_genie: [3.49, 0.05], matrix_game_2: [5.34, 0.15]}, exact_match: {project_genie: [13.3, 9.5], matrix_game_2: [1.7, 9.1]}, error_rate: {project_genie: [4.73, 0.92], matrix_game_2: [41.7, 14.3]}}
-      billiard/first:   {dtw: {project_genie: [0.81, 0.19], matrix_game_2: [0.64, 0.00]}, fde: {project_genie: [0.83, 0.52], matrix_game_2: [0.45, 0.01]}, exact_match: {project_genie: [1.7, 3.7], matrix_game_2: [0.0, 0.0]}, error_rate: {project_genie: [2.07, 0.72], matrix_game_2: [2.6, 0.2]}}
+      racing_car/third: {dtw: {project_genie: [2.28, 0.54, 4], matrix_game_2: [17.10, 0.27]}, fde: {project_genie: [9.39, 2.25, 4], matrix_game_2: [29.65, 0.20]}, robust_error: {project_genie: [25.7, 2.5, 4]}}
+      billiard/first:   {dtw: {project_genie: [0.81, 0.19], matrix_game_2: [0.64, 0.00]}, fde: {project_genie: [0.83, 0.52], matrix_game_2: [0.45, 0.01]}, robust_error: {project_genie: [26.8, 0.4], matrix_game_2: [23.3, 0.2]}}
   action_controllability:
     table: main-raft_controllability.tex (tab:worldmodel_controllability). Waypoint-1.5 is scored with Ground Truth RAFT only (camera-only control), on BallRoller and BeamDomino.
     n: 5
