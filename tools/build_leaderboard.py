@@ -43,7 +43,7 @@ results are mapped onto the paper cells for all eight dimensions.
         --lite odyssey=reports/wmeval_lite/odyssey_v2_prompt/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_v2_lighting_native/per_case_results.jsonl \\
         --lite odyssey=reports/wmeval_lite/odyssey_eoc_5seed_merged/per_case_results.jsonl \\
-        --skip-dimension lpips --skip-dimension physical_causality --drop-model hy_worldplay --rank-style shared \\
+        --skip-dimension lpips --skip-dimension physical_causality --drop-model hy_worldplay --rank-style exact \\
         --skip-metric action_controllability:rel_epe --skip-metric action_controllability:cos \\
         --skip-metric action_controllability:syn_epe \\
         --skip-metric lighting_shading:scene_retention --skip-metric lighting_shading:shadow_detection \\
@@ -573,6 +573,51 @@ def apply_shared_ranks(report: dict) -> dict:
     return report
 
 
+def apply_exact_ranks(report: dict) -> dict:
+    """Exact-average ranks: no significance ties.
+
+    Per (cell, metric), models are ranked on their exact means (equal means share the best
+    rank); a model's dimension value is its mean rank over the cells it appears in, and its
+    dimension rank is 1 + the number of models with a strictly lower mean rank. A model the
+    dimension cannot evaluate is tied last and marked unsupported. Dimension score = share of
+    the other models with a strictly worse dimension value (unsupported count as worse; an
+    unsupported model scores 0). Overall = mean over all dimensions shown; overall rank =
+    1 + the number of models with a strictly higher overall score."""
+    rows = {r["model"]: r for r in report["leaderboard"]}
+    models = list(rows)
+    n = len(models)
+    for dim, det in report["dimensions"].items():
+        per: dict[str, list[int]] = {}
+        for metrics in det["cells"].values():
+            for info in metrics.values():
+                if info.get("floor_excluded"):
+                    continue
+                vals = {m: v["mean"] for m, v in info["values"].items()}
+                sign = -1 if info["direction"] == "higher" else 1
+                for m, v in vals.items():
+                    per.setdefault(m, []).append(1 + sum(sign * o < sign * v for o in vals.values()))
+        avg = {m: sum(v) / len(v) for m, v in per.items()}
+        unsupported = [m for m in models if m not in avg]
+        det["exact_mean_rank"] = {m: round(v, 4) for m, v in avg.items()}
+        for m in avg:
+            rows[m]["dimension_ranks"][dim] = {
+                "rank": 1 + sum(o < avg[m] for o in avg.values()), "of": n, "supported": True,
+                "percentile": round((sum(o > avg[m] for o in avg.values()) + len(unsupported)) / (n - 1), 4)}
+        for m in unsupported:
+            rows[m]["dimension_ranks"][dim] = {"rank": 1 + len(avg), "of": n, "supported": False, "percentile": 0.0}
+    for r in rows.values():
+        vals = [v["percentile"] for v in r["dimension_ranks"].values()]
+        r["overall_score"] = round(sum(vals) / len(vals), 4)
+        r["coverage"] = sum(v["supported"] for v in r["dimension_ranks"].values())
+    for r in rows.values():
+        r["overall_rank"] = 1 + sum(o["overall_score"] > r["overall_score"] for o in rows.values())
+        r["like_for_like_rank"] = r["like_for_like_score"] = None
+    report["leaderboard"] = sorted(rows.values(), key=lambda r: (r["overall_rank"], r["display"]))
+    report["like_for_like_dimensions"] = []
+    report["rank_style"] = "exact"
+    return report
+
+
 def label(report: dict, dim: str) -> str:
     return SHORT[dim]
 
@@ -699,7 +744,7 @@ def readme_section(report: dict) -> str:
     """Compact overall table for the repository README."""
     dims = [d for d in DIMENSION_ORDER if d in report["dimensions"]]
     n_dims = report["num_dimensions"]
-    shared = report.get("rank_style") == "shared"
+    shared = report.get("rank_style") in ("shared", "exact")
     head = "| Rank | Model | Score ↑ | " + ("" if shared else "Coverage | ")
     lines = [README_START, "", head + " | ".join(label(report, d) for d in dims) + " |",
              "|" + "---|" * ((3 if shared else 4) + len(dims))]
@@ -715,7 +760,14 @@ def readme_section(report: dict) -> str:
         rank = "–" if row["overall_rank"] is None else _rank(row["overall_rank"])
         cov = "" if shared else f" {row['coverage']}/{n_dims} |"
         lines.append(f"| {rank} | **{row['display']}** | {score} |{cov} " + " | ".join(cells) + " |")
-    if shared:
+    if report.get("rank_style") == "exact":
+        lines += ["",
+                  "Each dimension is ranked on one metric, scene by scene: a model's dimension rank orders the models by their "
+                  "average rank across the dimension's scenes (equal averages share a rank). ‡ = not supported: the model's "
+                  "interface cannot express that dimension's actions; it is ranked tied last. Score = mean over dimensions of the "
+                  "share of the other models a model ranks above (unsupported models count as below and score 0); models are "
+                  "ordered by that exact average."]
+    elif shared:
         lines += ["",
                   "Models are ranked separately in each dimension, on the metrics the paper reports for it, scene by scene. "
                   "A model's rank is 1 + the number of models significantly better than it (bootstrap over seeds or Welch "
@@ -789,8 +841,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="leave one metric out of a dimension's ranking (repeatable)")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--readme", type=Path, help="also rewrite the leaderboard section of this README")
-    parser.add_argument("--rank-style", choices=("averaged", "shared"), default="averaged",
-                        help="shared: whole-number shared ranks, unsupported models tied last (apply_shared_ranks)")
+    parser.add_argument("--rank-style", choices=("averaged", "shared", "exact"), default="averaged",
+                        help="shared: significance-tested whole-number ranks (apply_shared_ranks); exact: ranks from "
+                             "exact averages (apply_exact_ranks); both rank unsupported models tied last")
     args = parser.parse_args(argv)
     paper = yaml.safe_load(args.paper.read_text(encoding="utf-8"))
     exclude = {tuple(spec.split(":", 1)) for spec in args.exclude}
@@ -799,6 +852,8 @@ def main(argv: list[str] | None = None) -> int:
                    drop_models=frozenset(args.drop_model))
     if args.rank_style == "shared":
         report = apply_shared_ranks(report)
+    elif args.rank_style == "exact":
+        report = apply_exact_ranks(report)
     command = "python tools/build_leaderboard.py " + " ".join(
         [f"--lite {s}" for s in args.lite] + [f"--exclude {s}" for s in args.exclude]
         + [f"--skip-dimension {d}" for d in args.skip_dimension]

@@ -305,3 +305,18 @@ def test_one_metric_per_dimension_note_names_each_metric() -> None:
     report = build(paper, {}, floors={}, skip_metrics=frozenset({("fluid_mechanics", "l1")}))
     assert bl.ranking_metrics(report) == {"fluid_mechanics": ["d_theta"]}
     assert "each dimension is ranked on one metric: Fluid, surface-tilt error" in bl.readme_section(report)
+
+
+def test_exact_ranks_order_by_mean_scene_rank_without_ties() -> None:
+    paper = _paper({
+        "lighting_shading": {"metrics": {"z": "lower"}, "cells": {
+            "k1": {"z": {"a": [59.1, 14.0], "b": [60.1, 14.0], "c": [98.0, 10.0]}}}},
+        "fluid_mechanics": {"metrics": {"y": "lower"}, "cells": {"k": {"y": {"a": [0.1, 0.0]}}}},
+    })
+    report = bl.apply_exact_ranks(build(paper, {}, floors={}))
+    rows = _rows(report)
+    light = {m: rows[m]["dimension_ranks"]["lighting_shading"] for m in "abc"}
+    assert [light[m]["rank"] for m in "abc"] == [1, 2, 3]          # a 59.1 beats b 60.1 although within noise
+    assert light["a"]["percentile"] == 1.0 and light["c"]["percentile"] == 0.0
+    assert rows["b"]["dimension_ranks"]["fluid_mechanics"] == {"rank": 2, "of": 3, "supported": False, "percentile": 0.0}
+    assert [r["overall_rank"] for r in report["leaderboard"]] == [1, 2, 3] and report["rank_style"] == "exact"
