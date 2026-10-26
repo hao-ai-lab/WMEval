@@ -331,3 +331,33 @@ def test_skipped_cell_leaves_the_dimension_ranking() -> None:
     report = bl.apply_exact_ranks(build(paper, {}, floors={}, skip_cells=frozenset({("kinematics_mechanics", "billiard/first")})))
     assert {r["model"]: r["dimension_ranks"]["kinematics_mechanics"]["rank"] for r in report["leaderboard"]} == {"a": 1, "b": 2}
     assert "Kinematics is ranked on RacingCar (third person) only" in bl.readme_section(report)
+
+
+def test_anchored_scores_place_values_between_failure_and_unity_self_match() -> None:
+    from tools.build_leaderboard import apply_anchored_scores
+
+    def entry(v: float) -> dict:
+        return {"mean": v}
+
+    report = {
+        "leaderboard": [{"model": "a", "display": "A"}, {"model": "b", "display": "B"}],
+        "dimensions": {
+            # lower is better: Unity 2 m, never-moving car 30 m
+            "kinematics_mechanics": {"cells": {"racing_car/third": {"fde": {
+                "direction": "lower", "values": {"a": entry(9.0), "b": entry(40.0)}}}}},
+            # higher is better, two scenes; b is not measured here
+            "prompt_scene_consistency": {"cells": {
+                "x": {"overall": {"direction": "higher", "values": {"a": entry(0.5)}}},
+                "y": {"overall": {"direction": "higher", "values": {"a": entry(1.0)}}}}},
+        },
+    }
+    anchors = {"kinematics_mechanics": {"fde": {"racing_car/third": {"upper": 2.0, "lower": 30.0}}},
+               "prompt_scene_consistency": {"overall": {"x": {"upper": 1.0, "lower": 0.0}}}}   # y has no anchor
+
+    out = {r["model"]: r["anchored"] for r in apply_anchored_scores(report, anchors)["leaderboard"]}
+
+    assert out["a"]["dimensions"] == {"kinematics_mechanics": 0.75, "prompt_scene_consistency": 0.5}
+    assert out["a"]["score"] == 0.625 and out["a"]["coverage"] == 2 and out["a"]["rank"] == 1
+    # worse than the failure anchor clips to 0; an unmeasured dimension lowers coverage instead of scoring 0
+    assert out["b"]["dimensions"] == {"kinematics_mechanics": 0.0} and out["b"]["coverage"] == 1
+    assert report["anchored"]["unanchored"] == ["prompt_scene_consistency:y:overall"]

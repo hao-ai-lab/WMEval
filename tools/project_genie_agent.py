@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import platform
 import shutil
 import socket
@@ -406,9 +407,13 @@ def launch_chrome(chrome: Path, profile: Path, port: int) -> subprocess.Popen[by
         "--disable-default-apps",
         GENIE_URL,
     ]
+    headless = os.environ.get("WMEVAL_GENIE_HEADLESS") == "1"
+    if headless:
+        # No visible window; the viewport matches the headed MacBook capture size.
+        browser_args[:0] = ["--headless=new", "--window-size=1728,1000", "--use-angle=metal"]
     command = (
         ["open", "-na", "Google Chrome", "--args", *browser_args]
-        if platform.system() == "Darwin"
+        if platform.system() == "Darwin" and not headless
         else [str(chrome), *browser_args]
     )
     return subprocess.Popen(
@@ -950,9 +955,12 @@ class GenieAgent:
             if capture_rows:
                 capture_rows[0]["elapsed_sec"] = 0.0
             next_capture = 1.0 / capture_fps
+            # Only closed-loop yaw needs the start-view matcher; building it for
+            # every trajectory fails on low-texture scenes (e.g. flat arenas).
             return_detector = (
                 VisualReturnDetector(Path(capture_rows[0]["path"]))
                 if capture_rows
+                and any(str(a.get("op")) == "turn_until_return" for a in actions)
                 else None
             )
             for index, action in enumerate(actions):
