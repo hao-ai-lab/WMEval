@@ -28,7 +28,7 @@ Interactive world models ranked against their Unity engine twin (live version on
 | Rank | Model | Score ↑ | Control | Consistency | Kinematics | Fluid | Lighting | Prompt |
 |---|---|---|---|---|---|---|---|---|
 | 1 | **Project Genie** | 0.833 | 2/6 | 1/6 | 1/6 | 1/6 | 4/6 | 1/6 |
-| 2 | **LingBot-World** | 0.533 | 1/6 | 3/6 | 3/6 ‡ | 2/6 ‡ | 2/6 | 1/6 |
+| 2 | **LingBot-World (Act)** | 0.533 | 1/6 | 3/6 | 3/6 ‡ | 2/6 ‡ | 2/6 | 1/6 |
 | 3 | **Matrix-Game 2.0** | 0.300 | 3/6 ‡ | 4/6 | 2/6 | 2/6 ‡ | 3/6 | 6/6 ‡ |
 | 4 | **Odyssey** | 0.267 | 3/6 ‡ | 2/6 | 3/6 ‡ | 2/6 ‡ | 5/6 | 3/6 |
 | 5 | **Matrix-Game 3.0** | 0.233 | 3/6 ‡ | 5/6 | 3/6 ‡ | 2/6 ‡ | 1/6 | 5/6 |

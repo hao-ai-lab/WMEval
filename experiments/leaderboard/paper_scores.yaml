@@ -9,7 +9,7 @@ schema_version: 2
 source: arxiv-WorldModel-Eval/table/*.tex (2026-10-21 checkout, 438594a)
 models:
   project_genie: {display: Project Genie}
-  lingbot_world: {display: LingBot-World, note: "Cam for consistency/prompt/lighting; Act for controllability/cLPIPS"}
+  lingbot_world: {display: LingBot-World (Act), note: "Cam for consistency/prompt/lighting; Act for controllability/cLPIPS"}
   matrix_game_2: {display: Matrix-Game 2.0}
   matrix_game_3: {display: Matrix-Game 3.0}
   hy_worldplay: {display: HY-WorldPlay}
