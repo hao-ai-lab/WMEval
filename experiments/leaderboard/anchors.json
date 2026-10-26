@@ -1,0 +1,168 @@
+{
+ "_sources": {
+  "upper": "Unity reference scored against itself: reports/wmeval_lite/unity_selfmatch (consistency, kinematics), judge_noise_floor.json selfmatch (prompt), reports/wmeval_lite_modal/anchors_* (control, lighting, fluid)",
+  "lower": {
+   "environment_object_consistency:char": "0 % (identity never kept)",
+   "prompt_scene_consistency:overall": "rubric minimum 0",
+   "lighting_shading:mosd": "90 deg: mean angle between independent random sun directions",
+   "action_controllability": "frozen first-frame video scored by the same evaluator (reports/wmeval_lite_modal/anchors_*)",
+   "fluid_mechanics": "frozen first-frame video scored by the same evaluator (reports/wmeval_lite_modal/anchors_*)",
+   "kinematics_mechanics": "frozen first-frame video scored by the same evaluator (reports/wmeval_lite_modal/anchors_*)"
+  },
+  "kinematics_mechanics:fde": "road coordinates: upper = road_trajectory on the Unity reference vs Unity's logged car path; lower = never-moving car (logged displacement)"
+ },
+ "action_controllability": {
+  "cos": {
+   "ball_roller": {
+    "upper": 1.0,
+    "lower": 0.498612
+   },
+   "beam_domino": {
+    "upper": 1.0,
+    "lower": -0.006103
+   },
+   "mirror_ball": {
+    "upper": 1.0,
+    "lower": -0.240609
+   }
+  },
+  "obj_cos": {
+   "ball_roller": {
+    "upper": 1.0,
+    "lower": 0.419896
+   },
+   "beam_domino": {
+    "upper": 1.0,
+    "lower": -0.091645
+   },
+   "mirror_ball": {
+    "upper": 1.0,
+    "lower": -0.324986
+   }
+  },
+  "rel_epe": {
+   "ball_roller": {
+    "upper": 0.0,
+    "lower": 0.393858
+   },
+   "beam_domino": {
+    "upper": 0.0,
+    "lower": 0.864114
+   },
+   "mirror_ball": {
+    "upper": 0.0,
+    "lower": 0.661937
+   }
+  },
+  "syn_cos": {
+   "ball_roller": {
+    "upper": 0.607851,
+    "lower": 0.374422
+   },
+   "mirror_ball": {
+    "upper": 0.963396,
+    "lower": 0.71551
+   }
+  },
+  "syn_epe": {
+   "ball_roller": {
+    "upper": 0.304492,
+    "lower": 0.174451
+   },
+   "mirror_ball": {
+    "upper": 0.182657,
+    "lower": 0.122004
+   }
+  }
+ },
+ "environment_object_consistency": {
+  "char": {
+   "billiard/360": {
+    "upper": 81.33,
+    "lower": 0.0
+   },
+   "billiard/perturb": {
+    "upper": 100.0,
+    "lower": 0.0
+   },
+   "mirror/360": {
+    "upper": 56.5,
+    "lower": 0.0
+   },
+   "mirror/perturb": {
+    "upper": 100.0,
+    "lower": 0.0
+   }
+  }
+ },
+ "fluid_mechanics": {
+  "d_a_dot": {
+   "pooled": {
+    "upper": 0.000218,
+    "lower": 0.000113
+   }
+  },
+  "d_sigma_a": {
+   "pooled": {
+    "upper": 0.001172,
+    "lower": -0.00258
+   }
+  },
+  "d_theta": {
+   "pooled": {
+    "upper": 0.46828,
+    "lower": 4.383806
+   }
+  },
+  "l1": {
+   "pooled": {
+    "upper": 0.751754,
+    "lower": 1.077305
+   }
+  }
+ },
+ "lighting_shading": {
+  "mosd": {
+   "sun_rises_and_sets": {
+    "upper": 72.23,
+    "lower": 90.0
+   }
+  }
+ },
+ "prompt_scene_consistency": {
+  "overall": {
+   "chessboard/first": {
+    "upper": 0.984,
+    "lower": 0.0
+   },
+   "chessboard/third": {
+    "upper": 1.0,
+    "lower": 0.0
+   },
+   "mirror/first": {
+    "upper": 0.9533,
+    "lower": 0.0
+   },
+   "mirror/third": {
+    "upper": 0.9947,
+    "lower": 0.0
+   },
+   "racing_car/first": {
+    "upper": 0.8267,
+    "lower": 0.0
+   },
+   "racing_car/third": {
+    "upper": 0.8924,
+    "lower": 0.0
+   }
+  }
+ },
+ "kinematics_mechanics": {
+  "fde": {
+   "racing_car/third": {
+    "upper": 1.861565,
+    "lower": 29.168141
+   }
+  }
+ }
+}

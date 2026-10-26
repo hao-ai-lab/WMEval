@@ -81,9 +81,11 @@ backends:
       ego_vehicle: target_entity_validation_required
       cue_ball: target_entity_validation_required
       ball: target_entity_validation_required
+      # WASD-to-ball hypothesis, scored on all three controllability scenes; Synthetic-RAFT
+      # reports whether the keys move the ball (or only the camera).
+      rolling_ball: target_entity_validation_required
     unsupported:
       table_objects: No object-placement or cue-shot controls.
-      rolling_ball: Keyboard drives the first-person camera/agent; there is no ball-force channel.
       liquid_container: Keyboard moves the camera, which breaks the fixed side camera the fluid metrics require.
     # Visual degrees per mouse unit per frame. Two independent short-probe
     # seeds at +/-0.3 mouse units gave gains near 10.1. Production-shaped
@@ -103,13 +105,15 @@ backends:
     upstream_geometric_deg_per_mouse_unit: 15.0
     supports:
       camera: response_calibrated_repeat_validated
+      # Keyboard (forward/back/left/right) drives the agent; scored on the controllability
+      # scenes with the same WASD-to-ball hypothesis as Matrix-Game 2.0.
+      ball: target_entity_validation_required
+      rolling_ball: target_entity_validation_required
     unsupported:
       character: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       ego_vehicle: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       cue_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
-      ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
       table_objects: No object-placement or cue-shot controls.
-      rolling_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
       liquid_container: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
     # Response-side gains from clean Garden validation videos. Short
     # perturbations are linear; full turns accumulate a small direction-
@@ -186,10 +190,12 @@ backends:
     supports:
       character: nominal_uncalibrated
       camera: nominal_uncalibrated
+      # In the fixed-camera ball scenes (BallRoller, MirrorRollingBall) the keys move
+      # the player ball rather than the viewpoint (checked on the stored rollouts).
+      ball: nominal_uncalibrated
     unsupported:
       ego_vehicle: Keys move the generated world's viewpoint; there is no vehicle channel.
       cue_ball: Keys move the generated world's viewpoint; there is no object channel.
-      ball: Keys move the generated world's viewpoint; there is no object channel.
       table_objects: No object-placement or cue-shot controls.
       rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
       liquid_container: Keys move the viewpoint, which breaks the fixed side camera the fluid metrics require.

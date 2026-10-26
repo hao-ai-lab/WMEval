@@ -112,6 +112,19 @@ def _extract_control_motion(result: Mapping[str, Any]) -> dict[str, Any]:
             _get(result, "raw", "cosine_similarity_dynamic_summary", "mean")
         ),
     }
+    # Camera-compensated (object) motion: the candidate's fitted camera motion is removed
+    # from its flow before comparing with the reference flow where the reference moves,
+    # so a camera move in the commanded direction earns nothing; only scene-relative
+    # motion of the controlled object counts.
+    metrics["object_cosine_dynamic_mean"] = _numeric(
+        _get(result, "camera_compensated", "cosine_similarity_dynamic_summary", "mean")
+    )
+    metrics["object_relative_epe_dynamic_mean"] = _numeric(
+        _get(result, "camera_compensated", "relative_epe_dynamic_summary", "mean")
+    )
+    metrics["candidate_camera_motion_px_mean"] = _numeric(
+        _get(result, "camera_compensation", "candidate_camera_motion_px", "mean")
+    )
     bad_pixel = _get(section, "bad_pixel_rates") if section else None
     if isinstance(bad_pixel, Mapping):
         for threshold_key, stats in bad_pixel.items():

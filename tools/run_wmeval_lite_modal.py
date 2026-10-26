@@ -120,6 +120,7 @@ image = (
         "pydantic",  # vlm_consistency schemas
         "requests",
         "git+https://github.com/facebookresearch/sam2.git",
+        "decord",  # fluid_mechanics: SAM2 video predictor frame loading
     )
     .env(
         {

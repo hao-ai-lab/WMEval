@@ -84,6 +84,7 @@ SHORT = {
     "kinematics_mechanics": "Kinematics", "fluid_mechanics": "Fluid", "physical_causality": "Causality",
     "lighting_shading": "Lighting", "prompt_scene_consistency": "Prompt", "lpips": "cLPIPS",
 }
+LITE_DISPLAY = {"odyssey": "Odyssey", "lingbot_world_v2": "LingBot-World v2 (Cam)"}   # models scored only with WMEval Lite
 ALPHA = 0.05            # Welch / prediction-interval test level
 BOOT_CONFIDENCE = 0.95  # bootstrap: an ordering must hold in this share of resamples
 BOOT_RESAMPLES = 4000
@@ -109,6 +110,7 @@ LITE_METRICS: dict[str, dict[str, tuple[str, str]]] = {
         "cos": ("cosine_similarity_dynamic_mean_raw", "higher"),
         "syn_cos": ("synthetic_mean_flow_cosine", "higher"),
         "syn_epe": ("synthetic_pixel_epe_mean", "lower"),
+        "obj_cos": ("object_cosine_dynamic_mean", "higher"),
     },
     # Causal rows only: a generation with no matched event has lpips_causal_mean None (the
     # paper excludes such generations), never the temporal fallback.
@@ -412,7 +414,7 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
                 if directions[dim].setdefault(metric, direction) != direction:
                     raise ValueError(f"{dim}.{metric}: paper direction {directions[dim][metric]} != Lite {direction}")
     for model, rows in lite.items():
-        models.setdefault(model, {"display": model.replace("_", " ").title(), "note": "WMEval Lite runs"})
+        models.setdefault(model, {"display": LITE_DISPLAY.get(model, model.replace("_", " ").title()), "note": "WMEval Lite runs"})
         for dim, cells in lite_cells(rows).items():
             if dim not in values or (model, dim) in exclude:
                 continue
@@ -623,6 +625,64 @@ def apply_exact_ranks(report: dict) -> dict:
     return report
 
 
+def apply_anchored_scores(report: dict, anchors: dict) -> dict:
+    """Anchored scores, alongside the rank scheme: no other model enters a model's score.
+
+    Each (dimension, cell, metric) has two fixed anchors: ``upper`` = the Unity reference
+    scored against itself (the best attainable value) and ``lower`` = a defined failure
+    (e.g. a frozen first-frame video, or chance). Cell score = clip((value - lower) /
+    (upper - lower), 0, 1), which handles both metric directions. Dimension score = mean
+    over the dimension's cells the model has a value in; overall = mean over the dimensions
+    the model is measured in, reported with that coverage. Cells without anchors are not
+    scored (listed under ``unanchored``)."""
+    rows = {r["model"]: r for r in report["leaderboard"]}
+    per_dim: dict[str, dict[str, list[float]]] = {}
+    unanchored = []
+    for dim, det in report["dimensions"].items():
+        for cell, metrics in det["cells"].items():
+            for metric, info in metrics.items():
+                if info.get("floor_excluded"):
+                    continue
+                a = anchors.get(dim, {}).get(metric, {}).get(cell)
+                if a is None:
+                    unanchored.append(f"{dim}:{cell}:{metric}")
+                    continue
+                hi, lo = float(a["upper"]), float(a["lower"])
+                for m, v in info["values"].items():
+                    score = min(1.0, max(0.0, (v["mean"] - lo) / (hi - lo)))
+                    v["anchored"] = round(score, 4)
+                    per_dim.setdefault(dim, {}).setdefault(m, []).append(score)
+    for m, r in rows.items():
+        dims = {d: round(sum(v[m]) / len(v[m]), 4) for d, v in per_dim.items() if m in v}
+        r["anchored"] = {"dimensions": dims, "coverage": len(dims),
+                         "score": round(sum(dims.values()) / len(dims), 4) if dims else None}
+    for r in rows.values():
+        s = r["anchored"]["score"]
+        r["anchored"]["rank"] = None if s is None else 1 + sum(
+            (o["anchored"]["score"] or -1) > s for o in rows.values())
+    report["anchored"] = {"dimensions": sorted(per_dim, key=DIMENSION_ORDER.index), "unanchored": unanchored,
+                          "sources": anchors.get("_sources", {})}
+    return report
+
+
+def anchored_table(report: dict) -> list[str]:
+    dims = report["anchored"]["dimensions"]
+    n = len(dims)
+    lines = ["| Rank | Model | Anchored score ↑ | Coverage | " + " | ".join(label(report, d) for d in dims) + " |",
+             "|" + "---|" * (4 + len(dims))]
+    rows = sorted(report["leaderboard"], key=lambda r: (r["anchored"]["rank"] or 99, r["display"]))
+    for r in rows:
+        a = r["anchored"]
+        cells = [f"{a['dimensions'][d]:.2f}" if d in a["dimensions"] else "—" for d in dims]
+        score = "–" if a["score"] is None else f"{a['score']:.3f}"
+        lines.append(f"| {a['rank'] or '–'} | **{r['display']}** | {score} | {a['coverage']}/{n} | " + " | ".join(cells) + " |")
+    lines += ["", "Anchored score: each scene's value is placed between two fixed anchors, a defined failure (0) and the "
+              "Unity reference scored against itself (1), clipped to [0, 1]; a dimension averages its scenes and the "
+              "anchored score averages the dimensions a model is measured in (coverage). No other model enters a "
+              "model's score, and `—` (not measured or not supported) lowers coverage instead of scoring 0."]
+    return lines
+
+
 def label(report: dict, dim: str) -> str:
     return SHORT[dim]
 
@@ -631,6 +691,7 @@ CELL_NAMES = {"racing_car/third": "RacingCar (third person)", "billiard/first": 
 
 METRIC_NAMES = {
     "syn_cos": "Synthetic-RAFT flow cosine (does the motion follow the commanded direction)",
+    "obj_cos": "camera-compensated flow cosine vs the Unity reference (does the controlled object, not the camera, move as commanded)",
     "rel_epe": "Ground Truth RAFT relative EPE", "cos": "Ground Truth RAFT cosine", "syn_epe": "Synthetic-RAFT pixel EPE",
     "char": "character consistency (DINOv2 identity)", "depth": "depth AbsRel", "dist": "pairwise-distance MAE",
     "fde": "final displacement error", "dtw": "DTW", "robust_error": "robust mechanics error",
@@ -738,6 +799,10 @@ def markdown(report: dict, command: str | None = None) -> str:
         if det["floor_excluded"]:
             lines += ["", "Below measurement floor: " + "; ".join(
                 f"{k} ({why})" for k, why in det["floor_excluded"].items()) + "."]
+    if report.get("anchored"):
+        lines += ["", "## Anchored scores", ""] + anchored_table(report)
+        if report["anchored"]["unanchored"]:
+            lines += ["", "Not anchored (not scored): " + ", ".join(report["anchored"]["unanchored"]) + "."]
     if command:
         lines += ["", f"Generated with `{command}`."]
     return "\n".join(lines) + "\n"
@@ -798,7 +863,8 @@ def readme_section(report: dict) -> str:
                      + (" are" if len(skipped) > 1 else " is") + " not included")
     dropped = [report.get("model_names", {}).get(m, m) for m in report.get("dropped_models", [])]
     if dropped:
-        notes.append(", ".join(dropped) + (" is" if len(dropped) == 1 else " are") + " left out")
+        notes.append((" and ".join(dropped) if len(dropped) < 3 else ", ".join(dropped[:-1]) + " and " + dropped[-1])
+                     + (" is" if len(dropped) == 1 else " are") + " left out")
     for spec in report.get("gate_overrides", []):
         m, d = spec.split(":", 1)
         notes.append(f"{label(report, d)} for {report.get('model_names', {}).get(m, m)}, which can only move the camera, uses "
@@ -818,6 +884,8 @@ def readme_section(report: dict) -> str:
         if character_only(report):
             notes.append("object and character consistency is ranked on character identity only (depth and pairwise-distance "
                          "geometry are left out)")
+    if report.get("anchored"):
+        lines += ["", "**Anchored scores**", ""] + anchored_table(report)
     lines += ["", "Generated by `tools/build_leaderboard.py` from `experiments/leaderboard/paper_scores.yaml` and the "
               "Lite results of models scored after the paper" + ("; " + "; ".join(notes) if notes else "")
               + ". Its `--output` report lists every per-metric value and rank."]
@@ -853,6 +921,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--skip-metric", action="append", default=[], metavar="DIMENSION:METRIC",
                         help="leave one metric out of a dimension's ranking (repeatable)")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--anchors", type=Path, help="per-cell anchor JSON: also report anchored scores (apply_anchored_scores)")
     parser.add_argument("--readme", type=Path, help="also rewrite the leaderboard section of this README")
     parser.add_argument("--rank-style", choices=("averaged", "shared", "exact"), default="averaged",
                         help="shared: significance-tested whole-number ranks (apply_shared_ranks); exact: ranks from "
@@ -868,6 +937,8 @@ def main(argv: list[str] | None = None) -> int:
         report = apply_shared_ranks(report)
     elif args.rank_style == "exact":
         report = apply_exact_ranks(report)
+    if args.anchors:
+        report = apply_anchored_scores(report, json.loads(args.anchors.read_text(encoding="utf-8")))
     command = "python tools/build_leaderboard.py " + " ".join(
         [f"--lite {s}" for s in args.lite] + [f"--exclude {s}" for s in args.exclude]
         + [f"--skip-dimension {d}" for d in args.skip_dimension]
@@ -875,6 +946,7 @@ def main(argv: list[str] | None = None) -> int:
         + [f"--drop-model {m}" for m in args.drop_model]
         + [f"--skip-cell {c}" for c in args.skip_cell]
         + ([f"--rank-style {args.rank_style}"] if args.rank_style != "averaged" else [])
+        + ([f"--anchors {args.anchors}"] if args.anchors else [])
         + ([f"--output {args.output}"] if args.output else [])
         + ([f"--readme {args.readme}"] if args.readme else []))
     report["inputs"] = {"paper": str(args.paper.relative_to(ROOT) if args.paper.is_relative_to(ROOT) else args.paper),
