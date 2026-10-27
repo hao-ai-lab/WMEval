@@ -3,7 +3,7 @@
 </p>
 
 <div align="center"> <h1>WMEval: Evaluating Interactive World Models Grounded on Physical Simulations</h1> </div>
-<p align="center"> <b>📜 Paper</b> (coming soon) | <a href="https://snyhlx.github.io/wmeval-blog/"><b>🌐 Project Page</b></a> | <a href="https://huggingface.co/datasets/lmgame/WMEval-Lite"><b>🤗 Dataset</b></a></p>
+<p align="center"> <a href="https://arxiv.org/pdf/2610.33894"><b>📜 Paper</b></a> | <a href="https://snyhlx.github.io/wmeval-blog/"><b>🌐 Project Page</b></a> | <a href="https://huggingface.co/datasets/lmgame/WMEval-Lite"><b>🤗 Dataset</b></a></p>
 
 ## Introduction
 
@@ -535,7 +535,7 @@ If you find this repository helpful, please kindly cite:
              Wu, Yuyuan and Qian, Kun and Liu, Junze and Srinivasan, Arvind and Huo, Mingjia and
              Lin, Will and Zhong, Kai and Zhang, Weiqi and Wang, Tian and Cui, Qingjun and
              Rosing, Tajana and Zhang, Hao},
-  journal = {arXiv preprint},
+  journal = {arXiv preprint arXiv:2610.33894},
   year    = {2026}
 }
 ```
