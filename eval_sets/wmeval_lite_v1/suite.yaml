@@ -1,5 +1,43 @@
-# 2026-10-11: lighting_shading uses the verified lighting_orbit_v2 baseline.
-# Historical native-paper lighting has its own lighting_paper_native/ suite.
+# 2026-10-21: KINEMATICS EXTRAS (non-headline; headline fde_m_mean and the Eq. 12/13
+# error_rate_pct / exact_match_pct are unchanged). evaluation/modules/kinematics_robust.py adds
+# to kinematics_mechanics: fde_m_ego_mean / dtw_m_ego_mean (lower better) -- when the Unity
+# camera moves (RacingCar chase camera, BilliardGame cue-ball camera; decided from poses.npy)
+# candidate pixels are lifted through the candidate video's OWN ground-plane camera motion
+# (LK features below the horizon, RANSAC homography inliers, keyframes every 0.5 s chained to
+# frame 0 as a 2D rigid ground motion, metric scale from the plane calibration's frame-0
+# anchors); static cameras keep the Unity-camera lifting. The legacy lifting is blind to a
+# follow camera (ego_vehicle self vs other-trajectory FDE: 1.00 vs 1.00 m median); the new
+# one gives 0.14 vs 22.6 m. Rows whose camera estimate fails the gates (left/right split
+# consistency, inliers, coverage, and the case's Unity-reference floor) report null and
+# ego_lift_reliable 0 -- currently every Project Genie RacingCar run and all of BilliardGame /
+# cue_ball. robust_error_rate_pct, peak_speed_error_pct, contact_dp_error_pct (lower better):
+# Savitzky-Golay (0.27 s) speed curves over the span where GT speed > 30 % of peak,
+# normalised by the peak GT momentum/energy (self 1.1 % vs negatives 45 % on ego_vehicle,
+# 4.4 vs 30 % on cue_ball; legacy Eq. 13 self floor 29-80 %). Tables and gates:
+# docs/evaluation_dimensions.md (Kinematics & Mechanics, "Extended metrics").
+# 2026-10-21: DATASET AUDIT (AUDIT.md, tools/audit_dataset.py). 17 core prompts corrected to
+# match their conditioning frames (DIFFERENCES_FROM_PAPER.md); BallRoller/ctrl's kinematics
+# cell now tracks the controlled white ball (kin_* artifacts from
+# tools/build_ballroller_kinematics_gt.py) instead of the static dome/cube described in the
+# 2026-08 notes below; synthetic trajectories screened against their Unity references
+# (synthetic/screening.json). ChessBoard/prompt_first (synthetic) drops character consistency.
+# 2026-10-20: ONE LIGHTING CASE. lighting_shading scores SunRisesAndSets/lighting,
+# the paper's native case, with the paper's protocol (shadow_consistency,
+# reference-free, candidate_normalization none, eval_fps 24, max_pairs 0,
+# headline shadow_direction_jitter_deg_per_frame) -- the protocol of the
+# paper's lighting table (Project Genie, LingBot, Matrix-Game 2.0/3.0,
+# HY-WorldPlay, Waypoint-1.5). The separate lighting_paper_native/ suite is
+# gone (it scored the same case), and so is SunRisesAndSets/lighting_orbit_v2
+# (an explicit 2 m / 12 fps look-at-orbit protocol with LingBot/MG3/HY
+# baselines, 2026-10-11 to 2026-10-20; kept as a historical record in
+# experiments/lighting_orbit/). The native case now also bundles a Unity
+# reference video (reference/unity_orbit.mp4, 10 s, 24 fps, 1280x1280) with
+# its ground truth (trajectory.yaml camera_look_at_orbit, action.npz,
+# poses.npy, intrinsics.npy, calibration.json, unity_qa.json): the scene's own
+# CameraOrbitAgent start view, which is exactly ref.png (frame 0 at 30.9 dB),
+# orbited counter-clockwise once in 10 s about its pivot (radius 2.819 m, eye
+# height 2.306 m -- the conditioning frame's camera, not the prompt's ~2 m /
+# 1.6 m). The score does not read it. tools/build_lighting_case.py builds it.
 # WMEval Lite suite manifest — hand-maintained single source of truth.
 # (Edit as text; do not regenerate with a YAML round-trip, it strips comments.)
 #
@@ -462,7 +500,7 @@
 #   MirrorRollingBall -> lpips, prompt_scene_consistency
 #   WanderingGarden   -> scene_character_consistency                     (data pending),
 #                        environment_object_consistency (live, scoped, see below)
-#   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting_orbit_v2, 2026-10-11)
+#   SunRisesAndSets   -> lighting_shading                                LIVE (SunRisesAndSets/lighting, paper-native, 2026-10-20)
 #   LiquidContainer   -> fluid_mechanics (LIVE, all 4 action profiles, 2026-09)
 #   BeamDomino        -> physical_causality (LIVE, all 3 trajectory shapes, 2026-09)
 #   BilliardGame      -> per paper Table 10 + Sec 4.2 results narrative, its REAL
@@ -690,7 +728,7 @@ dimensions:
     - control_motion
     metric_config:
       control_camera_compensation: true
-      control_global_motion_mode: median_translation
+      control_global_motion_mode: affine_ransac
       control_bad_pixel_thresholds:
       - 1.0
       - 3.0
@@ -748,18 +786,24 @@ dimensions:
       - obj_score_unity
   lighting_shading:
     display_name: Lighting & Shading
-    description: 'Fixed-sun full camera look-at orbit: explicit two-metre radius, ten native seconds, exactly 120 timestamp-sampled frames at 12fps. Three supported pose backends with five seeds each; other strict interfaces are N/A. Historical native-paper scoring is retained in lighting_paper_native/. Strict numerical reproduction is verified on the pinned RTX PRO 6000 environment.'
+    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking
+      with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD) under the paper''s
+      first-person, fixed-sun, walking-orbit regime, on the paper''s native case
+      SunRisesAndSets/lighting (the protocol of the paper''s lighting table). The
+      case bundles a Unity reference orbit from the same first frame for viewing
+      and synthetic orbits; the score does not use it. ChessBoard/lighting is still
+      pending a team decision (PENDING.md).'
     evaluator: registry
     requires_reference: false
     modules:
     - shadow_consistency
     metric_config:
-      eval_fps: 12.0
+      eval_fps: 24.0
       max_pairs: 0
     # first-person (the paper's lighting regime). Per-candidate
     # shadow_hud_preset comes from model.yaml / manifest params, not the case.
     cases:
-    - SunRisesAndSets/lighting_orbit_v2
+    - SunRisesAndSets/lighting
     aggregate:
       headline: shadow_direction_jitter_deg_per_frame
       direction: lower
@@ -820,7 +864,7 @@ dimensions:
       - character_consistency_pct
   kinematics_mechanics:
     display_name: Kinematics & Mechanics
-    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction against timestamp-matched Unity trajectories. For calibrated planar Table-4 captures, candidate contact points are mapped into Unity X/Z metres by camera-ray/plane intersection; FDE and path-normalized DTW are reported in metres, with raw pixel diagnostics retained. Simulator-exported mass and a bounded, persistence-gated alignment of peak physical events feed momentum and kinetic energy using the paper''s one-step finite difference. Error Rate is the sole headline mechanics metric. Visual anchors remain a camera-divergence QA signal and do not redefine metric scale. Non-planar legacy Lite cases without plane calibration retain their prior pixel/depth diagnostic behavior.'
+    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction against timestamp-matched Unity trajectories. For calibrated planar Table-4 captures, candidate contact points are mapped into Unity X/Z metres by camera-ray/plane intersection; FDE and path-normalized DTW are reported in metres, with raw pixel diagnostics retained. Simulator-exported mass and a bounded, persistence-gated alignment of peak physical events feed momentum and kinetic energy using the paper''s one-step finite difference. Error Rate is the sole headline mechanics metric. Visual anchors remain a camera-divergence QA signal and do not redefine metric scale. Non-planar legacy Lite cases without plane calibration retain their prior pixel/depth diagnostic behavior. Non-headline extras (2026-10-21): fde_m_ego_mean/dtw_m_ego_mean lift through the candidate video''s own ground-plane camera motion when the Unity camera moves (static cameras keep the Unity-camera lifting), withheld when the camera estimate is unreliable; robust_error_rate_pct, peak_speed_error_pct and contact_dp_error_pct compare Savitzky-Golay-smoothed speed curves over the moving span, normalised by the object''s peak GT value.'
     evaluator: registry
     requires_reference: true
     modules:
@@ -828,6 +872,8 @@ dimensions:
     metric_config:
       eval_fps: 4.0
       max_pairs: 32
+      # RacingCar: final displacement in road coordinates (only cases whose Unity log has a car)
+      kin_road_trajectory: true
     cases:
     - BallRoller/ctrl
     # Table 4 cells (tools/build_table_lite_cases.py)
@@ -841,6 +887,14 @@ dimensions:
       - error_rate_pct
       - fde_px_mean
       - dtw_px_mean
+      # 2026-10-21, non-headline (all lower = better; see the dated kinematics
+      # note at the top of this file): candidate-camera-lifted FDE/DTW and
+      # robust mechanics from evaluation/modules/kinematics_robust.py
+      - fde_m_ego_mean
+      - dtw_m_ego_mean
+      - robust_error_rate_pct
+      - peak_speed_error_pct
+      - contact_dp_error_pct
   physical_causality:
     display_name: Physical Causality
     description: >-
@@ -1014,6 +1068,74 @@ dimensions:
       - mask_area_drift_per_sec_delta
       - surface_tilt_residual_deg_delta
       - surface_tilt_residual_deg_unity
+# ==========================================================================
+# Synthetic split (test_full): the 220 trajectories of synthetic/manifest.json,
+# scored with `run_wmeval_lite.py run --split synthetic|full`. Each trajectory
+# is scored on its manifest `dimensions` as its conditioning core case is
+# (protocol, evaluator lock, module params), against its own Unity reference
+# (reference/reference.mp4 + reference/artifacts/, checksummed in
+# synthetic/references.json). Its aggregate is reported separately from the
+# core headline. See evaluation/lite/synthetic.py.
+# `module_params` below adds or replaces, per conditioning case, what the
+# trajectories inherit from that case's case.yaml (null drops a key); paths
+# are relative to the trajectory directory. Needed where the conditioning
+# case does not run a dimension its synthetic family declares (EOC on the
+# prompt views and the vehicle), or where a core file name differs.
+# Object prompts follow the core EOC cases of the same scene; depth/pairwise
+# need the label to exist in the trajectory's object_transforms.json.
+# ==========================================================================
+# (manifest / references default to synthetic/manifest.json and
+# synthetic/references.json.)
+synthetic:
+  module_params:
+    MirrorRollingBall/prompt_first:
+      # as prompt_third (below); the core prompt_first case runs no EOC
+      environment_object_consistency:
+        eoc_text_prompt: yellow sphere.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    MirrorRollingBall/prompt_third:
+      # the renders log the mirror ball only, not the core's yellow-sphere anchors
+      environment_object_consistency:
+        eoc_fixed_anchor_labels: null
+        eoc_unity_object_diameters_json: null
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    ChessBoard/prompt_first:
+      # first person: the camera sits inside the (hidden) mannequin, so no character is
+      # visible and character consistency would score detector noise (2026-10-21 audit)
+      environment_object_consistency:
+        eoc_text_prompt: sphere.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    ChessBoard/prompt_third:
+      environment_object_consistency:
+        eoc_text_prompt: sphere.
+        eoc_character_prompt: person.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/prompt_first:
+      # first person: the car body is hidden, the roadside trees are the objects
+      environment_object_consistency:
+        eoc_text_prompt: tree.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/prompt_third:
+      environment_object_consistency:
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/kinematics_third:
+      environment_object_consistency:
+        eoc_text_prompt: car.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
 legacy_case_aliases:
   lpips:
     mirror_ball_third_person: MirrorRollingBall/lpips_collision

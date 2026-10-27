@@ -288,6 +288,59 @@ def test_orbit_without_receipt_runs_from_a_model_root(tmp_path, monkeypatch):
     assert _probe(Path(runner.calls[0]['video_path']),timeout_sec=30)['frames'] == 120
 
 
+@pytest.mark.skipif(not shutil.which('ffmpeg') or not shutil.which('ffprobe'), reason='ffmpeg required')
+def test_derived_orbit_mapping_is_reported_warned_and_counted(tmp_path, monkeypatch):
+    suite_root = _registry_only_suite(tmp_path)
+    case_path = suite_root/'cases/scene_a/main/case.yaml'
+    raw = yaml.safe_load(case_path.read_text())
+    raw['protocol']['candidate_normalization'] = 'lighting_orbit_10s_fps12'
+    case_path.write_text(yaml.safe_dump(raw, sort_keys=False))
+    mock_video_probing(monkeypatch)
+    for model, zero, body in (('plain', None, 'model.yaml absent'), ('warm', 4, None)):
+        video = tmp_path/model/'scene_a'/'main'/'42.mp4'
+        video.parent.mkdir(parents=True)
+        subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','testsrc2=size=64x48:rate=16',
+                        '-frames:v',str(160 + (zero or 0)),'-c:v','libx264',str(video)],
+                       check=True,capture_output=True)
+        if zero is not None:
+            (tmp_path/model/'model.yaml').write_text(f'lighting_canonical_zero_frame: {zero}\n')
+    messages, details, runners = [], {}, {}
+    for model in ('plain', 'warm'):
+        runners[model] = RecordingRunner()
+        run_suite(suite_root=suite_root,output_dir=tmp_path/'out'/model,model_root=tmp_path/model,
+                  runner=runners[model],log=messages.append)
+        row = read_rows(tmp_path/'out'/model/PER_CASE_RESULTS_FILENAME)[0]
+        assert row['status'] == 'completed' and row['input_contract']['lighting_time_mapping'] == 'derived'
+        details[model] = row['input_contract']['lighting_time_mapping_detail']
+        # Normalization-only params never reach the runner.
+        assert 'lighting_canonical_zero_frame' not in runners[model].calls[0]
+        summary = json.loads((tmp_path/'out'/model/'aggregate_summary.json').read_text())
+        assert summary['models'][model]['dimensions']['toy_metric']['lighting_time_mapping_counts'] == {'derived': 1}
+    assert details['plain'] == {'native_fps': 16, 'native_fps_source': 'container', 'canonical_zero_frame': 0,
+                                'canonical_zero_frame_source': 'default', 'container_fps': 16.0, 'retimed': False}
+    assert details['warm']['canonical_zero_frame'] == 4
+    assert details['warm']['canonical_zero_frame_source'] == 'lighting_canonical_zero_frame'
+    warnings = [m for m in messages if 'lighting_time_mapping derived' in m]
+    assert len(warnings) == 2
+    assert 'plain/42' in warnings[0] and 'if the orbit does not start at the first frame' in warnings[0]
+    assert 'warm/42' in warnings[1] and 'if the orbit does not start' not in warnings[1]
+
+
+def test_lighting_model_params_do_not_break_other_dimensions(tmp_path, monkeypatch):
+    suite_root = _registry_only_suite(tmp_path)
+    model_root = tmp_path / 'waypoint_like'
+    write_candidates(model_root, ['scene_a/main'])
+    (model_root / 'model.yaml').write_text('lighting_canonical_zero_frame: 4\n', encoding='utf-8')
+    mock_video_probing(monkeypatch)
+    runner = RecordingRunner()
+    run_suite(suite_root=suite_root, output_dir=tmp_path/'out', model_root=model_root,
+              runner=runner, log=_quiet)
+    row = read_rows(tmp_path/'out'/PER_CASE_RESULTS_FILENAME)[0]
+    assert row['status'] == 'completed'
+    assert 'lighting_canonical_zero_frame' not in runner.calls[0]
+    assert 'lighting_time_mapping' not in row['input_contract']
+
+
 def test_run_suite_module_error_reports_error_status(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -11,7 +11,7 @@ from evaluation.trajectories import TrajectoryError, compile_trajectory, load_ac
 
 @pytest.fixture
 def spec():
-    return {"schema_version":1,"trajectory_id":"lighting.camera.look_at_orbit_v2",
+    return {"schema_version":1,"trajectory_id":"lighting.camera.look_at_orbit",
             "kind":"camera_look_at_orbit","target":"camera", "coordinates":"right_handed_y_up_opencv_c2w",
             "duration_sec":10,"control_hz":60,
             "geometry":{"origin_m":[0,0,0],"look_at_m":[0,1.2735698223114014,0],

@@ -1,5 +1,9 @@
 # Lighting orbit diagnostics
 
+> Historical (2026-10-10): the trials that led to the retired explicit-orbit
+> protocol in `experiments/lighting_orbit/`. Lite lighting is the paper's native
+> case `SunRisesAndSets/lighting` (2026-10-20); see docs/evaluation_dimensions.md.
+
 Completed diagnostic trials, 2026-10-10; release integration remains open.
 These trials test the proposed release action; they do not replace the existing
 paper videos or the locked lighting case. Only LingBot and Waypoint have been

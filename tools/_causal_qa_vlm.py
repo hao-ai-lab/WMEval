@@ -241,6 +241,12 @@ def decorate_qa(
             },
         },
     )
+    try:  # token accounting (evaluation/vlm_usage.py); never fatal
+        from evaluation.vlm_usage import log_usage
+
+        log_usage("openai", str(model), getattr(resp, "usage", None), api="chat.completions")
+    except Exception:  # noqa: BLE001
+        pass
     raw = resp.choices[0].message.content or ""
     parsed = json.loads(raw)
 

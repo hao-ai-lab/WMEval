@@ -68,7 +68,7 @@ def flow_to_color(flow: np.ndarray) -> np.ndarray:
 
 def _to_rgb_tchw(frame_bgr: np.ndarray, device: torch.device) -> torch.Tensor:
     frame_rgb = frame_bgr[..., ::-1].copy()
-    return torch.from_numpy(frame_rgb).permute(2, 0, 1).float().unsqueeze(0).to(device)
+    return (torch.from_numpy(frame_rgb).permute(2, 0, 1).float().unsqueeze(0) / 255.0).to(device)
 
 
 def raft_flow(model: torch.nn.Module, transform, prev_bgr: np.ndarray, next_bgr: np.ndarray, device: torch.device) -> np.ndarray:

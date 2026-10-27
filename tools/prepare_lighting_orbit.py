@@ -67,7 +67,7 @@ def prepare(output: Path, **kwargs) -> dict:
         for t, p in zip(times, poses)), encoding="utf-8")
     receipt = {
         "schema_version": 1, "status": "diagnostic_unvalidated",
-        "target": "camera", "trajectory_id": "lighting.camera.look_at_orbit_v2",
+        "target": "camera", "trajectory_id": "lighting.camera.look_at_orbit.diagnostic",
         "parameters": kwargs, "pose_convention": "right_handed_y_up_opencv_c2w",
         "intrinsics_convention": "fx_fy_cx_cy_in_832x480_pixels",
         "control_duration_sec": float(times[-1]), "poses": len(times),

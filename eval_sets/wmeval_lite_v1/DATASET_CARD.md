@@ -50,10 +50,10 @@ dataset_info:
 configs:
   - config_name: default
     data_files:
-      - split: test_core
-        path: test_core.jsonl
       - split: test_full
         path: test_full.jsonl
+      - split: test_core
+        path: test_core.jsonl
 ---
 
 # WMEval Lite (v1)
@@ -74,28 +74,38 @@ or help from the maintainers.
 - Suite: `WMEval Lite`, version `v1`, release id `wmeval-lite-v1`
 - 32 cases across 9 Unity scenes, 8 evaluation dimensions, 43 case-dimension
   assignments (one case can be scored by several dimensions)
-- A companion suite, `lighting_paper_native/`, keeps the paper's original
-  ("native") lighting protocol for historical comparison.
+- Lighting is scored on one case, `SunRisesAndSets/lighting`, with the paper's
+  own (native) protocol; the case also ships a Unity reference orbit from the
+  same first frame.
 
 ## Dataset structure
 
-The viewer shows two splits:
+The viewer shows two splits and opens on `test_full`:
 
-- `test_core` (33 rows): the curated WMEval Lite v1 cases, each with a Unity
-  reference rendering. The paper's numbers come from this split.
-- `test_full` (253 rows): `test_core` plus 220 synthetic action trajectories
+- `test_full` (252 rows): `test_core` plus 220 synthetic action trajectories
   under `synthetic/` (camera yaw, look-at orbit, vehicle, cue ball, rolling ball,
   beam-domino ball, bottle motion, character). Each is built text first: an action
   description (a short sequence of steps such as "turns left at 30 degrees per
   second for 2 seconds") forms the second half of its prompt and is compiled into
   its action sequence; the first half is the scene description of the core case
   whose conditioning frame and initial state it reuses. `meta.json` stores the
-  description and its steps. Unity reference renders are pending
-  (`reference_status: pending_unity_render`), so these rows are generation-ready
-  but not yet scored. Their `suites` value is `wmeval_v1`; core rows carry the
-  Lite suite they belong to (`wmeval_lite_v1`).
+  description and its steps. Each also has a Unity reference in its
+  `reference/` folder, rendered by replaying the same actions in the core case's
+  Unity scene (`reference_status: unity_rendered`); `synthetic/references.json`
+  in the code repository records checksums, render provenance and how closely
+  frame 0 matches the core frame (`reference_quality: weak_first_frame` below
+  20 dB). Their `suites` value is `wmeval_v1`; core rows carry the
+  Lite suite they belong to (`wmeval_lite_v1`). `run_wmeval_lite.py run
+  --split synthetic` (or `full`) scores them on their declared dimensions with
+  the conditioning case's protocol, against their own reference and its
+  `reference/artifacts/` (Unity ground truth plus the same pre-computed inputs
+  as the core cases: LPIPS contact events, CausalStep QA and recorded reference
+  answers, liquid masks and flow, rubrics); their aggregate is reported apart
+  from the core headline, with `reference_quality` on every row.
+- `test_core` (32 rows): the curated WMEval Lite v1 cases, each with a Unity
+  reference rendering. The paper's numbers come from this split.
 
-Each row links to its first frame, trajectory and, for core cases, reference video.
+Each row links to its first frame, trajectory and reference video.
 
 This Hub dataset holds the case data: every file under each case's `reference/`
 directory (reference videos, conditioning frames, action trajectories, Unity
@@ -132,15 +142,11 @@ cases/<Scene>/<variant>/
       reference_scores.json       # frozen prompt-judge scores of the Unity video
       contact_events.json         # frozen LPIPS reference contact events
       liquid_mask.npz, bottle_mask.npz, raft_pooled_flow.npz   # LiquidContainer
-lighting_paper_native/            # companion suite: the paper-native lighting case
-  suite.yaml
-  cases/SunRisesAndSets/lighting/...
 human_alignment/
   prompt_scene_consistency.json   # the human side of the judge-human study
 baselines/
-  lighting_paper_native.json      # paper-native lighting scores of the evaluated models
-  lighting_orbit_v2/              # 15 baseline rollouts (3 models x 5 seeds) with
-                                  # generation receipts and expected scores
+  lighting_paper_native.json      # the paper's lighting table: per-run scores of the
+                                  # six evaluated models (5 seeds each) on SunRisesAndSets/lighting
 ```
 
 Every case bundle can be checked on its own: `checksums.sha256` covers its
@@ -165,8 +171,10 @@ Taken from `suite.yaml` (`dimensions.<id>.cases`):
 
 Cases per scene: MirrorRollingBall 7, BilliardGame 5, WanderingGarden 5,
 LiquidContainer 4, BeamDomino 3, ChessBoard 3, RacingCar 3, BallRoller 1,
-SunRisesAndSets 1. The companion suite `lighting_paper_native/` adds one case,
-`SunRisesAndSets/lighting`, scored by `lighting_shading`.
+SunRisesAndSets 1 (`SunRisesAndSets/lighting`, the paper's native lighting
+case, scored reference-free exactly as in the paper; its `reference/unity_orbit.mp4`
+is a Unity rendering of the same walk from the same first frame, which the score
+does not read).
 
 Each dimension's `extra_means` in `suite.yaml` lists the secondary metrics
 that are aggregated alongside the headline. Several dimensions carry caveats
@@ -215,9 +223,7 @@ Use that revision for results you can compare against published numbers.
    ```
 
    The output directory receives `per_case_results.jsonl`,
-   `aggregate_summary.json` and `aggregate_summary.csv`. For the historical
-   lighting protocol, run the same command with
-   `--suite <dataset_dir>/lighting_paper_native`. To check a prompt-judge run
+   `aggregate_summary.json` and `aggregate_summary.csv`. To check a prompt-judge run
    against the human study, use
    `python tools/check_prompt_human_alignment.py --fixture <dataset_dir>/human_alignment/prompt_scene_consistency.json ...`.
 
@@ -254,8 +260,9 @@ from Unity:
   bottle masks and the pooled RAFT flow of each LiquidContainer reference
   (`*.npz`). Only the candidate side runs SAM2 and RAFT.
 - **Human study**: `human_alignment/prompt_scene_consistency.json`.
-- **Baselines**: `baselines/` holds the paper-native lighting scores and the
-  lighting-orbit baseline rollouts with their expected scores.
+- **Baselines**: `baselines/lighting_paper_native.json` holds the paper's
+  lighting scores (six models, five seeds, every per-run metric), which the
+  evaluator reproduces exactly.
 
 ## External requirements
 
@@ -265,13 +272,10 @@ dataset:
 - **The evaluator code** (WMEval repository) at the revision in
   `MANIFEST.json`, with its Python dependencies (`requirements-*.lock`).
 - **A GPU** for the CV-based dimensions: SAM2, GroundingDINO, Depth Anything,
-  DINOv2, RAFT and LPIPS. Suite validation and dry runs need only PyYAML. Exact
-  numerical reproduction of `lighting_shading` is verified only on the pinned
-  environment recorded in that case's `evaluator_lock`.
+  DINOv2, RAFT and LPIPS. Suite validation and dry runs need only PyYAML.
 - **CV checkpoints**, downloaded on first use from their upstream hosts. The
   pinned revisions and weight SHA-256s are listed in the evaluator repository's
-  `experiments/tables_4_7/evaluator_assets.lock.json` and, for lighting, in
-  `cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/evaluator_assets.lock.json`.
+  `experiments/tables_4_7/evaluator_assets.lock.json`.
   DINOv2 is loaded through `torch.hub`, which needs network access to GitHub on
   first use.
 - **A hosted VLM judge** (OpenAI API, `OPENAI_API_KEY`) for the candidate side

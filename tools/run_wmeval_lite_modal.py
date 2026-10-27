@@ -120,6 +120,7 @@ image = (
         "pydantic",  # vlm_consistency schemas
         "requests",
         "git+https://github.com/facebookresearch/sam2.git",
+        "decord",  # fluid_mechanics: SAM2 video predictor frame loading
     )
     .env(
         {
@@ -148,6 +149,11 @@ image = (
             "**/.DS_Store",
             ".env",
             ".env.example",
+            # local-only state: browser profiles with sign-in cookies, agent worktrees
+            ".local",
+            ".local/**",
+            ".claude",
+            ".claude/**",
             "WorldModelBenchScenePrivate",
             "WorldModelBenchScenePrivate/**",
             "reports",

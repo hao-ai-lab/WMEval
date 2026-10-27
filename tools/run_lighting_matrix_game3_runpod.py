@@ -54,7 +54,7 @@ def main():
     inputs = root / 'inputs/mg3-orbit'
     adapter = prepare(args.case, inputs, 'matrix-game3')
     case = yaml.safe_load((args.case / 'case.yaml').read_text())
-    parent = root / 'outputs/lighting_orbit_v2/Matrix-Game3'
+    parent = root / 'outputs/lighting_orbit/Matrix-Game3'
     parent.mkdir(parents=True, exist_ok=True)
     runs = []
     for seed in args.seeds:

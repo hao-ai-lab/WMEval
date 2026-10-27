@@ -28,9 +28,11 @@ orbit poses, which may differ in the last float bits across platforms).
 Each trajectory directory gets ``trajectory.yaml``, the compiled ``action.npz``
 (timestamps, values, channel names; camera poses for look-at orbits),
 ``actions.jsonl`` (Project Genie browser program) and ``meta.json`` (prompt,
-action description and steps). The generated files are published to the Hub
-dataset (split ``test_full``); this repository keeps the generator and the
-manifest.
+action description and steps, and -- once ``tools/render_synthetic_references.py
+publish`` has listed it in ``synthetic/references.json`` -- its Unity reference,
+which sits in the trajectory's ``reference/`` folder). The generated files and
+references are published to the Hub dataset (split ``test_full``); this
+repository keeps the generator, the manifest and references.json.
 
     python tools/generate_synthetic_trajectories.py            # write eval_sets/wmeval_lite_v1/synthetic/
     python tools/generate_synthetic_trajectories.py --verify   # regenerate and compare with the manifest
@@ -38,8 +40,8 @@ manifest.
 Sign conventions follow the core trajectories and the browser key rules:
 positive yaw / steer / lateral / x is to the right, positive forward / y is
 away from the camera, and a positive orbit rate is counter-clockwise (the core
-``lighting_orbit_v2`` runs at +36 deg/s and its prompt calls that
-counter-clockwise).
+``SunRisesAndSets/lighting`` reference orbit runs at +36 deg/s and its prompt
+calls that counter-clockwise).
 """
 from __future__ import annotations
 
@@ -68,6 +70,10 @@ from evaluation.trajectories import load_trajectory, write_compiled_trajectory  
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 OUT_ROOT = SUITE_ROOT / "synthetic"
 MANIFEST = OUT_ROOT / "manifest.json"
+REFERENCES = OUT_ROOT / "references.json"  # written by tools/render_synthetic_references.py publish
+# Plans rejected by the dataset audit (tools/audit_dataset.py) after their Unity reference was
+# rendered, with the reason; select_plans swaps each for the next-best plan of its stratum.
+SCREENING = OUT_ROOT / "screening.json"
 GENERATOR_VERSION = 2
 SEED = 20261019
 POOL_FACTOR = 20  # candidate plans sampled per selected trajectory
@@ -269,7 +275,9 @@ def camera_yaw_grammar() -> Grammar:
                         {"amp": None, "dir": SIDE, "speed": None},
                         lambda s: [(s["amp"] / s["speed"], y(SIDE[s["dir"]] * s["speed"])),
                                    (s["amp"] / s["speed"], y(-SIDE[s["dir"]] * s["speed"]))]),
-        "look_back": Clause("look_back", "turns {dir} to look directly behind (180 degrees at {speed} degrees per second)",
+        # "half turn", not "to look directly behind": after an earlier turn, 180 degrees does not
+        # end facing away from the starting view (audit: the text read as an absolute heading)
+        "look_back": Clause("look_back", "turns {dir} through a half turn (180 degrees at {speed} degrees per second)",
                             {"dir": SIDE, "speed": None},
                             lambda s: [(180 / s["speed"], y(SIDE[s["dir"]] * s["speed"]))]),
     }
@@ -333,8 +341,21 @@ def camera_orbit_grammar() -> Grammar:
 
 # ego vehicle ----------------------------------------------------------------
 THROTTLE = {"half": 0.5, "three-quarter": 0.75, "full": 1.0}
-STEER = {"gently": 0.3, "moderately": 0.6, "sharply": 1.0}
-LANE_STEER = {"gentle": 0.3, "moderate": 0.6, "sharp": 1.0}
+# Steering in RacingCar's CarController is strong: the Unity GT of the v2 trajectories gives a
+# yaw rate of roughly 70 deg/s per unit steer at 8-10 m/s (saturating near 60 deg/s), so the
+# earlier 0.3 / 0.6 / 1.0 steers turned the car 45-160 degrees and 19 of 28 trajectories ended
+# against a roadside barrier, and "lane changes" crossed the whole 24 m carriageway.
+# "steers gently / moderately / sharply" now means about 7 / 14 / 25 deg/s.
+STEER = {"gently": 0.1, "moderately": 0.2, "sharply": 0.35}
+# A lane change steers +s then -s for half its duration each; heading peaks at ~35 s T deg and
+# the lateral offset is ~0.3 v s T^2 m, so s = LANE_GAIN / T^2 moves the car about one lane
+# (3-4 m at 8-10 m/s; more at higher speed) and leaves it parallel to the road again. Steps
+# are at least 1 s (steer) / 2 s (lane): shorter ones turned too little or too sharply.
+LANE_GAIN = 1.2
+
+
+def lane_steer(sec: float) -> float:
+    return round(min(1.0, LANE_GAIN / sec ** 2), 4)
 
 
 def ego_vehicle_grammar() -> Grammar:
@@ -348,10 +369,10 @@ def ego_vehicle_grammar() -> Grammar:
         "steer": Clause("steer", "steers {amount} {dir} at {level} throttle for {sec} seconds",
                         {"amount": STEER, "dir": SIDE, "level": THROTTLE, "sec": None},
                         lambda s: [(s["sec"], car(SIDE[s["dir"]] * STEER[s["amount"]], THROTTLE[s["level"]]))]),
-        "lane": Clause("lane", "changes lanes to the {dir} with {amount} steering over {sec} seconds",
-                       {"dir": SIDE, "amount": LANE_STEER, "sec": None},
-                       lambda s: [(s["sec"] / 2, car(SIDE[s["dir"]] * LANE_STEER[s["amount"]], 0.75)),
-                                  (s["sec"] / 2, car(-SIDE[s["dir"]] * LANE_STEER[s["amount"]], 0.75))]),
+        "lane": Clause("lane", "changes lanes to the {dir} over {sec} seconds",
+                       {"dir": SIDE, "sec": None},
+                       lambda s: [(s["sec"] / 2, car(SIDE[s["dir"]] * lane_steer(s["sec"]), 0.75)),
+                                  (s["sec"] / 2, car(-SIDE[s["dir"]] * lane_steer(s["sec"]), 0.75))]),
         "coast": Clause("coast", "coasts for {sec} seconds", {"sec": None}, lambda s: [(s["sec"], car())]),
         "brake": Clause("brake", "brakes hard for {sec} seconds", {"sec": None}, lambda s: [(s["sec"], car(brake=1))]),
     }
@@ -361,9 +382,9 @@ def ego_vehicle_grammar() -> Grammar:
             return {"kind": kind, "level": _pick(r, THROTTLE), "sec": float(r.choice((1, 1.5, 2, 2.5, 3, 4)))}
         if kind == "steer":
             return {"kind": kind, "amount": _pick(r, STEER), "dir": _pick(r, SIDE), "level": _pick(r, THROTTLE),
-                    "sec": float(r.choice((0.5, 1, 1.5, 2)))}
+                    "sec": float(r.choice((1, 1.5, 2)))}
         if kind == "lane":
-            return {"kind": kind, "dir": _pick(r, SIDE), "amount": _pick(r, LANE_STEER), "sec": float(r.choice((1, 2, 3)))}
+            return {"kind": kind, "dir": _pick(r, SIDE), "sec": float(r.choice((2, 2.5, 3)))}
         secs = {"wait": (0.5, 1, 1.5, 2), "coast": (1, 1.5, 2), "brake": (0.5, 1, 1.5, 2)}[kind]
         return {"kind": kind, "sec": float(r.choice(secs))}
 
@@ -392,7 +413,11 @@ REPEATS = {"twice": 2, "three times": 3}
 
 
 def cue_ball_grammar() -> Grammar:
-    # The Unity replay fires one impulse when a non-zero input starts and again every 0.5 s while held.
+    # The Unity replay fires one impulse when a non-zero input starts and again every 0.5 s while
+    # held. A strike holds its input for one control step and a repeated strike until its last
+    # impulse, so a "wait" starts right after the (last) impulse, as the sentence reads (the v2
+    # trajectories held every strike for 0.5 s, so each following strike came 0.5 s later than
+    # the text implied).
     def hit(s: Step) -> dict[str, float]:
         f, lat = CUE_DIR[s["dir"]]
         k = STRENGTH[s["strength"]]
@@ -402,20 +427,28 @@ def cue_ball_grammar() -> Grammar:
         "wait": Clause("wait", "waits {sec} seconds", {"sec": None},
                        lambda s: [(s["sec"], {"forward": 0.0, "lateral": 0.0})]),
         "strike": Clause("strike", "is struck {dir} at {strength} strength", {"dir": CUE_DIR, "strength": STRENGTH},
-                         lambda s: [(0.5, hit(s))]),
+                         lambda s: [(1 / 30, hit(s))]),
         "repeat": Clause("repeat", "is struck {dir} at {strength} strength {n}, half a second apart",
-                         {"dir": CUE_DIR, "strength": STRENGTH, "n": REPEATS}, lambda s: [(0.5 * REPEATS[s["n"]], hit(s))]),
+                         {"dir": CUE_DIR, "strength": STRENGTH, "n": REPEATS},
+                         lambda s: [(0.5 * (REPEATS[s["n"]] - 1) + 1 / 30, hit(s))]),
     }
 
-    def strike(r: random.Random) -> Step:
-        base = {"dir": _pick(r, CUE_DIR), "strength": _pick(r, STRENGTH)}
+    def strike(r: random.Random, first: bool = False) -> Step:
+        # The first strike sends the cue ball straight at the yellow ball (dead ahead of the
+        # ball-mounted camera) at light or medium strength: the yellow ball is the tracked
+        # object, and the v2 audit found most other openings never hit it or knocked it out
+        # of view within half a second.
+        if first:
+            base = {"dir": "forward", "strength": _pick(r, ("light", "medium"))}
+        else:
+            base = {"dir": _pick(r, CUE_DIR), "strength": _pick(r, STRENGTH)}
         if r.random() < 0.3:
             return {"kind": "repeat", **base, "n": _pick(r, REPEATS)}
         return {"kind": "strike", **base}
 
     def sample(rng: random.Random, n: int) -> list[Step] | None:
         def make(r: random.Random) -> list[Step] | None:
-            plan: list[Step] = [{"kind": "wait", "sec": float(r.choice((0.5, 1, 1.5, 2)))}, strike(r)]
+            plan: list[Step] = [{"kind": "wait", "sec": float(r.choice((0.5, 1, 1.5, 2)))}, strike(r, first=True)]
             for _ in range(n - 1):  # n strikes, separated by waits
                 plan += [{"kind": "wait", "sec": float(r.choice((1, 1.5, 2, 3)))}, strike(r)]
             return plan
@@ -432,15 +465,40 @@ def cue_ball_grammar() -> Grammar:
 FORCE = {"half": 0.5, "full": 1.0}
 
 
-def ball_force_grammar() -> Grammar:
+# The ball_force controls push the ball along world X ("horizontal") and Z ("vertical"), but
+# the conditioning cases film it from fixed cameras that do not look along +Z, so a world
+# direction word would contradict the reference video. Each case therefore names a push by
+# the direction the ball moves as seen from its camera (frame-0 pose, ground-plane
+# projection): BallRoller/ctrl looks along +X (yaw 88.6 deg, so world +Z runs screen-left);
+# MirrorRollingBall/lpips_collision looks along (+X +Z) (yaw 46.5 deg, so world +Z runs
+# away and to the left). VIEW_DIRS maps a world direction name (the sampling vocabulary,
+# so selection is unchanged) to its camera-relative name.
+VIEW_DIRS: dict[str, dict[str, str]] = {
+    "BallRoller/ctrl": {
+        "forward": "left", "backward": "right", "left": "backward", "right": "forward",
+        "forward-left": "backward-left", "forward-right": "forward-left",
+        "backward-left": "backward-right", "backward-right": "forward-right"},
+    "MirrorRollingBall/lpips_collision": {
+        "forward": "forward-left", "backward": "backward-right", "left": "backward-left",
+        "right": "forward-right", "forward-left": "left", "forward-right": "forward",
+        "backward-left": "backward", "backward-right": "right"},
+}
+
+
+def ball_force_grammar(view: dict[str, str] | None = None) -> Grammar:
+    """``view`` (world name -> camera-relative name) relabels the push directions; the
+    controls a step compiles to are those of its world direction either way."""
+    dirs = {(view or {}).get(name, name): vec for name, vec in DIR8.items()}
+
     def push(s: Step) -> dict[str, float]:
-        x, y = DIR8[s["dir"]]
+        x, y = dirs[s["dir"]]
         return {"horizontal": round(x * FORCE[s["strength"]], 4), "vertical": round(y * FORCE[s["strength"]], 4)}
 
     clauses = {
         "push": Clause("push", "is pushed {dir} at {strength} force for {sec} seconds",
-                       {"dir": DIR8, "strength": FORCE, "sec": None}, lambda s: [(s["sec"], push(s))]),
-        "roll": Clause("roll", "rolls without input for {sec} seconds", {"sec": None},
+                       {"dir": dirs, "strength": FORCE, "sec": None}, lambda s: [(s["sec"], push(s))]),
+        # "receives no input", not "rolls": at the start the ball is still at rest
+        "roll": Clause("roll", "receives no input for {sec} seconds", {"sec": None},
                        lambda s: [(s["sec"], {"horizontal": 0.0, "vertical": 0.0})]),
     }
 
@@ -456,7 +514,8 @@ def ball_force_grammar() -> Grammar:
         return _sample_plan(rng, make, ref, 6.0)
 
     ref: list[Grammar] = []
-    g = Grammar("The ball ", "rolls freely until the end of the 6-second clip", clauses, sample,
+    g = Grammar("As seen from the camera, the ball " if view else "The ball ",
+                "rolls freely until the end of the 6-second clip", clauses, sample,
                 {1: 0.2, 2: 0.3, 3: 0.3, 4: 0.2}, rest={"horizontal": 0.0, "vertical": 0.0}, filler=("roll",))
     ref.append(g)
     return g
@@ -613,28 +672,32 @@ SCENE_EDITS: dict[str, list[tuple[str, str]]] = {
     "WanderingGarden/scene_360_in": [_360],
     "WanderingGarden/scene_360_out": [_360],
     "BilliardGame/scene_360_in": [_360],
-    "SunRisesAndSets/lighting_orbit_v2": [(
-        "Move counter-clockwise around the round wooden table at a constant 2-metre radius, completing one full "
-        "circle in exactly 10 seconds, continuously looking at the tabletop centre. Constant speed, no head bobbing "
-        "or roll.",
-        "The camera stays on a circle of 2-metre radius around the round wooden table, continuously looking at the "
-        "tabletop centre, with no head bobbing or roll.")],
+    "SunRisesAndSets/lighting": [(
+        "The viewer walks slowly and steadily counter-clockwise around a wooden round dining table at a constant "
+        "radius of about 2.8 metres, completing one full loop over the duration of the clip while continuously "
+        "keeping the table near the centre of the field of view. Smooth steady gait, no head bobbing, no jumping, "
+        "no looking up at the sky, no looking down at the feet.",
+        "The viewer stays on a circle of about 2.8 metres radius around a wooden round dining table, continuously "
+        "keeping the table near the centre of the field of view. Smooth steady gait, no head bobbing, no jumping, "
+        "no looking up at the sky, no looking down at the feet.")],
     "BeamDomino/causal": [(
         "After a brief pause it rolls straight forward into the nearest front-right pillar, then takes no further "
         "steering. Expected chain: the ball rolls, strikes a supporting pillar, the roof tips and the gold ball "
         "drops, and the domino ring cascades.",
         "If the ball strikes a supporting pillar, the roof can tip, the gold ball can drop and the domino ring can "
-        "cascade.")],
+        "cascade."),
+        ("also after the ball has passed the structure and runs off the edge of the floating platform.",
+         "also if the ball rolls past the structure or off the edge of the floating platform.")],
     "ChessBoard/walk_third": [(
         "A gray humanoid mannequin character walks and jogs along the platform in third-person view, turning and "
         "briefly jumping.",
         "A gray humanoid mannequin character stands on the platform, seen in third-person view.")],
     "LiquidContainer/fluid_rest": [
-        ("it rotates in response to control inputs but does not deform.",
-         "it moves in response to control inputs but does not deform."),
+        ("it stays upright, never rotates and does not deform.",
+         "it translates in response to control inputs but stays upright, never rotates and does not deform."),
         ("The bottle is not commanded to move at all for the entire clip: no strafe, no jump, no rotation. Any "
          "bottle or liquid motion in a generation is hallucinated.",
-         "The bottle never rotates; it only translates as described below."),
+         "The camera travels with the bottle, keeping it at the centre of the frame while the floor moves past."),
     ],
 }
 
@@ -659,31 +722,42 @@ def families() -> list[dict[str, Any]]:
          "channels": {"yaw_rate_deg_s": {"kind": "continuous", "min": -360.0, "max": 360.0, "unit": "deg_per_sec"}},
          "keys": GENIE_YAW, "grammar": camera_yaw_grammar(),
          "dimensions": ["environment_object_consistency", "prompt_scene_consistency"]},
-        {"family": "camera_orbit", "target": "camera", "cases": ["SunRisesAndSets/lighting_orbit_v2"], "count": 20,
+        {"family": "camera_orbit", "target": "camera", "cases": ["SunRisesAndSets/lighting"], "count": 20,
          "duration": 10.0, "hz": 60, "orbit": True, "grammar": camera_orbit_grammar(), "dimensions": ["lighting_shading"]},
         {"family": "ego_vehicle", "target": "ego_vehicle", "cases": ["RacingCar/kinematics_third"], "count": 28,
          "duration": 10.0, "hz": 30, "channels": {"steer": cont(), "throttle": cont(), "brake": boolean},
          "keys": [{"channel": "steer", "threshold": 0.25, "positive_key": "KeyD", "negative_key": "KeyA"},
                   {"channel": "throttle", "threshold": 0.25, "positive_key": "KeyW", "negative_key": "KeyS"},
                   {"channel": "brake", "threshold": 0.5, "positive_key": "KeyS"}],
-         "grammar": ego_vehicle_grammar(), "dimensions": ["kinematics_mechanics", "environment_object_consistency"]},
+         "grammar": ego_vehicle_grammar(), "dimensions": ["kinematics_mechanics", "environment_object_consistency"],
+         # Replacements for screened-out plans make at most one lateral manoeuvre (two lane
+         # changes or steers in a row mostly ended against a barrier in the audit renders) and
+         # do not end on a lane change (the car keeps yawing a few degrees after the counter-
+         # steer and drifts back while coasting).
+         "replace_ok": lambda plan: (sum(st["kind"] in ("lane", "steer") for st in plan) <= 1
+                                     and plan[-1]["kind"] != "lane")},
         {"family": "cue_ball", "target": "cue_ball", "cases": ["BilliardGame/kinematics_first"], "count": 25,
          "duration": 10.0, "hz": 30,
          "channels": {"forward": cont("normalized_ball_impulse"), "lateral": cont("normalized_ball_impulse")},
          "keys": [{"channel": "forward", "threshold": 0.25, "positive_key": "KeyW", "negative_key": "KeyS"},
                   {"channel": "lateral", "threshold": 0.15, "positive_key": "KeyD", "negative_key": "KeyA"}],
-         "grammar": cue_ball_grammar(), "dimensions": ["kinematics_mechanics"]},
+         "grammar": cue_ball_grammar(), "dimensions": ["kinematics_mechanics"], "signal_hold_sec": 0.5},
         {"family": "ball_force", "target": "ball", "cases": ["BallRoller/ctrl", "MirrorRollingBall/lpips_collision"],
          "count": 28, "duration": 6.0, "hz": 20,
          "channels": {"horizontal": cont("normalized_force_input"), "vertical": cont("normalized_force_input")},
          "keys": [{"channel": "horizontal", "threshold": 0.25, "positive_key": "KeyD", "negative_key": "KeyA"},
                   {"channel": "vertical", "threshold": 0.25, "positive_key": "KeyW", "negative_key": "KeyS"}],
-         "grammar": ball_force_grammar(), "dimensions": ["action_controllability", "lpips"]},
+         "grammar": ball_force_grammar(), "dimensions": ["action_controllability", "lpips"],
+         "views": {case: ball_force_grammar(view) for case, view in VIEW_DIRS.items()}, "view_dirs": VIEW_DIRS},
         {"family": "beam_domino", "target": "rolling_ball", "cases": ["BeamDomino/causal"], "count": 25,
          "duration": 12.2, "hz": 10, "channels": {"z_force": cont(), "x_force": cont()},
          "keys": [{"channel": "z_force", "threshold": 0.25, "positive_key": "KeyW", "negative_key": "KeyS"},
                   {"channel": "x_force", "threshold": 0.25, "positive_key": "KeyD", "negative_key": "KeyA"}],
-         "grammar": beam_domino_grammar(), "dimensions": ["physical_causality", "action_controllability", "lpips"]},
+         "grammar": beam_domino_grammar(), "dimensions": ["physical_causality", "action_controllability", "lpips"],
+         # Replacements for screened-out plans push for at most 5 s in total: the floating platform
+         # is small, and with longer pushes the ball rolls off its edge while inputs are still
+         # commanded (they then have no visible effect; the audit allows the core case's 2 s).
+         "replace_ok": lambda plan: sum(st["sec"] for st in plan if st["kind"] == "roll") <= 5},
         {"family": "liquid_container", "target": "liquid_container", "cases": ["LiquidContainer/fluid_rest"], "count": 25,
          "duration": 20.0, "hz": 12, "channels": {"forward": cont(), "right": cont(), "up": cont()},
          "keys": [{"channel": "forward", "threshold": 0.5, "positive_key": "KeyW", "negative_key": "KeyS"},
@@ -700,17 +774,42 @@ def families() -> list[dict[str, Any]]:
     ]
 
 
+def grammar_for(fam: dict[str, Any], case_id: str | None) -> Grammar:
+    """The grammar a trajectory on ``case_id`` is described with (its family's, unless the
+    case names directions from its own camera; see VIEW_DIRS)."""
+    return (fam.get("views") or {}).get(case_id, fam["grammar"])
+
+
+def shown_plan(fam: dict[str, Any], case_id: str, plan: list[Step]) -> list[Step]:
+    """``plan`` (selection vocabulary) with directions renamed as ``case_id`` describes them."""
+    view = (fam.get("view_dirs") or {}).get(case_id)
+    if not view:
+        return plan
+    return [{**st, "dir": view[st["dir"]]} if "dir" in st else dict(st) for st in plan]
+
+
 # --------------------------------------------------------------------------- diverse selection
-def control_signal(fam: dict[str, Any], plan: list[Step]) -> np.ndarray:
-    """The compiled per-step control values (x1000, int64) used to compare plans exactly."""
-    g: Grammar = fam["grammar"]
+def control_signal(fam: dict[str, Any], plan: list[Step], case_id: str | None = None) -> np.ndarray:
+    """The compiled per-step control values (x1000, int64) used to compare plans exactly.
+
+    ``plan`` is in the family's selection vocabulary, or -- with ``case_id`` -- as the
+    case describes it (manifest ``action_steps``)."""
+    g: Grammar = grammar_for(fam, case_id)
     segs = segments(g.compile(plan), fam["duration"], fam["hz"], g.rest)
     names = sorted(g.rest)
     rows = []
     for seg in segs:
         n = round((seg["end_sec"] - seg["start_sec"]) * fam["hz"])
         rows += [[round(float(seg["values"][k]) * 1000) for k in names]] * n
-    return np.asarray(rows, dtype=np.int64).ravel()
+    arr = np.asarray(rows, dtype=np.int64)
+    hold = round(fam.get("signal_hold_sec", 0) * fam["hz"])
+    if hold > 1:
+        # impulse controls (one-step strikes): compare them as if held for ``hold`` steps, so
+        # two plans that differ only in a strike's strength do not count as far apart
+        csum = np.vstack([np.zeros((1, arr.shape[1]), dtype=np.int64), np.cumsum(arr, axis=0)])
+        idx = np.arange(len(arr))
+        arr = csum[idx + 1] - csum[np.maximum(0, idx + 1 - hold)]
+    return arr.ravel()
 
 
 def _quotas(strata: dict[int, float], total: int) -> dict[int, int]:
@@ -721,8 +820,23 @@ def _quotas(strata: dict[int, float], total: int) -> dict[int, int]:
     return out
 
 
-def select_plans(fam: dict[str, Any], index: int) -> list[list[Step]]:
-    """Distinct, mutually far-apart plans for a family (deterministic on every platform)."""
+def load_screening() -> dict[str, list[dict[str, Any]]]:
+    """family -> plans rejected after their Unity reference was audited (see SCREENING)."""
+    if not SCREENING.is_file():
+        return {}
+    return json.loads(SCREENING.read_text(encoding="utf-8")).get("rejected", {})
+
+
+def select_plans(fam: dict[str, Any], index: int,
+                 rejected: list[dict[str, Any]] | None = None) -> list[list[Step]]:
+    """Distinct, mutually far-apart plans for a family (deterministic on every platform).
+
+    ``rejected`` (``synthetic/screening.json``): plans whose Unity reference failed the
+    dataset audit (the action has no visible or scoreable effect, the vehicle gets stuck,
+    the tracked object never moves or leaves the view, ...). Selection itself is unchanged;
+    afterwards each rejected pick is swapped, in slot order, for the remaining plan of the
+    same stratum that is farthest from the other picks and not itself rejected, so every
+    other trajectory of the family keeps its plan and id."""
     g: Grammar = fam["grammar"]
     rng = random.Random(SEED + index)
     pool: list[tuple[int, list[Step]]] = []
@@ -760,13 +874,31 @@ def select_plans(fam: dict[str, Any], index: int) -> list[list[Step]]:
                 used[k] += 1
             d = signals - signals[pick]
             nearest = np.minimum(nearest, np.einsum("ij,ij->i", d, d))
+    if rejected:
+        bad = {control_signal(fam, entry["plan"], entry.get("conditioning_case")).tobytes() for entry in rejected}
+        strata = [s for s, _ in pool]
+        used = set(chosen)
+        ok = fam.get("replace_ok", lambda plan: True)
+        for slot, pick in enumerate(list(chosen)):
+            if signals[pick].tobytes() not in bad:
+                continue
+            # The closest acceptable plan to the rejected pick (its own ranking, so one slot's
+            # replacement rarely depends on another's and screening converges); ties -> lowest index.
+            options = [i for i in range(len(pool)) if strata[i] == strata[pick] and i not in used
+                       and signals[i].tobytes() not in bad and ok(pool[i][1])]
+            if not options:
+                raise RuntimeError(f"{fam['family']}: no unrejected plan left for slot {slot}")
+            d = signals[options] - signals[pick]
+            chosen[slot] = options[int(np.argmin(np.einsum("ij,ij->i", d, d)))]
+            used.add(chosen[slot])
     return [pool[i][1] for i in chosen]
 
 
 # --------------------------------------------------------------------------- build
 def trajectory_doc(fam: dict[str, Any], case_id: str, slug: str, plan: list[Step], sentence: str) -> dict[str, Any]:
+    """``plan`` as the case describes it (see shown_plan)."""
     scene, variant = case_id.split("/")
-    g: Grammar = fam["grammar"]
+    g: Grammar = grammar_for(fam, case_id)
     tid = f"synthetic.{fam['family']}.{scene.lower()}_{variant}.{slug}_v{GENERATOR_VERSION}"
     description = (f"Synthetic {fam['family'].replace('_', ' ')} trajectory '{slug}' on {case_id}, generated by "
                    f"tools/generate_synthetic_trajectories.py (v{GENERATOR_VERSION}) from its action description: "
@@ -799,14 +931,24 @@ def trajectory_doc(fam: dict[str, Any], case_id: str, slug: str, plan: list[Step
     }
 
 
+def load_references() -> dict[str, Any]:
+    if not REFERENCES.is_file():
+        return {}
+    return json.loads(REFERENCES.read_text(encoding="utf-8"))["references"]
+
+
 def generate(out_root: Path) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
+    references = load_references()
+    screening = load_screening()
     for index, fam in enumerate(families()):
-        g: Grammar = fam["grammar"]
-        for i, plan in enumerate(select_plans(fam, index)):
+        for i, picked in enumerate(select_plans(fam, index, screening.get(fam["family"]))):
             case_id = fam["cases"][i % len(fam["cases"])]
             case = core_case(case_id)
             scene, variant = case_id.split("/")
+            g: Grammar = grammar_for(fam, case_id)
+            plan = shown_plan(fam, case_id, picked)
+            assert g.compile(plan) == fam["grammar"].compile(picked)
             slug = f"s{i:02d}_" + "_".join(dict.fromkeys(s["kind"] for s in plan))
             sentence = g.describe(plan, fam["duration"])
             assert parse_description(g, sentence, fam["duration"]) == plan, sentence
@@ -835,6 +977,12 @@ def generate(out_root: Path) -> list[dict[str, Any]]:
                 "duration_sec": fam["duration"], "control_hz": fam["hz"], "dimensions": fam["dimensions"],
                 "reference_status": "pending_unity_render", "generator_version": GENERATOR_VERSION,
             }
+            ref = references.get(f"synthetic/{rel}")
+            if ref:
+                meta.update({"reference_status": "unity_rendered",
+                             "reference_video": f"synthetic/{rel}/{ref['video']}",
+                             "reference_quality": ref["quality"],
+                             "reference_first_frame_psnr_db": ref["first_frame_psnr_db"]})
             (out / "meta.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
             files = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.iterdir()) if p.is_file()}
             rows.append({**meta, "path": f"synthetic/{rel}", "files": files})
@@ -918,11 +1066,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(f"verified {len(rows)} synthetic trajectories against {MANIFEST.relative_to(ROOT)}")
         return 0
-    if OUT_ROOT.exists():
-        for child in OUT_ROOT.iterdir():
-            if child.is_dir():
-                shutil.rmtree(child)
     rows = generate(OUT_ROOT)
+    # Drop trajectory folders that are no longer generated (each one's reference/ is kept
+    # with it otherwise: references are published into the same folder).
+    keep = {Path(r["path"]).relative_to("synthetic") for r in rows}
+    for traj in sorted(OUT_ROOT.glob("*/*/*")):
+        if traj.is_dir() and traj.relative_to(OUT_ROOT) not in keep:
+            shutil.rmtree(traj)
     by_family: dict[str, int] = {}
     for r in rows:
         by_family[r["family"]] = by_family.get(r["family"], 0) + 1

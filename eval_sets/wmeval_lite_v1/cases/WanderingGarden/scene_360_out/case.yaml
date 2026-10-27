@@ -3,13 +3,14 @@ case_id: WanderingGarden/scene_360_out
 scene: WanderingGarden
 display_name: WanderingGarden table7 360_out
 prompt: A first-person view from a fixed standing position on the small bridge in
-  a traditional Japanese garden courtyard, initially facing the main cherry tree.
-  Two stone garden lanterns and foreground and background rockery ornaments serve
-  as persistent spatial anchors. Warm architectural and garden lighting illuminates
-  the foliage and surrounding wooden buildings. No main character is persistently
-  visible. The initial Unity conditioning view is outward-facing away from the scene's
-  designated target objects and anchors. From that orientation, the camera performs
-  the controlled full 360-degree camera rotation used by the paper.
+  a traditional Japanese garden courtyard, initially facing away from the main cherry
+  tree, toward the rockery waterfall and pond in front of a lit wooden building, with
+  a stone lantern on the left. Two stone garden lanterns and foreground and background
+  rockery ornaments serve as persistent spatial anchors. Warm architectural and garden
+  lighting illuminates the foliage and surrounding wooden buildings. No main character
+  is persistently visible. The initial Unity conditioning view is outward-facing,
+  away from the main cherry tree. From that orientation, the camera performs the controlled
+  full 360-degree camera rotation used by the paper.
 perspective: first_person
 modules:
 - environment_object_consistency
@@ -42,7 +43,7 @@ module_params:
     eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
 evaluator_lock:
   code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
-  evaluator_fingerprint: 609ac0034ebc9e09084cdaf2cc27dffa
+  evaluator_fingerprint: 8ad0871784ea48f1901613c6f2389426
   release_id: wmeval-lite-v1
   module_config: {}
   artifact_schema_versions: {}
