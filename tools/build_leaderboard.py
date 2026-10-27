@@ -852,7 +852,8 @@ def per_dimension_table(report: dict) -> list[str]:
         rows = report["leaderboard"]
         sup = sorted((r for r in rows if r["dimension_ranks"][d]["supported"]),
                      key=lambda r: (r["dimension_ranks"][d]["rank"], r["overall_rank"], r["display"]))
-        uns = [r["display"] + (" †" if r["dimension_ranks"][d].get("unmeasurable") else " ‡")
+        # a model run but withheld by the evaluator (``unmeasurable``) is listed without a mark
+        uns = [r["display"] + ("" if r["dimension_ranks"][d].get("unmeasurable") else " ‡")
                for r in rows if not r["dimension_ranks"][d]["supported"]]
         metric = " / ".join(METRIC_SHORT.get(m, m) for m in per_dim.get(d, []))
         if any(s.startswith(f"{d}:") for s in report.get("skipped_cells", [])):
@@ -875,8 +876,7 @@ def readme_section(report: dict) -> str:
         for d in dims:
             dr = row["dimension_ranks"].get(d)
             if shared:
-                cells.append(f"{dr['rank']}/{dr['of']}" + ("" if dr["supported"] else
-                                                           " †" if dr.get("unmeasurable") else " ‡"))
+                cells.append(f"{dr['rank']}/{dr['of']}" + ("" if dr["supported"] or dr.get("unmeasurable") else " ‡"))
             else:
                 cells.append("—" if dr is None else f"{_rank(dr['rank'])}/{dr['of']}" + ("*" if dr["of"] < 2 else ""))
         score = "–" if row["overall_score"] is None else f"{row['overall_score']:.3f}"
@@ -888,10 +888,7 @@ def readme_section(report: dict) -> str:
                   "Each dimension is ranked on one metric, scene by scene: a model's dimension rank orders the models by their "
                   "average rank across the dimension's scenes (equal averages share a rank). ‡ = not supported: the model's "
                   "interface cannot express that dimension's actions; it is ranked tied last. "
-                  + ("† = not measurable: the model was run, but its videos failed the evaluator's own reliability check "
-                     "(e.g. the road could not be tracked); it is ranked tied last too. "
-                     if any(dr.get("unmeasurable") for r in report["leaderboard"] for dr in r["dimension_ranks"].values()) else "")
-                  + "Score = mean over dimensions of the "
+                  "Score = mean over dimensions of the "
                   "share of the other models a model ranks above (unsupported models count as below and score 0); models are "
                   "ordered by that exact average."]
     elif shared:
