@@ -22,8 +22,11 @@ def center_crop_to_common(a: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.
 
 
 def to_rgb_tchw(frame_bgr: np.ndarray, device: torch.device) -> torch.Tensor:
+    # RAFT's OpticalFlow preset maps [0, 1] to [-1, 1] and leaves float input
+    # unscaled, so 8-bit frames must be brought to [0, 1] here; fed 0..255 RAFT
+    # returns hundreds of px of flow on a static scene.
     frame_rgb = frame_bgr[..., ::-1].copy()
-    tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1).float().unsqueeze(0)
+    tensor = torch.from_numpy(frame_rgb).permute(2, 0, 1).float().unsqueeze(0) / 255.0
     return tensor.to(device)
 
 

@@ -24,11 +24,13 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:  # run as a script: the index metadata imports evaluation.*
+    sys.path.insert(0, str(ROOT))
 SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
 DEFAULT_REPO = "lmgame/WMEval-Lite"
 CHECKSUMS = "checksums.sha256"
-# Case data lives under each case's reference/ directory; every suite (including the
-# paper-native lighting suite, via `cases_root: ../cases`) uses the shared cases/ tree.
+# Case data lives under each case's reference/ directory; every suite (a companion suite
+# via `cases_root: ../cases`) uses the shared cases/ tree.
 DATA_PATTERNS = ["cases/*/*/reference/**"]
 # test_full adds the synthetic trajectory suite (tools/generate_synthetic_trajectories.py).
 SYNTHETIC_PATTERNS = ["synthetic/*/*/*/**"]
@@ -88,11 +90,13 @@ def cmd_status(args: argparse.Namespace) -> int:
 def cmd_download(args: argparse.Namespace) -> int:
     from huggingface_hub import snapshot_download
 
-    patterns = DATA_PATTERNS + (SYNTHETIC_PATTERNS if args.split == "full" else [])
+    # only the trajectories this checkout's manifest lists (the Hub may hold other versions too)
+    patterns = DATA_PATTERNS + ([f"{t}/**" for t in synthetic_files()] if args.split == "full" else [])
+    revision = args.revision or pinned_revision()
     snapshot_download(
         repo_id=args.repo,
         repo_type="dataset",
-        revision=args.revision,
+        revision=revision,
         local_dir=str(SUITE_ROOT),
         allow_patterns=patterns,
         token=_token(args),
@@ -101,11 +105,12 @@ def cmd_download(args: argparse.Namespace) -> int:
     bad = {c: r for c, r in report.items() if r[1] or r[2]}
     for case, (n, miss, mism) in bad.items():
         print(f"FAILED {case}: {len(miss)} missing, {len(mism)} mismatched of {n}")
-    print(f"downloaded {args.repo}@{args.revision or 'main'}: {len(report) - len(bad)}/{len(report)} case(s) verified")
+    print(f"downloaded {args.repo}@{revision or 'main'}: {len(report) - len(bad)}/{len(report)} case(s) verified")
     failed = bool(bad)
     if args.split == "full":
         n, missing, mism = check_synthetic()
-        print(f"synthetic trajectories: {n - len({m.rsplit('/', 1)[0] for m in missing + mism})}/{n} verified")
+        broken = {"/".join(m.split("/")[:4]) for m in missing + mism}  # synthetic/<family>/<case>/<slug>
+        print(f"synthetic trajectories: {n - len(broken)}/{n} verified (references included)")
         failed = failed or bool(missing or mism)
     return 1 if failed else 0
 
@@ -114,6 +119,9 @@ def cmd_download(args: argparse.Namespace) -> int:
 # split can be added beside it later.
 INDEX_NAME = "test_core.jsonl"
 FULL_INDEX_NAME = "test_full.jsonl"
+# The Hub dataset is shared by every branch; each checkout downloads the commit its metadata
+# was published with, so a newer dataset version never breaks an older branch.
+REVISION_FILE = "DATASET_REVISION"
 SYNTHETIC_SUITE = "wmeval_v1"  # suite label of the synthetic (non-Lite) test_full rows
 INDEX_COLUMNS = ("case_id", "scene", "variant", "group", "family", "action_target", "suites", "dimensions",
                  "perspective", "prompt", "conditioning_case", "reference_video", "first_frame", "trajectory",
@@ -156,7 +164,9 @@ def build_index(root: Path = SUITE_ROOT) -> list[dict]:
                         "perspective": case.get("perspective"),
                         "prompt": case.get("prompt"),
                         "conditioning_case": case_id,
-                        "reference_video": rel(ref.get("video")),
+                        # the declared reference video, else the Unity video the bundle ships even when
+                        # its metrics are reference-free (prompt-only cases), so every row links one
+                        "reference_video": rel(ref.get("video")) or _bundled_video(case_dir, rel_dir),
                         "first_frame": rel(ref.get("first_frame") or ref.get("video")),
                         "trajectory": rel("reference/artifacts/trajectory.yaml") if (art / "trajectory.yaml").is_file() else None,
                         "candidate_normalization": (case.get("protocol") or {}).get("candidate_normalization"),
@@ -164,8 +174,13 @@ def build_index(root: Path = SUITE_ROOT) -> list[dict]:
                     }
                 if suite_name not in row["suites"]:
                     row["suites"].append(suite_name)
-                row["dimensions"].append(dim if suite_name == "wmeval_lite_v1" else f"{dim} (paper-native)")
+                row["dimensions"].append(dim if suite_name == "wmeval_lite_v1" else f"{dim} ({suite_root.name})")
     return sorted(rows.values(), key=lambda r: r["case_id"] + ("~" if r["suites"] != ["wmeval_lite_v1"] else ""))
+
+
+def _bundled_video(case_dir: Path, rel_dir: str) -> str | None:
+    videos = sorted((case_dir / "reference").glob("*.mp4"))
+    return f"{rel_dir}/reference/{videos[0].name}" if videos else None
 
 
 def _declared_target(artifacts: Path) -> str | None:
@@ -184,14 +199,23 @@ def synthetic_rows(root: Path = SUITE_ROOT) -> list[dict]:
         return []
     import json
 
+    import yaml
+
+    normalization: dict[str, str | None] = {}  # scored with the conditioning case's protocol
     rows = []
     for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
+        cond = t["conditioning_case"]
+        if cond not in normalization:
+            case_yaml = root / "cases" / cond / "case.yaml"
+            raw = yaml.safe_load(case_yaml.read_text(encoding="utf-8")) if case_yaml.is_file() else None
+            protocol = (raw or {}).get("protocol") or {}
+            normalization[cond] = protocol.get("candidate_normalization")
         rows.append({
             "case_id": t["synthetic_id"], "scene": t["scene"], "variant": t["pattern"], "group": "synthetic",
             "family": t["family"], "action_target": t["action_target"], "suites": [SYNTHETIC_SUITE], "dimensions": t["dimensions"],
             "perspective": t["perspective"], "prompt": t["prompt"], "conditioning_case": t["conditioning_case"],
-            "reference_video": None, "first_frame": t["first_frame"], "trajectory": f"{t['path']}/trajectory.yaml",
-            "candidate_normalization": None, "reference_status": t["reference_status"],
+            "reference_video": t.get("reference_video"), "first_frame": t["first_frame"], "trajectory": f"{t['path']}/trajectory.yaml",
+            "candidate_normalization": normalization[cond], "reference_status": t["reference_status"],
         })
     return rows
 
@@ -200,23 +224,42 @@ def build_full_index(root: Path = SUITE_ROOT) -> list[dict]:
     return build_index(root) + synthetic_rows(root)
 
 
-def check_synthetic(root: Path = SUITE_ROOT, *, verify_hashes: bool = True) -> tuple[int, list[str], list[str]]:
-    """(trajectories listed, missing files, mismatched files) for the synthetic suite."""
+def synthetic_files(root: Path = SUITE_ROOT) -> dict[str, dict[str, str]]:
+    """trajectory path -> {file relative to it: sha256}: generated files plus its published Unity reference."""
     import json
 
     manifest = root / "synthetic" / "manifest.json"
     if not manifest.is_file():
+        return {}
+    out = {t["path"]: dict(t["files"]) for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]}
+    references = root / "synthetic" / "references.json"
+    if references.is_file():
+        for sid, ref in json.loads(references.read_text(encoding="utf-8"))["references"].items():
+            if sid in out:
+                out[sid].update(ref["files"])
+    return out
+
+
+def check_synthetic(root: Path = SUITE_ROOT, *, verify_hashes: bool = True) -> tuple[int, list[str], list[str]]:
+    """(trajectories listed, missing files, mismatched files) for the synthetic suite, references included."""
+    files = synthetic_files(root)
+    if not files:
         return 0, ["synthetic/manifest.json"], []
-    missing, bad, n = [], [], 0
-    for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
-        n += 1
-        for name, digest in t["files"].items():
-            path = root / t["path"] / name
+    missing, bad = [], []
+    for traj, entries in files.items():
+        for name, digest in entries.items():
+            path = root / traj / name
             if not path.is_file():
-                missing.append(f"{t['path']}/{name}")
+                missing.append(f"{traj}/{name}")
             elif verify_hashes and hashlib.sha256(path.read_bytes()).hexdigest() != digest:
-                bad.append(f"{t['path']}/{name}")
-    return n, missing, bad
+                bad.append(f"{traj}/{name}")
+    return len(files), missing, bad
+
+
+def pinned_revision(root: Path = SUITE_ROOT) -> str | None:
+    """The Hub commit this checkout's metadata was published with (``DATASET_REVISION``)."""
+    pin = root / REVISION_FILE
+    return pin.read_text(encoding="utf-8").strip() or None if pin.is_file() else None
 
 
 def cmd_upload(args: argparse.Namespace) -> int:
@@ -253,18 +296,21 @@ def cmd_upload(args: argparse.Namespace) -> int:
             print(f"refusing to upload: synthetic suite incomplete ({len(missing)} missing, {len(mism)} mismatched); "
                   "run tools/generate_synthetic_trajectories.py")
             return 1
-        patterns += SYNTHETIC_PATTERNS
+        patterns += [f"{t}/**" for t in synthetic_files()]
     api.upload_folder(
         folder_path=str(SUITE_ROOT),
         repo_id=args.repo,
         repo_type="dataset",
         allow_patterns=patterns,
-        # a regenerated synthetic suite replaces the old one: drop remote trajectories that no longer exist
-        delete_patterns=SYNTHETIC_PATTERNS if args.split == "full" else None,
+        # Other branches may still list older synthetic trajectories, so nothing is deleted
+        # unless asked (once every branch has moved to the current manifest).
+        delete_patterns=SYNTHETIC_PATTERNS if args.split == "full" and args.prune_synthetic else None,
         commit_message=args.message,
     )
+    head = api.repo_info(args.repo, repo_type="dataset").sha
+    (SUITE_ROOT / REVISION_FILE).write_text(head + "\n", encoding="utf-8")
     print(f"uploaded {len(report)} case(s) to https://huggingface.co/datasets/{args.repo}"
-          f" ({'private' if args.private else 'public'})")
+          f" ({'private' if args.private else 'public'}) at {head}; commit {REVISION_FILE} to pin it")
     return 0
 
 
@@ -275,12 +321,14 @@ def main(argv: list[str] | None = None) -> int:
         p = sub.add_parser(name)
         p.add_argument("--repo", default=DEFAULT_REPO)
         p.add_argument("--token-file")
-    sub.choices["download"].add_argument("--revision", help="dataset revision (tag/commit) to pin")
+    sub.choices["download"].add_argument("--revision", help=f"dataset revision (tag/commit); default: {REVISION_FILE}, else main")
     for name in ("download", "upload"):
         sub.choices[name].add_argument("--split", choices=("core", "full"), default="core",
                                        help="core = curated cases (test_core); full = core + synthetic trajectories (test_full)")
     sub.choices["upload"].add_argument("--private", action="store_true", help="create the dataset as private")
     sub.choices["upload"].add_argument("--message", default="Upload WMEval Lite case data")
+    sub.choices["upload"].add_argument("--prune-synthetic", action="store_true",
+                                       help="delete Hub synthetic trajectories that this manifest no longer lists")
     sub.choices["upload"].add_argument("--card-only", action="store_true",
                                        help="refresh only the dataset card and the case index")
     p_status = sub.add_parser("status")

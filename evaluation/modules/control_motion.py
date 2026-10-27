@@ -460,7 +460,7 @@ def analyze_control_motion_from_context(
         artifacts.get("control_camera_compensation", True)
     )
     global_motion_mode = str(
-        artifacts.get("control_global_motion_mode", "median_translation")
+        artifacts.get("control_global_motion_mode", "affine_ransac")
     )
     synthetic_calibration = artifacts.get("synthetic_calibration") or str(
         VENDORED_SYNTHETIC_DIR / "calibration.json"
@@ -477,6 +477,7 @@ def analyze_control_motion_from_context(
     compensated_metrics_per_pair: List[Dict[str, Any]] = []
     reference_camera_model_per_pair: List[Dict[str, Any]] = []
     candidate_camera_model_per_pair: List[Dict[str, Any]] = []
+    candidate_camera_motion_px: List[float] = []
     flow_refs: List[np.ndarray] = []
     flow_gens: List[np.ndarray] = []
 
@@ -513,6 +514,7 @@ def analyze_control_motion_from_context(
         )
         reference_camera_model_per_pair.append(ref_camera_model)
         candidate_camera_model_per_pair.append(gen_camera_model)
+        candidate_camera_motion_px.append(float(np.linalg.norm(gen_camera_motion, axis=2).mean()))
 
         if camera_compensation_enabled:
             flow_ref_comp = flow_ref - ref_camera_motion
@@ -544,6 +546,9 @@ def analyze_control_motion_from_context(
             "mode": global_motion_mode,
             "reference_camera_model_per_pair": reference_camera_model_per_pair,
             "candidate_camera_model_per_pair": candidate_camera_model_per_pair,
+            # mean per-frame displacement of the fitted candidate camera motion (px); a
+            # fixed camera (the Unity references) is near 0
+            "candidate_camera_motion_px": _summarize(candidate_camera_motion_px),
         },
         "raw": _build_section(raw_metrics_per_pair, bad_pixel_thresholds),
     }

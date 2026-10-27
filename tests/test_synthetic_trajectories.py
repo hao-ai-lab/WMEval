@@ -33,7 +33,7 @@ def test_manifest_is_consistent() -> None:
         assert r["action_target"] in targets
         assert r["dimensions"] and set(r["dimensions"]) <= dimensions
         assert {"trajectory.yaml", "action.npz", "actions.jsonl", "meta.json"} <= set(r["files"])
-        assert r["reference_status"] == "pending_unity_render"
+        assert r["reference_status"] in {"pending_unity_render", "unity_rendered"}
 
 
 def test_full_index_extends_core() -> None:
@@ -68,13 +68,14 @@ def test_expected_jobs_full_split_adds_gated_synthetic_jobs(tmp_path: Path) -> N
     report = json.loads((tmp_path / "expected_jobs.json").read_text())
     assert report["split"] == "test_full"
     synthetic = [j for j in report["jobs"] if j["case_id"].startswith("synthetic/")]
-    assert synthetic and {j["action_support"]["target"] for j in synthetic} == {"camera", "character"}
+    # Odyssey drives the car on RacingCar (action_backends.yaml), so ego_vehicle cases are jobs too
+    assert synthetic and {j["action_support"]["target"] for j in synthetic} == {"camera", "character", "ego_vehicle"}
     assert all(set(j["dimensions"]) <= {"environment_object_consistency", "kinematics_mechanics"} for j in synthetic)
     job = synthetic[0]
     assert job["candidate_video"] == str(tmp_path / job["case_id"] / "42.mp4")
     assert "trajectory.yaml" in job["conditioning"]["action_files"]
     gated = {row["action_support"]["target"] for row in report["not_applicable"] if row["case_id"].startswith("synthetic/")}
-    assert {"ego_vehicle", "cue_ball"} <= gated
+    assert "cue_ball" in gated and "ego_vehicle" not in gated
 
 
 def test_dataset_card_declares_every_index_column() -> None:
@@ -100,16 +101,45 @@ def test_descriptions_match_actions_and_are_diverse() -> None:
         fam = families[r["family"]]
         # text first: the prompt ends with the action description, which parses back into the steps
         assert r["prompt"].endswith("\n\n" + r["action_description"])
-        assert gen.parse_description(fam["grammar"], r["action_description"], fam["duration"]) == r["action_steps"]
+        grammar = gen.grammar_for(fam, r["conditioning_case"])
+        assert gen.parse_description(grammar, r["action_description"], fam["duration"]) == r["action_steps"]
         for old, _ in gen.SCENE_EDITS.get(r["conditioning_case"], []):
             assert old not in r["prompt"], f"{r['synthetic_id']} still describes the core case's action"
     for name, fam in families.items():
-        plans = [r["action_steps"] for r in rows if r["family"] == name]
-        signals = np.stack([gen.control_signal(fam, plan) for plan in plans]).astype(float)
+        plans = [(r["action_steps"], r["conditioning_case"]) for r in rows if r["family"] == name]
+        signals = np.stack([gen.control_signal(fam, plan, case) for plan, case in plans]).astype(float)
         assert len({s.tobytes() for s in signals}) == len(plans), f"{name}: duplicate action sequences"
-        dist = np.sqrt(((signals[:, None] - signals[None]) ** 2).mean(-1)) / np.sqrt((signals ** 2).mean())
+        if fam.get("signal_hold_sec"):
+            # impulse families (one-step strikes): relative to the pair's own energy, since a
+            # single strike's held signal is small against the family RMS
+            energy = (signals ** 2).mean(-1)
+            dist = np.sqrt(((signals[:, None] - signals[None]) ** 2).mean(-1) / ((energy[:, None] + energy[None]) / 2))
+        else:
+            dist = np.sqrt(((signals[:, None] - signals[None]) ** 2).mean(-1)) / np.sqrt((signals ** 2).mean())
         np.fill_diagonal(dist, np.inf)
         assert dist.min() > 0.25, f"{name}: two action sequences are near-duplicates ({dist.min():.2f})"
+
+
+def test_ball_force_directions_are_named_from_the_camera() -> None:
+    # Same controls, camera-relative words: BallRoller's camera looks along world +X, so a
+    # world +Z push ("vertical" > 0) moves the ball screen-left.
+    fam = next(f for f in gen.families() if f["family"] == "ball_force")
+    world = [{"kind": "push", "dir": "forward", "strength": "full", "sec": 1.0}]
+    shown = gen.shown_plan(fam, "BallRoller/ctrl", world)
+    assert shown[0]["dir"] == "left"
+    g = gen.grammar_for(fam, "BallRoller/ctrl")
+    assert g.compile(shown) == fam["grammar"].compile(world)
+    assert g.describe(shown, 6.0).startswith("As seen from the camera, the ball is pushed left")
+
+
+def test_screening_swaps_only_rejected_plans() -> None:
+    fam = next(f for f in gen.families() if f["family"] == "cue_ball")
+    index = [f["family"] for f in gen.families()].index("cue_ball")
+    base = gen.select_plans(fam, index)
+    swapped = gen.select_plans(fam, index, [{"plan": base[3]}, {"plan": base[7]}])
+    assert len(swapped) == len(base)
+    assert [k for k, (a, b) in enumerate(zip(base, swapped)) if a != b] == [3, 7]
+    assert base[3] not in swapped and base[7] not in swapped
 
 
 def test_parse_rejects_text_that_does_not_match_the_steps() -> None:
@@ -121,3 +151,43 @@ def test_parse_rejects_text_that_does_not_match_the_steps() -> None:
         gen.parse_description(g, good.replace("60 degrees", "90 degrees"), 2.0)
     with pytest.raises(ValueError):  # the steps end early but the end-of-clip phrase is missing
         gen.parse_description(g, good, fam["duration"])
+
+
+def test_references_are_consistent_with_the_manifest() -> None:
+    path = SUITE / "synthetic" / "references.json"
+    if not path.is_file():
+        pytest.skip("no Unity references published yet")
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    refs, rows = doc["references"], {r["synthetic_id"]: r for r in MANIFEST["trajectories"]}
+    assert doc["count"] == len(refs) and set(refs) <= set(rows)
+    for sid, row in rows.items():
+        ref = refs.get(sid)
+        # meta.json (in the manifest) mirrors references.json, so --verify covers it
+        assert row["reference_status"] == ("unity_rendered" if ref else "pending_unity_render")
+        if ref is None:
+            continue
+        assert row["reference_video"] == f"{sid}/{ref['video']}"
+        assert ref["video"] in ref["files"] and all(f.startswith("reference/") for f in ref["files"])
+        weak = ref["first_frame_psnr_db"] is not None and ref["first_frame_psnr_db"] < doc["weak_first_frame_threshold_db"]
+        assert ref["quality"] == ("weak_first_frame" if weak else "ok") == row["reference_quality"]
+        assert "/Users/" not in json.dumps(ref)
+
+
+def test_dataset_revision_is_pinned() -> None:
+    from tools.sync_lite_data import pinned_revision
+
+    rev = pinned_revision()
+    assert rev is not None and len(rev) == 40 and all(c in "0123456789abcdef" for c in rev)
+
+
+def test_index_metadata_when_run_as_a_script() -> None:
+    # `python tools/sync_lite_data.py upload` has tools/ (not the repo root) on sys.path;
+    # the index must still resolve evaluation.* metadata such as action_target.
+    import subprocess
+    import sys
+
+    code = ("import sys; sys.path.insert(0, sys.argv[1]); import sync_lite_data as s; "
+            "print(sum(r['action_target'] is not None for r in s.build_index()))")
+    out = subprocess.run([sys.executable, "-I", "-c", code, str(ROOT / "tools")],
+                         capture_output=True, text=True, check=True).stdout.strip()
+    assert int(out) > 0

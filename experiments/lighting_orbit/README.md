@@ -1,4 +1,23 @@
-# Complete lighting orbit protocol
+# Complete lighting orbit protocol (historical)
+
+> **HISTORICAL RECORD (retired 2026-10-20).** This directory documents the explicit
+> 2 m / 10 s / 12 fps look-at-orbit lighting protocol that the suite scored from
+> 2026-10-11 to 2026-10-20 as case `SunRisesAndSets/lighting_orbit_v2`. That case,
+> its suite wiring and the separate `lighting_paper_native/` suite are gone: Lite
+> lighting is again the paper's native case `SunRisesAndSets/lighting`, scored with
+> the paper's protocol, which now also bundles a Unity reference orbit
+> (`tools/build_lighting_case.py`). What is kept here: this protocol description,
+> its 15 baseline rollouts with receipts and scores (`baselines/`, formerly
+> `eval_sets/wmeval_lite_v1/baselines/lighting_orbit_v2/`), the capability audit
+> (`trajectory_support.yaml`, formerly in `experiments/tables_4_7/action_backends.yaml`),
+> the case manifest (`historical_case.yaml`), its evaluator asset lock
+> (`evaluator_assets.lock.json`) and the verification reports. The case bundle
+> and the tools that only served it (`build_lighting_orbit_case.py`,
+> `build_lighting_release_package.py`, `verify_lighting_release_run.py`,
+> `prepare_lighting_key_controls.py`, `prepare_lighting_genie_controls.py`) were
+> removed; they are at git commit `57eb773`. Paths and case ids below are as they
+> were (`experiments/lighting_orbit_v2/` is this directory). Nothing here is read
+> by the live suite.
 
 The canonical action is a 10-second counter-clockwise circle of radius 2 m,
 with eye height 1.6 m and a continuous look-at at the measured tabletop centre
@@ -94,7 +113,7 @@ model exports at 12 fps, despite a different framerate advertised elsewhere.
 seed mesh points, forward/backward optical flow and robust PnP. It rejects
 insufficient correspondence fits instead of assigning unsupported status.
 The portable mesh points in `calibration_assets/` were obtained by
-`tools/unity/LightingSeedGeometry.cs` from the original static scene's exact
+`unity/LightingSeedGeometry.cs` (formerly tools/unity/) from the original static scene's exact
 MeshFilter triangles. Their seed rerender has MAE=0, and maximum reprojection
 error is 0.00252 pixels. Alpha texture/skinned-mesh mismatches must be rejected.
 These assets are independent calibration evidence, not formal output correction.
@@ -180,10 +199,11 @@ connected-components kernel before accepting the installation.
 
 Each candidate's receipt supplies `lighting_time_mapping`: schema version 1,
 native fps, canonical_zero_frame and video_sha256. A candidate without one
-(e.g. a model-root directory) gets a mapping derived from the video: its
-decoded fps, canonical_zero_frame 0 and its own sha256; rows record
-`input_contract.lighting_time_mapping` as `receipt` or `derived`. A model whose
-orbit does not start at frame 0 passes the mapping in the candidate manifest.
+(e.g. a model-root directory) gets a mapping derived from the video and the
+model's declared `lighting_canonical_zero_frame` / `candidate_fps_override`;
+rows record `input_contract.lighting_time_mapping` as `receipt` or `derived`.
+The field definitions and precedence are specified in
+[docs/evaluation_dimensions.md](../../docs/evaluation_dimensions.md#candidate-time-mapping-lighting_time_mapping).
 Lite verifies CFR timestamps and at least 10 real seconds after that offset,
 then samples exactly 120 frames at 12 fps before tracking. It keeps image
 geometry and playback speed.
@@ -237,7 +257,7 @@ cached rows retain source_evaluator_lock and an explicit correction audit. Actua
 resume on the corrected identity also passed. Future metadata authoring refreshes
 this stamp automatically.
 
-Build from eval_sets/wmeval_lite_v1/baselines/lighting_orbit_v2/release_sources.json.
+Build from experiments/lighting_orbit/baselines/release_sources.json.
 The published baseline README provides full build, fresh-scoring and cached-resume
 commands. A copied cache replays all 15 rows on CPU without GPU or model downloads;
 changing candidate/evaluator fingerprints invalidates stale rows. Exact cross-GPU

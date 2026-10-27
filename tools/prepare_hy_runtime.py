@@ -31,7 +31,7 @@ def main():
     root = args.workspace.resolve()
     if not root.is_relative_to('/workspace'):
         p.error('all runtime assets must stay under /workspace')
-    assets = Path(__file__).resolve().parents[1] / 'experiments/lighting_orbit_v2'
+    assets = Path(__file__).resolve().parents[1] / 'experiments/lighting_orbit'
     inventory = assets / 'hy_runtime_inventory.json'
     paths = {'tencent/HY-WorldPlay': root / 'models/hy-worldplay-action',
         'tencent/HunyuanVideo-1.5': root / 'models/hunyuan-video-1.5',

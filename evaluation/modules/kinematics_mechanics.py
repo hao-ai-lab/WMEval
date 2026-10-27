@@ -252,6 +252,7 @@ def _track_with_bytetrack(
                 "score": float(scores[nearest]),
                 "centroid": [float(tcentre[0]), float(tcentre[1])],
                 "bbox_bottom_center": [float(tcentre[0]), float(tlbr[3])],
+                "bbox_xyxy": [float(v) for v in tlbr[:4]],
             })
     return tracks
 
@@ -1243,7 +1244,8 @@ def analyze_kinematics_mechanics_from_context(
         trajectories_out[label] = [
             {"frame": p["frame"], "centroid_uv": p["centroid"],
              "centroid_uv_compensated": p["centroid_compensated"],
-             "bbox_bottom_center_uv": p.get("bbox_bottom_center", p["centroid"])}
+             "bbox_bottom_center_uv": p.get("bbox_bottom_center", p["centroid"]),
+             "bbox_xyxy": p.get("bbox_xyxy")}
             for p in pts_sorted
         ]
 
@@ -1312,10 +1314,12 @@ def analyze_kinematics_mechanics_from_context(
     mechanics: Dict[str, Any] = {}
     plane_homographies: Dict[int, np.ndarray] = {}
     metric_plane_y: Optional[float] = None
+    loaded_plane_calibration: Optional[Dict[str, Any]] = None
     if plane_calibration_path:
         try:
             plane_calibration = _load_plane_calibration(str(plane_calibration_path))
             metric_plane_y = float(plane_calibration["plane"]["value_m"])
+            loaded_plane_calibration = plane_calibration
             plane_homographies, plane_diagnostics = _track_plane_homographies(
                 video_path, plane_calibration
             )
@@ -1752,4 +1756,282 @@ def analyze_kinematics_mechanics_from_context(
     }
     result["mechanical_quantities"] = mechanics if mechanics else None
     result["mechanical_summary"] = _summarize_mechanical_quantities(mechanics)
+    # Non-headline additions (candidate-camera FDE/DTW, robust mechanics);
+    # computed after, and independently of, every legacy field above.
+    try:
+        result["extended_kinematics"] = extended_kinematics_from_tracks(
+            trajectories_out,
+            fps=fps,
+            track_point=track_point,
+            video_path=video_path,
+            gt=gt,
+            poses=poses,
+            intrinsics=intrinsics,
+            plane_calibration=loaded_plane_calibration,
+            masses=masses,
+            required_labels=required_labels,
+            alignment_tolerance_frames=event_alignment_tolerance_frames,
+            ego_params=_prefixed_params(artifacts, "kin_ego_"),
+            robust_params=_prefixed_params(artifacts, "kin_robust_"),
+            reference_video=getattr(context, "reference_video", None),
+        )
+    except Exception as exc:  # never let the additions break legacy output
+        result["extended_kinematics"] = {"status": "error", "error": str(exc), "summary": None}
+    # Ego-vehicle path in road coordinates (evaluation/modules/road_trajectory.py): a chase
+    # camera keeps the car centred, so the car's pixel track cannot show where it went.
+    if artifacts.get("kin_road_trajectory") and plane_calibration_path:
+        try:
+            from . import road_trajectory
+            result["road_trajectory"] = road_trajectory.score_video(
+                str(video_path), str(gt_json_path), str(poses_path), str(intrinsics_path),
+                str(plane_calibration_path))
+        except Exception as exc:
+            result["road_trajectory"] = {"status": "error", "error": str(exc), "fde_road_m": None}
     return result
+
+
+def _prefixed_params(artifacts: Dict[str, Any], prefix: str) -> Dict[str, Any]:
+    """``kin_ego_<key>`` / ``kin_robust_<key>`` case overrides of the
+    kinematics_robust defaults."""
+    return {
+        key[len(prefix):]: value
+        for key, value in (artifacts or {}).items()
+        if isinstance(key, str) and key.startswith(prefix)
+    }
+
+
+# ---------------------------------------------------------------------------
+# Extended (non-headline) kinematics: candidate-camera lifting + robust
+# mechanics. See evaluation/modules/kinematics_robust.py.
+# ---------------------------------------------------------------------------
+def _mean_or_none(values: Sequence[float]) -> Optional[float]:
+    finite = [float(v) for v in values if isinstance(v, (int, float)) and np.isfinite(float(v))]
+    return round(float(np.mean(finite)), 6) if finite else None
+
+
+def _reference_object_boxes(
+    trajectories: Dict[str, List[Dict[str, Any]]],
+    gt: Dict[str, Any],
+    poses: np.ndarray,
+    intrinsics: np.ndarray,
+    size: Tuple[int, int],
+) -> Dict[int, List[List[float]]]:
+    """Object masks for the Unity reference video: each tracked label's Unity
+    position projected through the Unity camera, boxed with the candidate's
+    median box size (bottom edge at the projected ground point)."""
+    from . import kinematics_robust as kr
+
+    boxes: Dict[int, List[List[float]]] = {}
+    for label, points in trajectories.items():
+        world = _unity_trajectory(gt, label)
+        if not world:
+            continue
+        sizes = [
+            (b[2] - b[0], b[3] - b[1])
+            for b in kr.object_boxes_from_trajectory(points).values()
+        ]
+        w, h = np.median(np.asarray(sizes), axis=0) if sizes else (0.15 * size[0], 0.2 * size[1])
+        for frame, (u, v) in _project_unity_trajectory_to_pixels(world, poses, intrinsics).items():
+            boxes.setdefault(int(frame), []).append([u - w / 2, v - h, u + w / 2, v + 0.3 * h])
+    return boxes
+
+
+def extended_kinematics_from_tracks(
+    trajectories: Dict[str, List[Dict[str, Any]]],
+    *,
+    fps: float,
+    track_point: str,
+    video_path: Optional[str],
+    gt: Dict[str, Any],
+    poses: np.ndarray,
+    intrinsics: np.ndarray,
+    plane_calibration: Optional[Dict[str, Any]],
+    masses: Dict[str, float],
+    required_labels: Sequence[str],
+    alignment_tolerance_frames: int,
+    ego_params: Optional[Dict[str, Any]] = None,
+    robust_params: Optional[Dict[str, Any]] = None,
+    reference_video: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Candidate-camera FDE/DTW and robust mechanics from tracked pixels.
+
+    Pure function of the tracked trajectories (``result["trajectories"]``),
+    the candidate video (for its camera motion) and the Unity artifacts, so
+    stored results can be re-scored without re-running the detector
+    (``tools/rescore_kinematics_extended.py``).  Legacy fields are untouched.
+    """
+    from . import kinematics_robust as kr
+
+    camera = kr.unity_camera_motion(poses)
+    out: Dict[str, Any] = {
+        "schema_version": 1,
+        "unity_camera": camera,
+        "labels": {},
+    }
+    if plane_calibration is None:
+        out["status"] = "not_configured"
+        out["note"] = "kin_plane_calibration_json is required for metric lifting"
+        out["summary"] = None
+        return out
+    plane_y = float(plane_calibration["plane"]["value_m"])
+    reliable = True
+    reasons: List[str] = []
+    transforms: Dict[int, np.ndarray] = {}
+    if camera["moving"]:
+        out["lifting"] = "candidate_camera_ground_plane"
+        if not video_path:
+            out["status"] = "error"
+            out["error"] = "candidate video is required for candidate-camera lifting"
+            out["summary"] = None
+            return out
+        cap = cv2.VideoCapture(str(video_path))
+        size = (
+            int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
+        cap.release()
+        h0, anchor_rms = kr.frame0_plane_homography(plane_calibration, size)
+        boxes: Dict[int, List[List[float]]] = {}
+        for points in trajectories.values():
+            for frame, box in kr.object_boxes_from_trajectory(points).items():
+                boxes.setdefault(frame, []).append(box)
+        motion_params = {**(ego_params or {}), "motion_model": kr.resolve_motion_model(camera, ego_params)}
+        transforms, diagnostics = kr.estimate_plane_camera_motion(
+            str(video_path), h0, fps=fps, object_boxes=boxes, params=motion_params
+        )
+        if (motion_params.get("split_check", kr.EGO_DEFAULTS["split_check"])):
+            diagnostics["split_consistency"] = kr.split_consistency(
+                str(video_path), h0, transforms, np.asarray(poses[0][[0, 2], 3], dtype=np.float64),
+                fps=fps, object_boxes=boxes, params=motion_params,
+            )
+        floor = None
+        if reference_video:
+            try:
+                floor = kr.reference_camera_floor(
+                    str(reference_video),
+                    h0,
+                    poses,
+                    object_boxes=_reference_object_boxes(trajectories, gt, poses, intrinsics, size),
+                    params=motion_params,
+                )
+            except Exception as exc:  # the floor is a gate, never a crash
+                floor = {"error": str(exc), "relative_max_error": None}
+            out["reference_camera_floor"] = floor
+        reliable, reasons = kr.ego_reliability(diagnostics, ego_params, floor)
+        diagnostics["anchor_fit_rms_m"] = round(anchor_rms, 6)
+        diagnostics["reliable"] = reliable
+        diagnostics["unreliable_reasons"] = reasons
+        out["camera_motion_estimate"] = diagnostics
+    else:
+        out["lifting"] = "unity_camera_static"
+    out["reliable"] = reliable
+
+    label_rows: Dict[str, Any] = {}
+    for label, points in trajectories.items():
+        traj_world = _unity_trajectory(gt, label)
+        if traj_world is None or len(traj_world) < 2:
+            continue
+        pixels = {
+            int(p["frame"]): np.asarray(
+                p["bbox_bottom_center_uv"] if track_point == "bbox_bottom_center" else p["centroid_uv"],
+                dtype=np.float64,
+            )
+            for p in points
+        }
+        reference_xz = {int(f): pos[[0, 2]] for f, pos in traj_world}
+        row: Dict[str, Any] = {}
+        unity_lifted = _map_pixels_to_unity_plane_by_pose(pixels, poses, intrinsics, plane_y)
+        mechanics_points: Optional[Dict[int, np.ndarray]] = None
+        if camera["moving"]:
+            lifted = kr.lift_points(pixels, transforms)
+            lifted, anchor = kr.anchor_contact_offset(lifted, reference_xz, transforms, ego_params)
+            row["contact_offset_anchor"] = anchor
+            attachment = kr.object_camera_attachment(traj_world, poses, intrinsics, float(2.0 * intrinsics[0][2]))
+            row["object_camera_attachment"] = attachment
+            if reliable:
+                mechanics_points, row["mechanics_position_source"] = lifted, "candidate_camera"
+            elif not attachment["attached"]:
+                # Velocities of an object the camera does not carry stay
+                # observable through the timestamp-matched Unity camera.
+                mechanics_points = unity_lifted
+                row["mechanics_position_source"] = "unity_camera_fallback_unattached_object"
+            else:
+                row["mechanics_position_source"] = "withheld_unreliable_camera_attached_object"
+        else:
+            lifted = unity_lifted
+            mechanics_points, row["mechanics_position_source"] = lifted, "unity_camera_static"
+        frames = sorted(set(lifted) & set(reference_xz))
+        row["metric_frames_compared"] = len(frames)
+        if len(frames) >= 2:
+            hat = np.stack([lifted[f] for f in frames])
+            ref = np.stack([reference_xz[f] for f in frames])
+            row["fde_m_ego"] = round(_fde(hat, ref), 6)
+            row["dtw_m_ego"] = round(_dtw_mean(hat, ref), 6)
+        else:
+            row["status"] = "insufficient_overlap"
+        if mechanics_points is not None:
+            # Far-field guard: near the plane's horizon a pixel spans metres,
+            # so a one-pixel detector jitter becomes a huge speed.
+            shifted = {f: p + np.asarray([0.0, 1.0]) for f, p in pixels.items()}
+            if row.get("mechanics_position_source") == "candidate_camera":
+                base, step = kr.lift_points(pixels, transforms), kr.lift_points(shifted, transforms)
+            else:
+                base = unity_lifted
+                step = _map_pixels_to_unity_plane_by_pose(shifted, poses, intrinsics, plane_y)
+            max_scale = float({**kr.ROBUST_DEFAULTS, **(robust_params or {})}["max_m_per_px"])
+            far = {
+                f for f in base
+                if f in step and float(np.linalg.norm(step[f] - base[f])) > max_scale
+            }
+            far |= set(mechanics_points) - set(base)
+            if far:
+                row["mechanics_far_field_frames_dropped"] = len(far)
+                mechanics_points = {f: p for f, p in mechanics_points.items() if f not in far}
+        mass_kg = masses.get(label.strip().lower())
+        if mass_kg is not None and mechanics_points is not None and len(frames) >= 2:
+            mechanics = kr.robust_mechanics(
+                mechanics_points,
+                reference_xz,
+                fps,
+                mass_kg=float(mass_kg),
+                alignment_tolerance_frames=alignment_tolerance_frames,
+                params=robust_params,
+            )
+            row["robust_mechanics"] = mechanics
+        label_rows[label] = row
+    out["labels"] = label_rows
+
+    scored = {
+        label.strip().lower()
+        for label, row in label_rows.items()
+        if isinstance(row.get("fde_m_ego"), (int, float))
+    }
+    missing = [label for label in required_labels if label.strip().lower() not in scored]
+    rows = list(label_rows.values())
+    mech = [
+        row["robust_mechanics"]
+        for row in rows
+        if isinstance(row.get("robust_mechanics"), dict)
+        and row["robust_mechanics"].get("status") == "computed"
+    ]
+    publish_fidelity = reliable and not missing
+    summary = {
+        "lifting": out["lifting"],
+        "reliable": reliable,
+        "missing_required_labels": missing,
+        # withheld (None) when the camera estimate is unreliable or a required
+        # label is untracked; the per-label raw values stay inspectable above
+        "fde_m_ego_mean": _mean_or_none([r.get("fde_m_ego") for r in rows]) if publish_fidelity else None,
+        "dtw_m_ego_mean": _mean_or_none([r.get("dtw_m_ego") for r in rows]) if publish_fidelity else None,
+    }
+    for key in (
+        "robust_error_rate_pct",
+        "robust_momentum_error_pct",
+        "robust_energy_error_pct",
+        "peak_speed_error_pct",
+        "contact_dp_error_pct",
+    ):
+        summary[key] = _mean_or_none([m.get(key) for m in mech])
+    out["summary"] = summary
+    out["status"] = "computed"
+    return out

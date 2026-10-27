@@ -18,6 +18,7 @@ ROW_SCHEMA_VERSION = 1
 PER_CASE_RESULTS_FILENAME = "per_case_results.jsonl"
 AGGREGATE_JSON_FILENAME = "aggregate_summary.json"
 AGGREGATE_CSV_FILENAME = "aggregate_summary.csv"
+SYNTHETIC_AGGREGATE_CSV_FILENAME = "aggregate_summary_synthetic.csv"
 
 RowKey = tuple[str, str, str, str]
 

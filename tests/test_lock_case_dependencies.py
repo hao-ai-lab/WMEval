@@ -90,9 +90,7 @@ def test_live_suite_locks_cover_each_cases_dimensions() -> None:
     for case_id, dimensions in lcd.case_dimensions(suite).items():
         lock = dict(load_case(suite.cases_root / case_id, allowed_cases=suite.all_case_ids()).evaluator_lock["dependency_versions"])
         assert lock, case_id
-        if lock.get("lock_source") != lcd.LOCK_SOURCE:
-            assert case_id == "SunRisesAndSets/lighting_orbit_v2"  # hardware-pinned, hand-written
-            continue
+        assert lock.get("lock_source") == lcd.LOCK_SOURCE, case_id  # every live lock is tool-written
         case = load_case(suite.cases_root / case_id, allowed_cases=suite.all_case_ids())
         req = lcd.Requirements()
         for dimension in dimensions:

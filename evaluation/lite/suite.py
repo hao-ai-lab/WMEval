@@ -32,11 +32,13 @@ from .adapters.base import (
     DimensionEvaluator,
 )
 from .action_support import support_record, unsupported_reason
+from .normalization import LIGHTING_ZERO_FRAME_PARAM
 from evaluation import action_backends
 from .aggregate import (
     build_aggregate,
     write_aggregate_json,
     write_summary_csv,
+    write_synthetic_summary_csv,
 )
 from .case_loader import LiteCase, load_case
 from .candidate_discovery import (
@@ -48,6 +50,7 @@ from .output import (
     AGGREGATE_CSV_FILENAME,
     AGGREGATE_JSON_FILENAME,
     PER_CASE_RESULTS_FILENAME,
+    SYNTHETIC_AGGREGATE_CSV_FILENAME,
     append_row,
     build_row,
     read_rows,
@@ -60,6 +63,15 @@ from .suite_loader import (
     DimensionSpec,
     Suite,
     load_suite,
+)
+from .synthetic import (
+    SPLIT_CORE,
+    SyntheticCase,
+    check_split,
+    includes_core,
+    includes_synthetic,
+    load_synthetic_cases,
+    load_trajectories,
 )
 
 LIQUID_MODULES = frozenset(
@@ -220,6 +232,61 @@ def _default_normalized_path(
     )
 
 
+def resolve_lighting_time_mapping(case: LiteCase, candidate: CandidateRow) -> dict[str, Any]:
+    """The lighting orbit's time mapping for one candidate, and where each field came from.
+
+    A generation receipt (``params.lighting_time_mapping``) wins. Without one the
+    mapping is derived from the video: ``native_fps`` from ``candidate_fps_override``
+    (explicit, or the backend registry's ``real_fps``) else the container, and
+    ``canonical_zero_frame`` from ``lighting_canonical_zero_frame`` (model.yaml or
+    manifest params) else 0. A receipt that disagrees with those params is an error.
+    """
+    from .normalization import derive_lighting_time_mapping
+
+    params = candidate.params or {}
+    zero = params.get(LIGHTING_ZERO_FRAME_PARAM)
+    if zero is not None and (isinstance(zero, bool) or not isinstance(zero, int) or zero < 0):
+        raise SuiteRunError(f"{case.case_id}: {LIGHTING_ZERO_FRAME_PARAM} must be a nonnegative integer")
+    override = params.get("candidate_fps_override")
+    receipt = params.get("lighting_time_mapping")
+    if receipt is not None:
+        if not isinstance(receipt, Mapping):
+            raise SuiteRunError(f"{case.case_id}: lighting_time_mapping must be a mapping")
+        if zero is not None and zero != receipt.get("canonical_zero_frame"):
+            raise SuiteRunError(
+                f"{case.case_id}: {LIGHTING_ZERO_FRAME_PARAM}={zero} conflicts with the receipt's "
+                f"canonical_zero_frame={receipt.get('canonical_zero_frame')}")
+        if override is not None and abs(float(override) - float(receipt.get("native_fps") or 0)) > 1e-6:
+            raise SuiteRunError(
+                f"{case.case_id}: candidate_fps_override={override} conflicts with the receipt's "
+                f"native_fps={receipt.get('native_fps')}")
+        return {"mapping": dict(receipt), "source": "receipt",
+                "native_fps_source": "receipt", "canonical_zero_frame_source": "receipt"}
+    mapping = derive_lighting_time_mapping(
+        candidate.candidate_video,
+        native_fps=float(override) if override is not None else None,
+        canonical_zero_frame=zero if zero is not None else 0,
+    )
+    return {"mapping": mapping, "source": "derived",
+            "native_fps_source": "candidate_fps_override" if override is not None else "container",
+            "canonical_zero_frame_source": LIGHTING_ZERO_FRAME_PARAM if zero is not None else "default"}
+
+
+def _normalize_lighting_orbit(
+    *, case: LiteCase, candidate: CandidateRow, output_root: Path,
+) -> tuple[Path, dict[str, Any]]:
+    """Cut the 10 s orbit window; return it with the mapping's provenance and the window report."""
+    from .normalization import normalize_lighting_window
+
+    lighting = resolve_lighting_time_mapping(case, candidate)
+    destination = _default_normalized_path(output_root, candidate)
+    # This small artifact must be verified/rebuilt for changed receipt/input,
+    # even when a previous candidate occupied the same output path.
+    lighting["window"] = normalize_lighting_window(
+        candidate.candidate_video, destination, time_mapping=dict(lighting["mapping"]))
+    return destination, lighting
+
+
 def _normalize_candidate(
     *,
     case: LiteCase,
@@ -236,21 +303,12 @@ def _normalize_candidate(
         return candidate.candidate_video
 
     from .normalization import (
-        derive_lighting_time_mapping, normalize_liquid_video, normalize_to_reference,
-        normalize_lighting_video, normalize_lighting_window,
+        normalize_liquid_video, normalize_to_reference, normalize_lighting_video,
     )
 
     destination = _default_normalized_path(output_root, candidate)
     if kind == "lighting_orbit":
-        mapping = candidate.params.get("lighting_time_mapping")
-        if mapping is None:
-            mapping = derive_lighting_time_mapping(candidate.candidate_video)
-        elif not isinstance(mapping, Mapping):
-            raise SuiteRunError(f"{case.case_id}: lighting_time_mapping must be a mapping")
-        # This small artifact must be verified/rebuilt for changed receipt/input,
-        # even when a previous candidate occupied the same output path.
-        normalize_lighting_window(candidate.candidate_video, destination, time_mapping=dict(mapping))
-        return destination
+        return _normalize_lighting_orbit(case=case, candidate=candidate, output_root=output_root)[0]
     if not destination.is_file():
         if kind == "reference":
             if case.reference_video is None:
@@ -324,13 +382,20 @@ def run_suite(
     runner: Callable[..., Mapping[str, Any]] | None = None,
     adapters: Mapping[str, DimensionEvaluator] | None = None,
     log: Callable[[str], None] | None = None,
+    split: str = SPLIT_CORE,
+    families: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     """Run the requested dimensions over discovered candidates.
+
+    ``split`` selects the curated cases (``core``, the default), the synthetic
+    trajectories (``synthetic``, optionally limited to ``families``) or both
+    (``full``). Synthetic rows are aggregated separately from the core headline.
 
     Returns the aggregate summary (also written to ``output_dir`` together
     with the per-case JSONL, except in dry runs which write nothing).
     """
     emit = log or (lambda message: print(message, flush=True))
+    check_split(split)
     suite = load_suite(suite_root)
 
     requested = tuple(dimensions) if dimensions else tuple(suite.dimensions)
@@ -341,33 +406,56 @@ def run_suite(
 
     case_ids = sorted(
         {case_id for dimension in requested_dimensions for case_id in dimension.cases}
-    )
+    ) if includes_core(split) else []
     cases = _load_cases(suite, case_ids)
+    synthetic: dict[str, SyntheticCase] = (
+        load_synthetic_cases(suite, dimensions=requested, families=families)
+        if includes_synthetic(split)
+        else {}
+    )
+    cases.update({case_id: entry.case for case_id, entry in synthetic.items()})
 
     if not dry_run:
-        from .validation import validate_case_bundle
+        from .synthetic import validate_synthetic_case
+        from .validation import CaseValidationError, validate_case_bundle
 
         for case_id in case_ids:
             validate_case_bundle(cases[case_id], verify_checksums=verify_checksums)
+        for case_id, entry in synthetic.items():
+            try:
+                validate_synthetic_case(entry, verify_checksums=verify_checksums)
+            except CaseValidationError as exc:
+                raise CaseValidationError(f"{case_id}: {exc}") from exc
 
+    suite_cases = {
+        case_id for dimension in suite.dimensions.values() for case_id in dimension.cases
+    }
+    if suite.synthetic is not None and (
+        candidate_manifest is not None or includes_synthetic(split)
+    ):
+        # Rows for synthetic trajectories outside the selection are skipped.
+        suite_cases |= {t.synthetic_id for t in load_trajectories(suite)}
     candidate_rows, model_params = _discover_candidates(
         model_root=model_root,
         candidate_manifest=candidate_manifest,
-        allowed_cases=frozenset(case_ids),
-        suite_cases=frozenset(
-            case_id for dimension in suite.dimensions.values() for case_id in dimension.cases
-        ),
+        allowed_cases=frozenset(case_ids) | frozenset(synthetic),
+        suite_cases=frozenset(suite_cases),
     )
     candidate_rows = [
         _with_backend_defaults(_merge_candidate_params(row, model_params))
         for row in candidate_rows
     ]
 
+    def scored_on(dimension: DimensionSpec, case_id: str) -> bool:
+        if case_id in synthetic:
+            return dimension.dimension_id in synthetic[case_id].dimensions
+        return case_id in dimension.cases
+
     work_items = [
         WorkItem(dimension=dimension, case=cases[row.case_id], candidate=row)
         for dimension in requested_dimensions
         for row in candidate_rows
-        if row.case_id in dimension.cases
+        if scored_on(dimension, row.case_id)
     ]
     work_items.sort(
         key=lambda item: (
@@ -474,6 +562,9 @@ def run_suite(
             "reference_video": reference_video,
             "evaluator_lock": case.evaluator_lock,
         }
+        synthetic_fields = (
+            synthetic[case.case_id].row_fields() if case.case_id in synthetic else {}
+        )
 
         if dry_run:
             candidate_exists = candidate.candidate_video.is_file()
@@ -490,6 +581,7 @@ def run_suite(
                     "reference_exists": bool(
                         reference_video and Path(reference_video).is_file()
                     ),
+                    **synthetic_fields,
                 }
             )
             emit(
@@ -526,12 +618,15 @@ def run_suite(
             error=result.error,
             timing_sec=round(timing, 3),
         )
+        row.update(synthetic_fields)
         if input_fingerprints.get(key) is not None:
             row['candidate_input_fingerprint'] = input_fingerprints[key]
             row['required_repeats'] = 5
         if result.input_contract is not None:
             row['input_contract'] = result.input_contract
-        support = support_record(item.case.artifacts_dir, candidate.model)
+        support = support_record(
+            item.case.artifacts_dir, candidate.model, target=item.case.action_target
+        )
         if support is not None:
             row['action_support'] = support
         row['metric_status'] = metric_status(result.status, result.metrics)
@@ -547,26 +642,40 @@ def run_suite(
             f"{candidate.model}/{candidate.seed}: {result.status}"
             + (f" ({result.error})" if result.error else "")
         )
-        short = _short_candidate_note(case, result.input_contract)
-        if short is not None:
-            emit(
-                f"[wmeval-lite] warning {dimension.dimension_id}/{case.case_id}/"
-                f"{candidate.model}/{candidate.seed}: {short}"
-            )
+        for note in (_short_candidate_note(case, result.input_contract),
+                     _derived_time_mapping_note(result.input_contract)):
+            if note is not None:
+                emit(
+                    f"[wmeval-lite] warning {dimension.dimension_id}/{case.case_id}/"
+                    f"{candidate.model}/{candidate.seed}: {note}"
+                )
 
+    not_applicable = {
+        case_id: dict(entry.not_applicable)
+        for case_id, entry in sorted(synthetic.items())
+        if entry.not_applicable
+    }
     if dry_run:
         return {
             "suite_name": suite.suite_name,
             "version": suite.version,
             "dry_run": True,
+            "split": split,
             "num_work_items": len(work_items),
             "work_items": dry_run_items,
+            **({"synthetic_not_applicable": not_applicable} if not_applicable else {}),
         }
 
     all_rows = read_rows(results_path)
     aggregate = build_aggregate(suite, all_rows)
+    if "synthetic" in aggregate and not_applicable:
+        aggregate["synthetic"]["not_applicable"] = not_applicable
     write_aggregate_json(output_root / AGGREGATE_JSON_FILENAME, aggregate)
     write_summary_csv(output_root / AGGREGATE_CSV_FILENAME, suite, aggregate)
+    if "synthetic" in aggregate:
+        write_synthetic_summary_csv(
+            output_root / SYNTHETIC_AGGREGATE_CSV_FILENAME, suite, aggregate["synthetic"]
+        )
     emit(f"[wmeval-lite] wrote {results_path}")
     return aggregate
 
@@ -584,7 +693,7 @@ def _evaluate_item(
     case = item.case
     candidate = item.candidate
 
-    reason = unsupported_reason(case.artifacts_dir, candidate.model)
+    reason = unsupported_reason(case.artifacts_dir, candidate.model, target=case.action_target)
     if reason is not None:
         return CaseResult(status=STATUS_UNSUPPORTED, error=reason)
 
@@ -611,9 +720,14 @@ def _evaluate_item(
     except CandidateValidationError as exc:
         return CaseResult(status=STATUS_INVALID_CANDIDATE, error=str(exc))
 
-    candidate_video = _normalize_candidate(
-        case=case, candidate=candidate, output_root=output_root
-    )
+    lighting = None
+    if NORMALIZATION_TOKENS.get(str(protocol.get("candidate_normalization"))) == "lighting_orbit":
+        candidate_video, lighting = _normalize_lighting_orbit(
+            case=case, candidate=candidate, output_root=output_root)
+    else:
+        candidate_video = _normalize_candidate(
+            case=case, candidate=candidate, output_root=output_root
+        )
 
     _install_liquid_artifacts_if_needed(
         dimension=dimension, case=case, installed=installed_liquid_cases
@@ -631,10 +745,17 @@ def _evaluate_item(
     result.input_contract = input_contract(
         validated, normalization=str(protocol.get("candidate_normalization") or "none")
     )
-    if NORMALIZATION_TOKENS.get(str(protocol.get("candidate_normalization"))) == "lighting_orbit":
-        result.input_contract["lighting_time_mapping"] = (
-            "receipt" if candidate.params.get("lighting_time_mapping") is not None else "derived"
-        )
+    if lighting is not None:
+        mapping, window = lighting["mapping"], lighting["window"]
+        result.input_contract["lighting_time_mapping"] = lighting["source"]
+        result.input_contract["lighting_time_mapping_detail"] = {
+            "native_fps": mapping["native_fps"],
+            "native_fps_source": lighting["native_fps_source"],
+            "canonical_zero_frame": mapping["canonical_zero_frame"],
+            "canonical_zero_frame_source": lighting["canonical_zero_frame_source"],
+            "container_fps": round(float(window["source_fps"]), 6),
+            "retimed": bool(window["retimed"]),
+        }
     return result
 
 
@@ -702,6 +823,22 @@ def _short_candidate_note(case: LiteCase, contract: Mapping[str, Any] | None) ->
         f"({contract['candidate']['duration_sec']:.2f} s of {contract['reference']['duration_sec']:.2f} s); "
         "only the overlap is scored"
     )
+
+
+def _derived_time_mapping_note(contract: Mapping[str, Any] | None) -> str | None:
+    """Note for a lighting orbit scored without a receipt (see resolve_lighting_time_mapping)."""
+    if not contract or contract.get("lighting_time_mapping") != "derived":
+        return None
+    detail = contract.get("lighting_time_mapping_detail") or {}
+    note = (
+        f"lighting_time_mapping derived from the video: native_fps {detail.get('native_fps')} "
+        f"({detail.get('native_fps_source')}), canonical_zero_frame "
+        f"{detail.get('canonical_zero_frame')} ({detail.get('canonical_zero_frame_source')})"
+    )
+    if detail.get("canonical_zero_frame_source") == "default":
+        note += (f"; if the orbit does not start at the first frame, set {LIGHTING_ZERO_FRAME_PARAM} "
+                 "in model.yaml or pass a lighting_time_mapping in the candidate manifest")
+    return note
 
 
 def metric_status(status: str, metrics: Mapping[str, Any] | None) -> dict[str, str]:

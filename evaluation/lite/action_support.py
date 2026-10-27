@@ -42,9 +42,14 @@ def declared_target(artifacts_dir: Path) -> str | None:
     return None
 
 
-def support_record(artifacts_dir: Path, model: str) -> dict[str, str | None] | None:
-    """Declared target and the backend's support status (None = unregistered/undeclared)."""
-    target = declared_target(artifacts_dir)
+def support_record(
+    artifacts_dir: Path, model: str, target: str | None = None
+) -> dict[str, str | None] | None:
+    """Declared target and the backend's support status (None = unregistered/undeclared).
+
+    ``target`` overrides the target declared under ``artifacts_dir`` (synthetic
+    trajectories declare theirs in the manifest)."""
+    target = target or declared_target(artifacts_dir)
     if target is None:
         return None
     try:
@@ -56,9 +61,11 @@ def support_record(artifacts_dir: Path, model: str) -> dict[str, str | None] | N
     return {"target": target, "status": action_backends.support_status(model, target)}
 
 
-def unsupported_reason(artifacts_dir: Path, model: str) -> str | None:
+def unsupported_reason(
+    artifacts_dir: Path, model: str, target: str | None = None
+) -> str | None:
     """Why ``model`` cannot express the case's action target, or ``None`` if it can."""
-    target = declared_target(artifacts_dir)
+    target = target or declared_target(artifacts_dir)
     if target is None:
         return None
     try:

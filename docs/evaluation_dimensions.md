@@ -2,6 +2,8 @@
 
 Detailed pipeline, metrics, flags and interpretation notes for each WMEval Lite dimension. The summary table is in the [README](../README.md#evaluation-dimensions).
 
+> **Judge noise floor (judge-scored dimensions).** Prompt-Scene Consistency, Physical Causality and causal LPIPS call a sampled `gpt-5.4` judge, so the same video scores differently on every run. Measured by re-judging the same videos (`tools/measure_judge_floor.py`; per-case numbers in [`SELF_MATCH_BOUNDS.md`](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#judge-scored-dimensions-2026-10-22), machine-readable in `eval_sets/wmeval_lite_v1/judge_noise_floor.json`): prompt `overall_score` moves by 0.02–0.04 (std) per call on ChessBoard / MirrorRollingBall and 0.04–0.08 on RacingCar, so 5-seed means closer than 0.02–0.10 (case-dependent MDD_5) are not separable; glancing CSR moves by ±17 points per 5-pass run; causal LPIPS is judge-stable on the reference (std ≤ 0.011) but BeamDomino/causal scores 0.34 against itself and MirrorRollingBall/lpips_collision pairs events ~7 s apart, both from the frozen reference event sets. The NVIDIA gateway and direct OpenAI agree within that noise.
+
 ### Environment Object & Character Consistency
 
 Do objects, spatial relations and character identity persist as the camera moves away and returns?
@@ -338,7 +340,7 @@ Likely follow-ups after this v1:
 
 Do matched controls produce simulator-consistent trajectories and mechanical outcomes?
 
-- **Metrics:** DTW ↓, FDE ↓ (trajectories); momentum / kinetic-energy Error Rate ↓ and Exact Match ↑
+- **Metrics:** DTW ↓, FDE ↓ (trajectories); momentum / kinetic-energy Error Rate ↓ and Exact Match ↑; non-headline extras `fde_m_ego_mean` ↓, `dtw_m_ego_mean` ↓, `robust_error_rate_pct` ↓, `peak_speed_error_pct` ↓, `contact_dp_error_pct` ↓ ([details](#extended-metrics-candidate-camera-lifting-and-robust-mechanics-2026-10-21-non-headline))
 - **Suite dimension & tooling:** `kinematics_mechanics` — detection + tracking lifted with Unity camera calibration, masses and diameters
 
 <details>
@@ -411,6 +413,147 @@ units, since that also needs metric-scale candidate velocity. See
 | Momentum `p_hat_t = m * v_hat_t` | -- | pending metric-scale velocity |
 | Kinetic energy `E_hat_t = 0.5 * m * \|\|v_hat_t\|\|^2` | -- | pending metric-scale velocity |
 | ExactMatch / ErrorRate over `p`/`E` | `round2(q_hat_o) == round2(q_o)` / `\|q_hat_o - q_o\| / (\|q_o\| + eps)` | not yet computed (needs the above) |
+
+##### Extended metrics: candidate-camera lifting and robust mechanics (2026-10-21, non-headline)
+
+Two additions in `evaluation/modules/kinematics_robust.py`, written to
+`result["extended_kinematics"]` and flattened by `evaluation/lite/aggregate.py`.
+They sit beside the paper-reconstruction metrics: `fde_m_mean` stays the
+headline, and Eq. 12/13 (`error_rate_pct`, `exact_match_pct`) are unchanged.
+
+| Flat metric | Direction | What it is |
+| --- | --- | --- |
+| `fde_m_ego_mean` | lower | FDE (m, Unity X/Z) with candidate-camera lifting when the Unity camera moves, Unity-camera lifting otherwise |
+| `dtw_m_ego_mean` | lower | path-normalised DTW (m), same lifting |
+| `robust_error_rate_pct` | lower | mean of `robust_momentum_error_pct` and `robust_energy_error_pct` |
+| `robust_momentum_error_pct` | lower | mean over the moving span of \|p̂(t) − p(t)\| / p_peak |
+| `robust_energy_error_pct` | lower | mean over the moving span of \|Ê(t) − E(t)\| / E_peak |
+| `peak_speed_error_pct` | lower | \|max v̂ − max v\| / max v over the paired moving span |
+| `contact_dp_error_pct` | lower | \|Δp̂ − Δp\| / \|Δp\| across impulsive GT contacts (vector, linear fits before/after) |
+| `ego_lift_reliable` | (diagnostic) | 1 when the camera estimate passed every gate; `fde/dtw_m_ego_mean` are `null` otherwise |
+| `ego_camera_moving` | (diagnostic) | 1 when candidate-camera lifting applied |
+
+**Why candidate-camera lifting.** The legacy metric lifts candidate pixels
+through the *Unity* camera at the same timestamp. A chase camera keeps the
+car near the same pixel in any video, so that lifting returns Unity's own
+path whatever the candidate does: a synthetic RacingCar reference scored
+against itself and against a different trajectory both gave FDE 1.24 m.
+
+**Which cases.** The Unity poses decide per case (translation std > 0.05 m or
+rotation range > 2°): RacingCar/kinematics_third and the 28 `ego_vehicle`
+references (chase camera; `ground_rigid` motion model),
+BilliardGame/kinematics_first and the 25 `cue_ball` references (camera rides
+on the cue ball with a fixed heading; `ground_translation`). BallRoller/ctrl
+has a fixed camera and keeps the Unity-camera lifting, so its
+`fde_m_ego_mean` equals `fde_m_mean`.
+
+**Method.**
+
+1. Ground features (Shi–Tomasi corners) are detected in the candidate frame
+   below the plane's horizon minus a margin (22 % of the image height; the
+   horizon of frame t is where the third row of `G_t` vanishes) and outside
+   every tracked object's padded box (box + shadow), then followed with
+   forward/backward-checked pyramidal LK.
+2. Per frame a RANSAC (USAC-MAGSAC, seeded) homography to the current
+   keyframe rejects off-plane and moving points. Keyframes are re-anchored
+   every 0.5 s (or when half the tracks are lost).
+3. Metric chain. Frame 0 is the conditioning frame, so the plane
+   calibration's frame-0 anchors give `H0` (pixel → world X/Z). The camera is
+   rigidly mounted at a constant height and pitch above the *local* ground,
+   so `G_t = T_t · H0` with `T_t` a 2D rigid motion; each step is a weighted
+   (1/(m per px)²) IRLS 2D Kabsch fit between the inlier correspondences
+   mapped through `H0`. A free 8-DOF homography chain drifts in scale/tilt
+   where the road is not one plane (RacingCar's road climbs ~3.4 %): 7.7 m vs
+   2.0 m final car error on the core reference with an otherwise identical
+   pipeline, before the horizon margin was raised.
+4. The tracked contact pixel (box bottom-centre) is lifted with `G_t`. Its
+   offset to the Unity object origin at frame 0 (the shared conditioning
+   view; ~1.7 m for the car's rear bumper) is carried in the camera's ground
+   frame.
+5. FDE / DTW against the Unity X/Z trajectory exactly as the legacy metric.
+
+**Reliability.** A row is `reliable` only if (row level) coverage ≥ 0.9,
+failed-frame fraction ≤ 0.05, median keyframe inliers ≥ 20, median keyframe
+reprojection error ≤ 3 px, and the camera paths re-estimated from the left
+and right image halves agree within max(0.75 m, 5 % of the path); and (case
+level) the same estimator on the Unity reference video follows Unity's own
+camera within 5 % of its path (`reference_camera_floor`). Unreliable rows
+keep their raw per-label values under `extended_kinematics.labels` but report
+`null` flat `fde_m_ego_mean` / `dtw_m_ego_mean`.
+
+**Robust mechanics.** Candidate and Unity X/Z tracks are Savitzky–Golay
+smoothed and differentiated (order 2, 0.27 s window); the GT is resampled on
+the candidate's observed frames so detector gaps (strikes, occlusion) are
+compared like with like. The candidate is shifted by the bounded motion-onset
+offset (first frame each smoothed speed exceeds the moving threshold, within
+`kin_event_alignment_tolerance_frames`). Over the span where the GT speed
+exceeds 30 % of its peak (floor 0.05 m/s; rows with < 50 % of that span
+observed report `insufficient_overlap`) the errors above are averaged and
+normalised by the object's peak GT momentum/energy, so a near-zero
+instantaneous value never becomes the denominator. Contacts are GT frames with
+an impulsive velocity change (one-frame acceleration ≥ 4 × peak speed / s,
+|Δv| ≥ 25 % of peak, and ≥ 2× what the in-window acceleration would
+accumulate, which excludes braking and throttle). Positions come from the
+candidate-camera lifting when reliable, from the Unity-camera lifting for a
+static camera or for a moving camera whose tracked object it does not carry
+(the cue-ball camera and the yellow ball), and are withheld for a carried
+object (the chase-camera car) with an unreliable camera estimate.
+
+Overrides: any `EGO_DEFAULTS` / `ROBUST_DEFAULTS` key as `kin_ego_<key>` /
+`kin_robust_<key>` module parameters. `tools/rescore_kinematics_extended.py`
+recomputes everything from stored `per_case_results.jsonl` rows (no detector),
+optionally against another case's ground truth (`--gt-case`, negatives).
+
+**Validation (2026-10-21, Unity references as candidates; detector tracks from
+`run_wmeval_lite.py run`, negatives re-scored with
+`tools/rescore_kinematics_extended.py --gt-case`: each reference's tracks
+against every other trajectory of its family).**
+
+Camera path recovered from the reference video vs the Unity camera
+(final / max X/Z error):
+
+| Set | Camera path | Final error, median (max) | Relative (median) |
+| --- | --- | --- | --- |
+| 28 `ego_vehicle` + RacingCar/kinematics_third | 2.4–117 m | 0.12 m (1.50 m) | 0.4 % |
+| 25 `cue_ball` + BilliardGame/kinematics_first | 0.8–9.3 m | 0.27 m (1.26 m) | 5.8 % (unreliable: low ball-level view of an untextured table, rails off-plane) |
+
+Self (reference vs its own GT) vs negative (vs the other trajectories' GT):
+
+| Family | Metric | Self median (max) | Negative median (10th pct) | P(neg > self) |
+| --- | --- | --- | --- | --- |
+| ego_vehicle + core (29) | legacy `fde_m` | 1.00 m (5.51) | 1.00 m (0.21) | 0.48 |
+| | `fde_m_ego` | 0.14 m (1.97) | 22.6 m (8.2) | 1.00 |
+| | legacy `error_rate_pct` (core) | 29.2 % | — | — |
+| | `robust_error_rate_pct` | 1.1 % (2.4) | 45.2 % (24.7) | 1.00 |
+| | `peak_speed_error_pct` | 0.9 % (3.7) | 36.4 % (4.9) | 0.97 |
+| cue_ball + core (26) | `robust_error_rate_pct` (22 computable) | 4.4 % (10.0) | 29.8 % (13.1) | 0.95 |
+| | `peak_speed_error_pct` | 5.5 % (13.7) | 18.7 % (5.2) | 0.77 |
+| | `contact_dp_error_pct` | 2.2 % (173) | 154 % (55) | 0.71 |
+| BallRoller/ctrl vs 14 `ball_force` GTs | `robust_error_rate_pct` | 8.6 % | 33.3 % (min 21.8) | 1.00 |
+| | `contact_dp_error_pct` | 4.7 % | 99 % (min 84) | 1.00 |
+| | legacy `error_rate_pct` | 79.8 % | — | — |
+| BilliardGame/kinematics_first | `robust_error_rate_pct` | 5.0 % | 28.0 % (min 8.6) | — |
+| | legacy `error_rate_pct` | 52.4 % | — | — |
+
+`fde_m_ego` on cue_ball is not discriminative (detector identity switches once
+the yellow ball leaves the ball-level view; the legacy FDE has the same p90 of
+15 m) and is withheld there by the reference floor (1/26 rows reliable).
+Smoothing window 0.27 s and moving threshold 30 % of peak were chosen from a
+grid (0.13–0.4 s, 10–30 %); ego_vehicle is insensitive to both, cue_ball needs
+≥ 0.2 s and ≥ 30 % (shorter windows amplify detector jitter at strikes,
+lower thresholds lose span coverage to the slow, often out-of-view tail).
+
+Stored model runs (Project Genie Table 4, five runs each): on RacingCar every
+run is flagged unreliable -- the left/right split disagrees by 10–15 m
+(Unity references: ≤ 0.6 m), i.e. the generated road texture does not
+determine the camera path -- so `fde_m_ego_mean` and the robust mechanics
+(the car is carried by the chase camera) are `null`; the raw values
+(6–15 m) stay in the row. On BilliardGame the camera estimate fails the
+reference floor, and the robust mechanics use the Unity-camera lifting (the
+yellow ball is not carried): `robust_error_rate_pct` 25–27 % vs 5.0 % for
+the Unity reference, where the legacy Eq. 13 Error Rate ranked every Genie
+run (0.8–2.7 %) far *better* than Unity itself (52 %).
+
 
 ##### Ground truth artifacts
 
@@ -951,6 +1094,7 @@ Does an action propagate through a multi-stage causal chain (rolling → impact 
 
 - **Metrics:** Causal Success Rate ↑, AMCL/MCL, weighted score, DUA, ICRA — reported as deltas from the Unity reference judged the same way
 - **Suite dimension & tooling:** `physical_causality` — CausalStep protocol with a VLM judge (repeated passes); `tools/evaluate_world_model_causal_step.py`
+- **Judge noise:** Unity-as-candidate csr_delta is 0 ± 0 on canonical / direct-strike and -4 ± 17 on glancing per 5-pass run. See [SELF_MATCH_BOUNDS.md](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#physical-causality-csr_delta-lower-is-better-unity-side--recorded-fixture).
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_causal_step_eval.md</code>)</summary>
@@ -1583,8 +1727,50 @@ or add scene-fidelity QAs that explicitly probe object identity / count.
 
 Do cast shadows stay geometrically and temporally coherent with one light source as the camera moves?
 
-- **Metrics:** Scene Retention ↑, Shadow Detection ↑, Multi-Object Sun Disagreement ↓, Shadow Direction Jitter ↓, Shadow Area Stability ↓, Shadow Shape Drift ↓
+- **Metrics:** Scene Retention ↑, Shadow Detection ↑, Multi-Object Sun Disagreement ↓, Shadow Direction Jitter ↓ (headline), Shadow Area Stability ↓, Shadow Shape Drift ↓
 - **Suite dimension & tooling:** `lighting_shading` — `shadow_consistency` module (GroundingDINO, SAM 2, Hu moments); reference-free
+- **Case:** `SunRisesAndSets/lighting`, the paper's native case and the only lighting case: first person, fixed sun, one counter-clockwise walking loop around the round dining table (`actions.txt`: hold ArrowLeft for 10 s), conditioned on the paper's `ref.png`.
+- **Protocol (the paper's):** the candidate is scored as supplied (`candidate_normalization: none`, at least 1 s long), frames sampled at up to 24 fps over the whole clip (`eval_fps: 24`, `max_pairs: 0`), text prompt `table. chair. lamp.`, anchor `table`; the per-model `shadow_hud_preset` comes from `model.yaml` or the manifest `params`.
+
+#### Unity reference
+
+The case also bundles a Unity rendering of the walk, `reference/unity_orbit.mp4` (10 s, 24 fps, 1280×1280), with its ground truth: `trajectory.yaml` (`camera_look_at_orbit`), `action.npz`, per-frame `poses.npy` (OpenCV camera-to-world, 241 poses including the loop-closing endpoint), `intrinsics.npy`, `calibration.json`, `frames.jsonl`, `scene_dependencies.json` and `unity_qa.json`. The score does not read it; it is there to show what a physically consistent answer looks like and to anchor the `camera_orbit` synthetic trajectories.
+
+`ref.png` is the SunRisesAndSets scene's own camera-rig start view (scene file of Unity revision 84a06a4; `CameraOrbitAgent`: look-at point on the tabletop at the scene's TrainingArea pivot, 3 m away, yaw 45°, pitch 20°, 60° vertical FOV; URP post-processing on; sun after the day-night script's first 12 fixed steps). Rendered that way, frame 0 matches `ref.png` at 31 dB PSNR. The reference turns that camera once counter-clockwise about the pivot's vertical axis in 10 s: radius 2.819 m and eye height 2.306 m, rather than the prompt's approximate 2 m and 1.6 m — the frame every model was conditioned on was taken from there. The pivot is 0.63 m from the table axis; a table-centred orbit through the same starting position would not reproduce `ref.png` (20.4 dB). Rebuild with `python tools/build_lighting_case.py` (needs the Unity editor and WorldModelBenchScenePrivate).
+
+#### Published lighting scores
+
+`eval_sets/wmeval_lite_v1/baselines/lighting_paper_native.json` holds the paper's lighting table: Project Genie, LingBot-World, Matrix-Game 2.0, Matrix-Game 3.0, HY-WorldPlay and Waypoint-1.5, five seeds each, every per-run metric. Running `lighting_shading` on those 30 rollouts with `tools/run_wmeval_lite_modal.py` (L40S, one container per rollout) reproduces all 180 per-run values exactly (max |diff| 0.00); the dated suite.yaml banner of 2026-09-15 lists the per-model means. The rollouts themselves stay on the paper's Modal volume.
+
+From 2026-10-11 to 2026-10-20 the dimension instead scored a separate explicit-orbit case (`lighting_orbit_v2`: 2 m radius, exactly 120 frames at 12 fps, LingBot/Matrix-Game 3.0/HY-WorldPlay pose inputs, a pinned CUDA scoring stack). That protocol, its baselines and its scoring environment are kept as a historical record in [`experiments/lighting_orbit/`](../experiments/lighting_orbit/README.md); it is not part of the suite.
+
+#### SAM2 CUDA extension
+
+SAM2 fills holes in its masks with a compiled CUDA extension (`sam2._C`). Without it (macOS, or a build that silently failed) SAM2 skips that step, so lighting values can differ slightly from GPU runs that have it; `tools/preflight_lite.py` warns when `lighting_shading` is selected and `sam2._C` cannot be imported. On Linux with a CUDA toolkit (nvcc, `CUDA_HOME`) and gcc:
+
+```bash
+CC=gcc CXX=g++ TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0;10.0;12.0" SAM2_BUILD_ALLOW_ERRORS=0 \
+  pip install --no-build-isolation "git+https://github.com/facebookresearch/sam2.git@2b90b9f5ceec907a1c18123530e92e794ad901a4"
+python -c "import torch, sam2._C"   # must succeed
+```
+
+#### Optional windowed orbit normalization (`lighting_time_mapping`)
+
+No live case uses this; it remains available to case authors (protocol token `lighting_orbit_10s_fps12`). Lite cuts the native frames `[z, z + ceil(10 × native_fps))` from the candidate, places native frame `n` at `(n − z) / native_fps` seconds and samples exactly 120 frames at 12 fps by timestamp. Nothing is stretched or padded: a candidate with a variable frame rate, fewer frames, or a hash mismatch is invalid.
+
+| Field | Meaning |
+|---|---|
+| `schema_version` | `1` |
+| `native_fps` | Frames per second of the model's own timeline, i.e. the rate at which the commanded trajectory advanced during generation. Rational rates such as 30000/1001 are accepted. If the mp4 is tagged with a different constant rate, the frames are re-timed to `native_fps`. |
+| `canonical_zero_frame` (`z`) | Index of the first frame the model emits for trajectory time t = 0; earlier frames are context it re-emits rather than generates under the trajectory. `0` for image-to-video models whose first output frame is the conditioning image; `4` for Waypoint-1.5, which re-emits its four-frame seed block. |
+| `video_sha256` | SHA-256 of the exact candidate file; a re-encoded file needs a new mapping. |
+
+Where the mapping comes from, in order:
+
+1. **Receipt.** `params.lighting_time_mapping` in the candidate manifest (the model adapters write it into each generation receipt). It is authoritative; a `lighting_canonical_zero_frame` or `candidate_fps_override` that disagrees with it is an error.
+2. **Derived.** Otherwise Lite builds it from the video: `native_fps` from `candidate_fps_override` (manifest or `model.yaml` params, or the backend registry's `real_fps`), else the container's frame rate; `canonical_zero_frame` from `lighting_canonical_zero_frame` (manifest or `model.yaml` params), else `0`; `video_sha256` from the file itself.
+
+Every such row records `input_contract.lighting_time_mapping` (`receipt` or `derived`) and `input_contract.lighting_time_mapping_detail`; a derived mapping also prints a warning, and `aggregate_summary.json` counts the rows of each kind under `lighting_time_mapping_counts`.
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_shadow_consistency_eval.md</code>)</summary>
@@ -1675,6 +1861,7 @@ Does the rollout match its scene description, for both environment and foregroun
 
 - **Metrics:** Environment ↑, Object ↑, Overall ↑ rubric scores (ρ = 0.90 with human ratings)
 - **Suite dimension & tooling:** `prompt_scene_consistency` — dual-agent rubric generation + unified VLM judge; rubrics are committed inside each case bundle
+- **Judge noise:** per-call std 0.02–0.08 on `overall_score`; the Unity reference itself scores 0.83–0.89 on RacingCar and 0.75–0.86 on WanderingGarden synthetics (rubric ceiling). See [SELF_MATCH_BOUNDS.md](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#prompt-scene-consistency-overall_score-higher-is-better).
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_consistency_vlm_judge.md</code>)</summary>
@@ -2115,6 +2302,7 @@ How perceptually close is the rollout to the reference around matched contact ev
 
 - **Metrics:** Causal LPIPS ↓ (offsets −2…+2 around chronologically matched events), temporal LPIPS ↓ as a separate fallback
 - **Suite dimension & tooling:** `lpips` — `tools/evaluate_world_model_lpips.py`
+- **Judge noise / floor:** self-match 0.0005 (BallRoller), 0.027 (MirrorRollingBall, events mis-paired ~7 s apart) and 0.34 (BeamDomino/causal, frozen reference events miss the pillar strike); judge-sampling std ≤ 0.011. See [SELF_MATCH_BOUNDS.md](../eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md#lpips-causal-reference-events-frozen-candidate-events-judged-live).
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_lpips_eval.md</code>)</summary>

@@ -17,6 +17,7 @@ from typing import Any, Callable, Mapping
 
 from ..case_loader import LiteCase
 from ..candidate_discovery import CandidateRow
+from ..normalization import LIGHTING_NORMALIZATION_PARAMS
 from ..suite_loader import DimensionSpec, Suite
 from .base import STATUS_COMPLETED, STATUS_ERROR, CaseResult
 
@@ -117,6 +118,7 @@ METRIC_CONFIG_KEYS = frozenset(
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
         "kin_plane_calibration_json",
+        "kin_road_trajectory",
         "kin_color_filter",
         "kin_color_hue_tolerance_deg",
         "kin_track_point",
@@ -160,9 +162,13 @@ def merge_metric_config(
             merged.update(dict(params))
     if candidate.params:
         candidate_params = dict(candidate.params)
+        # Lighting time-mapping params are consumed by normalization, never a
+        # runner kwarg; model.yaml may set them for every case of a model.
+        for key in LIGHTING_NORMALIZATION_PARAMS:
+            candidate_params.pop(key, None)
         if case.protocol.get('candidate_normalization') == 'lighting_orbit_10s_fps12':
-            # Receipt metadata is consumed by normalization, not a runner kwarg.
-            candidate_params.pop('lighting_time_mapping', None)
+            # The runner sees the normalized 12 fps video, not the native timeline.
+            candidate_params.pop('candidate_fps_override', None)
         merged.update(candidate_params)
 
     unknown = sorted(set(merged) - METRIC_CONFIG_KEYS)

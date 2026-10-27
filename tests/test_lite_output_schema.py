@@ -239,11 +239,14 @@ def test_extract_metrics_control_motion() -> None:
             "camera_compensated": {
                 "epe_summary": {"mean": 1.5},
                 "epe_dynamic_summary": {"mean": 2.5},
+                "cosine_similarity_dynamic_summary": {"mean": 0.3},
+                "relative_epe_dynamic_summary": {"mean": 0.8},
                 "bad_pixel_rates": {
                     "1px": {"summary": {"mean": 0.4}},
                     "3px": {"summary": {"mean": 0.1}},
                 },
             },
+            "camera_compensation": {"candidate_camera_motion_px": {"mean": 6.0}},
             "synthetic_vs_candidate": {
                 "enabled": True,
                 "temporal_summary": {"mf_cosine_mean": 0.9, "pixel_epe_mean_mean": 4.0},
@@ -263,6 +266,10 @@ def test_extract_metrics_control_motion() -> None:
     assert metrics["bad_pixel_rate_3px_mean"] == 0.1
     assert metrics["synthetic_mean_flow_cosine"] == 0.9
     assert metrics["synthetic_pixel_epe_mean"] == 4.0
+    # object motion: camera removed, so a camera pan in the commanded direction scores nothing
+    assert metrics["object_cosine_dynamic_mean"] == 0.3
+    assert metrics["object_relative_epe_dynamic_mean"] == 0.8
+    assert metrics["candidate_camera_motion_px_mean"] == 6.0
 
 
 def test_extract_metrics_causal_step_families() -> None:
@@ -507,3 +514,16 @@ def test_volume_conservation_extractor_emits_abs_drift_but_signed_std():
     assert metrics["mask_area_drift_per_sec_abs_delta"] == pytest.approx(0.003)
     assert metrics["mask_area_std_normalized_delta"] == pytest.approx(0.2)
     assert "mask_area_std_normalized_abs_delta" not in metrics
+
+
+def test_raft_input_is_scaled_to_unit_range() -> None:
+    # The RAFT preset expects [0, 1]; 0..255 input yields garbage flow.
+    import numpy as np
+    import torch
+
+    from evaluation.modules.flow_utils import to_rgb_tchw
+
+    frame = np.full((4, 4, 3), 255, dtype=np.uint8)
+    tensor = to_rgb_tchw(frame, torch.device("cpu"))
+    assert tensor.shape == (1, 3, 4, 4)
+    assert float(tensor.max()) == 1.0

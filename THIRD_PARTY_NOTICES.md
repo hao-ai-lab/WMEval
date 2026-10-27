@@ -25,9 +25,9 @@ downloaded from their upstream hosts on first use.
 ## Pinned model weights
 
 These are pinned in `experiments/tables_4_7/evaluator_assets.lock.json`
-(`schema_version: 1`, captured 2026-10-04). The lighting case pins its own
-subset in
-`eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting_orbit_v2/reference/artifacts/evaluator_assets.lock.json`.
+(`schema_version: 1`, captured 2026-10-04). The retired lighting-orbit
+protocol pinned its own subset in
+`experiments/lighting_orbit/evaluator_assets.lock.json` (historical).
 
 | Lock key | Upstream source | Pinned revision | Weight file | SHA-256 | License |
 | --- | --- | --- | --- | --- | --- |
@@ -41,7 +41,7 @@ subset in
 
 SAM2 *source code* is installed from <https://github.com/facebookresearch/sam2>
 at revision `2b90b9f5ceec907a1c18123530e92e794ad901a4`, as recorded in the
-lighting lock (`sam2_source`). License: verify upstream.
+historical lighting-orbit lock (`sam2_source`). License: verify upstream.
 
 ### Models referenced in code or `suite.yaml` but not pinned in the lock
 
