@@ -29,12 +29,12 @@ Interactive world models ranked against their Unity engine twin (live version on
 |---|---|---|---|---|---|---|---|---|
 | 1 | **Project Genie** | 0.767 | 1/6 | 1/6 | 1/6 | 2/6 | 4/6 | 1/6 |
 | 2 | **LingBot-World (Act)** | 0.467 | 3/6 | 3/6 | 3/6 ‡ | 3/6 ‡ | 2/6 | 1/6 |
-| 2 | **Odyssey** | 0.467 | 4/6 | 1/6 | 3/6 † | 1/6 | 5/6 | 3/6 |
+| 2 | **Odyssey** | 0.467 | 4/6 | 1/6 | 3/6 | 1/6 | 5/6 | 3/6 |
 | 4 | **Matrix-Game 2.0** | 0.433 | 1/6 | 4/6 | 2/6 | 3/6 ‡ | 3/6 | 6/6 ‡ |
 | 5 | **LingBot-World v2 (Cam)** | 0.267 | 5/6 ‡ | 5/6 | 3/6 ‡ | 3/6 ‡ | 1/6 | 3/6 |
 | 6 | **Waypoint-1.5** | 0.033 | 5/6 ‡ | 6/6 ‡ | 3/6 ‡ | 3/6 ‡ | 6/6 | 5/6 |
 
-Each dimension is ranked on one metric, scene by scene: a model's dimension rank orders the models by their average rank across the dimension's scenes (equal averages share a rank). ‡ = not supported: the model's interface cannot express that dimension's actions; it is ranked tied last. † = not measurable: the model was run, but its videos failed the evaluator's own reliability check (e.g. the road could not be tracked); it is ranked tied last too. Score = mean over dimensions of the share of the other models a model ranks above (unsupported models count as below and score 0); models are ordered by that exact average.
+Each dimension is ranked on one metric, scene by scene: a model's dimension rank orders the models by their average rank across the dimension's scenes (equal averages share a rank). ‡ = not supported: the model's interface cannot express that dimension's actions; it is ranked tied last. Score = mean over dimensions of the share of the other models a model ranks above (unsupported models count as below and score 0); models are ordered by that exact average.
 
 **Per-dimension rankings**
 
@@ -42,7 +42,7 @@ Each dimension is ranked on one metric, scene by scene: a model's dimension rank
 |---|---|---|---|
 | **Control** | Camera-compensated cosine | 1 Project Genie<br>1 Matrix-Game 2.0<br>3 LingBot-World (Act)<br>4 Odyssey | LingBot-World v2 (Cam) ‡, Waypoint-1.5 ‡ |
 | **Consistency** | Character consistency | 1 Project Genie<br>1 Odyssey<br>3 LingBot-World (Act)<br>4 Matrix-Game 2.0<br>5 LingBot-World v2 (Cam) | Waypoint-1.5 ‡ |
-| **Kinematics** | Final displacement error (RacingCar only) | 1 Project Genie<br>2 Matrix-Game 2.0 | LingBot-World (Act) ‡, Odyssey †, LingBot-World v2 (Cam) ‡, Waypoint-1.5 ‡ |
+| **Kinematics** | Final displacement error (RacingCar only) | 1 Project Genie<br>2 Matrix-Game 2.0 | LingBot-World (Act) ‡, Odyssey, LingBot-World v2 (Cam) ‡, Waypoint-1.5 ‡ |
 | **Fluid** | Surface-tilt error | 1 Odyssey<br>2 Project Genie | LingBot-World (Act) ‡, Matrix-Game 2.0 ‡, LingBot-World v2 (Cam) ‡, Waypoint-1.5 ‡ |
 | **Lighting** | Sun disagreement | 1 LingBot-World v2 (Cam)<br>2 LingBot-World (Act)<br>3 Matrix-Game 2.0<br>4 Project Genie<br>5 Odyssey<br>6 Waypoint-1.5 | — |
 | **Prompt** | Overall rubric score | 1 Project Genie<br>1 LingBot-World (Act)<br>3 Odyssey<br>3 LingBot-World v2 (Cam)<br>5 Waypoint-1.5 | Matrix-Game 2.0 ‡ |

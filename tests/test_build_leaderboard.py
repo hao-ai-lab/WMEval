@@ -384,7 +384,7 @@ def test_a_model_run_but_withheld_by_the_evaluator_is_marked_unmeasurable() -> N
     assert report["unmeasurable"] == ["odyssey:kinematics_mechanics"]
     dr = _rows(report)["odyssey"]["dimension_ranks"]["kinematics_mechanics"]
     assert dr["unmeasurable"] and not dr["supported"] and dr["percentile"] == 0.0
-    assert "| 2/2 † |" in bl.readme_section(report)
+    assert "| 2/2 |" in bl.readme_section(report) and "†" not in bl.readme_section(report)
 
 
 def test_lingbot_world_row_is_gated_only_where_both_checkpoints_reject() -> None:
