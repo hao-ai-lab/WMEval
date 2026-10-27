@@ -361,3 +361,13 @@ def test_anchored_scores_place_values_between_failure_and_unity_self_match() -> 
     # worse than the failure anchor clips to 0; an unmeasured dimension lowers coverage instead of scoring 0
     assert out["b"]["dimensions"] == {"kinematics_mechanics": 0.0} and out["b"]["coverage"] == 1
     assert report["anchored"]["unanchored"] == ["prompt_scene_consistency:y:overall"]
+
+
+def test_readme_per_dimension_rankings_list_one_model_per_line() -> None:
+    paper = _paper({"lighting_shading": {"metrics": {"mosd": "lower"}, "cells": {
+        "sun_rises_and_sets": {"mosd": {"a": [60.0, 1.0], "b": [60.0, 1.0], "c": [70.0, 1.0]}}}}}, models=("a", "b", "c"))
+    report = bl.apply_exact_ranks(build(paper, {}, floors={}))
+    text = bl.readme_section(report)
+    assert "**Per-dimension rankings**" in text
+    # tied models share the rank but each gets its own line
+    assert "| **Lighting** | Sun disagreement | 1 A<br>1 B<br>3 C | — |" in text
