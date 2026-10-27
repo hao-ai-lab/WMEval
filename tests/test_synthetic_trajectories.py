@@ -68,13 +68,14 @@ def test_expected_jobs_full_split_adds_gated_synthetic_jobs(tmp_path: Path) -> N
     report = json.loads((tmp_path / "expected_jobs.json").read_text())
     assert report["split"] == "test_full"
     synthetic = [j for j in report["jobs"] if j["case_id"].startswith("synthetic/")]
-    assert synthetic and {j["action_support"]["target"] for j in synthetic} == {"camera", "character"}
+    # Odyssey drives the car on RacingCar (action_backends.yaml), so ego_vehicle cases are jobs too
+    assert synthetic and {j["action_support"]["target"] for j in synthetic} == {"camera", "character", "ego_vehicle"}
     assert all(set(j["dimensions"]) <= {"environment_object_consistency", "kinematics_mechanics"} for j in synthetic)
     job = synthetic[0]
     assert job["candidate_video"] == str(tmp_path / job["case_id"] / "42.mp4")
     assert "trajectory.yaml" in job["conditioning"]["action_files"]
     gated = {row["action_support"]["target"] for row in report["not_applicable"] if row["case_id"].startswith("synthetic/")}
-    assert {"ego_vehicle", "cue_ball"} <= gated
+    assert "cue_ball" in gated and "ego_vehicle" not in gated
 
 
 def test_dataset_card_declares_every_index_column() -> None:

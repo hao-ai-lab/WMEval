@@ -94,7 +94,7 @@ BOOT_RESAMPLES = 4000
 # are N/A on it), e.g. add  "fde_ego": ("fde_m_ego", "lower"),  to include ego-frame FDE.
 KINEMATICS_METRICS = {
     "dtw": ("dtw_m_mean", "lower"),
-    "fde": ("fde_m_mean", "lower"),
+    "fde": ("fde_road_m", "lower"),   # road coordinates, as the paper's revised Table 4
     "robust_error": ("robust_error_rate_pct", "lower"),
 }
 
@@ -176,6 +176,10 @@ def _routes(dimension: str, case_id: str) -> list[tuple[str, str, set[str] | Non
     return []
 
 
+# LingBot-World's row: Base Cam for camera-driven cases, Base Act for object control.
+COMPOSITE_BACKENDS = {"lingbot_world": ("lingbot_world_act", "lingbot_world_cam")}
+
+
 def _gated_out(case_id: str, model: str) -> bool:
     """True when today's action-target gate marks ``model`` unsupported for ``case_id``.
 
@@ -184,7 +188,10 @@ def _gated_out(case_id: str, model: str) -> bool:
     from evaluation.lite.action_support import unsupported_reason
 
     artifacts = ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id / "reference/artifacts"
-    return bool(model) and artifacts.is_dir() and unsupported_reason(artifacts, model) is not None
+    if not model or not artifacts.is_dir():
+        return False
+    # a leaderboard row that combines checkpoints is gated out only when every one rejects the case
+    return all(unsupported_reason(artifacts, b) is not None for b in COMPOSITE_BACKENDS.get(model, (model,)))
 
 
 def lite_cells(rows: list[dict]) -> dict[str, dict[str, dict[str, list[float]]]]:
@@ -211,6 +218,19 @@ def lite_cells(rows: list[dict]) -> dict[str, dict[str, dict[str, list[float]]]]
                 if (allowed is None or metric in allowed) and isinstance(value, (int, float)) \
                         and not isinstance(value, bool) and math.isfinite(value):
                     out[target][cell][metric].append(float(value))
+    return out
+
+
+def attempted_dimensions(rows: list[dict]) -> set[str]:
+    """Dimensions a model was run on and allowed by the action gate (completed rows), whether
+    or not the evaluator published a value -- e.g. a road alignment that fails its check."""
+    out = set()
+    for row in rows:
+        case = str(row.get("case_id", ""))
+        if row.get("status") != "completed" or (
+                not row.get("gate_override") and _gated_out(case, str(row.get("model") or ""))):
+            continue
+        out.update(target for target, _cell, _allowed in _routes(str(row.get("dimension")), case))
     return out
 
 
@@ -519,6 +539,10 @@ def build(paper: dict, lite: dict[str, list[dict]], exclude: set[tuple[str, str]
         "skipped_cells": sorted(f"{d}:{c}" for d, c in skip_cells),
         "dropped_models": sorted(drop_models),
         "gate_overrides": [f"{m}:{d}" for m, d in gate_overrides],
+        # run and allowed by the gate, but no value survived the evaluator's own checks
+        "unmeasurable": sorted(f"{m}:{d}" for m, rows in lite.items() for d in attempted_dimensions(rows)
+                               if d in detail and not any(m in info["values"] for metrics in values[d].values()
+                                                          for info in [{"values": v} for v in metrics.values()])),
         "model_names": {**{k: v.get("display", k) for k, v in paper["models"].items()},
                         **{r["model"]: r["display"] for r in board}},
         "leaderboard": board,
@@ -610,8 +634,10 @@ def apply_exact_ranks(report: dict) -> dict:
             rows[m]["dimension_ranks"][dim] = {
                 "rank": 1 + sum(o < avg[m] for o in avg.values()), "of": n, "supported": True,
                 "percentile": round((sum(o > avg[m] for o in avg.values()) + len(unsupported)) / (n - 1), 4)}
+        unmeasurable = set(report.get("unmeasurable", []))
         for m in unsupported:
-            rows[m]["dimension_ranks"][dim] = {"rank": 1 + len(avg), "of": n, "supported": False, "percentile": 0.0}
+            rows[m]["dimension_ranks"][dim] = {"rank": 1 + len(avg), "of": n, "supported": False, "percentile": 0.0,
+                                               "unmeasurable": f"{m}:{dim}" in unmeasurable}
     for r in rows.values():
         vals = [v["percentile"] for v in r["dimension_ranks"].values()]
         r["overall_score"] = round(sum(vals) / len(vals), 4)
@@ -821,12 +847,13 @@ def per_dimension_table(report: dict) -> list[str]:
     """Per-dimension rankings, one model per line; a shared rank repeats, tied models in overall-rank order."""
     dims = [d for d in DIMENSION_ORDER if d in report["dimensions"]]
     per_dim = ranking_metrics(report)
-    lines = ["| Dimension | Ranking metric | Rank · model | Not supported ‡ |", "|---|---|---|---|"]
+    lines = ["| Dimension | Ranking metric | Rank · model | Not ranked |", "|---|---|---|---|"]
     for d in dims:
         rows = report["leaderboard"]
         sup = sorted((r for r in rows if r["dimension_ranks"][d]["supported"]),
                      key=lambda r: (r["dimension_ranks"][d]["rank"], r["overall_rank"], r["display"]))
-        uns = [r["display"] for r in rows if not r["dimension_ranks"][d]["supported"]]
+        uns = [r["display"] + (" †" if r["dimension_ranks"][d].get("unmeasurable") else " ‡")
+               for r in rows if not r["dimension_ranks"][d]["supported"]]
         metric = " / ".join(METRIC_SHORT.get(m, m) for m in per_dim.get(d, []))
         if any(s.startswith(f"{d}:") for s in report.get("skipped_cells", [])):
             metric += " (" + " and ".join(CELL_NAMES.get(c, c).split(" (")[0] for c in report["dimensions"][d]["cells"]) + " only)"
@@ -848,7 +875,8 @@ def readme_section(report: dict) -> str:
         for d in dims:
             dr = row["dimension_ranks"].get(d)
             if shared:
-                cells.append(f"{dr['rank']}/{dr['of']}" + ("" if dr["supported"] else " ‡"))
+                cells.append(f"{dr['rank']}/{dr['of']}" + ("" if dr["supported"] else
+                                                           " †" if dr.get("unmeasurable") else " ‡"))
             else:
                 cells.append("—" if dr is None else f"{_rank(dr['rank'])}/{dr['of']}" + ("*" if dr["of"] < 2 else ""))
         score = "–" if row["overall_score"] is None else f"{row['overall_score']:.3f}"
@@ -859,7 +887,11 @@ def readme_section(report: dict) -> str:
         lines += ["",
                   "Each dimension is ranked on one metric, scene by scene: a model's dimension rank orders the models by their "
                   "average rank across the dimension's scenes (equal averages share a rank). ‡ = not supported: the model's "
-                  "interface cannot express that dimension's actions; it is ranked tied last. Score = mean over dimensions of the "
+                  "interface cannot express that dimension's actions; it is ranked tied last. "
+                  + ("† = not measurable: the model was run, but its videos failed the evaluator's own reliability check "
+                     "(e.g. the road could not be tracked); it is ranked tied last too. "
+                     if any(dr.get("unmeasurable") for r in report["leaderboard"] for dr in r["dimension_ranks"].values()) else "")
+                  + "Score = mean over dimensions of the "
                   "share of the other models a model ranks above (unsupported models count as below and score 0); models are "
                   "ordered by that exact average."]
     elif shared:

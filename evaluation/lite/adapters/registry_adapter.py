@@ -118,6 +118,7 @@ METRIC_CONFIG_KEYS = frozenset(
         "kin_unity_intrinsics_npy",
         "kin_unity_object_masses_json",
         "kin_plane_calibration_json",
+        "kin_road_trajectory",
         "kin_color_filter",
         "kin_color_hue_tolerance_deg",
         "kin_track_point",

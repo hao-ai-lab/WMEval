@@ -28,9 +28,9 @@ Layout written under ``runs/odyssey/`` (the runner's ``<Scene>/<variant>/<seed>.
 
 Key programs come from the case bundle (``reference/artifacts/actions.jsonl`` for the
 Table 4/7 cells, otherwise an executable ``actions.txt``) or a declared supplemental
-trajectory. Cases whose actions are object forces (BeamDomino ball strike,
-LiquidContainer bottle motion) have no key mapping and are recorded as
-``unsupported`` — never substituted with another control.
+trajectory. BeamDomino's ball strike (an object force) has no key mapping and is
+recorded as ``unsupported`` -- never substituted with another control. Where the case
+prompt does not name the controlled entity, PLAYER_PROMPTS appends it (the bottle).
 """
 from __future__ import annotations
 
@@ -64,13 +64,20 @@ SUPPLEMENTAL = {
     # case.yaml: deterministic in-place 360-degree yaw sweep from a fixed standing position.
     "WanderingGarden/scene_first": "experiments/tables_4_7/compiled/camera_360_in.actions.jsonl",
 }
+# Odyssey has one prompt and no separate character field, so the controlled entity is
+# named in it, as BallRoller's case prompt does for its ball (the role Genie's character
+# prompt plays). Checked on LiquidContainer/fluid_chirp_strafe: the bottle moves and the
+# camera holds still.
+PLAYER_PROMPTS = {
+    "LiquidContainer": ("The player controls only the glass bottle: W/A/S/D slide the bottle across the floor. "
+                        "The camera stays fixed in place and never moves; only the bottle moves."),
+}
 IDLE = {
     # Fixed top-down billiards: the cue strike is a scene event, not a player action.
     "BilliardGame/prompt_first": "cue strike is a scene event; idle input for the reference duration",
 }
 UNSUPPORTED_SCENES = {
     "BeamDomino": "action is a 2-channel force on the ball; Odyssey has no object-force control",
-    "LiquidContainer": "action is 6-DoF bottle motion; Odyssey has no object-manipulation control",
 }
 
 
@@ -146,7 +153,8 @@ def plan(dimensions: list[str] | None) -> tuple[list[dict[str, Any]], list[dict[
         ref = case.get("reference", {})
         jobs.append({
             **row,
-            "prompt": str(case.get("prompt") or "").strip(),
+            "prompt": " ".join(filter(None, [str(case.get("prompt") or "").strip(),
+                                             PLAYER_PROMPTS.get(case_id.split("/")[0], "")])),
             "first_frame": ref.get("first_frame"),
             "reference_video": ref.get("video"),
             "camera": CAMERA.get(str(case.get("perspective")), "World View"),

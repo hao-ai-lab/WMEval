@@ -219,3 +219,44 @@ def test_metric_config_keys_cover_every_artifacts_get_call():
         f"doesn't whitelist them, so any case.yaml setting them will raise "
         f"MetricConfigError through the real runner: {sorted(missing)}"
     )
+
+
+def test_extract_metrics_kinematics_road_trajectory_and_gate(tmp_path):
+    import json
+
+    import cv2
+    import numpy as np
+
+    from evaluation.lite.aggregate import extract_metrics
+    from evaluation.lite.suite_loader import DimensionSpec
+    from evaluation.modules import road_trajectory
+
+    dimension = DimensionSpec(dimension_id="kinematics_mechanics", display_name="K", description="t",
+                              evaluator="registry", requires_reference=False, cases=(), modules=("kinematics_mechanics",))
+    base = {"module": "kinematics_mechanics", "trajectory_fidelity": {}, "mechanical_quantities": None}
+    ok = extract_metrics(dimension, {"kinematics_mechanics": {
+        **base, "road_trajectory": {"status": "computed", "fde_road_m": 1.86, "align_failed_frac": 0.01}}})
+    assert ok["fde_road_m"] == 1.86 and ok["road_align_failed_frac"] == 0.01
+    withheld = extract_metrics(dimension, {"kinematics_mechanics": {
+        **base, "road_trajectory": {"status": "unreliable_alignment", "fde_road_m": None, "align_failed_frac": 0.82}}})
+    assert withheld["fde_road_m"] is None and withheld["road_align_failed_frac"] == 0.82
+
+    # a case whose Unity log has no car is not applicable (no video decoding needed)
+    transforms = tmp_path / "t.json"
+    transforms.write_text(json.dumps({"objects": {"ball": {"positions_world": [[0, 0, 0]]}}}))
+    out = road_trajectory.score_video(str(tmp_path / "missing.mp4"), str(transforms), "", "", "")
+    assert out == {"status": "not_applicable", "fde_road_m": None}
+    assert road_trajectory.MAX_ALIGN_FAILED_FRAC == 0.25
+
+
+def test_every_forwarded_metric_config_key_is_a_runner_argument():
+    # The Lite adapter forwards whitelisted metric_config keys as keyword arguments;
+    # a key the runner does not accept fails every row of that dimension at run time.
+    import inspect
+
+    from evaluation.lite.adapters.registry_adapter import METRIC_CONFIG_KEYS
+    from evaluation.runner import run_world_model_evaluation
+
+    params = set(inspect.signature(run_world_model_evaluation).parameters)
+    forwarded = {k for k in METRIC_CONFIG_KEYS if k.startswith(("kin_", "control_", "liquid_"))}
+    assert forwarded <= params, sorted(forwarded - params)

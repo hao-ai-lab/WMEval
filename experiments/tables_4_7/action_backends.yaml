@@ -156,12 +156,15 @@ backends:
       ball: nominal
       rolling_ball: nominal
     unsupported:
+      # Act's W/A/S/D moves the camera (ego locomotion), not an object: upstream example 00
+      # through tools/run_lingbot_act_modal.py flies forward (mean frame change 15.2), while
+      # RacingCar run0-4 never moves (1.4; road FDE 29.15 m = a never-moving car).
+      ego_vehicle: W/A/S/D move the camera (ego locomotion), not the car; the car never moved on RacingCar.
+      liquid_container: W/A/S/D move the camera (ego locomotion), not the bottle.
       character: No Act adapter for third-person avatar control.
       camera: The Act variant is evaluated on object-control scenes; camera cases use lingbot_world_cam.
-      ego_vehicle: No Act adapter for vehicle control.
       cue_ball: No Act adapter for cue-ball control.
       table_objects: No object-placement or cue-shot controls.
-      liquid_container: No Act adapter for bottle motion.
 
   # Waypoint-1.5 is a first-person keys + mouse model: W/A/S/D translate and the
   # mouse rotates the ego camera. It has no channel for an object, so asking it
@@ -193,12 +196,16 @@ backends:
       # In the fixed-camera ball scenes (BallRoller, MirrorRollingBall) the keys move
       # the player ball rather than the viewpoint (checked on the stored rollouts).
       ball: nominal_uncalibrated
+      # RacingCar: the keys drive the car on the stored rollouts. LiquidContainer, with the
+      # bottle named as the player (odyssey_agent PLAYER_PROMPTS): checked 2026-10-26 on
+      # fluid_chirp_strafe run0, the camera holds still (RAFT affine fit 0.13 px per 0.5 s,
+      # Unity 0.07) while the bottle travels ~390 px across the frame.
+      ego_vehicle: nominal_uncalibrated
+      liquid_container: nominal_uncalibrated
     unsupported:
-      ego_vehicle: Keys move the generated world's viewpoint; there is no vehicle channel.
       cue_ball: Keys move the generated world's viewpoint; there is no object channel.
       table_objects: No object-placement or cue-shot controls.
       rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
-      liquid_container: Keys move the viewpoint, which breaks the fixed side camera the fluid metrics require.
   happy_oyster:
     interface: browser_keyboard
     note: Adventure mode; first/third-person view selectable; yaw calibration in progress.

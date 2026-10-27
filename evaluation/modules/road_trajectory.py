@@ -373,3 +373,48 @@ def _measure_distinct(frames: Sequence[np.ndarray], rig: Rig, min_car_px: int,
         "ecc_cc_median": float(np.median(ccs)) if ccs else None,
         "ecc_cc_p10": float(np.percentile(ccs, 10)) if ccs else None,
     }
+
+
+# Alignment failures on the Unity reference are 1-5 % (30 and 15 fps); generated roads whose
+# texture is redrawn between frames fail far more often, and the path is then fill-in.
+MAX_ALIGN_FAILED_FRAC = 0.25
+
+
+def score_video(video_path: str, transforms_json: str, poses_npy: str, intrinsics_npy: str,
+                plane_calibration_json: str, label: str = "car") -> Dict[str, Any]:
+    """Final displacement of ``label`` in road coordinates against Unity's logged path.
+
+    Both paths start at the origin and the candidate path is resampled onto the reference
+    timeline by fraction of the clip. ``fde_road_m`` is withheld (None, status
+    ``unreliable_alignment``) when more than MAX_ALIGN_FAILED_FRAC of the road alignments fail."""
+    import json
+    objects = json.loads(open(transforms_json, encoding="utf-8").read())["objects"]
+    if label not in objects or "positions_world" not in objects[label]:
+        return {"status": "not_applicable", "fde_road_m": None}
+    pos = np.asarray(objects[label]["positions_world"], dtype=np.float64)
+    gt = pos[:, [0, 2]] - pos[0, [0, 2]]
+    calib = json.loads(open(plane_calibration_json, encoding="utf-8").read())
+    width, height = calib.get("image_size", [1280, 720])
+    rig = Rig.from_unity(np.load(intrinsics_npy), np.load(poses_npy)[0], float(calib["plane"]["value_m"]),
+                         (int(width), int(height)))
+    cap, frames = cv2.VideoCapture(video_path), []
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        frames.append(cv2.resize(frame, (int(width), int(height))) if frame.shape[1::-1] != (width, height) else frame)
+    if len(frames) < 2:
+        return {"status": "no_frames", "fde_road_m": None}
+    res = measure(frames, rig)
+    hat = res["car_xz"] - res["car_xz"][0]
+    grid = np.linspace(0.0, 1.0, len(gt))
+    src = np.linspace(0.0, 1.0, len(hat))
+    hat = np.stack([np.interp(grid, src, hat[:, k]) for k in range(2)], axis=1)
+    reliable = res["align_failed_frac"] <= MAX_ALIGN_FAILED_FRAC
+    fde = float(np.linalg.norm(hat[-1] - gt[-1]))
+    return {"status": "computed" if reliable else "unreliable_alignment",
+            "fde_road_m": round(fde, 6) if reliable else None, "fde_road_m_unchecked": round(fde, 6),
+            "align_failed_frac": round(float(res["align_failed_frac"]), 4),
+            "ecc_cc_median": round(float(res["ecc_cc_median"]), 4),
+            "car_visible_frac": round(float(res["car_visible_frac"]), 4),
+            "end_xz": [round(float(v), 3) for v in hat[-1]], "reference_end_xz": [round(float(v), 3) for v in gt[-1]]}

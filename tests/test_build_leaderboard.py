@@ -152,7 +152,7 @@ def test_lite_model_is_ranked_on_paper_cells_only_and_extra_metrics_are_one_line
     paper = _paper({"kinematics_mechanics": {"metrics": {"fde": "lower"}, "cells": {
         "racing_car/third": {"fde": {"a": [3.5, 0.05], "b": [5.3, 0.15]}}}}}, models=("a", "b"))
     rows = [_row("kinematics_mechanics", "RacingCar/kinematics_third", s,
-                 {"fde_m_mean": v, "fde_m_ego": v / 2}) for s, v in (("run0", 0.9), ("run1", 1.0))]
+                 {"fde_road_m": v, "fde_m_ego": v / 2}) for s, v in (("run0", 0.9), ("run1", 1.0))]
     report = build(paper, {"lite_model": rows})
     km = report["dimensions"]["kinematics_mechanics"]
     assert km["rank"] == {"lite_model": 1.0, "a": 2.0, "b": 3.0}
@@ -193,7 +193,7 @@ def test_lite_rows_for_cases_the_model_cannot_express_are_dropped() -> None:
     from tools.build_leaderboard import lite_cells
 
     row = {"dimension": "kinematics_mechanics", "case_id": "RacingCar/kinematics_third", "seed": "run0",
-           "status": "completed", "model": "odyssey", "metrics": {"fde_m_mean": 0.9, "dtw_m_mean": 0.5}}
+           "status": "completed", "model": "waypoint15", "metrics": {"fde_road_m": 0.9, "dtw_m_mean": 0.5}}
     assert "kinematics_mechanics" not in lite_cells([row])
     assert "kinematics_mechanics" in lite_cells([{**row, "model": "project_genie"}])
 
@@ -318,7 +318,8 @@ def test_exact_ranks_order_by_mean_scene_rank_without_ties() -> None:
     light = {m: rows[m]["dimension_ranks"]["lighting_shading"] for m in "abc"}
     assert [light[m]["rank"] for m in "abc"] == [1, 2, 3]          # a 59.1 beats b 60.1 although within noise
     assert light["a"]["percentile"] == 1.0 and light["c"]["percentile"] == 0.0
-    assert rows["b"]["dimension_ranks"]["fluid_mechanics"] == {"rank": 2, "of": 3, "supported": False, "percentile": 0.0}
+    assert rows["b"]["dimension_ranks"]["fluid_mechanics"] == {"rank": 2, "of": 3, "supported": False, "percentile": 0.0,
+                                                              "unmeasurable": False}
     assert [r["overall_rank"] for r in report["leaderboard"]] == [1, 2, 3] and report["rank_style"] == "exact"
 
 
@@ -371,3 +372,25 @@ def test_readme_per_dimension_rankings_list_one_model_per_line() -> None:
     assert "**Per-dimension rankings**" in text
     # tied models share the rank but each gets its own line
     assert "| **Lighting** | Sun disagreement | 1 A<br>1 B<br>3 C | — |" in text
+    assert "| Dimension | Ranking metric | Rank · model | Not ranked |" in text
+
+
+def test_a_model_run_but_withheld_by_the_evaluator_is_marked_unmeasurable() -> None:
+    # Odyssey drives the car, but its road alignment fails, so fde_road_m is withheld (None)
+    paper = _paper({"kinematics_mechanics": {"metrics": {"fde": "lower"}, "cells": {
+        "racing_car/third": {"fde": {"a": [3.5, 0.05]}}}}}, models=("a",))
+    row = _row("kinematics_mechanics", "RacingCar/kinematics_third", "run0", {"fde_road_m": None})
+    report = bl.apply_exact_ranks(build(paper, {"odyssey": [{**row, "model": "odyssey"}]}, floors={}))
+    assert report["unmeasurable"] == ["odyssey:kinematics_mechanics"]
+    dr = _rows(report)["odyssey"]["dimension_ranks"]["kinematics_mechanics"]
+    assert dr["unmeasurable"] and not dr["supported"] and dr["percentile"] == 0.0
+    assert "| 2/2 † |" in bl.readme_section(report)
+
+
+def test_lingbot_world_row_is_gated_only_where_both_checkpoints_reject() -> None:
+    from tools.build_leaderboard import _gated_out
+
+    assert not _gated_out("BallRoller/ctrl", "lingbot_world")              # Act moves the ball
+    assert not _gated_out("ChessBoard/prompt_first", "lingbot_world")      # Cam drives the camera
+    assert _gated_out("RacingCar/kinematics_third", "lingbot_world")       # neither drives the car
+    assert _gated_out("LiquidContainer/fluid_step_hold", "lingbot_world")  # nor the bottle
