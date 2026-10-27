@@ -872,6 +872,8 @@ dimensions:
     metric_config:
       eval_fps: 4.0
       max_pairs: 32
+      # RacingCar: final displacement in road coordinates (only cases whose Unity log has a car)
+      kin_road_trajectory: true
     cases:
     - BallRoller/ctrl
     # Table 4 cells (tools/build_table_lite_cases.py)

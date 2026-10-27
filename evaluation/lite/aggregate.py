@@ -333,6 +333,9 @@ def _extract_kinematics_mechanics(result: Mapping[str, Any]) -> dict[str, Any]:
             "contact_dp_error_pct",
         )
     }
+    road = result.get("road_trajectory") if isinstance(result.get("road_trajectory"), Mapping) else {}
+    extended_metrics["fde_road_m"] = _numeric(road.get("fde_road_m"))
+    extended_metrics["road_align_failed_frac"] = _numeric(road.get("align_failed_frac"))
     extended_metrics["ego_lift_reliable"] = (
         None if ext_reliable is None else (1.0 if ext_reliable else 0.0)
     )

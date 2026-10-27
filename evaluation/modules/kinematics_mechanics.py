@@ -1777,6 +1777,16 @@ def analyze_kinematics_mechanics_from_context(
         )
     except Exception as exc:  # never let the additions break legacy output
         result["extended_kinematics"] = {"status": "error", "error": str(exc), "summary": None}
+    # Ego-vehicle path in road coordinates (evaluation/modules/road_trajectory.py): a chase
+    # camera keeps the car centred, so the car's pixel track cannot show where it went.
+    if artifacts.get("kin_road_trajectory") and plane_calibration_path:
+        try:
+            from . import road_trajectory
+            result["road_trajectory"] = road_trajectory.score_video(
+                str(video_path), str(gt_json_path), str(poses_path), str(intrinsics_path),
+                str(plane_calibration_path))
+        except Exception as exc:
+            result["road_trajectory"] = {"status": "error", "error": str(exc), "fde_road_m": None}
     return result
 
 
