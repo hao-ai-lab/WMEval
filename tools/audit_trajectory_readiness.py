@@ -11,8 +11,8 @@ import numpy as np
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CASES = REPO_ROOT / "eval_sets" / "wmeval_lite_v1" / "cases"
-DEFAULT_SUITE = REPO_ROOT / "eval_sets" / "wmeval_lite_v1" / "suite.yaml"
+DEFAULT_CASES = REPO_ROOT / "lite" / "cases"
+DEFAULT_SUITE = REPO_ROOT / "lite" / "suite.yaml"
 DEFAULT_TABLE_ROOT = REPO_ROOT / "experiments" / "tables_4_7"
 DEFAULT_OTHER_ROOT = REPO_ROOT / "experiments" / "trajectory_reconstructions"
 

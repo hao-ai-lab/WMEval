@@ -25,7 +25,7 @@ mismatches against a lock are WARN (scores may drift) unless ``--strict``.
 
 Usage::
 
-    python tools/preflight_lite.py --suite eval_sets/wmeval_lite_v1 --device mps
+    python tools/preflight_lite.py --suite lite --device mps
     python tools/preflight_lite.py --dimensions lpips,fluid_mechanics --device cuda --strict
 """
 from __future__ import annotations
@@ -463,7 +463,7 @@ def render(rows: list[Row]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--suite", default="eval_sets/wmeval_lite_v1", help="Suite root (default: %(default)s)")
+    parser.add_argument("--suite", default="lite", help="Suite root (default: %(default)s)")
     parser.add_argument("--dimensions", default=None, help="Comma-separated dimension ids (default: all)")
     parser.add_argument("--device", default="auto", help="cuda | cuda:N | mps | cpu | auto (default: %(default)s)")
     parser.add_argument("--strict", action="store_true", help="Treat locked-version mismatches as failures")

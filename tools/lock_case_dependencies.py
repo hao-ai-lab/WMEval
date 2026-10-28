@@ -35,7 +35,7 @@ in the same environment changes nothing.  Changed cases are re-authored with
 
 Usage::
 
-    python tools/lock_case_dependencies.py --suite eval_sets/wmeval_lite_v1
+    python tools/lock_case_dependencies.py --suite lite
     python tools/lock_case_dependencies.py --check     # exit 1 if any lock is stale
     python tools/lock_case_dependencies.py --explain   # per-dimension requirements
 """
@@ -290,7 +290,7 @@ def _explain(suite: Any) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--suite", default="eval_sets/wmeval_lite_v1", help="Suite root (default: %(default)s)")
+    parser.add_argument("--suite", default="lite", help="Suite root (default: %(default)s)")
     parser.add_argument("--cases", default=None, help="Comma-separated case ids (default: every live case)")
     parser.add_argument("--check", action="store_true", help="Write nothing; exit 1 if any managed lock would change")
     parser.add_argument("--force", action="store_true", help="Overwrite non-empty locks this tool did not write")

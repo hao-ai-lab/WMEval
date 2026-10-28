@@ -39,7 +39,7 @@ from evaluation import action_backends  # noqa: E402
 from evaluation.trajectories import load_trajectory  # noqa: E402
 
 RECON_ROOT = ROOT / "experiments/trajectory_reconstructions"
-CASES_ROOT = ROOT / "eval_sets/wmeval_lite_v1/cases"
+CASES_ROOT = ROOT / "lite/cases"
 
 # Paper table each case reports into; trajectory shapes use the paper's names.
 PAPER_CELLS = {

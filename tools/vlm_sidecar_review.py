@@ -15,7 +15,7 @@ Examples::
 
     python tools/vlm_sidecar_review.py \
         --module environment_object_consistency \
-        --candidate-video eval_sets/wmeval_lite_v1/cases/BallRoller/ctrl/reference/reference.mp4 \
+        --candidate-video lite/cases/BallRoller/ctrl/reference/reference.mp4 \
         --text-prompt "ball. wall."
 
     python tools/vlm_sidecar_review.py \

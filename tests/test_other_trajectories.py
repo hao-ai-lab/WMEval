@@ -46,7 +46,7 @@ def test_lighting_orbit_compiles_locked_ten_second_schedule() -> None:
     assert compiled.timestamps_sec[-1] + 1.0 / 16.0 == 10.0
 
 
-CASES = Path(__file__).resolve().parents[1] / "eval_sets" / "wmeval_lite_v1" / "cases"
+CASES = Path(__file__).resolve().parents[1] / "lite" / "cases"
 
 
 @pytest.mark.integration("case_data")

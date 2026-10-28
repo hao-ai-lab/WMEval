@@ -114,5 +114,5 @@ Waypoint at 12. Those results cannot establish the common-fps ranking.
   under the new action.
 - All 30 original video hashes match the volume's manifest. Native frame
   metadata and metrics are pinned in
-  `eval_sets/wmeval_lite_v1/baselines/lighting_paper_native.json`. This pins the
+  `lite/baselines/lighting_paper_native.json`. This pins the
   Modal source; it does not constitute publication of the files to HF.

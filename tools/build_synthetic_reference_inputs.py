@@ -49,7 +49,7 @@ for path in (ROOT, ROOT / "tools"):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 RENDERS = ROOT / "runs/synthetic_unity"
 EVENTS = "contact_events.json"
 SEGMENTS = "causal_segments.json"

@@ -47,7 +47,7 @@ FLASH_ATTN = ("https://github.com/Dao-AILab/flash-attention/releases/download/v2
 def schedule(model: str, case_id: str) -> tuple[np.ndarray, np.ndarray, dict]:
     from evaluation.trajectories import sample_held_values
     spec = MODELS[model]
-    npz = ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id / "reference/artifacts/action.npz"
+    npz = ROOT / "lite/cases" / case_id / "reference/artifacts/action.npz"
     end = float(np.load(npz)["timestamps_sec"][-1])
     values, names = sample_held_values(npz, spec["fps"], spec["frames"], end_sec=end)
     ch = {str(n): values[:, i] for i, n in enumerate(names)}
@@ -72,7 +72,7 @@ def prepare() -> None:
             d = INPUTS / model / case_id
             d.mkdir(parents=True, exist_ok=True)
             np.savez(d / "schedule.npz", keyboard=kb, mouse=mouse)
-            case_dir = ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id
+            case_dir = ROOT / "lite/cases" / case_id
             case = yaml.safe_load((case_dir / "case.yaml").read_text())
             # Conditioning frame: the case's first_frame file, else frame 0 of the reference video
             # (the same rule tools/odyssey_agent.py applies).

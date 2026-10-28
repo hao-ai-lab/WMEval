@@ -29,7 +29,7 @@ with two independent sources:
 Every judge call's token usage is appended to ``<out>/vlm_usage.jsonl``. One
 JSON result per item goes to ``<out>/items/``; ``summary`` merges them into
 ``<out>/summary.json`` and (``--publish``) the tracked
-``eval_sets/wmeval_lite_v1/audit/{audit_results.jsonl,audit_summary.json}``.
+``lite/audit/{audit_results.jsonl,audit_summary.json}``.
 
     python tools/audit_dataset.py run --split all --round r1 --workers 8
     python tools/audit_dataset.py run --split synthetic --only 'cue_ball' --round r2 --force
@@ -62,7 +62,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 OUT_ROOT = ROOT / "runs/dataset_audit"
 PUBLISHED = SUITE_ROOT / "audit"
 DEFAULT_MODEL = "azure/openai/gpt-6-astra"

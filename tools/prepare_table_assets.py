@@ -240,7 +240,7 @@ def _evaluation_contract(case: dict[str, Any]) -> dict[str, Any]:
         if lite is None:
             issues.append("no_corresponding_lite_case")
         else:
-            case_yaml = REPO_ROOT / "eval_sets" / "wmeval_lite_v1" / "cases" / lite / "case.yaml"
+            case_yaml = REPO_ROOT / "lite" / "cases" / lite / "case.yaml"
             case_doc = yaml.safe_load(case_yaml.read_text(encoding="utf-8"))
             modules = case_doc.get("modules", [])
             if "kinematics_mechanics" not in modules:

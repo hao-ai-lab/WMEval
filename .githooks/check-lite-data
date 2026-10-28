@@ -1,7 +1,7 @@
 #!/bin/sh
 # Warn when WMEval Lite case data needs a (re-)download after a checkout, merge or pull.
 #
-# Case data lives in git-ignored files under eval_sets/wmeval_lite_v1/cases/*/*/reference/
+# Case data lives in git-ignored files under lite/cases/*/*/reference/
 # (downloaded from Hugging Face). Checking out a commit from before that data left git,
 # and then moving forward again, makes git delete those files; a branch with a different
 # DATASET_REVISION expects a different dataset version. This never blocks git.
@@ -13,7 +13,7 @@ cd "$root" || exit 0
 [ -f tools/sync_lite_data.py ] || exit 0
 py=.venv/bin/python; [ -x "$py" ] || py=$(command -v python3) || exit 0
 
-pin=eval_sets/wmeval_lite_v1/DATASET_REVISION
+pin=lite/DATASET_REVISION
 if [ -n "$old" ] && [ -n "$new" ] && [ "$old" != "$new" ] && ! git diff --quiet "$old" "$new" -- "$pin" 2>/dev/null; then
     echo "wmeval: this checkout pins a different dataset revision ($(cat "$pin" 2>/dev/null | cut -c1-10))."
     echo "        run: python tools/sync_lite_data.py download   (add --split full for test_full)"

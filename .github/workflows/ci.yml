@@ -56,7 +56,7 @@ jobs:
 
       - name: Validate Lite suite bundles
         run: |
-          python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
+          python tools/run_wmeval_lite.py validate --suite lite
 
       # Integration tests whose other inputs (git-ignored runs/, the sibling paper
       # checkout) are absent skip themselves; case-data tests run.

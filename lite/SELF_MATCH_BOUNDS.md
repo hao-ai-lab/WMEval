@@ -9,7 +9,7 @@ repeated judge passes in [Judge-scored dimensions](#judge-scored-dimensions-2026
 at the end. Reproduce the first two sections:
 
 ```bash
-python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \
+python tools/run_wmeval_lite.py run --suite lite \
   --candidate-manifest runs/unity_selfmatch/candidates.jsonl \
   --dimensions environment_object_consistency,kinematics_mechanics \
   --output-dir reports/wmeval_lite/unity_selfmatch --device mps
@@ -107,7 +107,7 @@ python tools/measure_judge_floor.py summarize --compact \
   --candidates reports/judge_noise_floor/runs/ody_*/per_case_results.jsonl \
   --stored nvidia_2026-10-15=reports/wmeval_lite/odyssey_v2_prompt/per_case_results.jsonl \
            openai_2026-10-12=reports/wmeval_lite/odyssey_judge/per_case_results.jsonl \
-  --output eval_sets/wmeval_lite_v1/judge_noise_floor.json
+  --output lite/judge_noise_floor.json
 ```
 
 Spend: 1,251 `gpt-5.4` calls, 18.2 M input tokens (8.4 M cached), 0.64 M

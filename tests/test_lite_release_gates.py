@@ -21,7 +21,7 @@ from lite_suite_test_utils import (
     write_suite,
 )
 
-SUITE_ROOT = Path(__file__).resolve().parents[1] / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = Path(__file__).resolve().parents[1] / "lite"
 
 
 def _quiet(_message: str) -> None:

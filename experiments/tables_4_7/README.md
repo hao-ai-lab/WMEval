@@ -123,7 +123,7 @@ uv run python tools/prepare_table_trajectories.py compile
 
 # Launch the dedicated Chrome profile, then execute one independent run
 uv run python tools/project_genie_agent.py run --launch \
-  --first-frame eval_sets/wmeval_lite_v1/cases/RacingCar/prompt_third/reference/ref.png \
+  --first-frame lite/cases/RacingCar/prompt_third/reference/ref.png \
   --actions experiments/tables_4_7/compiled/racing_car_drive.actions.jsonl \
   --environment-prompt "A wide straight highway lined with trees." \
   --character-prompt "A yellow sports car with two black racing stripes." \
@@ -442,7 +442,7 @@ unchanged and both hashes are recorded.
 
 PYTORCH_ENABLE_MPS_FALLBACK=1 \
 .venv/bin/python tools/run_wmeval_lite.py run \
-  --suite eval_sets/wmeval_lite_v1 \
+  --suite lite \
   --candidate-manifest \
     runs/project_genie/table7/WanderingGarden/360_in/evaluation_prepared_pose_corrected/candidate_manifest.jsonl \
   --dimensions environment_object_consistency \

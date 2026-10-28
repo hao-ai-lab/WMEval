@@ -15,7 +15,7 @@ from tools.fixture_backend import FixtureError, degrade_video, generate_fixtures
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SUITE = ROOT / "eval_sets" / "wmeval_lite_v1"
+SUITE = ROOT / "lite"
 # Two of the smallest reference videos, both in the `lpips` dimension.
 SMALL_CASES = ["BallRoller/ctrl", "LiquidContainer/fluid_rest"]
 

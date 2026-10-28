@@ -38,7 +38,7 @@ Run the judge through the NVIDIA gateway::
         --dimensions prompt_scene_consistency --output-dir reports/judge_noise_floor/core/prompt
     python tools/measure_judge_floor.py summarize \\
         --selfmatch reports/judge_noise_floor/core/*/per_case_results.jsonl \\
-        --output eval_sets/wmeval_lite_v1/judge_noise_floor.json
+        --output lite/judge_noise_floor.json
 """
 from __future__ import annotations
 
@@ -53,7 +53,7 @@ from statistics import mean, stdev
 from typing import Any, Iterable, Mapping, Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_SUITE = ROOT / "eval_sets/wmeval_lite_v1"
+DEFAULT_SUITE = ROOT / "lite"
 
 JUDGE_DIMENSIONS = ("prompt_scene_consistency", "physical_causality", "lpips")
 # Synthetic families whose trajectories are scored on a judge dimension.

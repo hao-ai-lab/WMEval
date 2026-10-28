@@ -45,7 +45,7 @@ for p in (ROOT, ROOT / "tools"):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-CASE = ROOT / "eval_sets/wmeval_lite_v1/cases/BallRoller/ctrl"
+CASE = ROOT / "lite/cases/BallRoller/ctrl"
 REPLAY = ROOT / "runs/synthetic_unity/_corecheck/ball_force/BallRoller__ctrl/artifacts"
 BALL_CENTRE_Y = 0.476   # the replayed white ball's resting centre height (m)
 FLOOR_Y = 0.0

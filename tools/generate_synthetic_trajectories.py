@@ -34,7 +34,7 @@ which sits in the trajectory's ``reference/`` folder). The generated files and
 references are published to the Hub dataset (split ``test_full``); this
 repository keeps the generator, the manifest and references.json.
 
-    python tools/generate_synthetic_trajectories.py            # write eval_sets/wmeval_lite_v1/synthetic/
+    python tools/generate_synthetic_trajectories.py            # write lite/synthetic/
     python tools/generate_synthetic_trajectories.py --verify   # regenerate and compare with the manifest
 
 Sign conventions follow the core trajectories and the browser key rules:
@@ -67,7 +67,7 @@ if str(ROOT) not in sys.path:
 
 from evaluation.trajectories import load_trajectory, write_compiled_trajectory  # noqa: E402
 
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 OUT_ROOT = SUITE_ROOT / "synthetic"
 MANIFEST = OUT_ROOT / "manifest.json"
 REFERENCES = OUT_ROOT / "references.json"  # written by tools/render_synthetic_references.py publish

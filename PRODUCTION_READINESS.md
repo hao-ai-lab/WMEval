@@ -97,7 +97,7 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 ## Reproduce
 
 ```bash
-uv run python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
+uv run python tools/run_wmeval_lite.py validate --suite lite
 uv run python tools/audit_production_readiness.py --markdown PRODUCTION_READINESS.md --json reports/production_readiness.json
 ```
 

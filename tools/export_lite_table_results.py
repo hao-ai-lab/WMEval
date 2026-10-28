@@ -4,7 +4,7 @@
 The Table 4/7 cells are ordinary Lite cases (``tools/build_table_lite_cases.py``),
 so a model is evaluated with the usual runner::
 
-    python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \\
+    python tools/run_wmeval_lite.py run --suite lite \\
       --model-root runs/<model> \\
       --dimensions environment_object_consistency,kinematics_mechanics \\
       --output-dir reports/wmeval_lite/<model>
@@ -33,7 +33,7 @@ if str(ROOT) not in sys.path:
 
 from evaluation.table_comparison import load_baseline, result_template  # noqa: E402
 
-CASES_ROOT = ROOT / "eval_sets/wmeval_lite_v1/cases"
+CASES_ROOT = ROOT / "lite/cases"
 DEFAULT_BASELINE = ROOT / "experiments/tables_4_7/paper_baseline.yaml"
 METRIC_MAP = {
     # Table 7 — environment_object_consistency

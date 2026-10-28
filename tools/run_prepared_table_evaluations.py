@@ -569,7 +569,7 @@ def _select_consolidated_sources(
         )
         expected_fingerprint = None
         if isinstance(source_case_id, str) and "/" in source_case_id:
-            case = load_case(REPO_ROOT / "eval_sets/wmeval_lite_v1/cases" / source_case_id)
+            case = load_case(REPO_ROOT / "lite/cases" / source_case_id)
             expected_fingerprint = case.evaluator_lock.get("evaluator_fingerprint")
         if not expected_fingerprint or recorded_fingerprint != expected_fingerprint:
             ignored["stale"].append(
@@ -746,7 +746,7 @@ def run(
             str(REPO_ROOT / "tools/run_wmeval_lite.py"),
             "run",
             "--suite",
-            str(REPO_ROOT / "eval_sets/wmeval_lite_v1"),
+            str(REPO_ROOT / "lite"),
             "--candidate-manifest",
             str(manifest),
             "--dimensions",

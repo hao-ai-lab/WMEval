@@ -271,7 +271,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--case-root", type=Path,
-                        default=REPO_ROOT / "eval_sets/wmeval_lite_v1/cases/LiquidContainer",
+                        default=REPO_ROOT / "lite/cases/LiquidContainer",
                         help="directory holding the fluid_<profile> case bundles")
     parser.add_argument("--cache-dir", type=Path, required=False,
                         help="runs/liquid_cache directory holding the production pickles")

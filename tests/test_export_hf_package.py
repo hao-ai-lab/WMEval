@@ -11,7 +11,7 @@ import yaml
 from tools import export_hf_package as exporter
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-REAL_SUITE = REPO_ROOT / "eval_sets" / "wmeval_lite_v1"
+REAL_SUITE = REPO_ROOT / "lite"
 
 
 def _write(path: Path, text: str | bytes) -> Path:

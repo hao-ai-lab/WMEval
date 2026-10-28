@@ -1,5 +1,5 @@
 schema_version: 2
-source_of_truth: eval_sets/wmeval_lite_v1/suite.yaml
+source_of_truth: lite/suite.yaml
 
 # This file records readiness claims that cannot be inferred from file presence
 # alone. Dynamic counts (case coverage, trajectory assets, normalization, and
@@ -162,7 +162,7 @@ dimensions:
       action_trajectory: true
       lighting_regime: true
     evidence:
-      - eval_sets/wmeval_lite_v1/baselines/lighting_paper_native.json
+      - lite/baselines/lighting_paper_native.json
       - tools/build_lighting_case.py
     gaps:
       - priority: P1

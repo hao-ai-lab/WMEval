@@ -54,7 +54,7 @@ def _plans() -> tuple[Plan, ...]:
     plans: list[Plan] = []
     garden_root = "runs/unity/garden_bridge_gt/evaluation_artifacts"
     mirror_root = (
-        "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/"
+        "lite/cases/MirrorRollingBall/"
         "prompt_third/reference/artifacts"
     )
     # Reference-side anchoring (start frame on the periodic Unity orbit) is
@@ -93,7 +93,7 @@ def _plans() -> tuple[Plan, ...]:
     for trajectory, start, yaw in camera_cases:
         if trajectory.endswith("in"):
             conditioning = (
-                "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/"
+                "lite/cases/MirrorRollingBall/"
                 "prompt_third/reference/ref.png"
             )
         else:

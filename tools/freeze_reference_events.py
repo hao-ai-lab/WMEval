@@ -12,7 +12,7 @@ that selection for every candidate (``lpips_reference_events_json``).
 Requires OPENAI_API_KEY (explicit opt-in to hosted-judge calls)::
 
     python tools/freeze_reference_events.py MirrorRollingBall/lpips_collision --passes 5
-    python tools/build_lite_case.py eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/lpips_collision
+    python tools/build_lite_case.py lite/cases/MirrorRollingBall/lpips_collision
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 EVENTS_FILENAME = "contact_events.json"
 CASE_PARAM = "lpips_reference_events_json"
 DEFAULT_CLUSTER_GAP_FRAMES = 12

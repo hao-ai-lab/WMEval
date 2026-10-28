@@ -11,7 +11,7 @@ Usage::
 
     # Export the suite (plus companion suites / human_alignment / baselines)
     python tools/export_hf_package.py export \\
-        --suite eval_sets/wmeval_lite_v1 --output /tmp/wmeval_lite_hf
+        --suite lite --output /tmp/wmeval_lite_hf
 
     # Re-hash, scan for out-of-package references, run the suite validator
     python tools/export_hf_package.py verify /tmp/wmeval_lite_hf
@@ -1144,7 +1144,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     export_parser = sub.add_parser("export", help="Export a self-contained package")
-    export_parser.add_argument("--suite", default="eval_sets/wmeval_lite_v1")
+    export_parser.add_argument("--suite", default="lite")
     export_parser.add_argument("--output", required=True)
     export_parser.add_argument(
         "--cases", default=None,

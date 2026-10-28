@@ -119,7 +119,7 @@ def _synthetic_data_paths() -> list[Path]:
     """Every synthetic-trajectory file listed in synthetic/manifest.json (``--split full`` download)."""
     import json
 
-    suite = ROOT / "eval_sets" / "wmeval_lite_v1"
+    suite = ROOT / "lite"
     manifest = json.loads((suite / "synthetic" / "manifest.json").read_text(encoding="utf-8"))
     return [suite / t["path"] / name for t in manifest["trajectories"] for name in t["files"]]
 

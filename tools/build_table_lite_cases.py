@@ -67,7 +67,7 @@ from tools.run_prepared_table_evaluations import (  # noqa: E402
 )
 
 TABLE_ROOT = ROOT / "experiments/tables_4_7"
-CASES_ROOT = ROOT / "eval_sets/wmeval_lite_v1/cases"
+CASES_ROOT = ROOT / "lite/cases"
 GARDEN_RECEIPT = ROOT / "runs/unity/garden_bridge_gt/capture_receipt.json"
 NO_CHARACTER = "no_character_configured_for_this_case_xyz."
 PROTOCOL = {

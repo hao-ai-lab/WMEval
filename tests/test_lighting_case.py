@@ -13,7 +13,7 @@ from tools.build_lighting_case import CASE, CASE_ID, trajectory_spec
 from tools.render_synthetic_references import LIGHTING_NATIVE_UNITY
 
 ROOT = Path(__file__).resolve().parents[1]
-SUITE = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE = ROOT / "lite"
 
 
 def _unity_from_local(local: np.ndarray) -> np.ndarray:

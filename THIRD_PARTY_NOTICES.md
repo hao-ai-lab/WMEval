@@ -50,7 +50,7 @@ SHA-256 for them.
 
 | Model | Where it is used | License |
 | --- | --- | --- |
-| Hugging Face `facebook/sam2.1-hiera-small` | `fluid_mechanics` (`liquid_sam2_model` in `eval_sets/wmeval_lite_v1/suite.yaml`) and the liquid modules' default | verify upstream |
+| Hugging Face `facebook/sam2.1-hiera-small` | `fluid_mechanics` (`liquid_sam2_model` in `lite/suite.yaml`) and the liquid modules' default | verify upstream |
 | Hugging Face `depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf` | `evaluation/modules/environment_object_consistency.py` (indoor metric-depth default) | verify upstream |
 | Hugging Face `Searchium-ai/clip4clip-webvid150k` | `evaluation/modules/clip4clip.py` (standalone CLIP4Clip evaluator; not a WMEval Lite dimension) | verify upstream |
 
@@ -58,7 +58,7 @@ SHA-256 for them.
 
 The VLM-judged dimensions call the OpenAI API: `prompt_scene_consistency`,
 `physical_causality` and causal `lpips`. The judge models are pinned in
-`eval_sets/wmeval_lite_v1/suite.yaml` (`gpt-5.4`, plus `gpt-5.4-mini` for the
+`lite/suite.yaml` (`gpt-5.4`, plus `gpt-5.4-mini` for the
 LPIPS coarse pass). Using them is subject to the provider's terms. Nothing from
 the provider is redistributed here.
 

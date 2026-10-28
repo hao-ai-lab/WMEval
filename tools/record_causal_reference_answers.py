@@ -18,12 +18,12 @@ Two things follow from recording several independent passes:
 Usage (needs OPENAI_API_KEY; ~19 QA x N passes of paid calls per case):
 
     python tools/record_causal_reference_answers.py \\
-        eval_sets/wmeval_lite_v1/cases/BeamDomino/causal \\
+        lite/cases/BeamDomino/causal \\
         --passes 5
 
 Then refresh the bundle checksums:
 
-    python tools/build_lite_case.py eval_sets/wmeval_lite_v1/cases/BeamDomino/causal
+    python tools/build_lite_case.py lite/cases/BeamDomino/causal
 """
 from __future__ import annotations
 

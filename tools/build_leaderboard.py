@@ -187,7 +187,7 @@ def _gated_out(case_id: str, model: str) -> bool:
     ball case); they must not count, even when no newer run re-marked the case."""
     from evaluation.lite.action_support import unsupported_reason
 
-    artifacts = ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id / "reference/artifacts"
+    artifacts = ROOT / "lite/cases" / case_id / "reference/artifacts"
     if not model or not artifacts.is_dir():
         return False
     # a leaderboard row that combines checkpoints is gated out only when every one rejects the case
@@ -333,7 +333,7 @@ def averaged_ranks(scores: dict[str, float], lower_is_better: bool = True) -> di
     return out
 
 
-FLOORS_PATH = ROOT / "eval_sets/wmeval_lite_v1/self_match_floor.json"
+FLOORS_PATH = ROOT / "lite/self_match_floor.json"
 _CELL_SCENE = {"garden": "WanderingGarden", "billiard": "BilliardGame", "mirror": "MirrorRollingBall"}
 DIM_TIE_RESAMPLES = 4000
 DIM_TIE_CONFIDENCE = 0.95

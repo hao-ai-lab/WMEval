@@ -11,8 +11,8 @@ refresh it to the current git HEAD), then validates the bundle.
 
 Usage::
 
-    python tools/build_lite_case.py eval_sets/wmeval_lite_v1/cases/BallRoller/ctrl
-    python tools/build_lite_case.py --relock eval_sets/wmeval_lite_v1/cases/...
+    python tools/build_lite_case.py lite/cases/BallRoller/ctrl
+    python tools/build_lite_case.py --relock lite/cases/...
 """
 from __future__ import annotations
 

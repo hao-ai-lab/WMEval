@@ -62,7 +62,7 @@ def revalidate_rows(
     plan = plans.get(target_case_id)
     if plan is None or not target_case_id.startswith("table7/"):
         raise ValueError(f"unsupported Table 7 target: {target_case_id}")
-    suite = load_suite(REPO_ROOT / "eval_sets/wmeval_lite_v1")
+    suite = load_suite(REPO_ROOT / "lite")
     dimension = suite.dimensions[plan.dimension]
     if tuple(dimension.modules) != ("environment_object_consistency",):
         raise ValueError("revalidation is limited to the unchanged EOC dimension")
@@ -71,7 +71,7 @@ def revalidate_rows(
         raise ValueError(
             "EOC module source is newer than the stored result; a real rerun is required"
         )
-    case = load_case(REPO_ROOT / "eval_sets/wmeval_lite_v1/cases" / plan.lite_case_id)
+    case = load_case(REPO_ROOT / "lite/cases" / plan.lite_case_id)
     inputs = json.loads((prepared_dir / "evaluation_inputs.json").read_text())
     current_candidates = {
         str(item["repeat_id"]): str(Path(item["candidate_video"]).resolve())
@@ -154,7 +154,7 @@ def main() -> int:
     output.mkdir(parents=True, exist_ok=True)
     results_path = output / "per_case_results.jsonl"
     write_rows(results_path, rows)
-    suite = load_suite(REPO_ROOT / "eval_sets/wmeval_lite_v1")
+    suite = load_suite(REPO_ROOT / "lite")
     aggregate = build_aggregate(suite, rows)
     write_aggregate_json(output / "aggregate_summary.json", aggregate)
     write_summary_csv(output / "aggregate_summary.csv", suite, aggregate)

@@ -8,7 +8,7 @@ from tools.prepare_lighting_backend_inputs import prepare
 from evaluation.camera_orbit import orbit_poses
 import yaml
 
-CASE = Path(__file__).resolve().parents[1]/'eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting'
+CASE = Path(__file__).resolve().parents[1]/'lite/cases/SunRisesAndSets/lighting'
 
 
 def _position_at(seconds):

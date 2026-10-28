@@ -95,7 +95,7 @@ def discover_reference_files() -> dict[str, dict[str, Any]]:
         frame = (TABLE_ROOT / str(case["first_frame"])).resolve()
         _add_file(files, frame, f"conditioning_frame:{case['case_id']}")
 
-    case_root = REPO_ROOT / "eval_sets/wmeval_lite_v1/cases"
+    case_root = REPO_ROOT / "lite/cases"
     for case_id in REFERENCE_CASES:
         for path in sorted((case_root / case_id).rglob("*")):
             if path.is_file():

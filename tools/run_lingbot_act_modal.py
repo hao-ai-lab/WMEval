@@ -79,7 +79,7 @@ def schedule(case_id: str) -> tuple[np.ndarray, dict]:
     """Threshold the case's action channels into W/A/S/D (|value| > 0.05); a hypothesis about
     what the keys move (ball, car or bottle), checked on the videos, not a calibrated mapping."""
     from evaluation.trajectories import sample_held_values
-    npz = ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id / "reference/artifacts/action.npz"
+    npz = ROOT / "lite/cases" / case_id / "reference/artifacts/action.npz"
     end = float(np.load(npz)["timestamps_sec"][-1])
     n = frame_num(case_id)
     values, names = sample_held_values(npz, FPS, n, end_sec=end)
@@ -117,7 +117,7 @@ def first_frame(case_id: str) -> Path:
     if not out.is_file():
         import subprocess
         out.parent.mkdir(parents=True, exist_ok=True)
-        ref = ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id / "reference/reference.mp4"
+        ref = ROOT / "lite/cases" / case_id / "reference/reference.mp4"
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(ref), "-frames:v", "1", str(out)], check=True)
     return out
 
@@ -193,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
             wasd, mapping = schedule(case_id)
             buf_a, buf_k = io.BytesIO(), io.BytesIO()
             np.save(buf_a, wasd); np.save(buf_k, intrinsics(frame_num(case_id)))
-            case = yaml.safe_load((ROOT / "eval_sets/wmeval_lite_v1/cases" / case_id / "case.yaml").read_text())
+            case = yaml.safe_load((ROOT / "lite/cases" / case_id / "case.yaml").read_text())
             frame = first_frame(case_id)
             for repeat, seed in SEEDS.items():
                 dest = args.out / case_id / repeat

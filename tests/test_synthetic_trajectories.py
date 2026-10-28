@@ -13,7 +13,7 @@ from tools.expected_jobs import main as expected_jobs
 from tools.sync_lite_data import build_full_index, build_index, check_synthetic
 
 ROOT = Path(__file__).resolve().parents[1]
-SUITE = ROOT / "eval_sets" / "wmeval_lite_v1"
+SUITE = ROOT / "lite"
 MANIFEST = json.loads((SUITE / "synthetic" / "manifest.json").read_text(encoding="utf-8"))
 
 

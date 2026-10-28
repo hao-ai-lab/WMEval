@@ -46,18 +46,18 @@ sources:
 
   table7/MirrorRollingBall/perturb_in: &mirror_in
     kind: direct
-    path: ../../eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_third/reference/ref.png
+    path: ../../lite/cases/MirrorRollingBall/prompt_third/reference/ref.png
     provenance: unity_lite_reference_orbit_frame_zero
     status: repository_validated
   table7/MirrorRollingBall/360_in: *mirror_in
   table7/MirrorRollingBall/perturb_out: &mirror_out
     kind: video_frame
-    video: ../../eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_third/reference/unity_groundtruth.mp4
+    video: ../../lite/cases/MirrorRollingBall/prompt_third/reference/unity_groundtruth.mp4
     frame_index: 135
     provenance: unity_lite_reference_orbit_half_turn
     status: reconstructed_validated
     orientation_validation:
-      poses: ../../eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_third/reference/artifacts/poses.npy
+      poses: ../../lite/cases/MirrorRollingBall/prompt_third/reference/artifacts/poses.npy
       base_frame: 0
       derived_frame: 135
       maximum_forward_dot: -0.95

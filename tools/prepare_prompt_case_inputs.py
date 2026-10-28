@@ -27,7 +27,7 @@ candidate manifest for scoring is ``runs/prompt_scene_consistency/candidates.jso
       --queue runs/prompt_scene_consistency/model_inputs/lingbot_world_cam/generation_queue.jsonl
     python tools/run_matrix_game3.py \\
       --queue runs/prompt_scene_consistency/model_inputs/matrix_game_3/generation_queue.jsonl
-    python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \\
+    python tools/run_wmeval_lite.py run --suite lite \\
       --candidate-manifest runs/prompt_scene_consistency/candidates.jsonl \\
       --dimensions prompt_scene_consistency --output-dir reports/wmeval_lite/prompt_open_models
 
@@ -55,7 +55,7 @@ from evaluation.lite.case_loader import LiteCase, load_case  # noqa: E402
 from evaluation.lite.suite_loader import load_suite  # noqa: E402
 from evaluation.trajectories import load_trajectory  # noqa: E402
 
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 DIMENSION = "prompt_scene_consistency"
 TABLE_ROOT = ROOT / "experiments/tables_4_7"
 TRAJECTORY = "trajectories/prompt_camera_left_turn.yaml"

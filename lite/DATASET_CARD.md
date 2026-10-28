@@ -286,7 +286,7 @@ case of the dimension together.
 
 ```bash
 # 1. Re-judge (hosted judge; explicit opt-in via OPENAI_API_KEY)
-python tools/record_causal_reference_answers.py eval_sets/wmeval_lite_v1/cases/BeamDomino/causal --passes 5
+python tools/record_causal_reference_answers.py lite/cases/BeamDomino/causal --passes 5
 python tools/freeze_prompt_reference_scores.py --passes 5 --register
 python tools/freeze_reference_events.py MirrorRollingBall/lpips_collision --passes 5 --register
 
@@ -295,10 +295,10 @@ python tools/judge_gateway.py --key-file <key> --script tools/freeze_reference_e
     LiquidContainer/fluid_rest --passes 5 --register --allow-empty
 
 # 2. Re-lock each touched case (checksums + evaluator fingerprint)
-python tools/build_lite_case.py eval_sets/wmeval_lite_v1/cases/<Scene>/<variant>
+python tools/build_lite_case.py lite/cases/<Scene>/<variant>
 
 # 3. Verify
-python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
+python tools/run_wmeval_lite.py validate --suite lite
 python -m pytest -q tests
 ```
 

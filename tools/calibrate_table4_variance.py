@@ -202,7 +202,7 @@ def main() -> int:
         report_dir.mkdir(parents=True, exist_ok=True)
         results_path = report_dir / "per_case_results.jsonl"
         write_rows(results_path, final_rows)
-        suite = load_suite(Path("eval_sets/wmeval_lite_v1").resolve())
+        suite = load_suite(Path("lite").resolve())
         aggregate = build_aggregate(suite, final_rows)
         write_aggregate_json(report_dir / "aggregate_summary.json", aggregate)
         write_summary_csv(report_dir / "aggregate_summary.csv", suite, aggregate)

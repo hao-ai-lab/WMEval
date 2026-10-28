@@ -32,7 +32,7 @@ if str(ROOT) not in sys.path:
 from build_leaderboard import lite_cells  # noqa: E402
 
 UNITY_SELFMATCH = ROOT / "reports/wmeval_lite/unity_selfmatch/per_case_results.jsonl"
-JUDGE_FLOOR = ROOT / "eval_sets/wmeval_lite_v1/judge_noise_floor.json"   # Hub-hosted; see _judge_floor()
+JUDGE_FLOOR = ROOT / "lite/judge_noise_floor.json"   # Hub-hosted; see _judge_floor()
 
 
 def _judge_floor() -> Path:
@@ -78,7 +78,7 @@ def racing_car_road_fde() -> tuple[float, float]:
     import cv2
     import numpy as np
     from evaluation.modules import road_trajectory as rt
-    case = ROOT / "eval_sets/wmeval_lite_v1/cases/RacingCar/kinematics_third"
+    case = ROOT / "lite/cases/RacingCar/kinematics_third"
     art = case / "reference/artifacts"
     pos = np.asarray(json.loads((art / "object_transforms.json").read_text())["objects"]["car"]["positions_world"], float)
     gt = pos[:, [0, 2]] - pos[0, [0, 2]]

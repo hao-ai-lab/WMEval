@@ -22,7 +22,7 @@ import cv2
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
-CASES = ROOT / "eval_sets/wmeval_lite_v1/cases"
+CASES = ROOT / "lite/cases"
 DEFAULT_CASES = ("RacingCar/kinematics_third", "BilliardGame/kinematics_first")
 
 

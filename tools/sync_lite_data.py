@@ -5,7 +5,7 @@ The repository keeps each case's metadata -- ``case.yaml`` and the checksum
 manifest ``reference/checksums.sha256`` -- while the case data itself (reference
 videos, conditioning images, action trajectories and other artifacts under
 ``reference/``) lives in the dataset ``lmgame/WMEval-Lite`` at the same relative
-paths. ``download`` writes the files back into ``eval_sets/wmeval_lite_v1`` and
+paths. ``download`` writes the files back into ``lite`` and
 verifies every case against its manifest.
 
     python tools/sync_lite_data.py download            # curated cases (test_core)
@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:  # run as a script: the index metadata imports evaluation.*
     sys.path.insert(0, str(ROOT))
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 DEFAULT_REPO = "lmgame/WMEval-Lite"
 CHECKSUMS = "checksums.sha256"
 # Case data lives under each case's reference/ directory; every suite (a companion suite

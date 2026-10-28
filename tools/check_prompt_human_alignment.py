@@ -3,7 +3,7 @@
 
 The paper reports that the judge ranks models the way blinded human raters do
 (Spearman rho = 0.90 over Unity + 4 generative models, 0.80 over the 4
-generative models). ``eval_sets/wmeval_lite_v1/human_alignment/
+generative models). ``lite/human_alignment/
 prompt_scene_consistency.json`` freezes the human side of that comparison.
 This tool recomputes the correlation for any Lite run over the same models'
 videos -- e.g. after changing the judge model, prompts or rubrics -- and exits
@@ -32,7 +32,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_FIXTURE = (
-    ROOT / "eval_sets/wmeval_lite_v1/human_alignment/prompt_scene_consistency.json"
+    ROOT / "lite/human_alignment/prompt_scene_consistency.json"
 )
 DIMENSION = "prompt_scene_consistency"
 

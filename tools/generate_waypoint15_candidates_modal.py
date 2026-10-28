@@ -49,7 +49,7 @@ from pathlib import Path
 import modal
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CASES_DIR = REPO_ROOT / "eval_sets" / "wmeval_lite_v1" / "cases"
+CASES_DIR = REPO_ROOT / "lite" / "cases"
 REMOTE_CASES = "/workspace/cases"
 
 MODEL_NAME = "waypoint15"

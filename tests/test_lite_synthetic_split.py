@@ -269,7 +269,7 @@ def test_synthetic_capture_segments() -> None:
 
 @pytest.mark.integration("synthetic_data")
 def test_real_suite_synthetic_cases_build() -> None:
-    suite = load_suite(ROOT / "eval_sets/wmeval_lite_v1")
+    suite = load_suite(ROOT / "lite")
     entries = load_synthetic_cases(suite)
     assert len(entries) == 220
     for entry in entries.values():
@@ -293,7 +293,7 @@ JUDGE_AUTHORED = ("contact_events.json", "qa_dataset.json", "rubric for")
 
 @pytest.mark.integration("synthetic_data")
 def test_real_suite_synthetic_bundles_validate() -> None:
-    suite = load_suite(ROOT / "eval_sets/wmeval_lite_v1")
+    suite = load_suite(ROOT / "lite")
     pending = []
     for case_id, entry in load_synthetic_cases(suite).items():
         try:

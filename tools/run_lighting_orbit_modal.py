@@ -36,8 +36,8 @@ image = (
           "LINGBOT_SOURCE": "/workspace/lingbot-world"})
     .add_local_dir(str(INPUT), "/workspace/orbit", copy=True)
     .add_local_file(str(ROOT / "tools/model_adapters/lingbot_no_ui.py"), "/workspace/lingbot_no_ui.py", copy=True)
-    .add_local_file(str(ROOT / "eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting/reference/ref.png"), "/workspace/ref.png", copy=True)
-    .add_local_file(str(ROOT / "eval_sets/wmeval_lite_v1/cases/SunRisesAndSets/lighting/case.yaml"), "/workspace/case.yaml", copy=True)
+    .add_local_file(str(ROOT / "lite/cases/SunRisesAndSets/lighting/reference/ref.png"), "/workspace/ref.png", copy=True)
+    .add_local_file(str(ROOT / "lite/cases/SunRisesAndSets/lighting/case.yaml"), "/workspace/case.yaml", copy=True)
 )
 
 

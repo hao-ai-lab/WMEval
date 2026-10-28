@@ -402,7 +402,7 @@ def prepare(
 ) -> dict[str, Any]:
     run_root = run_root.resolve()
     output = output.resolve()
-    case_root = REPO_ROOT / "eval_sets" / "wmeval_lite_v1" / "cases" / lite_case_id
+    case_root = REPO_ROOT / "lite" / "cases" / lite_case_id
     reference = (
         reference_video_override.expanduser().resolve()
         if reference_video_override is not None

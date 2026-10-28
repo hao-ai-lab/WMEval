@@ -32,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("legacy_jsonl", help="Old-format candidate JSONL")
     parser.add_argument("output_jsonl", help="Where to write the strict JSONL")
-    parser.add_argument("--suite", default="eval_sets/wmeval_lite_v1")
+    parser.add_argument("--suite", default="lite")
     args = parser.parse_args(argv)
 
     from evaluation.lite.suite_loader import load_suite

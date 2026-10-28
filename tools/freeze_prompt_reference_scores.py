@@ -13,7 +13,7 @@ re-judging, and ignores it once the judge settings it records no longer match.
 Requires OPENAI_API_KEY (explicit opt-in to hosted-judge calls)::
 
     python tools/freeze_prompt_reference_scores.py --passes 5 --register
-    python tools/build_lite_case.py eval_sets/wmeval_lite_v1/cases/*/prompt_*
+    python tools/build_lite_case.py lite/cases/*/prompt_*
 """
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ from evaluation.lite.adapters.vlm_consistency_adapter import (  # noqa: E402
     VlmConsistencyAdapter,
 )
 
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 DIMENSION = "prompt_scene_consistency"
 DEFAULT_REFERENCE_VIDEO = "reference/unity_groundtruth.mp4"
 

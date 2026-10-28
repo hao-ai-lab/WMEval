@@ -15,7 +15,7 @@ forwarded as an ephemeral Secret (never baked into the image)::
     modal run --detach tools/freeze_reference_events_modal.py \
         --cases MirrorRollingBall/lpips_collision,BeamDomino/causal,BallRoller/ctrl --register
     modal run tools/freeze_reference_events_modal.py --fetch-only --register   # collect later
-    python tools/build_lite_case.py eval_sets/wmeval_lite_v1/cases/<Scene>/<variant>
+    python tools/build_lite_case.py lite/cases/<Scene>/<variant>
 """
 from __future__ import annotations
 

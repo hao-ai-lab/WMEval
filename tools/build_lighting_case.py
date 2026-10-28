@@ -48,7 +48,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 CASE_ID = "SunRisesAndSets/lighting"
-CASE = ROOT / "eval_sets/wmeval_lite_v1/cases" / CASE_ID
+CASE = ROOT / "lite/cases" / CASE_ID
 ART = CASE / "reference/artifacts"
 UNITY_REPO = (ROOT.parent / "WorldModelBenchScenePrivate").resolve()
 SCENE_REVISION = "84a06a422ae0a0d04153596e881c85be8d4ff3f1"

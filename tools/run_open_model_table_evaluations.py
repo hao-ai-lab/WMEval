@@ -299,7 +299,7 @@ def run_one(model: str, plan: Any, device: str, prepare_only: bool, repeat_ids: 
     report = ROOT / f"reports/{plan.case_id.split('/')[0]}/{model}/{plan.case_id.split('/')[1]}/{plan.case_id.split('/')[2]}/{cohort}"
     command = [
         sys.executable, str(ROOT / "tools/run_wmeval_lite.py"), "run",
-        "--suite", str(ROOT / "eval_sets/wmeval_lite_v1"),
+        "--suite", str(ROOT / "lite"),
         "--candidate-manifest", str(preparation["candidate_manifest"]),
         "--dimensions", plan.dimension,
         "--device", device,

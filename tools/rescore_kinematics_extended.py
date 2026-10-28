@@ -195,7 +195,7 @@ def _rows(paths: Iterable[str]) -> Iterable[Dict[str, Any]]:
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--results", nargs="+", required=True, help="per_case_results.jsonl file(s)")
-    parser.add_argument("--suite", default=str(REPO_ROOT / "eval_sets/wmeval_lite_v1"))
+    parser.add_argument("--suite", default=str(REPO_ROOT / "lite"))
     parser.add_argument("--output", required=True)
     parser.add_argument("--case", action="append", default=None, help="only rows of this case id (repeatable)")
     parser.add_argument("--gt-case", default=None, help="score against this case's Unity GT instead")

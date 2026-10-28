@@ -20,7 +20,7 @@ from evaluation.modules.kinematics_mechanics import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-SUITE = ROOT / "eval_sets" / "wmeval_lite_v1"
+SUITE = ROOT / "lite"
 W, H = 320, 180
 FX = FY = 260.0
 CX, CY = W / 2.0, H / 2.0

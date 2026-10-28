@@ -12,7 +12,7 @@ Existing ``actions.txt`` / ``action.npy`` are left untouched. Re-lock the case
 afterwards::
 
     python tools/bake_case_action.py BallRoller/ctrl ball_roller_collision_path
-    python tools/build_lite_case.py eval_sets/wmeval_lite_v1/cases/BallRoller/ctrl
+    python tools/build_lite_case.py lite/cases/BallRoller/ctrl
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ if str(ROOT) not in sys.path:
 from evaluation import action_backends  # noqa: E402
 from evaluation.trajectories import load_trajectory, write_compiled_trajectory  # noqa: E402
 
-CASES_ROOT = ROOT / "eval_sets/wmeval_lite_v1/cases"
+CASES_ROOT = ROOT / "lite/cases"
 TRAJECTORIES = ROOT / "experiments/tables_4_7/trajectories"
 
 

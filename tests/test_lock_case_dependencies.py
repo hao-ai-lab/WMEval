@@ -11,7 +11,7 @@ from tests.lite_suite_test_utils import build_default_suite_dir
 from tools import lock_case_dependencies as lcd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SUITE = REPO_ROOT / "eval_sets" / "wmeval_lite_v1"
+SUITE = REPO_ROOT / "lite"
 
 
 def _lock(case_dir: Path) -> dict:

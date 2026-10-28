@@ -324,7 +324,7 @@ def _evaluation_status(generation: dict[str, Any] | None = None) -> dict[str, An
             )
             continue
         lite_case = load_case(
-            REPO_ROOT / "eval_sets" / "wmeval_lite_v1" / "cases" / plan.lite_case_id
+            REPO_ROOT / "lite" / "cases" / plan.lite_case_id
         )
         fingerprint = str(lite_case.evaluator_lock["evaluator_fingerprint"])
         table, scene, variant = plan.case_id.split("/")
@@ -543,7 +543,7 @@ def _metric_source_readiness() -> dict[str, Any]:
     """Audit source artifacts that impose metric-level, not case-level, blockers."""
     mirror_transforms = (
         REPO_ROOT
-        / "eval_sets/wmeval_lite_v1/cases/MirrorRollingBall/prompt_third"
+        / "lite/cases/MirrorRollingBall/prompt_third"
         / "reference/artifacts/object_transforms.json"
     )
     object_labels: list[str] = []
@@ -593,7 +593,7 @@ def build_status() -> dict[str, Any]:
     table_audit = audit_table_trajectories(TABLE_ROOT, strict=False)
     strict_audit = audit_table_trajectories(TABLE_ROOT, strict=True)
     trajectory_inventory = inventory(
-        REPO_ROOT / "eval_sets" / "wmeval_lite_v1" / "cases"
+        REPO_ROOT / "lite" / "cases"
     )
     generation = _generation_status()
     evaluation = _evaluation_status(generation)

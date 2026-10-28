@@ -54,11 +54,11 @@ uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -r requi
 bash scripts/bootstrap_tables_4_7_gpu.sh
 ```
 
-Case metadata (`case.yaml`, checksums) lives in this repo; case data is on the Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite) (public, no token), pinned to `eval_sets/wmeval_lite_v1/DATASET_REVISION`:
+Case metadata (`case.yaml`, checksums) lives in this repo; case data is on the Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite) (public, no token), pinned to `lite/DATASET_REVISION`:
 
 ```
 python tools/sync_lite_data.py download        # add --split full for the 220 synthetic trajectories
-python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
+python tools/run_wmeval_lite.py validate --suite lite
 ```
 
 VLM-judged dimensions need `OPENAI_API_KEY`; CV dimensions fetch pinned checkpoints on first use (`experiments/tables_4_7/evaluator_assets.lock.json`). The data is git-ignored; `git config core.hooksPath .githooks` warns when a checkout needs a re-download.
@@ -68,8 +68,8 @@ VLM-judged dimensions need `OPENAI_API_KEY`; CV dimensions fetch pinned checkpoi
 Generate one video per case and seed at `<model_root>/<Scene>/<variant>/<seed>.mp4` (or list them in a JSONL `--candidate-manifest`), then:
 
 ```
-python tools/run_wmeval_lite.py list-cases --suite eval_sets/wmeval_lite_v1
-python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \
+python tools/run_wmeval_lite.py list-cases --suite lite
+python tools/run_wmeval_lite.py run --suite lite \
   --model-root runs/<model> --output-dir reports/wmeval_lite/<model> --resume
 ```
 
@@ -98,11 +98,11 @@ Each dimension compares quantities recovered from the candidate video with those
 | [Prompt-Scene Consistency](docs/evaluation_dimensions.md#prompt-scene-consistency) | Does the rollout match its scene description? | Environment / object / overall rubric ↑ (ρ = 0.90 with humans) | 6 | VLM |
 | [Perceptual Similarity](docs/evaluation_dimensions.md#perceptual-similarity-lpips) | How close is the rollout around matched contact events? | Causal LPIPS ↓ | 7 | CV + VLM |
 
-Unity self-match floors: [`SELF_MATCH_BOUNDS.md`](eval_sets/wmeval_lite_v1/SELF_MATCH_BOUNDS.md); differences from the paper: [`DIFFERENCES_FROM_PAPER.md`](eval_sets/wmeval_lite_v1/DIFFERENCES_FROM_PAPER.md). Optional CLIP4Clip, DiffusionLight and GroundingDINO tools: [docs/additional_evaluators.md](docs/additional_evaluators.md).
+Unity self-match floors: [`SELF_MATCH_BOUNDS.md`](lite/SELF_MATCH_BOUNDS.md); differences from the paper: [`DIFFERENCES_FROM_PAPER.md`](lite/DIFFERENCES_FROM_PAPER.md). Optional CLIP4Clip, DiffusionLight and GroundingDINO tools: [docs/additional_evaluators.md](docs/additional_evaluators.md).
 
 ## WMEval Lite Suite
 
-`eval_sets/wmeval_lite_v1/suite.yaml` is the single source of truth for case wiring. The `test_core` split has **32 cases across 9 scenes and 8 dimensions** (43 case–dimension pairs), including the 14 Table 4/7 cells (`<Scene>/scene_<variant>`, `<Scene>/kinematics_<view>`).
+`lite/suite.yaml` is the single source of truth for case wiring. The `test_core` split has **32 cases across 9 scenes and 8 dimensions** (43 case–dimension pairs), including the 14 Table 4/7 cells (`<Scene>/scene_<variant>`, `<Scene>/kinematics_<view>`).
 
 ```
 cases/<Scene>/<variant>/
@@ -124,7 +124,7 @@ cases/<Scene>/<variant>/
 | Matrix-Game 3.0 | 177 frames @ 17 fps, keys + mouse | regime-specific gains | out of scope |
 | LingBot-World Base Cam | 161 camera poses @ 16 fps | nominal poses | unsupported |
 
-**Synthetic trajectories (`test_full`).** 220 trajectories (252 rows with the core cases) built text first: each is an action description from a per-target step vocabulary (*"the camera turns left at 30°/s for 2 s, then holds still"*) that completes a core case's prompt and compiles to a schema-v1 `trajectory.yaml`, starting from that case's conditioning frame. Each has a Unity reference rendered by replaying the actions; plans whose reference cannot give a meaningful score are screened out and replaced deterministically ([`audit/`](eval_sets/wmeval_lite_v1/audit/README.md)). Synthetic rows are scored like their conditioning case and aggregated in a separate `synthetic` block.
+**Synthetic trajectories (`test_full`).** 220 trajectories (252 rows with the core cases) built text first: each is an action description from a per-target step vocabulary (*"the camera turns left at 30°/s for 2 s, then holds still"*) that completes a core case's prompt and compiles to a schema-v1 `trajectory.yaml`, starting from that case's conditioning frame. Each has a Unity reference rendered by replaying the actions; plans whose reference cannot give a meaningful score are screened out and replaced deterministically ([`audit/`](lite/audit/README.md)). Synthetic rows are scored like their conditioning case and aggregated in a separate `synthetic` block.
 
 | Family | Target | # | Steps (core case) |
 | --- | --- | --- | --- |
@@ -141,7 +141,7 @@ Maintainer commands for rendering references and reference inputs (Unity editor 
 
 ## License
 
-The Unity benchmark scenes, and any output they produce (including the reference rollouts and Unity-logged quantities in the [dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite)), are licensed under the **Unity Benchmark Scene License v1.0** ([`LICENSE-UNITY.txt`](eval_sets/wmeval_lite_v1/LICENSE-UNITY.txt)). They may be used only to produce or validate the benchmark's metrics, and in particular not as training, fine-tuning or other input to any AI model, except as the reference against which a model's independently generated output is compared. Third-party evaluator code and weights are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+The Unity benchmark scenes, and any output they produce (including the reference rollouts and Unity-logged quantities in the [dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite)), are licensed under the **Unity Benchmark Scene License v1.0** ([`LICENSE-UNITY.txt`](lite/LICENSE-UNITY.txt)). They may be used only to produce or validate the benchmark's metrics, and in particular not as training, fine-tuning or other input to any AI model, except as the reference against which a model's independently generated output is compared. Third-party evaluator code and weights are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 ## Citation
 

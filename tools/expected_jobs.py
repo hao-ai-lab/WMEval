@@ -43,7 +43,7 @@ from evaluation.lite.action_support import support_record, unsupported_reason  #
 from evaluation.lite.case_loader import load_case  # noqa: E402
 from evaluation.lite.suite_loader import load_suite  # noqa: E402
 
-DEFAULT_SUITE = ROOT / "eval_sets/wmeval_lite_v1"
+DEFAULT_SUITE = ROOT / "lite"
 DEFAULT_SEEDS = ("42", "1", "2", "3", "4")
 ACTION_FILES = ("trajectory.yaml", "action.npz", "actions.jsonl", "actions.json", "actions.txt", "action.npy")
 

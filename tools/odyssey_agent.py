@@ -14,7 +14,7 @@ Pipeline::
     python tools/odyssey_agent.py plan                       # jobs.jsonl for every supported case
     python tools/odyssey_agent.py run --seeds run0           # one 60 s session per case
     python tools/odyssey_agent.py manifest                   # candidates.jsonl (excludes *.raw.mp4)
-    python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \\
+    python tools/run_wmeval_lite.py run --suite lite \\
         --candidate-manifest runs/odyssey/candidates.jsonl --output-dir reports/wmeval_lite/odyssey --resume
 
 Layout written under ``runs/odyssey/`` (the runner's ``<Scene>/<variant>/<seed>.mp4``):
@@ -53,7 +53,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 URL = "https://experience.odyssey.systems/"
-SUITE = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE = ROOT / "lite"
 PROFILE = ROOT / ".local/odyssey-profile"
 OUT = ROOT / "runs/odyssey"
 CAMERA = {"first_person": "First-Person View", "third_person": "Third-Person View"}

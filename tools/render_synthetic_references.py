@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Render Unity reference videos for the synthetic ``test_full`` trajectories.
 
-Every synthetic trajectory (``eval_sets/wmeval_lite_v1/synthetic/manifest.json``)
+Every synthetic trajectory (``lite/synthetic/manifest.json``)
 is replayed in the Unity scene of its conditioning core case: the trajectory's
 compiled ``action.npz`` is turned into a ``schedule.json`` (zero-order-held
 control steps, plus precomputed per-frame camera yaw/poses for camera
@@ -90,7 +90,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-SUITE = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE = ROOT / "lite"
 MANIFEST = SUITE / "synthetic/manifest.json"
 OUT = ROOT / "runs/synthetic_unity"
 UNITY_REPO = (ROOT.parent / "WorldModelBenchScenePrivate").resolve()
