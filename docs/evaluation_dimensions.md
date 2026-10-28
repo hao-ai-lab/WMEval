@@ -1043,12 +1043,12 @@ estimator identity.
 | [scripts/run_liquid_leaderboard.sh](../scripts/run_liquid_leaderboard.sh) | Manifest fan-out → per-model JSON + `leaderboard.csv`. |
 | [scripts/sanity_unity_vs_unity_liquid.sh](../scripts/sanity_unity_vs_unity_liquid.sh) | Unity-vs-Unity noise floor. |
 | [manifests/liquid_full_grid.tsv](../manifests/liquid_full_grid.tsv) | 64-row paper grid (lingbot + matrix-game2 + matrix-game3). |
-| [tests/test_liquid_registry.py](../tests/test_liquid_registry.py) | Module registration smoke. |
-| [tests/test_liquid_common_cache.py](../tests/test_liquid_common_cache.py) | Cache-key invariants. |
-| [tests/test_liquid_common_divcurl.py](../tests/test_liquid_common_divcurl.py) | Divergence / curl pure-numerics. |
-| [tests/test_liquid_velocity_metrics.py](../tests/test_liquid_velocity_metrics.py) | EPE / cosine / div-curl / temporal-consistency stats. |
-| [tests/test_liquid_volume_conservation.py](../tests/test_liquid_volume_conservation.py) | Mask-area std / drift. |
-| [tests/test_liquid_surface_orientation.py](../tests/test_liquid_surface_orientation.py) | Per-frame tilt + RMS. |
+| [tests/metrics/test_liquid_registry.py](../tests/test_liquid_registry.py) | Module registration smoke. |
+| [tests/metrics/test_liquid_common_cache.py](../tests/test_liquid_common_cache.py) | Cache-key invariants. |
+| [tests/metrics/test_liquid_common_divcurl.py](../tests/test_liquid_common_divcurl.py) | Divergence / curl pure-numerics. |
+| [tests/metrics/test_liquid_velocity_metrics.py](../tests/test_liquid_velocity_metrics.py) | EPE / cosine / div-curl / temporal-consistency stats. |
+| [tests/metrics/test_liquid_volume_conservation.py](../tests/test_liquid_volume_conservation.py) | Mask-area std / drift. |
+| [tests/metrics/test_liquid_surface_orientation.py](../tests/test_liquid_surface_orientation.py) | Per-frame tilt + RMS. |
 
 ###### Unity scene (consumed unchanged)
 
@@ -1168,7 +1168,7 @@ export OPENAI_API_KEY=sk-...   # only needed for the real (gpt-4o) judge
 Verify CausalStep is importable from the venv:
 
 ```bash
-pytest tests/test_causal_step_delta.py::test_causalstep_package_importable -v
+pytest tests/metrics/test_causal_step_delta.py::test_causalstep_package_importable -v
 ```
 
 If it fails, either `CausalStep/` is not at `imports/CausalStep/` or the
@@ -1344,9 +1344,9 @@ The fake judge returns `"A"` for every question, so it exercises every code
 path without hitting OpenAI.
 
 ```bash
-pytest tests/test_causal_step_delta.py -v
-pytest tests/test_beamdomino_segments.py -v
-pytest tests/test_causal_step_module.py -v
+pytest tests/metrics/test_causal_step_delta.py -v
+pytest tests/dataset/test_beamdomino_segments.py -v
+pytest tests/metrics/test_causal_step_module.py -v
 ```
 
 All three suites should pass before doing a real run.
@@ -1604,10 +1604,10 @@ prose regime.
 | `tools/dataset/_causal_qa_vlm.py` | OpenAI VLM-based QA decoration: rewrites question + 3 distractors per segment from the actual frames, and may correct the template's answer when the frames contradict it (overrides logged to stderr). Imported lazily by the QA-gen CLI when `--mode vlm` is set. |
 | `tools/legacy/evaluate_world_model_causal_step.py` | CLI: manifest → `causal_step_results.json`. |
 | `docs/causal_step_qa_review_checklist.md` | What to look for when reviewing the draft QA. |
-| `tests/test_causal_step_delta.py` | CausalStep importability + metric polarity. |
-| `tests/test_beamdomino_segments.py` | Segment detector unit tests. |
-| `tests/test_causal_step_module.py` | Module integration tests with the fake judge. |
-| `tests/test_generate_beamdomino_causal_step_qa.py` | QA-gen CLI tests: deterministic shuffle, template/VLM-mode contracts, decorator caching. |
+| `tests/metrics/test_causal_step_delta.py` | CausalStep importability + metric polarity. |
+| `tests/dataset/test_beamdomino_segments.py` | Segment detector unit tests. |
+| `tests/metrics/test_causal_step_module.py` | Module integration tests with the fake judge. |
+| `tests/dataset/test_generate_beamdomino_causal_step_qa.py` | QA-gen CLI tests: deterministic shuffle, template/VLM-mode contracts, decorator caching. |
 
 ###### CausalStep (consumed unchanged)
 
@@ -1624,7 +1624,7 @@ prose regime.
 [ ] WMEval/.venv exists; pip install opencv-python numpy openai pytest done.
 [ ] OPENAI_API_KEY exported (only for real runs).
 [ ] CausalStep/ is at WMEval/imports/CausalStep/.
-[ ] pytest tests/test_causal_step_delta.py::test_causalstep_package_importable passes.
+[ ] pytest tests/metrics/test_causal_step_delta.py::test_causalstep_package_importable passes.
 [ ] segments.json produced from unity_gt_log.json (each segment > ~0.4s; if any are tiny, re-record or tune detector flags).
 [ ] qa_dataset.json produced AND human-reviewed; for multi-run setups, fanned out across N video_ids (one per WM run).
 [ ] manifest.jsonl entries carry `trajectory` if you want per-trajectory mean+std in the aggregate.

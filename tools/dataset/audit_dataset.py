@@ -986,7 +986,7 @@ def near_duplicate_plans(family: str, threshold: float = 0.25) -> dict[str, dict
     if fam.get("signal_hold_sec"):
         energy = (sig ** 2).mean(-1)
         dist = np.sqrt(((sig[:, None] - sig[None]) ** 2).mean(-1) / ((energy[:, None] + energy[None]) / 2))
-    else:   # tests/test_synthetic_trajectories.py's family-wide criterion
+    else:   # tests/dataset/test_synthetic_trajectories.py's family-wide criterion
         dist = np.sqrt(((sig[:, None] - sig[None]) ** 2).mean(-1)) / np.sqrt((sig ** 2).mean())
     out = {}
     for j in range(len(rows)):

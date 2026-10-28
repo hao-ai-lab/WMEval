@@ -20,8 +20,8 @@ Examples:
 
 Shell wrapper and pytest (repo root):
     bash scripts/evaluate_world_model_vlm_consistency.sh
-    python -m pytest tests/test_vlm_consistency_batch_helpers.py \\
-        tests/test_vlm_consistency_batch_cli.py -q
+    python -m pytest tests/metrics/test_vlm_consistency_batch_helpers.py \\
+        tests/metrics/test_vlm_consistency_batch_cli.py -q
 """
 from __future__ import annotations
 

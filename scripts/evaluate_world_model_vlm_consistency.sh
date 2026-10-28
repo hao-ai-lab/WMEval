@@ -58,5 +58,5 @@ python tools/legacy/evaluate_world_model_vlm_consistency.py evaluate \
 #   --output "${OUTPUT%.jsonl}_noref.jsonl"
 
 # Offline / CLI smoke tests (require pytest + OpenCV in the active env):
-# python -m pytest tests/test_vlm_consistency_batch_helpers.py \
-#   tests/test_vlm_consistency_batch_cli.py -q
+# python -m pytest tests/metrics/test_vlm_consistency_batch_helpers.py \
+#   tests/metrics/test_vlm_consistency_batch_cli.py -q
