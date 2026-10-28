@@ -331,7 +331,7 @@ def test_skipped_cell_leaves_the_dimension_ranking() -> None:
     assert {r["model"]: r["dimension_ranks"]["kinematics_mechanics"]["rank"] for r in both["leaderboard"]} == {"a": 1, "b": 1}
     report = bl.apply_exact_ranks(build(paper, {}, floors={}, skip_cells=frozenset({("kinematics_mechanics", "billiard/first")})))
     assert {r["model"]: r["dimension_ranks"]["kinematics_mechanics"]["rank"] for r in report["leaderboard"]} == {"a": 1, "b": 2}
-    assert "Kinematics is ranked on RacingCar (third person) only" in bl.readme_section(report)
+    assert "| **Kinematics** | Final displacement error (RacingCar only) |" in bl.readme_section(report)
 
 
 def test_anchored_scores_place_values_between_failure_and_unity_self_match() -> None:
