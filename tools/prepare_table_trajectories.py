@@ -17,7 +17,7 @@ if str(REPO_ROOT) not in sys.path:
 from evaluation.trajectories import compile_trajectory, write_compiled_trajectory
 from evaluation.table_comparison import load_baseline
 
-DEFAULT_ROOT = REPO_ROOT / "experiments" / "tables_4_7"
+DEFAULT_ROOT = REPO_ROOT / "experiments" / "protocol"
 
 
 def load_cases(root: Path) -> dict[str, Any]:

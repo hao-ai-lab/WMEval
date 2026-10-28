@@ -8,7 +8,7 @@ records, from the interpreter running this tool (``importlib.metadata``):
 * one ``<distribution>: <version>`` entry per third-party package that the
   case's dimensions import on their scoring path (see ``module_requirements``);
 * one ``asset:<name>: <pin>`` entry per evaluator asset of
-  ``experiments/tables_4_7/evaluator_assets.lock.json`` the dimensions load
+  ``experiments/protocol/evaluator_assets.lock.json`` the dimensions load
   (the pin is the weight sha256, or the source revision for vendored code);
 * ``lock_source`` -- marks the mapping as owned by this tool.
 
@@ -57,7 +57,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 LOCK_SOURCE = "tools/lock_case_dependencies.py"
-ASSETS_LOCK_PATH = REPO_ROOT / "experiments" / "tables_4_7" / "evaluator_assets.lock.json"
+ASSETS_LOCK_PATH = REPO_ROOT / "experiments" / "protocol" / "evaluator_assets.lock.json"
 ASSET_PREFIX = "asset:"
 META_KEYS = ("python", "platform", "lock_source")
 

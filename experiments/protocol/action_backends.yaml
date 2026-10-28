@@ -1,7 +1,7 @@
 schema_version: 1
 description: >-
   Single source for how each backend receives the canonical Table 4/7 semantic
-  trajectories (experiments/tables_4_7/trajectories/*.yaml). The trajectory
+  trajectories (experiments/protocol/trajectories/*.yaml). The trajectory
   YAMLs stay authoritative and hash-locked; this file adds what they cannot
   express without changing their hashes: the entity each trajectory controls,
   each backend's native timeline, which action targets it can express, and the

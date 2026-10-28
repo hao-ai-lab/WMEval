@@ -33,7 +33,7 @@ def main() -> int:
 
     if args.reference_only:
         reference_manifest_path = (
-            REPO_ROOT / "experiments/tables_4_7/reference_package_manifest.json"
+            REPO_ROOT / "experiments/protocol/reference_package_manifest.json"
         )
         if not reference_manifest_path.is_file():
             errors.append(f"reference manifest is missing: {reference_manifest_path}")

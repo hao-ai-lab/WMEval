@@ -18,7 +18,7 @@ if str(REPO_ROOT) not in sys.path:
 from evaluation.provenance_paths import resolve_recorded_path
 from tools.run_prepared_table_evaluations import PLANS
 
-DEFAULT_MANIFEST = REPO_ROOT / "experiments/tables_4_7/gpu_handoff_manifest.json"
+DEFAULT_MANIFEST = REPO_ROOT / "experiments/protocol/gpu_handoff_manifest.json"
 REPEATS = tuple(f"run{index}" for index in range(5))
 
 

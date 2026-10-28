@@ -14,7 +14,7 @@ if str(REPO_ROOT) not in sys.path:
 from evaluation.table_comparison import compare_results, load_baseline, result_template, write_comparison
 
 
-DEFAULT_BASELINE = REPO_ROOT / "experiments/tables_4_7/paper_baseline.yaml"
+DEFAULT_BASELINE = REPO_ROOT / "experiments/protocol/paper_baseline.yaml"
 
 
 def main() -> int:
@@ -39,7 +39,7 @@ def main() -> int:
         missing_sources="error" if args.paper_sources == "require" else "warn",
     )
     if args.command == "template":
-        output = (args.output or (REPO_ROOT / "experiments/tables_4_7/rerun_results.template.json")).resolve()
+        output = (args.output or (REPO_ROOT / "experiments/protocol/rerun_results.template.json")).resolve()
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(result_template(baseline), indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(output)

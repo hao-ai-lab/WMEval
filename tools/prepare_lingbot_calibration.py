@@ -14,7 +14,7 @@ from prepare_lingbot_table7_inputs import pose_yaw_source_indices, proper_opencv
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "runs/unity/garden_bridge_gt/evaluation_artifacts"
-IMAGE = ROOT / "experiments/tables_4_7/conditioning_frames/garden_inward.png"
+IMAGE = ROOT / "experiments/protocol/conditioning_frames/garden_inward.png"
 # Put the expected response-compensated region first so an interrupted batch
 # still resolves the production-critical gain before the diagnostic points.
 TARGETS = (-115.0, 115.0, -135.0, 135.0, 0.0, -45.0, 45.0, -90.0, 90.0)

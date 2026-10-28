@@ -68,7 +68,7 @@ PLANS = (
         "perturbation",
         0,
         -45.0,
-        "experiments/tables_4_7/conditioning_frames/garden_inward.png",
+        "experiments/protocol/conditioning_frames/garden_inward.png",
     ),
     CasePlan(
         "table7/WanderingGarden/perturb_out",
@@ -78,7 +78,7 @@ PLANS = (
         "perturbation",
         75,
         45.0,
-        "experiments/tables_4_7/conditioning_frames/garden_outward.png",
+        "experiments/protocol/conditioning_frames/garden_outward.png",
     ),
     CasePlan(
         "table7/WanderingGarden/360_in",
@@ -88,7 +88,7 @@ PLANS = (
         "full_turn",
         0,
         -360.0,
-        "experiments/tables_4_7/conditioning_frames/garden_inward.png",
+        "experiments/protocol/conditioning_frames/garden_inward.png",
     ),
     CasePlan(
         "table7/WanderingGarden/360_out",
@@ -98,7 +98,7 @@ PLANS = (
         "full_turn",
         75,
         360.0,
-        "experiments/tables_4_7/conditioning_frames/garden_outward.png",
+        "experiments/protocol/conditioning_frames/garden_outward.png",
     ),
     CasePlan(
         "table7/BilliardGame/perturb_in",
@@ -404,7 +404,7 @@ def _write_table4_diagnostic(
                 f"{target_case_id}: {metric} is incomplete; inspect plane_calibration diagnostics"
             )
         values[metric] = [float(value) for value in series]
-    baseline = load_baseline(REPO_ROOT / "experiments/tables_4_7/paper_baseline.yaml")
+    baseline = load_baseline(REPO_ROOT / "experiments/protocol/paper_baseline.yaml")
     published = baseline["tables"][4]["cases"][target_case_id]
     comparisons = {
         "dtw": {
@@ -496,7 +496,7 @@ def _write_comparison_artifacts(
         diagnostic = _write_table4_diagnostic(results_path, report_dir, plan.case_id)
         return {"diagnostic_summary": str(diagnostic)}
 
-    baseline_path = REPO_ROOT / "experiments/tables_4_7/paper_baseline.yaml"
+    baseline_path = REPO_ROOT / "experiments/protocol/paper_baseline.yaml"
     rerun = build_table7_results(
         baseline_path=baseline_path,
         results_jsonl=results_path,
@@ -611,7 +611,7 @@ def _select_consolidated_sources(
 
 
 def refresh_consolidated_comparison() -> dict[str, str]:
-    baseline_path = REPO_ROOT / "experiments/tables_4_7/paper_baseline.yaml"
+    baseline_path = REPO_ROOT / "experiments/protocol/paper_baseline.yaml"
     baseline = load_baseline(baseline_path)
     merged = result_template(baseline)
     sources: list[str] = []

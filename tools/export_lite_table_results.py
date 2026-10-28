@@ -34,7 +34,7 @@ if str(ROOT) not in sys.path:
 from evaluation.table_comparison import load_baseline, result_template  # noqa: E402
 
 CASES_ROOT = ROOT / "lite/cases"
-DEFAULT_BASELINE = ROOT / "experiments/tables_4_7/paper_baseline.yaml"
+DEFAULT_BASELINE = ROOT / "experiments/protocol/paper_baseline.yaml"
 METRIC_MAP = {
     # Table 7 — environment_object_consistency
     "depth_absrel_pct": "depth_absrel_pct",

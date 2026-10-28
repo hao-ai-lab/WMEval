@@ -16,7 +16,7 @@ from urllib.parse import parse_qs, urlsplit
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TABLE_ROOT = REPO_ROOT / "experiments" / "tables_4_7"
+TABLE_ROOT = REPO_ROOT / "experiments" / "protocol"
 AGENT = REPO_ROOT / "tools" / "project_genie_agent.py"
 ARCHIVABLE_STALE_STATUSES = {
     "input_mismatch_complete",

@@ -22,7 +22,7 @@ import numpy as np
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TABLE_ROOT = REPO_ROOT / "experiments" / "tables_4_7"
+TABLE_ROOT = REPO_ROOT / "experiments" / "protocol"
 DEFAULT_OUTPUT = REPO_ROOT / "runs" / "tables_4_7" / "prepared_assets"
 PROJECT_GENIE_MIN_WIDTH = 1280
 PROJECT_GENIE_MIN_HEIGHT = 704

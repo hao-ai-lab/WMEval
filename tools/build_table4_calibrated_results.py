@@ -51,7 +51,7 @@ def load_rows(path: Path) -> list[dict[str, Any]]:
 
 
 def build() -> dict[str, Any]:
-    baseline_path = REPO_ROOT / "experiments/tables_4_7/paper_baseline.yaml"
+    baseline_path = REPO_ROOT / "experiments/protocol/paper_baseline.yaml"
     baseline = yaml.safe_load(baseline_path.read_text())
     published = baseline["tables"][4]["cases"]
     cases: dict[str, Any] = {}

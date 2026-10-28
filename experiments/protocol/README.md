@@ -60,7 +60,7 @@ Regenerate the repository-wide readiness inventory with:
 
 ```bash
 uv run python tools/audit_trajectory_readiness.py \
-  --output experiments/tables_4_7/other_trajectory_inventory.json
+  --output experiments/protocol/other_trajectory_inventory.json
 
 uv run python tools/prepare_other_trajectories.py
 ```
@@ -85,7 +85,7 @@ template and, later, the JSON/CSV/Markdown cross-comparison with:
 ```bash
 uv run python tools/compare_table_results.py template
 uv run python tools/compare_table_results.py compare \
-  --results experiments/tables_4_7/rerun_results.template.json \
+  --results experiments/protocol/rerun_results.template.json \
   --output runs/tables_4_7/comparison
 ```
 
@@ -124,7 +124,7 @@ uv run python tools/prepare_table_trajectories.py compile
 # Launch the dedicated Chrome profile, then execute one independent run
 uv run python tools/project_genie_agent.py run --launch \
   --first-frame lite/cases/RacingCar/prompt_third/reference/ref.png \
-  --actions experiments/tables_4_7/compiled/racing_car_drive.actions.jsonl \
+  --actions experiments/protocol/compiled/racing_car_drive.actions.jsonl \
   --environment-prompt "A wide straight highway lined with trees." \
   --character-prompt "A yellow sports car with two black racing stripes." \
   --view third_person --repeat-id run0 \
@@ -254,7 +254,7 @@ revisited a generated world during calibration, it is not table-repeat
 eligible.
 
 The exact Unity-rendered generation inputs are pinned under
-`experiments/tables_4_7/conditioning_frames/`: `garden_inward.png` has the
+`experiments/protocol/conditioning_frames/`: `garden_inward.png` has the
 hash above and `garden_outward.png` has SHA256
 `60321e3b5bd810f12087f2029ba3c26757a4883df0d2cbc40dcb316fc12b89a3`.
 They remain immutable because the completed browser-run receipts bind to those

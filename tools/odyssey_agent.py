@@ -62,7 +62,7 @@ SUPPLEMENTAL = {
     "ChessBoard/walk_third": "experiments/trajectory_reconstructions/compiled/chess_walk_third.actions.jsonl",
     "SunRisesAndSets/lighting": "experiments/trajectory_reconstructions/compiled/sun_rises_and_sets_lighting.actions.jsonl",
     # case.yaml: deterministic in-place 360-degree yaw sweep from a fixed standing position.
-    "WanderingGarden/scene_first": "experiments/tables_4_7/compiled/camera_360_in.actions.jsonl",
+    "WanderingGarden/scene_first": "experiments/protocol/compiled/camera_360_in.actions.jsonl",
 }
 # Odyssey has one prompt and no separate character field, so the controlled entity is
 # named in it, as BallRoller's case prompt does for its ball (the role Genie's character

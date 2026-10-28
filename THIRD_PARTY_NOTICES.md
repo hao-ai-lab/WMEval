@@ -24,7 +24,7 @@ downloaded from their upstream hosts on first use.
 
 ## Pinned model weights
 
-These are pinned in `experiments/tables_4_7/evaluator_assets.lock.json`
+These are pinned in `experiments/protocol/evaluator_assets.lock.json`
 (`schema_version: 1`, captured 2026-10-04). The retired lighting-orbit
 protocol pinned its own subset in
 `experiments/lighting_orbit/evaluator_assets.lock.json` (historical).

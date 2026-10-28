@@ -329,7 +329,7 @@ def run_one(model: str, plan: Any, device: str, prepare_only: bool, repeat_ids: 
         return row
     if plan.case_id.startswith("table7/") and len(repeat_ids) == 5:
         rerun = build_table7_results(
-            baseline_path=ROOT / "experiments/tables_4_7/paper_baseline.yaml",
+            baseline_path=ROOT / "experiments/protocol/paper_baseline.yaml",
             results_jsonl=results,
             evaluation_inputs_path=prepared / "evaluation_inputs.json",
             source_case_id=plan.lite_case_id,

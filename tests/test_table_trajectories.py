@@ -16,7 +16,7 @@ from evaluation.trajectories import (
 )
 
 
-ROOT = Path(__file__).resolve().parents[1] / "experiments" / "tables_4_7"
+ROOT = Path(__file__).resolve().parents[1] / "experiments" / "protocol"
 
 
 def test_manifest_has_every_table_cell() -> None:

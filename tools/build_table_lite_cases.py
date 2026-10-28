@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Bake the active Table 4/7 cells into self-contained WMEval Lite cases.
 
-Each active cell in ``experiments/tables_4_7/cases.yaml`` becomes one Lite case
+Each active cell in ``experiments/protocol/cases.yaml`` becomes one Lite case
 bundle, so Table 4 (kinematics & mechanics) and Table 7 (object & character
 consistency) are evaluated by the same ``tools/run_wmeval_lite.py`` path as
 every other dimension:
@@ -66,7 +66,7 @@ from tools.run_prepared_table_evaluations import (  # noqa: E402
     _racing_unity_params,
 )
 
-TABLE_ROOT = ROOT / "experiments/tables_4_7"
+TABLE_ROOT = ROOT / "experiments/protocol"
 CASES_ROOT = ROOT / "lite/cases"
 GARDEN_RECEIPT = ROOT / "runs/unity/garden_bridge_gt/capture_receipt.json"
 NO_CHARACTER = "no_character_configured_for_this_case_xyz."

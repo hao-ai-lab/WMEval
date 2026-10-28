@@ -13,7 +13,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CASES = REPO_ROOT / "lite" / "cases"
 DEFAULT_SUITE = REPO_ROOT / "lite" / "suite.yaml"
-DEFAULT_TABLE_ROOT = REPO_ROOT / "experiments" / "tables_4_7"
+DEFAULT_TABLE_ROOT = REPO_ROOT / "experiments" / "protocol"
 DEFAULT_OTHER_ROOT = REPO_ROOT / "experiments" / "trajectory_reconstructions"
 
 
@@ -115,7 +115,7 @@ def inspect_case(
     explicitly_unsupported = any(
         item.get("project_genie_status") == "unsupported" for item in supplements
     )
-    registry = repo_root / 'experiments/tables_4_7/action_backends.yaml'
+    registry = repo_root / 'experiments/protocol/action_backends.yaml'
     if trajectory and registry.is_file():
         support = yaml.safe_load(registry.read_text()).get('trajectory_support', {}).get(
             trajectory.get('trajectory_id'), {}).get('backends', {})

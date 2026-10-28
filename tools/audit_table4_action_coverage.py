@@ -15,7 +15,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TABLE_ROOT = ROOT / "experiments/tables_4_7"
+TABLE_ROOT = ROOT / "experiments/protocol"
 RUN_ROOT = ROOT / "runs/project_genie/table4"
 
 

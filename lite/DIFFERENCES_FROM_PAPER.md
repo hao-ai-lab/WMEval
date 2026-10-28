@@ -17,8 +17,8 @@ tables are frozen; nothing below changes a published value unless it says so.
 
 | Dimension | Lite trajectory | Difference from the paper's runs |
 |---|---|---|
-| Table 4/7 cells | canonical trajectories in `experiments/tables_4_7/trajectories/` | Commanded timing; browser models record realized timing separately |
-| Prompt consistency | `prompt.camera.left_turn_v1` (10 s at 40 deg/s) | The paper's rows used per-model as-run camera inputs (`experiments/tables_4_7/prompt_as_run_inputs.yaml`); they are kept as-run. New models use the canonical turn |
+| Table 4/7 cells | canonical trajectories in `experiments/protocol/trajectories/` | Commanded timing; browser models record realized timing separately |
+| Prompt consistency | `prompt.camera.left_turn_v1` (10 s at 40 deg/s) | The paper's rows used per-model as-run camera inputs (`experiments/protocol/prompt_as_run_inputs.yaml`); they are kept as-run. New models use the canonical turn |
 | Causality | `ball_force_v1`, exact (bit-for-bit the capture's `action.npy`) | None |
 | Fluid | `bottle_motion_v1`, nominal 12 Hz controller profile | The Unity capture stepped on wall-clock (~10 Hz); the legacy `action.npy` keeps that record |
 | Controllability / LPIPS | `ball` trajectories (BallRoller, MirrorRollingBall); BeamDomino shares the causality trajectory | None for scoring; `candidate_normalization: none` kept for paper parity |
@@ -40,7 +40,7 @@ conditioning frame and Unity reference. Reference videos, first frames, actions 
 outputs are unchanged; only these sentences of `case.yaml` `prompt` changed (evaluator
 fingerprints re-authored with `tools/build_lite_case.py`). No prompt-consistency case
 (`*/prompt_*`) changed, so rubrics and frozen prompt scores are unaffected; no other module
-reads the prompt. The paper's runs used the old text (`experiments/tables_4_7/prompt_components.yaml`
+reads the prompt. The paper's runs used the old text (`experiments/protocol/prompt_components.yaml`
 keeps the as-run Table 7 components).
 
 | Case(s) | Old | New | Why |

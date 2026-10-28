@@ -15,7 +15,7 @@ from evaluation.trajectories import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-TABLE_ROOT = ROOT / "experiments/tables_4_7"
+TABLE_ROOT = ROOT / "experiments/protocol"
 TRAJECTORIES = sorted((TABLE_ROOT / "trajectories").glob("*.yaml"))
 
 

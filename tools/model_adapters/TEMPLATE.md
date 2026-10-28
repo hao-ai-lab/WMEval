@@ -3,7 +3,7 @@
 A new model needs only three things: a registry entry, a generator, and the Lite
 runner. Nothing here changes a case's trajectory or reference.
 
-1. **Register the backend** in `experiments/tables_4_7/action_backends.yaml`:
+1. **Register the backend** in `experiments/protocol/action_backends.yaml`:
    interface, native frames / fps, and for every action target
    (`camera`, `ego_vehicle`, `cue_ball`, `ball`, `table_objects`, `rolling_ball`,
    `liquid_container`, `character`) either a `supports:` status or an

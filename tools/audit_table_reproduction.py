@@ -29,7 +29,7 @@ from tools.prepare_table_trajectories import audit as audit_table_trajectories
 from tools.run_prepared_table_evaluations import BLOCKED, EXCLUDED, PLANS
 from tools.run_project_genie_tables import completed_receipt_status
 
-TABLE_ROOT = REPO_ROOT / "experiments" / "tables_4_7"
+TABLE_ROOT = REPO_ROOT / "experiments" / "protocol"
 ASSET_ROOT = REPO_ROOT / "runs" / "tables_4_7" / "prepared_assets"
 EXPECTED_REPEATS = {f"run{index}" for index in range(5)}
 

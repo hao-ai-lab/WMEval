@@ -17,7 +17,7 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_CONFIG = ROOT / "experiments/tables_4_7/unity_scene_runs.yaml"
+DEFAULT_CONFIG = ROOT / "experiments/protocol/unity_scene_runs.yaml"
 DEFAULT_OUTPUT = ROOT / "runs/tables_4_7/unity_scene_runs"
 
 

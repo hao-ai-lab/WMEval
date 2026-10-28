@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 LOCK = json.loads(
-    (Path(__file__).resolve().parents[1] / "experiments/tables_4_7/evaluator_assets.lock.json").read_text(
+    (Path(__file__).resolve().parents[1] / "experiments/protocol/evaluator_assets.lock.json").read_text(
         encoding="utf-8"
     )
 )["assets"]

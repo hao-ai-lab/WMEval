@@ -10,7 +10,7 @@ Checks, for the selected dimensions (default: all) of a suite:
 * deps        -- every ``evaluator_lock.dependency_versions`` entry vs. what is
                  installed (packages, plus cuda/gpu/nvidia_driver and
                  ``*_source_revision`` pins where they can be read locally)
-* assets      -- evaluator weights of ``experiments/tables_4_7/
+* assets      -- evaluator weights of ``experiments/protocol/
                  evaluator_assets.lock.json`` the selected cases use: present in
                  the local HF / torch caches with the locked sha256 (``--online``
                  additionally probes HF for missing ones, with a HEAD request)

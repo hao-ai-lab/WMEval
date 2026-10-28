@@ -3,7 +3,7 @@
 
 Every ``prompt_scene_consistency`` case turns the camera left for 10 s at the
 Unity reference's 40 deg/s: the canonical semantic trajectory
-``experiments/tables_4_7/trajectories/prompt_camera_left_turn.yaml``, baked into
+``experiments/protocol/trajectories/prompt_camera_left_turn.yaml``, baked into
 each case as ``reference/artifacts/trajectory.yaml`` (+ ``action.npz``,
 ``actions.jsonl``). This tool writes each backend's native inputs for that turn
 and the five-repeat queues the existing runners consume.
@@ -57,7 +57,7 @@ from evaluation.trajectories import load_trajectory  # noqa: E402
 
 SUITE_ROOT = ROOT / "lite"
 DIMENSION = "prompt_scene_consistency"
-TABLE_ROOT = ROOT / "experiments/tables_4_7"
+TABLE_ROOT = ROOT / "experiments/protocol"
 TRAJECTORY = "trajectories/prompt_camera_left_turn.yaml"
 # Canonical compiled form -> name inside the case bundle.
 BAKED = {

@@ -29,7 +29,7 @@ BACKEND = action_backends.backend("lingbot_world_cam")
 FRAME_COUNT = int(BACKEND["frames"])
 FPS = float(BACKEND["fps"])
 REPEATS = tuple(f"run{i}" for i in range(5))
-TRAJECTORY_ROOT = REPO_ROOT / "experiments/tables_4_7/trajectories"
+TRAJECTORY_ROOT = REPO_ROOT / "experiments/protocol/trajectories"
 
 
 @dataclass(frozen=True)
@@ -70,7 +70,7 @@ def _plans() -> tuple[Plan, ...]:
                 f"table7/WanderingGarden/{trajectory}",
                 f"{garden_root}/poses.npy",
                 f"{garden_root}/intrinsics.npy",
-                f"experiments/tables_4_7/conditioning_frames/garden_{orientation}.png",
+                f"experiments/protocol/conditioning_frames/garden_{orientation}.png",
                 "yaw_select",
                 start,
                 yaw,
@@ -124,7 +124,7 @@ def sha256(path: Path) -> str:
 
 
 def prompt_metadata(case_id: str) -> dict[str, str]:
-    table_root = REPO_ROOT / "experiments/tables_4_7"
+    table_root = REPO_ROOT / "experiments/protocol"
     manifest_path = table_root / "cases.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     case = next(

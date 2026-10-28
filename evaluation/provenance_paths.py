@@ -5,8 +5,8 @@ from pathlib import Path
 
 
 _REPO_MARKERS = ("runs", "experiments", "lite", "eval_sets")
-# The Lite suite moved from lite/ to lite/; older receipts keep the old path.
-_MOVED = {("eval_sets", "wmeval_lite_v1"): ("lite",)}
+# Directories moved after receipts were recorded: old repo-relative prefix -> new one.
+_MOVED = {("eval_sets", "wmeval_lite_v1"): ("lite",), ("experiments", "tables_4_7"): ("experiments", "protocol")}
 
 
 def resolve_recorded_path(

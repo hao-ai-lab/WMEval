@@ -21,12 +21,12 @@ if str(ROOT) not in sys.path:
 from evaluation import action_backends  # noqa: E402
 from evaluation.trajectories import integrate_rate_channel, sample_held_values  # noqa: E402
 
-TABLE_ROOT = ROOT / "experiments/tables_4_7"
+TABLE_ROOT = ROOT / "experiments/protocol"
 DEFAULT_OUTPUT = ROOT / "runs/tables_4_7/model_inputs"
 REPEATS = tuple(f"run{index}" for index in range(5))
 # Native timelines, supported action targets and the frozen response-side
 # camera gains (with their measurement provenance) live in
-# experiments/tables_4_7/action_backends.yaml.
+# experiments/protocol/action_backends.yaml.
 MODEL_SPECS = {name: action_backends.backend(name) for name in ("matrix_game_2", "matrix_game_3")}
 
 

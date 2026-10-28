@@ -2,9 +2,9 @@
 """Bake a canonical action trajectory into a Lite case bundle.
 
 Copies ``trajectory.yaml`` (byte-identical to the hash-locked source in
-``experiments/tables_4_7/trajectories``), its compiled ``action.npz`` and
+``experiments/protocol/trajectories``), its compiled ``action.npz`` and
 ``actions.jsonl``, and writes ``actions.json`` declaring the action target
-(from ``experiments/tables_4_7/action_backends.yaml``) with source hashes. The
+(from ``experiments/protocol/action_backends.yaml``) with source hashes. The
 evaluation runner reads ``actions.json`` to report ``unsupported`` for backends
 that cannot express the target, instead of scoring a substituted control.
 
@@ -32,7 +32,7 @@ from evaluation import action_backends  # noqa: E402
 from evaluation.trajectories import load_trajectory, write_compiled_trajectory  # noqa: E402
 
 CASES_ROOT = ROOT / "lite/cases"
-TRAJECTORIES = ROOT / "experiments/tables_4_7/trajectories"
+TRAJECTORIES = ROOT / "experiments/protocol/trajectories"
 
 
 def _sha256(path: Path) -> str:
@@ -76,7 +76,7 @@ def bake(case_id: str, trajectory_stem: str) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("case_id", help="e.g. BallRoller/ctrl")
-    parser.add_argument("trajectory", help="stem under experiments/tables_4_7/trajectories")
+    parser.add_argument("trajectory", help="stem under experiments/protocol/trajectories")
     args = parser.parse_args(argv)
     print(f"wrote {bake(args.case_id, args.trajectory)}")
     return 0

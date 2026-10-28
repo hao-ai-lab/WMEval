@@ -9,7 +9,7 @@ instead of being scored against a substituted control.
 Cases without ``actions.json`` fall back to the target recorded in
 ``table_cell.json`` (``action_target``) or to the registry target of the baked
 ``trajectory.yaml``. Only models registered in
-``experiments/tables_4_7/action_backends.yaml`` are checked; an unregistered
+``experiments/protocol/action_backends.yaml`` are checked; an unregistered
 model, or a case with no declared target, is evaluated as before.
 """
 from __future__ import annotations

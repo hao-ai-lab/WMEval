@@ -21,7 +21,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from evaluation.provenance_paths import resolve_recorded_path
 
-TABLE_ROOT = REPO_ROOT / "experiments/tables_4_7"
+TABLE_ROOT = REPO_ROOT / "experiments/protocol"
 HANDOFF_MANIFEST = TABLE_ROOT / "gpu_handoff_manifest.json"
 AUDIT_MANIFEST = TABLE_ROOT / "reference_package_manifest.json"
 DEFAULT_OUTPUT = REPO_ROOT / "dist/reference-packages"
@@ -43,14 +43,14 @@ REFERENCE_CASES = (
 )
 
 CONTRACT_PATHS = (
-    "experiments/tables_4_7/cases.yaml",
-    "experiments/tables_4_7/paper_baseline.yaml",
-    "experiments/tables_4_7/evaluator_protocol.yaml",
-    "experiments/tables_4_7/prompt_components.yaml",
-    "experiments/tables_4_7/conditioning_sources.yaml",
-    "experiments/tables_4_7/unity_scene_runs.yaml",
-    "experiments/tables_4_7/trajectories",
-    "experiments/tables_4_7/compiled",
+    "experiments/protocol/cases.yaml",
+    "experiments/protocol/paper_baseline.yaml",
+    "experiments/protocol/evaluator_protocol.yaml",
+    "experiments/protocol/prompt_components.yaml",
+    "experiments/protocol/conditioning_sources.yaml",
+    "experiments/protocol/unity_scene_runs.yaml",
+    "experiments/protocol/trajectories",
+    "experiments/protocol/compiled",
 )
 
 

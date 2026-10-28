@@ -21,7 +21,7 @@ if str(ROOT) not in sys.path:
 # A few tests exercise the Table 4/7 reproduction against data that is not in
 # git: the git-ignored ``runs/`` tree produced by local Unity captures /
 # reproduction runs, and the sibling paper checkout ``../_arxiv__WorldModel_Eval``
-# pinned by experiments/tables_4_7/paper_baseline.yaml.  Such tests are marked
+# pinned by experiments/protocol/paper_baseline.yaml.  Such tests are marked
 #
 #     @pytest.mark.integration("case_data")   # or "synthetic_data", "table_runs", "paper_checkout"
 #
@@ -30,7 +30,7 @@ if str(ROOT) not in sys.path:
 # ``pytest -m "not integration"`` deselects them entirely.
 # --------------------------------------------------------------------------
 
-TABLE_ROOT = ROOT / "experiments" / "tables_4_7"
+TABLE_ROOT = ROOT / "experiments" / "protocol"
 RUNS_ROOT = ROOT / "runs"
 
 
@@ -142,7 +142,7 @@ EXTERNAL_INPUTS: dict[str, tuple[str, Callable[[], list[Path]]]] = {
     ),
     "paper_checkout": (
         "sibling paper checkout ../_arxiv__WorldModel_Eval "
-        "(sources pinned by experiments/tables_4_7/paper_baseline.yaml)",
+        "(sources pinned by experiments/protocol/paper_baseline.yaml)",
         _paper_checkout_paths,
     ),
 }

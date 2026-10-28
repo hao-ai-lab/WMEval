@@ -61,7 +61,7 @@ python tools/sync_lite_data.py download        # add --split full for the 220 sy
 python tools/run_wmeval_lite.py validate --suite lite
 ```
 
-VLM-judged dimensions need `OPENAI_API_KEY`; CV dimensions fetch pinned checkpoints on first use (`experiments/tables_4_7/evaluator_assets.lock.json`). The data is git-ignored; `git config core.hooksPath .githooks` warns when a checkout needs a re-download.
+VLM-judged dimensions need `OPENAI_API_KEY`; CV dimensions fetch pinned checkpoints on first use (`experiments/protocol/evaluator_assets.lock.json`). The data is git-ignored; `git config core.hooksPath .githooks` warns when a checkout needs a re-download.
 
 ## Quick Start
 
@@ -114,7 +114,7 @@ cases/<Scene>/<variant>/
 
 `tools/build_lite_case.py` (re)builds a case and its lock; `tools/sync_lite_data.py upload` publishes data (maintainers).
 
-**Action trajectories.** Table 4/7 cases carry a canonical semantic `trajectory.yaml` (typed channels, units, segments) and its compiled forms; `tools/build_table_lite_cases.py` rebuilds them from the hash-locked trajectories in `experiments/tables_4_7/trajectories/`. Backends are declared once in `experiments/tables_4_7/action_backends.yaml`: the entity each trajectory actuates (`camera`, `ego_vehicle`, `cue_ball`, ...), each backend's native timeline and calibration, and which targets it cannot express. Input preparation (`tools/prepare_table_trajectories.py`, `prepare_matrix_game_inputs.py`, `prepare_lingbot_table7_inputs.py`) refuses an unsupported target/backend pair rather than substitute another control.
+**Action trajectories.** Table 4/7 cases carry a canonical semantic `trajectory.yaml` (typed channels, units, segments) and its compiled forms; `tools/build_table_lite_cases.py` rebuilds them from the hash-locked trajectories in `experiments/protocol/trajectories/`. Backends are declared once in `experiments/protocol/action_backends.yaml`: the entity each trajectory actuates (`camera`, `ego_vehicle`, `cue_ball`, ...), each backend's native timeline and calibration, and which targets it cannot express. Input preparation (`tools/prepare_table_trajectories.py`, `prepare_matrix_game_inputs.py`, `prepare_lingbot_table7_inputs.py`) refuses an unsupported target/backend pair rather than substitute another control.
 
 | Backend | Native input | Camera | Vehicle / ball |
 | --- | --- | --- | --- |

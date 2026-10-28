@@ -15,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from evaluation.table_comparison import load_baseline, result_template, sha256
 
-DEFAULT_BASELINE = REPO_ROOT / "experiments" / "tables_4_7" / "paper_baseline.yaml"
+DEFAULT_BASELINE = REPO_ROOT / "experiments" / "protocol" / "paper_baseline.yaml"
 METRIC_MAP = {
     "depth_absrel_pct": "depth_absrel_pct",
     "pairwise_distance_mae_pct": "dist_mae_pct",

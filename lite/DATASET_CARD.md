@@ -317,7 +317,7 @@ dataset:
   DINOv2, RAFT and LPIPS. Suite validation and dry runs need only PyYAML.
 - **CV checkpoints**, downloaded on first use from their upstream hosts. The
   pinned revisions and weight SHA-256s are listed in the evaluator repository's
-  `experiments/tables_4_7/evaluator_assets.lock.json`.
+  `experiments/protocol/evaluator_assets.lock.json`.
   DINOv2 is loaded through `torch.hub`, which needs network access to GitHub on
   first use.
 - **A hosted VLM judge** (OpenAI API, `OPENAI_API_KEY`) for the candidate side
