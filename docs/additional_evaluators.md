@@ -252,6 +252,6 @@ python tools/groundingdino_sam.py \
 Use the scripts in `scripts/` as ready-to-edit templates for concrete runs, for example:
 
 ```bash
-bash scripts/groundingdino_bytetrack.sh
-bash scripts/groundingdino_sam.sh
+bash scripts/groundingdino_bytetrack_wm_car.sh
+bash scripts/groundingdino_sam_wm_car.sh
 ```
