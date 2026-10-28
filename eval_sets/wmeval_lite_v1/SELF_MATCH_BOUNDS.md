@@ -84,7 +84,7 @@ model `azure/openai/gpt-5.4`, pinned prompts/rubrics/QA unchanged).
   less than 5 % of the time. MDD_1 compares single videos; MDD_5 is the paper's
   5-seed protocol. Judge noise only: generation (seed) variance comes on top.
 
-Machine-readable: `judge_noise_floor.json` (next to this file). Raw rows, usage
+Machine-readable: `judge_noise_floor.json` in the [Hub dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite) (written here by `tools/measure_judge_floor.py`, not tracked in git). Raw rows, usage
 logs and the full per-video summary: `reports/judge_noise_floor/` (not tracked).
 Reproduce:
 

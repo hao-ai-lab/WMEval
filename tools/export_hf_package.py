@@ -26,10 +26,10 @@ What ``export`` copies (all discovered, nothing hard-coded per case):
   ship with the suite; ``--no-baselines`` drops the latter);
 * ``DATASET_CARD.md``, renamed to ``README.md`` (the Hub reads the card from
   ``README.md``), and the notes it links to (``DIFFERENCES_FROM_PAPER.md``,
-  ``FROZEN_JUDGE_OUTPUTS.md``).
+  ``LICENSE-UNITY.txt``).
 
 Case directories present on disk but not listed by any suite, and other
-suite-root files (``PENDING.md`` etc.), are reported and left out. Every path
+suite-root files (maintainer notes etc.), are reported and left out. Every path
 a ``case.yaml`` declares (``reference.*``, ``reference.artifacts.*`` and the
 known ``module_params`` path keys) must resolve inside its own case bundle;
 export fails otherwise.
@@ -89,7 +89,7 @@ MANIFEST_FORMAT_VERSION = 1
 EXTRA_DIRS = ("human_alignment", "baselines")
 DATASET_CARD = "DATASET_CARD.md"
 # User-facing notes the dataset card links to; shipped as-is.
-RELEASE_DOCS = ("DIFFERENCES_FROM_PAPER.md", "FROZEN_JUDGE_OUTPUTS.md", "SELF_MATCH_BOUNDS.md", "LICENSE-UNITY.txt")
+RELEASE_DOCS = ("DIFFERENCES_FROM_PAPER.md", "SELF_MATCH_BOUNDS.md", "LICENSE-UNITY.txt")
 
 # Never exported, never counted as "extra" by verify.
 CACHE_DIR_NAMES = frozenset(

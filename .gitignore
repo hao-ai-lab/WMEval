@@ -287,3 +287,8 @@ eval_sets/wmeval_lite_v1/synthetic/*
 # Table 4/7 working notes (kept locally, not part of the release)
 /TABLE4_TABLE7_REMAINING_MODELS_TODO.md
 /TABLE4_TABLE7_REPRODUCTION_PLAN.md
+
+# Hub-hosted outputs (lmgame/WMEval-Lite): written locally by tools/audit_dataset.py
+# and tools/measure_judge_floor.py, published to the dataset, not tracked here.
+eval_sets/wmeval_lite_v1/audit/audit_results.jsonl
+eval_sets/wmeval_lite_v1/judge_noise_floor.json

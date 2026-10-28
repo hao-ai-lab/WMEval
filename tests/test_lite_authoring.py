@@ -36,7 +36,7 @@ def test_author_case_always_recomputes_fingerprint(tmp_path: Path) -> None:
     assert first["code_revision"] == "test"
 
     # the empirically-reported defect scenario: edit the bundle, re-author
-    # with the DEFAULT command (what PENDING.md step 3 prescribes)
+    # with the DEFAULT command (the documented re-lock step)
     (case_dir / "reference" / "ref.png").write_text(
         "edited first frame\n", encoding="utf-8"
     )

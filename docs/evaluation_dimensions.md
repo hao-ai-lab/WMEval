@@ -30,7 +30,7 @@ ground truth (per-object 3D world transforms + camera pose/intrinsics), per
 the paper — not detector output re-run on Unity's own reference video.
 
 As of this writing, no case bundle in `eval_sets/wmeval_lite_v1/` ships that
-analytical ground-truth artifact (see `PENDING.md`), so
+analytical ground-truth artifact, so
 `depth_absrel_pct`/`pairwise_distance_mae_pct` currently report `null` with
 `ground_truth_status: "pending"` until it lands.
 
@@ -371,9 +371,8 @@ reprojected through Unity's *own* ground-truth camera (`status:
 "reprojection_proxy_2d"`), not the paper's 3D FDE/DTW. Likewise
 `mechanical_quantities` can report mass and a pixel/frame terminal speed
 (`status: "pixel_units_only"`) but not momentum/kinetic energy in physical
-units, since that also needs metric-scale candidate velocity. See
-`eval_sets/wmeval_lite_v1/PENDING.md` for what would close this gap
-(candidate-side pose recovery or a metric-depth model).
+units, since that also needs metric-scale candidate velocity. Closing this gap needs
+candidate-side pose recovery or a metric-depth model.
 
 ##### Main Entry Points
 

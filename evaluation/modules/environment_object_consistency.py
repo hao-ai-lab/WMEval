@@ -40,7 +40,7 @@ on ``context.artifacts``:
     (same convention as the bundled ``intrinsics.npy``).
 
 As of this writing no case bundle ships ``eoc_unity_object_transforms_json``
-(see ``eval_sets/wmeval_lite_v1/PENDING.md``), so when it is absent this
+so when it is absent this
 module reports ``ground_truth_status: "pending"`` and leaves
 ``depth_absrel_pct`` / ``pairwise_distance_mae_pct`` as ``None`` rather than
 inventing ground truth.
@@ -89,7 +89,7 @@ EPS = 1e-6
 # directly to Unity's metric-scale depth (as depth_absrel_pct does) is a
 # scale-mismatched comparison by construction -- empirically confirmed this
 # was responsible for most of the ~55-99% depth_absrel_pct self-match error
-# seen across every case before this fix (see PENDING.md).
+# seen across every case before this fix.
 DEPTH_DEFAULT_MODEL = "depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf"
 DEPTH_METRIC_INDOOR_MODEL = "depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf"
 # Candidate checkpoints _auto_select_depth_model chooses between when a
@@ -974,7 +974,7 @@ def _estimate_depth_via_apparent_size(
     mirror surfaces confuse depth models structurally (they see a reflection
     of the environment, not the object's own surface): empirically ~18-27%
     error here vs. ~79-91% for every monocular depth model tried on
-    MirrorRollingBall's chrome sphere (see suite.yaml/PENDING.md).
+    MirrorRollingBall's chrome sphere (see suite.yaml).
 
     ``real_diameter_m`` must be a real physical constant, not something
     re-derived per eval run -- callers should calibrate it once (e.g. from
@@ -1365,7 +1365,7 @@ def analyze_environment_object_consistency_from_context(
         result["ground_truth_status"] = "pending"
         result["ground_truth_note"] = (
             "eoc_unity_object_transforms_json and/or eoc_unity_poses_npy artifacts "
-            "are not configured for this case; see eval_sets/wmeval_lite_v1/PENDING.md. "
+            "are not configured for this case. "
             "depth_absrel_pct / pairwise_distance_mae_pct cannot be computed without "
             "Unity-side analytical 3D object transforms."
         )

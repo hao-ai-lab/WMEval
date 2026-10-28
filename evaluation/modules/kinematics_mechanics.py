@@ -32,8 +32,7 @@ module expects:
     ``eoc_unity_object_transforms_json``.
   - ``kin_unity_object_masses_json``: ``{"<label>": mass_kg, ...}``.
 
-As of this writing neither artifact is bundled with any case (see
-``eval_sets/wmeval_lite_v1/PENDING.md``); when they are absent this module
+As of this writing neither artifact is bundled with any case ; when they are absent this module
 still reports the candidate-side reconstructed trajectories (useful for
 inspection/QA) but leaves every ground-truth-dependent metric as ``None``
 with ``ground_truth_status: "pending"`` rather than inventing a reference.
@@ -1282,8 +1281,8 @@ def analyze_kinematics_mechanics_from_context(
         result["ground_truth_status"] = "pending"
         result["ground_truth_note"] = (
             "kin_unity_object_transforms_json / kin_unity_poses_npy / "
-            "kin_unity_intrinsics_npy are not fully configured for this case; see "
-            "eval_sets/wmeval_lite_v1/PENDING.md. Trajectory-fidelity (FDE/DTW) and "
+            "kin_unity_intrinsics_npy are not fully configured for this case. "
+            "Trajectory-fidelity (FDE/DTW) and "
             "mechanical-quantity (momentum/energy) metrics cannot be computed without "
             "a Unity-side analytical reference trajectory."
         )

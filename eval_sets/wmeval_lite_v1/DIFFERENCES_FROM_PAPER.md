@@ -35,7 +35,7 @@ tables are frozen; nothing below changes a published value unless it says so.
 
 ## Prompt corrections (2026-10-21 dataset audit)
 
-The audit (`AUDIT.md`, `tools/audit_dataset.py`) compared every core prompt with its
+The audit (`audit/README.md`, `tools/audit_dataset.py`) compared every core prompt with its
 conditioning frame and Unity reference. Reference videos, first frames, actions and judge
 outputs are unchanged; only these sentences of `case.yaml` `prompt` changed (evaluator
 fingerprints re-authored with `tools/build_lite_case.py`). No prompt-consistency case
@@ -55,7 +55,7 @@ keeps the as-run Table 7 components).
 | BallRoller/ctrl | "suitable for collecting pickups and weaving ..." | "suitable for weaving ..." | The scene has no pickups |
 | BeamDomino/causal, causal_glancing, causal_direct_strike | "Keep the layout clean and readable so the full physics chain is visible in one shot." / "the camera follows ... throughout." | "Keep the layout clean and readable." / "... throughout, also after the ball has passed the structure and runs off the edge of the floating platform." | The follow camera leaves the structure and the ball falls off the platform in all three recordings |
 
-Accepted as-is (documented in `AUDIT.md`): RacingCar/kinematics_third's car ends against the
+Accepted as-is (documented in `audit/README.md`): RacingCar/kinematics_third's car ends against the
 right barrier from 6.3 s (paper recording); ChessBoard/walk_third's follow camera clips through
 foreground statues; the outward Garden frames contain no tree, so the tree anchor cannot be
 detected at frame 0 on those Table 7 cells; BallRoller/ctrl's recording was driven more slowly
@@ -102,3 +102,22 @@ The pinned judge is `gpt-5.4`. `tools/judge_gateway.py` can route the same
 model through an OpenAI-compatible gateway; results produced that way record
 `WMEVAL_JUDGE_TRANSPORT` where the tool supports it and should say so in their
 notes.
+
+## Known limitations
+
+- **Realized camera motion is not reported beside the scores.** Consistency cases command
+  fixed yaw sweeps, but models realize different amounts of rotation (LingBot-World realized
+  −17.7°/+41.4° for the ±45° perturbations and +54.9°/+277.9° for the full turns), so
+  consistency scores are not normalized for how far the camera actually moved.
+- **Target control is checked per backend, not per rollout.** `action_backends.yaml` refuses
+  targets a backend cannot express, and RacingCar's road FDE is withheld when road alignment
+  fails, but no per-run target-success rate is recorded.
+- **Prompt cases.** The bundled trajectory is a 40 °/s left turn for 10 s; the paper models'
+  inputs (`tools/prepare_prompt_case_inputs.py`) reproduce their original rollouts instead.
+  New models should compile the bundled turn.
+- **Physical causality** grades one rollout over five judge passes, a different estimator
+  from the paper's five rollouts: it makes fractional CSR expressible but does not reproduce
+  Table 12 exactly.
+- **Reproduction.** Re-scoring a paper model through the Lite cases and matching the
+  published Table 4/7 means (`tools/export_lite_table_results.py` →
+  `tools/compare_table_results.py compare`) has not been completed for every model.

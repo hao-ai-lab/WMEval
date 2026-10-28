@@ -4,7 +4,7 @@
 This is NOT a production metric and is NOT wired into evaluation/registry.py
 or the suite CLI. It exists only to help validate `environment_object_consistency`
 and `kinematics_mechanics` while real Unity ground-truth artifacts are still
-pending (see eval_sets/wmeval_lite_v1/PENDING.md): run the module on a real
+pending: run the module on a real
 candidate video, sample a few frames, and ask a VLM judge whether the reported
 numbers plausibly match what's visible in the video.
 

@@ -241,7 +241,7 @@ def _extract_shadow_consistency(result: Mapping[str, Any]) -> dict[str, Any]:
 
 def _extract_environment_object_consistency(result: Mapping[str, Any]) -> dict[str, Any]:
     # depth_absrel_pct / pairwise_distance_mae_pct are None while Unity
-    # analytical ground truth (see PENDING.md) is unavailable; object
+    # analytical ground truth is unavailable; object
     # permanence and character consistency are reference-free and always
     # populated when detection succeeds.
     return {

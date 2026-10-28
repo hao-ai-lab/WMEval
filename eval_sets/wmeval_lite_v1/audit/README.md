@@ -2,9 +2,10 @@
 
 Every evaluation item -- the 32 core cases (`test_core`) and the 220 synthetic
 trajectories (`test_full`) -- was checked against its Unity reference, fixed where it
-was not sensible, and re-audited. Reproduce with `tools/audit_dataset.py`; results are in
-`audit/` (`audit_summary.json`: counts and the initial findings; `audit_results.jsonl`:
-the final per-item verdicts, GT flags and VLM checks).
+was not sensible, and re-audited. Reproduce with `tools/audit_dataset.py`; `audit_summary.json`
+(next to this file) holds the counts and initial findings; the final per-item verdicts, GT
+flags and VLM checks (`audit/audit_results.jsonl`) are in the
+[Hub dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite/tree/main/audit).
 
 ## Method
 

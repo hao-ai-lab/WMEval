@@ -32,7 +32,16 @@ if str(ROOT) not in sys.path:
 from build_leaderboard import lite_cells  # noqa: E402
 
 UNITY_SELFMATCH = ROOT / "reports/wmeval_lite/unity_selfmatch/per_case_results.jsonl"
-JUDGE_FLOOR = ROOT / "eval_sets/wmeval_lite_v1/judge_noise_floor.json"
+JUDGE_FLOOR = ROOT / "eval_sets/wmeval_lite_v1/judge_noise_floor.json"   # Hub-hosted; see _judge_floor()
+
+
+def _judge_floor() -> Path:
+    """The judge noise floor: written locally by measure_judge_floor.py, otherwise fetched from the Hub."""
+    if JUDGE_FLOOR.is_file():
+        return JUDGE_FLOOR
+    from huggingface_hub import hf_hub_download
+
+    return Path(hf_hub_download("lmgame/WMEval-Lite", JUDGE_FLOOR.name, repo_type="dataset"))
 ANCHOR_RUNS = [ROOT / f"reports/wmeval_lite_modal/anchors_{d}/per_case_results.jsonl"
                for d in ("action_controllability", "kinematics_mechanics", "lighting_shading", "fluid_mechanics")]
 ANCHOR_RUNS.append(ROOT / "reports/wmeval_lite_modal/ctrl_comp_v2/per_case_results.jsonl")   # Unity Control self-match
@@ -58,7 +67,7 @@ def _cells(rows: list[dict]) -> dict:
 
 def _judge_rows() -> list[dict]:
     # Unity prompt self-scores (K judge passes per case) as Lite-shaped rows.
-    floor = json.loads(JUDGE_FLOOR.read_text())["selfmatch"].get("prompt_scene_consistency", {})
+    floor = json.loads(_judge_floor().read_text())["selfmatch"].get("prompt_scene_consistency", {})
     return [{"dimension": "prompt_scene_consistency", "case_id": case, "model": "unity_self", "seed": "run0",
              "status": "completed", "metrics": {k: v["mean"] for k, v in d["metrics"].items()}}
             for case, d in floor.items() if not case.startswith("synthetic/")]

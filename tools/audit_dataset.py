@@ -866,11 +866,11 @@ def usage_summary(log: Path) -> dict[str, Any]:
     return tot
 
 
-# Remaining major findings reviewed by hand and accepted (AUDIT.md "Accepted as-is"): item regex -> reason.
+# Remaining major findings reviewed by hand and accepted (audit/README.md "Accepted as-is"): item regex -> reason.
 ACCEPTED = {
     r"^BallRoller/ctrl$": "the recording's realized key timing is slower than the commanded 2.96 s script (the ball "
                           "is still driven until ~5.3 s); re-deriving it would change the paper-parity "
-                          "controllability actions -- documented in AUDIT.md",
+                          "controllability actions -- documented in audit/README.md",
     r"^BeamDomino/causal$": "paper recording; the cascade is verified from the Unity log and the recorded reference "
                             "judge answers (csr_unity 100); the follow camera leaves the structure",
     r"^ChessBoard/walk_third$": "follow camera clips through foreground statues (scene rig, as recorded)",

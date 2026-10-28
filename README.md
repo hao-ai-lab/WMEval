@@ -124,7 +124,7 @@ cases/<Scene>/<variant>/
 | Matrix-Game 3.0 | 177 frames @ 17 fps, keys + mouse | regime-specific gains | out of scope |
 | LingBot-World Base Cam | 161 camera poses @ 16 fps | nominal poses | unsupported |
 
-**Synthetic trajectories (`test_full`).** 220 trajectories (252 rows with the core cases) built text first: each is an action description from a per-target step vocabulary (*"the camera turns left at 30°/s for 2 s, then holds still"*) that completes a core case's prompt and compiles to a schema-v1 `trajectory.yaml`, starting from that case's conditioning frame. Each has a Unity reference rendered by replaying the actions; plans whose reference cannot give a meaningful score are screened out and replaced deterministically ([`AUDIT.md`](eval_sets/wmeval_lite_v1/AUDIT.md)). Synthetic rows are scored like their conditioning case and aggregated in a separate `synthetic` block.
+**Synthetic trajectories (`test_full`).** 220 trajectories (252 rows with the core cases) built text first: each is an action description from a per-target step vocabulary (*"the camera turns left at 30°/s for 2 s, then holds still"*) that completes a core case's prompt and compiles to a schema-v1 `trajectory.yaml`, starting from that case's conditioning frame. Each has a Unity reference rendered by replaying the actions; plans whose reference cannot give a meaningful score are screened out and replaced deterministically ([`audit/`](eval_sets/wmeval_lite_v1/audit/README.md)). Synthetic rows are scored like their conditioning case and aggregated in a separate `synthetic` block.
 
 | Family | Target | # | Steps (core case) |
 | --- | --- | --- | --- |
