@@ -10,11 +10,11 @@ differs. Results produced this way should record the gateway in their notes.
 Usage::
 
     python tools/judge_gateway.py --key-file ~/.ssh/vlm_as_judge_key -- \\
-        run --suite eval_sets/wmeval_lite_v1 --model-root runs/odyssey \\
+        run --suite lite --model-root runs/odyssey \\
         --dimensions prompt_scene_consistency,lpips --output-dir reports/wmeval_lite/odyssey
 
     python tools/judge_gateway.py --key-file ~/.credentials/nv_vlm_api_key \\
-        --script tools/freeze_reference_events.py -- LiquidContainer/fluid_rest --passes 5 --register
+        --script tools/dataset/freeze_reference_events.py -- LiquidContainer/fluid_rest --passes 5 --register
 
 The gateway URL is exported as ``WMEVAL_JUDGE_TRANSPORT`` so tools that freeze
 judge outputs can record it next to the judge model.

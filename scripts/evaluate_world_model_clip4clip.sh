@@ -1,4 +1,4 @@
-python tools/evaluate_world_model_clip4clip.py \
+python tools/legacy/evaluate_world_model_clip4clip.py \
   --manifest_jsonl /path/to/world_model_clip4clip_manifest.jsonl \
   --output_jsonl reports/world_model_clip4clip/results.jsonl \
   --sample_mode timestamp \

@@ -63,7 +63,7 @@ def flow_raft(
 
 # Explicit rather than ``Raft_Large_Weights.DEFAULT``, an alias torchvision may
 # repoint; recorded with the checkpoint hash in
-# experiments/tables_4_7/evaluator_assets.lock.json.
+# experiments/protocol/evaluator_assets.lock.json.
 RAFT_WEIGHTS_NAME = "C_T_SKHT_V2"
 
 

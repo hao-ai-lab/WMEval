@@ -10,7 +10,7 @@ Checks, for the selected dimensions (default: all) of a suite:
 * deps        -- every ``evaluator_lock.dependency_versions`` entry vs. what is
                  installed (packages, plus cuda/gpu/nvidia_driver and
                  ``*_source_revision`` pins where they can be read locally)
-* assets      -- evaluator weights of ``experiments/tables_4_7/
+* assets      -- evaluator weights of ``experiments/protocol/
                  evaluator_assets.lock.json`` the selected cases use: present in
                  the local HF / torch caches with the locked sha256 (``--online``
                  additionally probes HF for missing ones, with a HEAD request)
@@ -25,7 +25,7 @@ mismatches against a lock are WARN (scores may drift) unless ``--strict``.
 
 Usage::
 
-    python tools/preflight_lite.py --suite eval_sets/wmeval_lite_v1 --device mps
+    python tools/preflight_lite.py --suite lite --device mps
     python tools/preflight_lite.py --dimensions lpips,fluid_mechanics --device cuda --strict
 """
 from __future__ import annotations
@@ -48,7 +48,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools import lock_case_dependencies as lcd  # noqa: E402
+from tools.dataset import lock_case_dependencies as lcd# noqa: E402
 
 PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
 MIN_PYTHON = (3, 11)
@@ -207,7 +207,7 @@ def check_runtime_imports(
     rows = []
     for module, dims in sorted(needed.items()):
         status = PASS if find_spec(module) is not None else FAIL
-        detail = "importable" if status == PASS else "not installed (pip install it; see requirements-gpu.lock)"
+        detail = "importable" if status == PASS else "not installed (pip install it; see requirements/gpu.lock)"
         rows.append(Row(status, f"import {module}", f"{detail} [{', '.join(sorted(dims))}]"))
     return rows
 
@@ -463,7 +463,7 @@ def render(rows: list[Row]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--suite", default="eval_sets/wmeval_lite_v1", help="Suite root (default: %(default)s)")
+    parser.add_argument("--suite", default="lite", help="Suite root (default: %(default)s)")
     parser.add_argument("--dimensions", default=None, help="Comma-separated dimension ids (default: all)")
     parser.add_argument("--device", default="auto", help="cuda | cuda:N | mps | cpu | auto (default: %(default)s)")
     parser.add_argument("--strict", action="store_true", help="Treat locked-version mismatches as failures")

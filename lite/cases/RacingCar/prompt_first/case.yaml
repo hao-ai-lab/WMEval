@@ -1,0 +1,38 @@
+schema_version: 2
+case_id: RacingCar/prompt_first
+scene: RacingCar
+display_name: RacingCar first
+prompt: "A very wide, straight highway under a clear blue sky, with dark roadside\
+  \ barriers, green grass, and long symmetrical rows of tall trees on both sides.\
+  \ The road begins abruptly at a starting point, with no ground behind it\u2014only\
+  \ open sky, as if the road is suspended in space. Bright daytime lighting, clean\
+  \ and minimal environment. First person view."
+perspective: first_person
+rubric_scene_name: RacingCar_first
+modules: []
+reference:
+  first_frame: reference/ref.png
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+    reference_scores: reference/artifacts/reference_scores.json
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
+  evaluator_fingerprint: b2a18ba4cfc8e582672b3ea4ce60ad89
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pydantic: 2.13.5
+    requests: 2.34.2
+    lock_source: tools/dataset/lock_case_dependencies.py

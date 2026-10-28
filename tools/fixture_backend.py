@@ -27,7 +27,7 @@ Examples::
 
     python tools/fixture_backend.py --output-root /tmp/wm_fixtures \\
         --dimensions lpips --mode identity
-    python tools/run_wmeval_lite.py run --suite eval_sets/wmeval_lite_v1 \\
+    python tools/run_wmeval_lite.py run --suite lite \\
         --candidate-manifest /tmp/wm_fixtures/fixture_candidates.jsonl \\
         --dimensions lpips --output-dir /tmp/wm_fixtures/report --dry-run
 """
@@ -54,7 +54,7 @@ from evaluation.lite.suite_loader import load_suite  # noqa: E402
 MODES = ("identity", "degraded")
 ENCODERS = ("auto", "ffmpeg", "opencv")
 DEFAULT_MODEL = "fixture"
-DEFAULT_SUITE = REPO_ROOT / "eval_sets" / "wmeval_lite_v1"
+DEFAULT_SUITE = REPO_ROOT / "lite"
 
 # Deterministic perturbation used by ``degraded`` (kept identical across encoders).
 BLUR_SIGMA = 2.0

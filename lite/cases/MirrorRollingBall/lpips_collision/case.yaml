@@ -1,0 +1,52 @@
+schema_version: 2
+case_id: MirrorRollingBall/lpips_collision
+scene: MirrorRollingBall
+display_name: MirrorBall
+prompt: 'Starting world must match this layout: a high camera looking diagonally down
+  at a flat light gray floor enclosed by low dark walls. In the middle of the floor,
+  a square grid of many glossy yellow spheres with alleys between rows; one small,
+  highly reflective chrome mirror ball (the player) sits at the centre of the grid.
+  Strong light from upper right; crisp shadows toward lower left. A pale blue-gray
+  background above the walls. The mirror ball sits in a central aisle with clear path
+  forward between yellow-sphere columns.
+
+
+  The player controls only the silver mirror ball: roll it on the floor using standard
+  directions. Keep physics simple and responsive.'
+perspective: third_person
+modules:
+- lpips
+- control_motion
+reference:
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 7a35bf7e17f0f5b182c20aa1564be1f39a77b009
+  evaluator_fingerprint: e7c1f3493d263d63df739244bf24acdd
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    lpips: 0.1.4
+    numpy: 2.4.6
+    openai: 3.22.1
+    opencv-python-headless: 5.0.0.93
+    torch: 2.14.1
+    torchvision: 0.29.1
+    asset:lpips_vgg: a78928a0af1e5f0fcb1f3b9e8f8c3a2a5a3de244d830ad5c1feddc79b8432868
+    asset:ptlflow_synthetic: 9397588204a48ad826ad168b9bd6961a78f09661
+    asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
+    lock_source: tools/dataset/lock_case_dependencies.py
+module_params:
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json

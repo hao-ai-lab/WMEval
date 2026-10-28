@@ -1,0 +1,61 @@
+schema_version: 2
+case_id: BeamDomino/causal
+scene: BeamDomino
+display_name: BeamDomino
+prompt: 'Starting world must match the BeamDomino Unity scene from a third-person
+  follow camera: a blue controllable ball on the floor in the foreground, a small
+  three-pillar structure with a triangular roof directly ahead, a gold ball resting
+  on top of the roof, and a radial ring of dominoes arranged around the structure
+  beyond it. Keep the layout clean and readable. Preserve the authored camera feeling
+  of the Unity scene rather than switching to first-person or a cinematic orbit: the
+  camera follows from behind and above the blue ball throughout, also after the ball
+  has passed the structure and runs off the edge of the floating platform.
+
+
+  The player controls the blue floor ball. After a brief pause it rolls straight forward
+  into the nearest front-right pillar, then takes no further steering. Expected chain:
+  the ball rolls, strikes a supporting pillar, the roof tips and the gold ball drops,
+  and the domino ring cascades.'
+perspective: third_person
+modules:
+- causal_step
+- control_motion
+- lpips
+module_params:
+  causal_step:
+    causal_step_video_id: BeamDomino_causal
+  lpips:
+    lpips_reference_events_json: reference/artifacts/contact_events.json
+reference:
+  artifacts:
+    qa_dataset: reference/artifacts/qa_dataset.json
+    judge_answers: reference/artifacts/judge_answers.json
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+  checksums: reference/checksums.sha256
+  video: reference/reference.mp4
+protocol:
+  candidate_normalization: beamdomino_native
+  duration_threshold_mode: max
+  min_duration_ratio: 0.5
+  min_duration_sec: 1.0
+evaluator_lock:
+  artifact_schema_versions: {}
+  code_revision: c79a1ffc6b424f7fa935c58c9c9d269d7d799879
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    lpips: 0.1.4
+    numpy: 2.4.6
+    openai: 3.22.1
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    torch: 2.14.1
+    torchvision: 0.29.1
+    asset:lpips_vgg: a78928a0af1e5f0fcb1f3b9e8f8c3a2a5a3de244d830ad5c1feddc79b8432868
+    asset:ptlflow_synthetic: 9397588204a48ad826ad168b9bd6961a78f09661
+    asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
+    lock_source: tools/dataset/lock_case_dependencies.py
+  evaluator_fingerprint: a2c376b36869eb4e9ec5fe6fb12b422f
+  module_config: {}
+  release_id: wmeval-lite-v1

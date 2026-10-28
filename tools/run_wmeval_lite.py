@@ -16,26 +16,26 @@ candidate_video[, params]); a synthetic case_id is its ``synthetic_id``.
 Examples::
 
     # Validate the bundled suite data (checksums, bundle completeness)
-    python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
+    python tools/run_wmeval_lite.py validate --suite lite
 
     # See every (dimension, case) the suite defines
-    python tools/run_wmeval_lite.py list-cases --suite eval_sets/wmeval_lite_v1
+    python tools/run_wmeval_lite.py list-cases --suite lite
 
     # Evaluate a model's rollouts across all dimensions
     python tools/run_wmeval_lite.py run \
-        --suite eval_sets/wmeval_lite_v1 \
+        --suite lite \
         --model-root runs/genie3 \
         --output-dir reports/wmeval_lite/genie3
 
     # Core cases plus the 220 synthetic trajectories (separate synthetic aggregate)
     python tools/run_wmeval_lite.py run \
-        --suite eval_sets/wmeval_lite_v1 --split full \
+        --suite lite --split full \
         --model-root runs/genie3 \
         --output-dir reports/wmeval_lite/genie3
 
     # Only the reference-free dimensions, resumable
     python tools/run_wmeval_lite.py run \
-        --suite eval_sets/wmeval_lite_v1 \
+        --suite lite \
         --model-root runs/genie3 \
         --dimensions prompt_scene_consistency,lighting_shading \
         --resume \
@@ -43,7 +43,7 @@ Examples::
 
     # Offline authoring: (re)generate prompt-consistency rubrics
     python tools/run_wmeval_lite.py generate-rubrics \
-        --suite eval_sets/wmeval_lite_v1
+        --suite lite
 """
 from __future__ import annotations
 
@@ -370,7 +370,7 @@ def main(argv: list[str] | None = None) -> int:
     def add_suite_arg(sub: argparse.ArgumentParser) -> None:
         sub.add_argument(
             "--suite",
-            default="eval_sets/wmeval_lite_v1",
+            default="lite",
             help="Suite root directory containing suite.yaml (default: %(default)s)",
         )
 

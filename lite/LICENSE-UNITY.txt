@@ -1,0 +1,17 @@
+Unity Benchmark Scene License v1.0
+
+Copyright (c) 2026 Unity Technologies SF. All rights reserved.
+
+Permission to execute and redistribute this software in unmodified binary form is granted, free of charge, solely to run the [UCSD AI World Model Benchmarking Protocol] (the "Protocol") in connection with this software for the purpose of producing or validating the Protocol's benchmarking metrics (the "Permitted Use"), subject in all instances to the following conditions:
+
+The software, and any output produced by it, may not be used for any purpose other than the Permitted Use. In particular, neither the software nor its output may be used as training data, fine-tuning data, evaluation input, retrieval corpus, embedding source, or any other input to any AI or machine learning model, except solely as the reference standard against which a model's independently generated output is compared.
+
+Embedded assets, models, textures, animations, audio, shaders, and scripts may not be extracted, separated, re-rendered, or otherwise obtained from the software.
+
+The software may not be modified, decompiled, or reverse engineered, nor incorporated into other software, except to the extent applicable law prohibits such restriction.
+
+Redistributions must be unmodified, must retain this license and any accompanying NOTICE file, and must impose this license on each recipient.
+
+No trademark rights are granted.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL UNITY TECHNOLOGIES SF OR ITS AFFILIATES BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE. ANY BREACH OF THIS LICENSE TERMINATES ALL RIGHTS GRANTED UNDER IT.

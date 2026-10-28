@@ -1,0 +1,62 @@
+schema_version: 2
+case_id: WanderingGarden/scene_360_in
+scene: WanderingGarden
+display_name: WanderingGarden table7 360_in
+prompt: A first-person view from a fixed standing position on the small bridge in
+  a traditional Japanese garden courtyard, initially facing the main cherry tree.
+  Two stone garden lanterns and foreground and background rockery ornaments serve
+  as persistent spatial anchors. Warm architectural and garden lighting illuminates
+  the foliage and surrounding wooden buildings. No main character is persistently
+  visible. The initial Unity conditioning view is inward-facing toward the scene's
+  designated target objects and anchors. From that orientation, the camera performs
+  the controlled full 360-degree camera rotation used by the paper.
+perspective: first_person
+modules:
+- environment_object_consistency
+reference:
+  first_frame: reference/ref.png
+  video: reference/reference.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+protocol:
+  candidate_normalization: match_reference
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+module_params:
+  environment_object_consistency:
+    eoc_text_prompt: tree. stone lantern. rock.
+    eoc_depth_model: depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf
+    eoc_fixed_anchor_labels:
+    - Main tree
+    - left lamp post
+    - right lamp post
+    - foreground rockery ornament
+    - background rockery ornament
+    eoc_character_prompt: no_character_configured_for_this_case_xyz.
+    eoc_max_objects: 5
+    eoc_unity_poses_npy: reference/artifacts/poses.npy
+    eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+evaluator_lock:
+  code_revision: aa8a2577d7f36f5d3dba6e1af35c173bd4d9440c
+  evaluator_fingerprint: 2fc299851ef0c404de45d8de40af584b
+  release_id: wmeval-lite-v1
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    sam2: 1.1.0
+    torch: 2.14.1
+    transformers: 5.18.0
+    asset:depth_anything_metric_outdoor: ad065c77a7421ca55159a1f0db9433397a607690f2d76bb8a6fc54b1be7a3124
+    asset:dinov2: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    asset:sam2: 2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318
+    lock_source: tools/dataset/lock_case_dependencies.py

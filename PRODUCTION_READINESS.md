@@ -32,7 +32,7 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 - **P0 / HIGH — `candidate_normalization`:** Most non-liquid cases use candidate_normalization none even when metrics compare candidate frame f with reference frame f.
   Remediation: Every row records input_contract (candidate vs. reference fps, size, frames, duration) and flags unnormalized rows outside the reference spec. Normalization is not added where it would change paper-parity scores; decide per case before adding it.
 - **P0 / HIGH — `dependency_lock_content`:** Live case evaluator locks have dependency_versions but empty artifact_schema_versions, and they describe the macOS environment only.
-  Remediation: dependency_versions are filled for every live case (tools/lock_case_dependencies.py, macOS venv). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set.
+  Remediation: dependency_versions are filled for every live case (tools/dataset/lock_case_dependencies.py, macOS venv). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set.
 - **P0 / HIGH — `external_model_artifacts`:** Candidate-side VLM judging depends on a hosted provider snapshot; model weights are pinned.
   Remediation: Checkpoints are pinned with revisions and sha256 (evaluator_assets.lock.json) and checked by tools/preflight_lite.py; reference-side judgments are frozen fixtures. Remaining: candidate-side hosted judging depends on the provider's model snapshot.
 - **P0 / MEDIUM — `result_status_schema`:** Metric availability, primary source, tracked-label coverage, and diagnostic-only status are not represented uniformly across dimensions.
@@ -41,7 +41,7 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
   Remediation: Resolved: .github/workflows/ci.yml validates the suite and runs the hermetic tests (integration tests skip without local data).
 - **P1 / MEDIUM — `repeat_semantics`:** Five independent model generations, repeated VLM judge passes, and cached reference judgments are different sampling units but are not described by one aggregation schema.
   Remediation: Resolved: suite.yaml repeat_policy (required_repeats 5) gates the headline; judge passes and frozen reference judgments are documented as separate sampling units in DIFFERENCES_FROM_PAPER.md and FROZEN_JUDGE_OUTPUTS.md.
-- **P2 / HIGH — `install_contract`:** The tested macOS environment is pinned in requirements-macos.lock, while there is no pyproject.toml/uv.lock project contract and CUDA dependencies are embedded separately in a Modal script.
+- **P2 / HIGH — `install_contract`:** The tested macOS environment is pinned in requirements/macos.lock, while there is no pyproject.toml/uv.lock project contract and CUDA dependencies are embedded separately in a Modal script.
   Remediation: Define supported CPU/macOS and CUDA extras in project metadata, produce uv locks for each platform, and add an offline checkpoint preflight.
 - **P2 / LOW — `artifact_retention`:** Local runs dominate repository disk usage, but there is no documented retention/archive policy separating canonical evidence from resumable caches and disposable diagnostics.
   Remediation: Define canonical run manifests and checksums, then provide a dry-run cleanup command for derived caches and superseded reports.
@@ -97,8 +97,8 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 ## Reproduce
 
 ```bash
-uv run python tools/run_wmeval_lite.py validate --suite eval_sets/wmeval_lite_v1
-uv run python tools/audit_production_readiness.py --markdown PRODUCTION_READINESS.md --json reports/production_readiness.json
+uv run python tools/run_wmeval_lite.py validate --suite lite
+uv run python tools/analysis/audit_production_readiness.py --markdown PRODUCTION_READINESS.md --json reports/production_readiness.json
 ```
 
 `--fail-on-high` is intended as a future release gate; it currently fails because the documented high-severity backlog is still open.

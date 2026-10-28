@@ -1,0 +1,69 @@
+schema_version: 2
+case_id: RacingCar/prompt_third
+scene: RacingCar
+display_name: RacingCar third
+prompt: "A very wide, straight highway under a clear blue sky, with dark roadside\
+  \ barriers, green grass, and long rows of tall trees on both sides. The road begins\
+  \ abruptly at a starting point, with no ground behind it\u2014only open sky, as\
+  \ if the road is suspended in space. A yellow sports car with two black racing stripes\
+  \ is parking exactly at the start of the road, centered in the frame, viewed from\
+  \ behind. The car faces forward into the long empty highway. Bright daytime lighting,\
+  \ clean and minimal environment. The character is the yellow sports car"
+perspective: third_person
+rubric_scene_name: RacingCar
+modules:
+- shadow_consistency
+- environment_object_consistency
+- kinematics_mechanics
+reference:
+  first_frame: reference/ref.png
+  video: reference/unity_groundtruth.mp4
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+    reference_scores: reference/artifacts/reference_scores.json
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
+  evaluator_fingerprint: 6f4561cf651d8f08d60342106eac56d3
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pillow: 12.3.0
+    pydantic: 2.13.5
+    requests: 2.34.2
+    sam2: 1.1.0
+    torch: 2.14.1
+    transformers: 5.18.0
+    asset:depth_anything_metric_indoor: e990eb82fbf11b05b7813261196a2b841bdcf5a05f64396724a8987fa90504a3
+    asset:depth_anything_metric_outdoor: ad065c77a7421ca55159a1f0db9433397a607690f2d76bb8a6fc54b1be7a3124
+    asset:dinov2: b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9
+    asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
+    asset:sam2: 2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318
+    lock_source: tools/dataset/lock_case_dependencies.py
+module_params:
+  shadow_consistency:
+    shadow_text_prompt: car. tree.
+    shadow_anchor_label: car
+  environment_object_consistency:
+    eoc_text_prompt: car.
+    eoc_character_prompt: no_character_configured_for_this_case_xyz.
+    eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    eoc_unity_poses_npy: reference/artifacts/poses.npy
+    eoc_unity_intrinsics_npy: reference/artifacts/intrinsics_t4.npy
+  kinematics_mechanics:
+    kin_text_prompt: car.
+    kin_unity_object_transforms_json: reference/artifacts/object_transforms.json
+    kin_unity_poses_npy: reference/artifacts/poses.npy
+    kin_unity_intrinsics_npy: reference/artifacts/intrinsics_t4.npy
+    kin_unity_object_masses_json: reference/artifacts/object_masses.json

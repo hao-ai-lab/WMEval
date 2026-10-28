@@ -1,0 +1,37 @@
+schema_version: 2
+case_id: ChessBoard/prompt_first
+scene: ChessBoard
+display_name: ChessBoard first
+prompt: A surreal, clean, high-contrast chess environment. The ground is a giant black-and-white
+  chessboard under a flat gray sky. Oversized glossy black and white chess pieces
+  surround the board. A large reflective chrome sphere stands near the center as a
+  key landmark. Bright overhead lighting.  First person view.
+perspective: first_person
+rubric_scene_name: ChessBoard_first
+modules: []
+reference:
+  first_frame: reference/ref.png
+  checksums: reference/checksums.sha256
+  artifacts:
+    actions_file: reference/artifacts/actions.txt
+    synthetic_action_dir: reference/artifacts
+    reference_scores: reference/artifacts/reference_scores.json
+protocol:
+  candidate_normalization: none
+  min_duration_sec: 1.0
+  min_duration_ratio: 0.5
+  duration_threshold_mode: max
+evaluator_lock:
+  release_id: wmeval-lite-v1
+  code_revision: 4e216c3c296768215671a62d0009112e02dabd3c
+  evaluator_fingerprint: 0d0a09204a5189e490d077e9021f557e
+  module_config: {}
+  artifact_schema_versions: {}
+  dependency_versions:
+    python: 3.11.16
+    platform: darwin-arm64
+    numpy: 2.4.6
+    opencv-python-headless: 5.0.0.93
+    pydantic: 2.13.5
+    requests: 2.34.2
+    lock_source: tools/dataset/lock_case_dependencies.py

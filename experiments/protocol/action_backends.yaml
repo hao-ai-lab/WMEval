@@ -1,0 +1,227 @@
+schema_version: 1
+description: >-
+  Single source for how each backend receives the canonical Table 4/7 semantic
+  trajectories (experiments/protocol/trajectories/*.yaml). The trajectory
+  YAMLs stay authoritative and hash-locked; this file adds what they cannot
+  express without changing their hashes: the entity each trajectory controls,
+  each backend's native timeline, which action targets it can express, and the
+  frozen response-side calibration used to compile camera motion.
+
+# What each semantic trajectory actuates. A backend may only receive a
+# trajectory whose target it declares under `supports`; anything else is
+# reported as unsupported, never silently substituted (e.g. moving the camera
+# instead of the car).
+action_targets:
+  table4.racing_car.drive_v1: {target: ego_vehicle, frame: vehicle_body}
+  table4.billiard_game.first_person_ball_wasd_v1: {target: cue_ball, frame: table_plane}
+  table4.billiard_game.center_ball_shot_v1: {target: table_objects, frame: table_plane}
+  controllability.ball_roller.collision_path_v1: {target: ball, frame: ground_plane}
+  controllability.mirror_rolling_ball.axis_cycle_v1: {target: ball, frame: ground_plane}
+  table7.camera.perturb_in_v1: {target: camera, frame: camera_yaw}
+  table7.camera.perturb_out_v1: {target: camera, frame: camera_yaw}
+  table7.camera.360_in_v1: {target: camera, frame: camera_yaw}
+  table7.camera.360_out_v1: {target: camera, frame: camera_yaw}
+  prompt.camera.left_turn_v1: {target: camera, frame: camera_yaw}
+  # Lite cases outside Tables 4/7 (experiments/trajectory_reconstructions).
+  wmeval_lite.beam_domino.causal.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_glancing.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.beam_domino.causal_direct_strike.ball_force_v1: {target: rolling_ball, frame: floor_plane}
+  wmeval_lite.liquid_container.fluid_rest.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_impulse_decay.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_chirp_strafe.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.liquid_container.fluid_step_hold.bottle_motion_v1: {target: liquid_container, frame: container_body}
+  wmeval_lite.chess_board.walk_third.capture_v1: {target: character, frame: character_body}
+  wmeval_lite.wandering_garden.scene_first.yaw_sweep_v1: {target: camera, frame: camera_yaw}
+
+backends:
+  hy_worldplay:
+    scope: trajectories_only
+    interface: pending_source_audit
+  waypoint:
+    scope: trajectories_only
+    interface: keyboard_mouse
+  unity:
+    interface: unity_runtime_args
+    supports:
+      character: reference
+      camera: reference
+      ego_vehicle: reference
+      cue_ball: reference
+      ball: reference
+      table_objects: reference
+      rolling_ball: reference
+      liquid_container: reference
+
+  project_genie:
+    interface: browser_keyboard
+    note: Key rules live in each trajectory's `adapters.project_genie` block.
+    supports:
+      character: nominal
+      camera: nominal_left_turn_calibrated
+      ego_vehicle: nominal
+      cue_ball: nominal
+      ball: nominal
+      rolling_ball: nominal_binary_keys
+      liquid_container: nominal
+    unsupported:
+      table_objects: The hosted web interface has no placement, cue-angle, strength, spin, or execute controls.
+    calibration:
+      left_turn_deg_per_s: 51.4735
+      right_turn: no reliable full-yaw correlation peak; not frozen
+
+  matrix_game_2:
+    interface: keyboard_mouse
+    frames: 129
+    fps: 12.0
+    latent_frames: 33
+    keyboard_width: 4
+    supports:
+      character: target_entity_validation_required
+      camera: response_calibrated_repeat_validated
+      ego_vehicle: target_entity_validation_required
+      cue_ball: target_entity_validation_required
+      ball: target_entity_validation_required
+      # WASD-to-ball hypothesis, scored on all three controllability scenes; Synthetic-RAFT
+      # reports whether the keys move the ball (or only the camera).
+      rolling_ball: target_entity_validation_required
+    unsupported:
+      table_objects: No object-placement or cue-shot controls.
+      liquid_container: Keyboard moves the camera, which breaks the fixed side camera the fluid metrics require.
+    # Visual degrees per mouse unit per frame. Two independent short-probe
+    # seeds at +/-0.3 mouse units gave gains near 10.1. Production-shaped
+    # Garden validation reached -332.715 / +353.859 degrees from nominal
+    # +/-360-degree schedules; a direction-specific one-step correction made
+    # the negative response worse (-309.723), i.e. saturation, so the pooled
+    # gain is frozen for every regime and residual error is model behaviour.
+    camera_gain_deg_per_mouse_unit:
+      pooled_bidirectional: 10.1
+
+  matrix_game_3:
+    interface: keyboard_mouse
+    frames: 177
+    fps: 17.0
+    iterations: 4
+    keyboard_width: 6
+    upstream_geometric_deg_per_mouse_unit: 15.0
+    supports:
+      camera: response_calibrated_repeat_validated
+      # Keyboard (forward/back/left/right) drives the agent; scored on the controllability
+      # scenes with the same WASD-to-ball hypothesis as Matrix-Game 2.0.
+      ball: target_entity_validation_required
+      rolling_ball: target_entity_validation_required
+    unsupported:
+      character: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      ego_vehicle: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      cue_ball: Not part of the requested Matrix-Game 3.0 scope (Table 7 only).
+      table_objects: No object-placement or cue-shot controls.
+      liquid_container: Not part of the requested Matrix-Game 3.0 scope (Table 7 only); camera control only.
+    # Response-side gains from clean Garden validation videos. Short
+    # perturbations are linear; full turns accumulate a small direction-
+    # dependent bias and use their own measured gains.
+    camera_gain_deg_per_mouse_unit:
+      perturb_negative: 11.175
+      perturb_positive: 11.234
+      full_turn_negative: 10.511
+      full_turn_positive: 11.434
+
+  lingbot_world_cam:
+    interface: camera_pose
+    frames: 161
+    fps: 16.0
+    supports:
+      camera: nominal_pose_no_response_correction
+    unsupported:
+      character: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the character.
+      ego_vehicle: Base Cam consumes camera extrinsics/intrinsics only; it cannot steer the car.
+      cue_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
+      ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the ball.
+      table_objects: Base Cam consumes camera extrinsics/intrinsics only.
+      rolling_ball: Base Cam consumes camera extrinsics/intrinsics only; it cannot push the ball.
+      liquid_container: Base Cam consumes camera extrinsics/intrinsics only; it cannot move the bottle.
+    # Response is nonlinear and horizon-sensitive, so nominal Unity pose paths
+    # are frozen without correction. Exact-horizon Garden run0 responses were
+    # -17.72 / +41.37 degrees (perturbations) and +54.91 / +277.88 degrees
+    # (signed full turns); report realized yaw alongside consistency metrics.
+
+  # Action-conditioned LingBot-World. One frame per 100 ms action tick, so the
+  # real frame rate is 10 fps even though the mp4 container is tagged 16 fps
+  # (see candidate_fps_override). Evaluated on object-control scenes only; the
+  # camera cases use lingbot_world_cam.
+  lingbot_world_act:
+    interface: action_conditioned
+    action_tick_ms: 100
+    real_fps: 10.0
+    container_fps: 16.0
+    supports:
+      ball: nominal
+      rolling_ball: nominal
+    unsupported:
+      # Act's W/A/S/D moves the camera (ego locomotion), not an object: upstream example 00
+      # through tools/generation/run_lingbot_act_modal.py flies forward (mean frame change 15.2), while
+      # RacingCar run0-4 never moves (1.4; road FDE 29.15 m = a never-moving car).
+      ego_vehicle: W/A/S/D move the camera (ego locomotion), not the car; the car never moved on RacingCar.
+      liquid_container: W/A/S/D move the camera (ego locomotion), not the bottle.
+      character: No Act adapter for third-person avatar control.
+      camera: The Act variant is evaluated on object-control scenes; camera cases use lingbot_world_cam.
+      cue_ball: No Act adapter for cue-ball control.
+      table_objects: No object-placement or cue-shot controls.
+
+  # Waypoint-1.5 is a first-person keys + mouse model: W/A/S/D translate and the
+  # mouse rotates the ego camera. It has no channel for an object, so asking it
+  # to steer one would silently move the camera instead -- recorded as
+  # unsupported rather than scored.
+  waypoint15:
+    interface: keyboard_mouse
+    fps: 60.0
+    frames_per_control_step: 4
+    supports:
+      camera: nominal
+    unsupported:
+      character: Keys and mouse drive the first-person ego camera; there is no third-person avatar.
+      ego_vehicle: Keys and mouse drive the first-person ego camera; there is no vehicle channel.
+      cue_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      table_objects: Keys and mouse drive the first-person ego camera; there is no object channel.
+      rolling_ball: Keys and mouse drive the first-person ego camera; there is no object channel.
+      liquid_container: Keys and mouse drive the first-person ego camera; there is no object channel.
+
+  # Hosted browser world models (not in the paper). Keys move the avatar/camera of
+  # the generated world; turn rates are uncalibrated, so camera support is nominal.
+  odyssey:
+    interface: browser_keyboard
+    note: tools/generation/odyssey_agent.py; held keys over a wall-clock session.
+    supports:
+      character: nominal_uncalibrated
+      camera: nominal_uncalibrated
+      # In the fixed-camera ball scenes (BallRoller, MirrorRollingBall) the keys move
+      # the player ball rather than the viewpoint (checked on the stored rollouts).
+      ball: nominal_uncalibrated
+      # RacingCar: the keys drive the car on the stored rollouts. LiquidContainer, with the
+      # bottle named as the player (odyssey_agent PLAYER_PROMPTS): checked 2026-10-26 on
+      # fluid_chirp_strafe run0, the camera holds still (RAFT affine fit 0.13 px per 0.5 s,
+      # Unity 0.07) while the bottle travels ~390 px across the frame.
+      ego_vehicle: nominal_uncalibrated
+      liquid_container: nominal_uncalibrated
+    unsupported:
+      cue_ball: Keys move the generated world's viewpoint; there is no object channel.
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
+  happy_oyster:
+    interface: browser_keyboard
+    note: Adventure mode; first/third-person view selectable; yaw calibration in progress.
+    supports:
+      character: nominal_uncalibrated
+      camera: nominal_uncalibrated
+    unsupported:
+      ego_vehicle: Keys move the generated world's viewpoint; there is no vehicle channel.
+      cue_ball: Keys move the generated world's viewpoint; there is no object channel.
+      ball: Keys move the generated world's viewpoint; there is no object channel.
+      table_objects: No object-placement or cue-shot controls.
+      rolling_ball: Keys move the generated world's viewpoint; there is no object channel.
+      liquid_container: Keys move the viewpoint, which breaks the fixed side camera the fluid metrics require.
+
+# Whole-trajectory capability reviews (a backend that supports a target can still be
+# unable to express one specific trajectory). Pending means incomplete work, never N/A
+# or a model-quality rejection. The strict look-at-orbit review of the retired
+# lighting_orbit protocol is archived in experiments/lighting_orbit/trajectory_support.yaml.
+trajectory_support: {}

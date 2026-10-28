@@ -1,6 +1,6 @@
 """Case-bundle authoring: checksum manifest + evaluator lock refresh.
 
-Shared by tools/build_lite_case.py and the generate-rubrics CLI path (which
+Shared by tools/dataset/build_lite_case.py and the generate-rubrics CLI path (which
 writes rubric files into the checksummed reference/ area and must therefore
 re-author the bundle afterwards).
 """

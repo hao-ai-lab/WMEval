@@ -1,0 +1,494 @@
+# WMEval Lite v1 suite: the single source of truth for case wiring.
+#
+# Each dimension lists its evaluator, modules, metric_config (headline metrics and their
+# directions), its cases (bundles under cases/<Scene>/<variant>/) and its aggregation.
+# Case inputs and module parameters live in each case.yaml; reference data is downloaded
+# from the Hub (tools/sync_lite_data.py) and checksummed per case.
+#
+#   python tools/run_wmeval_lite.py validate --suite <this directory>
+#   python tools/run_wmeval_lite.py run --suite <this directory> --model-root runs/<model>
+#
+# Metric definitions and caveats: docs/evaluation_dimensions.md. Deviations from the
+# paper and known limitations: DIFFERENCES_FROM_PAPER.md. Unity self-match floors:
+# SELF_MATCH_BOUNDS.md. The history behind these settings is in git log.
+suite_name: WMEval Lite
+version: v1
+# Coverage gate: a dimension headline is reported only when every case has this
+# many distinct completed seeds for the model, or the model is `unsupported` for
+# it (N/A). Otherwise the aggregate keeps the number as `provisional_value`.
+repeat_policy:
+  required_repeats: 5
+description: Unity-free evaluation bundle. Reference videos and artifacts are shared across dimensions; each dimension applies its own metrics.
+dimensions:
+  lpips:
+    display_name: LPIPS (causal)
+    description: Collision/contact timing via reference-first causal LPIPS.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - lpips
+    metric_config:
+      lpips_sampling: causal_vlm_collision
+      # reference-only event detection undershot causal LPIPS on some
+      # candidates; switched to both (the runner's own default) after
+      # verifying it closes the gap with no regression elsewhere.
+      lpips_causal_event_source: both
+      eval_fps: 4.0
+      max_pairs: 32
+      # fine judge + side relabel model, and coarse-window model: gpt-5.4-mini
+      # for the coarse pass, gpt-5.4 for the fine judge and side relabel --
+      # not the gpt-4o runner default.
+      lpips_vlm_model: gpt-5.4
+      lpips_vlm_coarse_model: gpt-5.4-mini
+    cases:
+    - MirrorRollingBall/lpips_collision
+    - BeamDomino/causal
+    - BallRoller/ctrl
+    - LiquidContainer/fluid_rest
+    - LiquidContainer/fluid_step_hold
+    - LiquidContainer/fluid_impulse_decay
+    - LiquidContainer/fluid_chirp_strafe
+    aggregate:
+      headline: lpips_mean
+      direction: lower
+      extra_means:
+      - lpips_median
+  action_controllability:
+    display_name: Action Controllability
+    description: Action-following motion via RAFT and optional synthetic-flow control_motion.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - control_motion
+    metric_config:
+      control_camera_compensation: true
+      control_global_motion_mode: affine_ransac
+      control_bad_pixel_thresholds:
+      - 1.0
+      - 3.0
+      eval_fps: 4.0
+      max_pairs: 32
+    cases:
+    - BallRoller/ctrl
+    - BeamDomino/causal
+    - MirrorRollingBall/lpips_collision
+    aggregate:
+      # Scale-normalized EPE on dynamic-region flow: comparable across scenes
+      # and candidate resolutions. Absolute pixel EPE stays as extra means.
+      headline: relative_epe_dynamic_mean_raw
+      direction: lower
+      extra_means:
+      - cosine_similarity_dynamic_mean_raw
+      - synthetic_mean_flow_cosine
+      - synthetic_pixel_epe_mean
+      - epe_dynamic_mean_compensated
+      - epe_mean_raw
+      - bad_pixel_rate_1px_mean
+      - bad_pixel_rate_3px_mean
+  prompt_scene_consistency:
+    display_name: Prompt-Scene Consistency
+    description: Prompt-scene semantic consistency via the dual-agent (environment+object) VLM judge; reference-free (first frame only). New models compile the baked 10 s / 40 deg/s left turn (prompt.camera.left_turn_v1); the paper's rows used per-model as-run camera inputs recorded in experiments/protocol/prompt_as_run_inputs.yaml.
+    evaluator: vlm_consistency
+    requires_reference: false
+    vlm:
+      provider: openai
+      model: gpt-5.4
+      # v0 = the formal rubric set (2026-05-06) used for the human study and
+      # results_v0; the rubric files are copied byte-for-byte, so each case's
+      # rubric_scene_name keeps that set's scene names (RollingBall_first, ...).
+      prompt_version: v0
+      alpha: 0.6
+      # case-relative: rubrics live inside each case's checksummed bundle
+      rubric_dir: reference/artifacts/rubrics
+    cases:
+    - MirrorRollingBall/prompt_first
+    - MirrorRollingBall/prompt_third
+    - RacingCar/prompt_first
+    - RacingCar/prompt_third
+    - ChessBoard/prompt_first
+    - ChessBoard/prompt_third
+    aggregate:
+      headline: overall_score
+      direction: higher
+      # *_unity: the Unity reference's frozen scores
+      # (reference/artifacts/reference_scores.json, read, not re-judged)
+      extra_means:
+      - env_score
+      - obj_score
+      - overall_score_unity
+      - env_score_unity
+      - obj_score_unity
+  lighting_shading:
+    display_name: Lighting & Shading
+    description: 'Reference-free lighting/shadow physics: GroundingDINO + SAM2 tracking
+      with Hu-moment shape signatures (SRR/SDR/MOSD/SDJ/SAS/SSD) under the paper''s
+      first-person, fixed-sun, walking-orbit regime, on the paper''s native case
+      SunRisesAndSets/lighting (the protocol of the paper''s lighting table). The
+      case bundles a Unity reference orbit from the same first frame for viewing
+      and synthetic orbits; the score does not use it. ChessBoard/lighting is still
+      pending a team decision.'
+    evaluator: registry
+    requires_reference: false
+    modules:
+    - shadow_consistency
+    metric_config:
+      eval_fps: 24.0
+      max_pairs: 0
+    # first-person (the paper's lighting regime). Per-candidate
+    # shadow_hud_preset comes from model.yaml / manifest params, not the case.
+    cases:
+    - SunRisesAndSets/lighting
+    aggregate:
+      headline: shadow_direction_jitter_deg_per_frame
+      direction: lower
+      extra_means:
+      - scene_retention_rate_pct
+      - shadow_detection_rate_pct
+      - multi_object_sun_disagreement_deg
+      - shadow_area_stability_pct
+      - shadow_shape_drift
+  environment_object_consistency:
+    display_name: Environment Object Consistency
+    description: >-
+      Paper B.1, object + character halves: GroundingDINO + SAM2 tracking
+      for depth AbsRel / pairwise-distance MAE against Unity-analytical
+      ground truth, reference-free object permanence, and reference-free
+      DINOv2 character-identity consistency. Per-case scoping (which
+      anchors, which prompts, why) and every real self-match number are
+      NOT duplicated here to avoid a second, driftable copy -- see this
+      file's dated header banners (search "==...==") for the numbers as of
+      each fix.
+      One structural note that belongs here rather than in a dated banner:
+      BallRoller/ctrl and RacingCar/prompt_third's character_consistency_pct
+      is deliberately noise, not signal (eoc_character_prompt is an
+      intentionally non-matching string on those two cases; GroundingDINO
+      still occasionally fires a spurious low-confidence box even for a
+      nonsense prompt).
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - environment_object_consistency
+    metric_config:
+      eval_fps: 4.0
+      max_pairs: 32
+    cases:
+    - BallRoller/ctrl
+    - RacingCar/prompt_third
+    - ChessBoard/walk_third
+    - WanderingGarden/scene_first
+    # Table 7 cells (tools/dataset/build_table_lite_cases.py)
+    - WanderingGarden/scene_perturb_in
+    - WanderingGarden/scene_perturb_out
+    - WanderingGarden/scene_360_in
+    - WanderingGarden/scene_360_out
+    - BilliardGame/scene_perturb_in
+    - BilliardGame/scene_perturb_out
+    - BilliardGame/scene_360_in
+    - BilliardGame/scene_360_out
+    - MirrorRollingBall/scene_perturb_in
+    - MirrorRollingBall/scene_perturb_out
+    - MirrorRollingBall/scene_360_in
+    - MirrorRollingBall/scene_360_out
+    aggregate:
+      headline: object_permanence_pct
+      direction: higher
+      extra_means:
+      - depth_absrel_pct
+      - pairwise_distance_mae_pct
+      - character_consistency_pct
+  kinematics_mechanics:
+    display_name: Kinematics & Mechanics
+    description: 'Paper B.3: GroundingDINO + ByteTrack trajectory reconstruction against timestamp-matched Unity trajectories. For calibrated planar Table-4 captures, candidate contact points are mapped into Unity X/Z metres by camera-ray/plane intersection; FDE and path-normalized DTW are reported in metres, with raw pixel diagnostics retained. Simulator-exported mass and a bounded, persistence-gated alignment of peak physical events feed momentum and kinetic energy using the paper''s one-step finite difference. Error Rate is the sole headline mechanics metric. Visual anchors remain a camera-divergence QA signal and do not redefine metric scale. Non-planar legacy Lite cases without plane calibration retain their prior pixel/depth diagnostic behavior. Non-headline extras (2026-10-21): fde_m_ego_mean/dtw_m_ego_mean lift through the candidate video''s own ground-plane camera motion when the Unity camera moves (static cameras keep the Unity-camera lifting), withheld when the camera estimate is unreliable; robust_error_rate_pct, peak_speed_error_pct and contact_dp_error_pct compare Savitzky-Golay-smoothed speed curves over the moving span, normalised by the object''s peak GT value.'
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - kinematics_mechanics
+    metric_config:
+      eval_fps: 4.0
+      max_pairs: 32
+      # RacingCar: final displacement in road coordinates (only cases whose Unity log has a car)
+      kin_road_trajectory: true
+    cases:
+    - BallRoller/ctrl
+    # Table 4 cells (tools/dataset/build_table_lite_cases.py)
+    - RacingCar/kinematics_third
+    - BilliardGame/kinematics_first
+    aggregate:
+      headline: fde_m_mean
+      direction: lower
+      extra_means:
+      - dtw_m_mean
+      - error_rate_pct
+      - fde_px_mean
+      - dtw_px_mean
+      # non-headline (all lower = better): candidate-camera-lifted FDE/DTW and
+      # robust mechanics from evaluation/modules/kinematics_robust.py
+      - fde_m_ego_mean
+      - dtw_m_ego_mean
+      - robust_error_rate_pct
+      - peak_speed_error_pct
+      - contact_dp_error_pct
+  physical_causality:
+    display_name: Physical Causality
+    description: >-
+      Paper B.6 / App. C.5, CausalStep stepwise QA on BeamDomino's
+      ROLLING -> IMPACT -> TOPPLE -> CASCADE chain. A shared VLM judge grades
+      the same QA twice -- once on the Unity reference, once on the candidate --
+      and every metric is reported as a {unity, wm, delta} triple, so a question
+      the judge fails on the reference is visibly uninformative about the world
+      model. Sign convention (evaluation/modules/_causal_step_delta.py):
+      positive delta always means the world model is worse than Unity.
+      All three trajectory shapes the paper reports are wired, each graded with
+      its own shape-specific QA chain (canonical / glancing / direct_strike), so
+      a physically valid non-canonical outcome is not penalised by questions that
+      assume the canonical chain.
+      `causal_step_vlm_num_frames: 8` is deliberate and load-bearing, not a
+      default: App. D.2 treats judge frame sampling as a benchmark
+      hyper-parameter and measures the Unity reference itself at CSR 53% (K=4)
+      vs 87% (K=8) on tight segments. Do not lower it without re-reading that
+      section. `causal_step_vlm_model: gpt-5.4` is pinned for PROVENANCE, not
+      because it measurably beats the cheaper model: the published Table 7
+      numbers were produced with full `gpt-5.4`, so that is what this dimension
+      pins. On the 19 bundled QA items the two models cannot in fact be
+      separated at n=1 -- `gpt-5.4-mini` disagrees with a published `gpt-5.4`
+      pass on 3/19 items, while a second `gpt-5.4` pass under the identical
+      config disagrees with it on 4/19. Judge noise exceeds the model effect.
+      Pick a different judge model if you have reason to, but re-baseline rather
+      than assuming a one-run comparison shows anything.
+      `csr_unity` is carried in extra_means because the reference side is NOT
+      saturated -- the GLANCE sub-event in particular is hard for the judge to
+      resolve from sampled frames even on simulator-rendered video, so part of
+      any delta on that shape is reference-side difficulty rather than
+      world-model error.
+      REPEATED JUDGE PASSES. CSR is all-or-nothing per video
+      (`max_chain_length >= num_segments`, causalstep/metrics.py), so ONE judge
+      pass over a case -- which bundles one video -- can only ever report csr 0
+      or 100. The judge is sampled, not deterministic: gpt-5.4 rejects a
+      non-default temperature, so none is sent and answers come from the API
+      default (two runs of this exact config differ on 4 of 19 items;
+      `glancing` has been observed at both 0 and 100).
+      `causal_step_judge_repeats: 5` makes CSR successes/5, so a fractional
+      value is expressible. It is NOT the paper's estimator: Table 12's CSR is
+      over five rollouts (generation variance), lite's is over five judge
+      passes of one rollout (judge-sampling variance). The shipped reference
+      recordings give csr_unity 100 / 80 / 100 (canonical / glancing /
+      direct_strike) against Table 12's 100 / 60 / 100, after the 2026-10-11
+      QA repair (see the banner at the top); the one remaining miss is
+      glancing's segment-1 descriptive item at 4/5. Lower the repeats and csr
+      becomes a coin flip again; amcl/ws/dua/icra degrade gracefully either
+      way.
+      THE REFERENCE SIDE IS A FIXTURE, NOT A RUN. When a case ships
+      `reference/artifacts/judge_answers.json`, the reference side replays those
+      recorded passes instead of calling the judge -- zero API cost, and
+      csr_unity stops moving between runs. The recording carries the settings
+      that produced it, and its pass count sets the default repeat count. A run
+      whose live judge differs from the recording in model, frame count or
+      prompt version is refused rather than silently compared across
+      protocols. Record
+      or re-record with:
+        python tools/dataset/record_causal_reference_answers.py <case_dir> --passes 5
+      A case with no recording still runs; it just pays the live judge on both
+      sides. This mirrors what the liquid dimension already does with its SAM2
+      and RAFT `.npz` artifacts.
+      `causal_step_wm_full_video` now defaults to TRUE, which is App. C.5's
+      published protocol: the candidate is scored over its whole clip while the
+      reference stays segment-windowed, because world-model rollouts are not
+      frame-aligned to the Unity log. The paper is explicit that this asymmetry
+      slightly favours the candidate and makes Table 7's deltas upper bounds.
+      The one case where it is wrong is an identical pair -- asking the two
+      sides different questions about the same file reported csr_delta = 100.0
+      on a self-pair -- so causal_step detects byte-identical candidate and
+      reference and forces segment windowing, reporting `wm_full_video_reason`
+      when it does. Set it to false explicitly for a candidate you know IS
+      frame-aligned to Unity.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - causal_step
+    metric_config:
+      causal_step_judge: openai
+      causal_step_vlm_model: gpt-5.4
+      causal_step_vlm_num_frames: 8
+      causal_step_judge_repeats: 5
+      causal_step_answers_cache_dir: runs/causal_step_cache
+    cases:
+    - BeamDomino/causal
+    - BeamDomino/causal_glancing
+    - BeamDomino/causal_direct_strike
+    aggregate:
+      # csr_delta matches Table 7's leading column. It is only meaningful
+      # because `causal_step_judge_repeats: 5` makes CSR a mean over five
+      # passes: CSR is all-or-nothing per video, so at one pass it can report
+      # only 0 or 100. amcl_delta is carried below as the ungated companion.
+      headline: csr_delta
+      direction: lower
+      # mcl_delta is deliberately NOT listed: B.6 defines MCL as the longest
+      # subchain across VIDEOS, but with one video graded over N passes the
+      # max runs over judge passes instead, biased above the single-trajectory
+      # value. Every other metric here averages over passes and stays
+      # coherent. mcl_{unity,wm,delta} remain in each case's full report.
+      extra_means:
+      - csr_unity
+      - amcl_delta
+      - ws_delta
+      - rf_delta
+      - dua_delta
+      - icra_delta
+  fluid_mechanics:
+    display_name: Fluid Mechanics
+    description: >-
+      Paper B.4, sealed-bottle sloshing on LiquidContainer under the fixed
+      side-camera regime (c2_static_side) so bottle motion is bottle-induced
+      rather than camera-induced. Four modules read a shared SAM2 mask pair
+      (liquid + bottle) and a pooled RAFT flow field; all four reference-side
+      artifacts ship inside each case bundle as portable .npz, so a run only
+      ever executes SAM2/RAFT on the candidate, never on the reference.
+      The four action profiles stress different regimes: `rest` is the
+      zero-action control for hallucinated motion, `step_hold` a sustained
+      tilt-and-decay, `impulse_decay` two isolated ring-downs, `chirp_strafe`
+      a 0.3->3.0 Hz sweep through the liquid's resonant modes.
+      HEADLINE CAVEAT: App. D.1 states outright that LiquidContainer "cannot be
+      summarised by any single scalar" -- the five axes measure approximately
+      orthogonal failure modes and the per-profile leaderboard re-orders sharply
+      versus the pooled one. `velocity_cosine_similarity` is the headline only
+      because it is Table 5's leading column; read extra_means alongside it, and
+      prefer the per-case breakdown over this scalar. Note also that RAFT
+      magnitudes inside an opaque, textureless liquid are estimator-noise
+      dominated (App. D.1), which is why cosine rather than EPE/divergence/curl
+      is surfaced at all. The dominant-frequency channel is deliberately NOT
+      promoted here: B.4 demotes it to a per-pair diagnostic because the
+      meniscus FFT peak is not uniquely defined under multi-mode sloshing on
+      chirp_strafe; `spectral_l1` is the surviving spectral statistic.
+    evaluator: registry
+    requires_reference: true
+    modules:
+    - liquid_velocity
+    - liquid_volume_conservation
+    - liquid_surface_orientation
+    - slosh_spectrum
+    metric_config:
+      liquid_cache_root: runs/liquid_cache
+      liquid_sam2_model: facebook/sam2.1-hiera-small
+      liquid_sam2_prompt: the liquid inside the bottle
+      liquid_bottle_prompt: the glass bottle
+      liquid_piv_window_size: 32
+      liquid_piv_overlap: 16
+      liquid_flow_min_mask_frac: 0.5
+      liquid_flow_estimator: raft
+      # Scopes to the velocity field, the one place C.4 specifies it ("the
+      # bottle bulk velocity ... is subtracted from every flow vector"). The
+      # slosh trace is mean-centered only, per B.4.
+      liquid_camera_compensation: true
+      liquid_camera_regime: c2_static_side
+      liquid_max_pairs: 0
+    cases:
+    - LiquidContainer/fluid_rest
+    - LiquidContainer/fluid_step_hold
+    - LiquidContainer/fluid_impulse_decay
+    - LiquidContainer/fluid_chirp_strafe
+    aggregate:
+      headline: velocity_cosine_similarity
+      direction: higher
+      # Tables 5/11 print `dsigma_A` signed but `|dAdot|` and `|dtheta_rms|`
+      # absolute, and pooling signed deltas across the four action profiles
+      # cancels. The *_abs_delta columns are the paper's; the signed ones are
+      # kept alongside because they carry the direction the absolute discards.
+      extra_means:
+      - mask_area_std_normalized_delta
+      - mask_area_drift_per_sec_abs_delta
+      - surface_tilt_residual_deg_abs_delta
+      - spectral_l1
+      - mask_area_drift_per_sec_delta
+      - surface_tilt_residual_deg_delta
+      - surface_tilt_residual_deg_unity
+# ==========================================================================
+# Synthetic split (test_full): the 220 trajectories of synthetic/manifest.json,
+# scored with `run_wmeval_lite.py run --split synthetic|full`. Each trajectory
+# is scored on its manifest `dimensions` as its conditioning core case is
+# (protocol, evaluator lock, module params), against its own Unity reference
+# (reference/reference.mp4 + reference/artifacts/, checksummed in
+# synthetic/references.json). Its aggregate is reported separately from the
+# core headline. See evaluation/lite/synthetic.py.
+# `module_params` below adds or replaces, per conditioning case, what the
+# trajectories inherit from that case's case.yaml (null drops a key); paths
+# are relative to the trajectory directory. Needed where the conditioning
+# case does not run a dimension its synthetic family declares (EOC on the
+# prompt views and the vehicle), or where a core file name differs.
+# Object prompts follow the core EOC cases of the same scene; depth/pairwise
+# need the label to exist in the trajectory's object_transforms.json.
+# ==========================================================================
+# (manifest / references default to synthetic/manifest.json and
+# synthetic/references.json.)
+synthetic:
+  module_params:
+    MirrorRollingBall/prompt_first:
+      # as prompt_third (below); the core prompt_first case runs no EOC
+      environment_object_consistency:
+        eoc_text_prompt: yellow sphere.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    MirrorRollingBall/prompt_third:
+      # the renders log the mirror ball only, not the core's yellow-sphere anchors
+      environment_object_consistency:
+        eoc_fixed_anchor_labels: null
+        eoc_unity_object_diameters_json: null
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    ChessBoard/prompt_first:
+      # first person: the camera sits inside the (hidden) mannequin, so no character is
+      # visible and character consistency would score detector noise (2026-10-21 audit)
+      environment_object_consistency:
+        eoc_text_prompt: sphere.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    ChessBoard/prompt_third:
+      environment_object_consistency:
+        eoc_text_prompt: sphere.
+        eoc_character_prompt: person.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/prompt_first:
+      # first person: the car body is hidden, the roadside trees are the objects
+      environment_object_consistency:
+        eoc_text_prompt: tree.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/prompt_third:
+      environment_object_consistency:
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+    RacingCar/kinematics_third:
+      environment_object_consistency:
+        eoc_text_prompt: car.
+        eoc_character_prompt: no_character_configured_for_this_case_xyz.
+        eoc_unity_object_transforms_json: reference/artifacts/object_transforms.json
+        eoc_unity_poses_npy: reference/artifacts/poses.npy
+        eoc_unity_intrinsics_npy: reference/artifacts/intrinsics.npy
+legacy_case_aliases:
+  lpips:
+    mirror_ball_third_person: MirrorRollingBall/lpips_collision
+    sample_scene: MirrorRollingBall/lpips_collision
+    sample_scene_third_person: MirrorRollingBall/lpips_collision
+    mirror_ball: MirrorRollingBall/lpips_collision
+    mirror_ball/third_person: MirrorRollingBall/lpips_collision
+    MirrorRollingBall/third_collision: MirrorRollingBall/lpips_collision
+  action_controllability:
+    ball_roller_third_person: BallRoller/ctrl
+    ball_roller: BallRoller/ctrl
+    ball_roller/third_person: BallRoller/ctrl
+    BallRoller/third: BallRoller/ctrl
+  prompt_scene_consistency:
+    mirror_rolling_ball/first: MirrorRollingBall/prompt_first
+    mirror_rolling_ball/third: MirrorRollingBall/prompt_third
+    racing_car/first: RacingCar/prompt_first
+    racing_car/third: RacingCar/prompt_third
+    MirrorRollingBall/first: MirrorRollingBall/prompt_first
+    MirrorRollingBall/third: MirrorRollingBall/prompt_third
+    RacingCar/first: RacingCar/prompt_first
+    RacingCar/third: RacingCar/prompt_third
+  # lighting_shading: no legacy ids.

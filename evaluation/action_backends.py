@@ -1,8 +1,8 @@
 """Backend registry for compiling canonical action trajectories.
 
-The semantic trajectory YAMLs (``experiments/tables_4_7/trajectories`` and,
+The semantic trajectory YAMLs (``experiments/protocol/trajectories`` and,
 for Lite cases outside Tables 4/7, ``experiments/trajectory_reconstructions``)
-say *what* happens over time.  ``experiments/tables_4_7/action_backends.yaml`` says
+say *what* happens over time.  ``experiments/protocol/action_backends.yaml`` says
 *which entity* each trajectory actuates and *how* each backend can express it:
 its native timeline, supported action targets, and frozen calibration.  Input
 preparation for every model goes through this module so that capability checks
@@ -17,7 +17,7 @@ from typing import Any, Mapping
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-REGISTRY_PATH = ROOT / "experiments/tables_4_7/action_backends.yaml"
+REGISTRY_PATH = ROOT / "experiments/protocol/action_backends.yaml"
 TARGETS = ("camera", "ego_vehicle", "cue_ball", "ball", "table_objects", "rolling_ball", "liquid_container", "character")
 
 

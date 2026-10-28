@@ -63,7 +63,7 @@ HF_CACHE_VOLUME = "wm-hf-cache"
 CONTAINER_VOL = "/vol"
 CONTAINER_CAND = "/cand"
 CONTAINER_HF_CACHE = "/cache/hf"
-SUITE_REL = "eval_sets/wmeval_lite_v1"
+SUITE_REL = "lite"
 LIGHTING_CASE_ID = "SunRisesAndSets/lighting"
 USAGE_LOG_FILENAME = "vlm_usage.jsonl"
 

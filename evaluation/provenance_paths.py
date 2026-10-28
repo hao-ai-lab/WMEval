@@ -4,7 +4,9 @@ from __future__ import annotations
 from pathlib import Path
 
 
-_REPO_MARKERS = ("runs", "experiments", "eval_sets")
+_REPO_MARKERS = ("runs", "experiments", "lite", "eval_sets")
+# Directories moved after receipts were recorded: old repo-relative prefix -> new one.
+_MOVED = {("eval_sets", "wmeval_lite_v1"): ("lite",), ("experiments", "tables_4_7"): ("experiments", "protocol")}
 
 
 def resolve_recorded_path(
@@ -28,8 +30,11 @@ def resolve_recorded_path(
     for marker in _REPO_MARKERS:
         if marker not in recorded.parts:
             continue
-        index = recorded.parts.index(marker)
-        candidate = (repo_root.resolve() / Path(*recorded.parts[index:])).resolve()
+        suffix = recorded.parts[recorded.parts.index(marker):]
+        for old, new in _MOVED.items():
+            if suffix[:len(old)] == old:
+                suffix = new + suffix[len(old):]
+        candidate = (repo_root.resolve() / Path(*suffix)).resolve()
         if candidate.is_file():
             return candidate
     return recorded.resolve()

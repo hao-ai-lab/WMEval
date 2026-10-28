@@ -10,7 +10,7 @@ inline — generation stays an offline authoring step), frames are sampled with
 the exact ``batch.py`` constants, and scoring goes through ``judge_scene``.
 
 The Unity reference video is judged once, offline
-(``tools/freeze_prompt_reference_scores.py``), and its scores ship in the
+(``tools/dataset/freeze_prompt_reference_scores.py``), and its scores ship in the
 bundle as ``reference/artifacts/reference_scores.json``. Each completed row
 reports them as ``<score>_unity`` beside the candidate's own scores, but only
 while the judge settings recorded in that file still match the live ones;

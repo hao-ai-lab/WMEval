@@ -5,7 +5,7 @@ The repository keeps each case's metadata -- ``case.yaml`` and the checksum
 manifest ``reference/checksums.sha256`` -- while the case data itself (reference
 videos, conditioning images, action trajectories and other artifacts under
 ``reference/``) lives in the dataset ``lmgame/WMEval-Lite`` at the same relative
-paths. ``download`` writes the files back into ``eval_sets/wmeval_lite_v1`` and
+paths. ``download`` writes the files back into ``lite`` and
 verifies every case against its manifest.
 
     python tools/sync_lite_data.py download            # curated cases (test_core)
@@ -26,13 +26,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:  # run as a script: the index metadata imports evaluation.*
     sys.path.insert(0, str(ROOT))
-SUITE_ROOT = ROOT / "eval_sets/wmeval_lite_v1"
+SUITE_ROOT = ROOT / "lite"
 DEFAULT_REPO = "lmgame/WMEval-Lite"
 CHECKSUMS = "checksums.sha256"
 # Case data lives under each case's reference/ directory; every suite (a companion suite
 # via `cases_root: ../cases`) uses the shared cases/ tree.
 DATA_PATTERNS = ["cases/*/*/reference/**"]
-# test_full adds the synthetic trajectory suite (tools/generate_synthetic_trajectories.py).
+# test_full adds the synthetic trajectory suite (tools/dataset/generate_synthetic_trajectories.py).
 SYNTHETIC_PATTERNS = ["synthetic/*/*/*/**"]
 SYNTHETIC_MANIFEST = SUITE_ROOT / "synthetic" / "manifest.json"
 
@@ -274,6 +274,10 @@ def cmd_upload(args: argparse.Namespace) -> int:
     if card.is_file():
         api.upload_file(path_or_fileobj=str(card), path_in_repo="README.md", repo_id=args.repo, repo_type="dataset",
                         commit_message="Dataset card")
+    license_file = SUITE_ROOT / "LICENSE-UNITY.txt"
+    if license_file.is_file():
+        api.upload_file(path_or_fileobj=str(license_file), path_in_repo=license_file.name, repo_id=args.repo,
+                        repo_type="dataset", commit_message="Unity Benchmark Scene License")
     with tempfile.TemporaryDirectory() as tmp:
         for name, rows in ((INDEX_NAME, build_index()), (FULL_INDEX_NAME, build_full_index())):
             index = Path(tmp) / name
@@ -294,7 +298,7 @@ def cmd_upload(args: argparse.Namespace) -> int:
         n, missing, mism = check_synthetic()
         if missing or mism:
             print(f"refusing to upload: synthetic suite incomplete ({len(missing)} missing, {len(mism)} mismatched); "
-                  "run tools/generate_synthetic_trajectories.py")
+                  "run tools/dataset/generate_synthetic_trajectories.py")
             return 1
         patterns += [f"{t}/**" for t in synthetic_files()]
     api.upload_folder(
