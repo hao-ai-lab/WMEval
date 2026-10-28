@@ -274,6 +274,10 @@ def cmd_upload(args: argparse.Namespace) -> int:
     if card.is_file():
         api.upload_file(path_or_fileobj=str(card), path_in_repo="README.md", repo_id=args.repo, repo_type="dataset",
                         commit_message="Dataset card")
+    license_file = SUITE_ROOT / "LICENSE-UNITY.txt"
+    if license_file.is_file():
+        api.upload_file(path_or_fileobj=str(license_file), path_in_repo=license_file.name, repo_id=args.repo,
+                        repo_type="dataset", commit_message="Unity Benchmark Scene License")
     with tempfile.TemporaryDirectory() as tmp:
         for name, rows in ((INDEX_NAME, build_index()), (FULL_INDEX_NAME, build_full_index())):
             index = Path(tmp) / name

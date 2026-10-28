@@ -139,6 +139,10 @@ cases/<Scene>/<variant>/
 
 Maintainer commands for rendering references and reference inputs (Unity editor required) are documented in `tools/render_synthetic_references.py` and `tools/build_synthetic_reference_inputs.py`.
 
+## License
+
+The Unity benchmark scenes, and any output they produce (including the reference rollouts and Unity-logged quantities in the [dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite)), are licensed under the **Unity Benchmark Scene License v1.0** ([`LICENSE-UNITY.txt`](eval_sets/wmeval_lite_v1/LICENSE-UNITY.txt)). They may be used only to produce or validate the benchmark's metrics, and in particular not as training, fine-tuning or other input to any AI model, except as the reference against which a model's independently generated output is compared. Third-party evaluator code and weights are listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
 ## Citation
 
 ```
