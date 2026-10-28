@@ -81,7 +81,7 @@ def _open_environment(build: Path, seed: int, worker_id: int):
     except ImportError as exc:
         raise SystemExit(
             "ML-Agents is unavailable. Use .venv-unity/bin/python and "
-            "requirements-unity-macos.lock."
+            "requirements/unity-macos.lock."
         ) from exc
     if not build.exists():
         raise SystemExit(f"Unity application not found: {build}")

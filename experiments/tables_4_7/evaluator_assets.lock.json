@@ -86,9 +86,9 @@
       "package": "OpenPIV",
       "import_name": "openpiv",
       "version": "0.26.1",
-      "version_source": "requirements-macos.lock and the local .venv; not listed in requirements-gpu.lock",
+      "version_source": "requirements/macos.lock and the local .venv; not listed in requirements/gpu.lock",
       "used_by": "evaluation/modules/_liquid_common.py get_piv_field (openpiv.pyprocess.extended_search_area_piv / get_coordinates), called by liquid_velocity only when liquid_flow_estimator == 'openpiv' (wmeval_lite_v1 fluid_mechanics uses 'raft')"
     }
   },
-  "dependency_lock": "requirements-gpu.lock"
+  "dependency_lock": "requirements/gpu.lock"
 }

@@ -49,7 +49,7 @@ Built by `tools/build_leaderboard.py` from `experiments/leaderboard/paper_scores
 ```
 git clone https://github.com/hao-ai-lab/WMEval.git && cd WMEval
 # macOS (Apple silicon)
-uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -r requirements-macos.lock
+uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -r requirements/macos.lock
 # Linux + NVIDIA GPU: creates .venv-gpu and checks it; runs every dimension
 bash scripts/bootstrap_tables_4_7_gpu.sh
 ```

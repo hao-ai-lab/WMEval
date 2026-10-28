@@ -119,7 +119,7 @@ def test_openpiv_pin_matches_the_macos_lock_and_the_installed_package() -> None:
     import importlib.metadata as md
 
     locked = LOCK["openpiv"]
-    lock_file = Path(__file__).resolve().parents[1] / "requirements-macos.lock"
+    lock_file = Path(__file__).resolve().parents[1] / "requirements/macos.lock"
     pinned = f"{locked['import_name']}=={locked['version']}"
     assert pinned in lock_file.read_text(encoding="utf-8").splitlines()
     try:

@@ -428,7 +428,7 @@ def playwright_module() -> Any:
         from playwright.sync_api import sync_playwright
     except ImportError as exc:
         raise RuntimeError(
-            "Playwright is missing; install the repository's requirements-macos.lock"
+            "Playwright is missing; install the repository's requirements/macos.lock"
         ) from exc
     return sync_playwright
 

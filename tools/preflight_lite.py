@@ -207,7 +207,7 @@ def check_runtime_imports(
     rows = []
     for module, dims in sorted(needed.items()):
         status = PASS if find_spec(module) is not None else FAIL
-        detail = "importable" if status == PASS else "not installed (pip install it; see requirements-gpu.lock)"
+        detail = "importable" if status == PASS else "not installed (pip install it; see requirements/gpu.lock)"
         rows.append(Row(status, f"import {module}", f"{detail} [{', '.join(sorted(dims))}]"))
     return rows
 

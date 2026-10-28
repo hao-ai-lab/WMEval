@@ -41,7 +41,7 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
   Remediation: Resolved: .github/workflows/ci.yml validates the suite and runs the hermetic tests (integration tests skip without local data).
 - **P1 / MEDIUM — `repeat_semantics`:** Five independent model generations, repeated VLM judge passes, and cached reference judgments are different sampling units but are not described by one aggregation schema.
   Remediation: Resolved: suite.yaml repeat_policy (required_repeats 5) gates the headline; judge passes and frozen reference judgments are documented as separate sampling units in DIFFERENCES_FROM_PAPER.md and FROZEN_JUDGE_OUTPUTS.md.
-- **P2 / HIGH — `install_contract`:** The tested macOS environment is pinned in requirements-macos.lock, while there is no pyproject.toml/uv.lock project contract and CUDA dependencies are embedded separately in a Modal script.
+- **P2 / HIGH — `install_contract`:** The tested macOS environment is pinned in requirements/macos.lock, while there is no pyproject.toml/uv.lock project contract and CUDA dependencies are embedded separately in a Modal script.
   Remediation: Define supported CPU/macOS and CUDA extras in project metadata, produce uv locks for each platform, and add an offline checkpoint preflight.
 - **P2 / LOW — `artifact_retention`:** Local runs dominate repository disk usage, but there is no documented retention/archive policy separating canonical evidence from resumable caches and disposable diagnostics.
   Remediation: Define canonical run manifests and checksums, then provide a dry-run cleanup command for derived caches and superseded reports.

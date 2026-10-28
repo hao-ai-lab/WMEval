@@ -45,7 +45,7 @@ scripts/bootstrap_tables_4_7_gpu.sh
 ```
 
 This creates `.venv-gpu`, installs Torch 2.6.0 / torchvision 0.21.0 from the
-CUDA 12.4 wheel index, installs `requirements-gpu.lock`, validates every
+CUDA 12.4 wheel index, installs `requirements/gpu.lock`, validates every
 handoff hash, checks evaluator imports, and fails if CUDA is unavailable.
 
 Runtime model aliases required by the active cells are printed by preflight:

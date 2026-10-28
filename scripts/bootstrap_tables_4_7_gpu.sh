@@ -11,5 +11,5 @@ uv venv --python 3.11 "${venv_path}"
 uv pip install --python "${venv_path}/bin/python" \
   torch==2.6.0 torchvision==0.21.0 \
   --index-url https://download.pytorch.org/whl/cu124
-uv pip install --python "${venv_path}/bin/python" -r requirements-gpu.lock
+uv pip install --python "${venv_path}/bin/python" -r requirements/gpu.lock
 "${venv_path}/bin/python" tools/preflight_lite.py --device cuda

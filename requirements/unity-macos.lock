@@ -2,7 +2,7 @@
 # Python 3.10.21. Create/install with:
 #   UV_CACHE_DIR=.uv-cache uv venv --python 3.10 .venv-unity
 #   UV_CACHE_DIR=.uv-cache uv pip install --no-deps \
-#     --python .venv-unity/bin/python -r requirements-unity-macos.lock
+#     --python .venv-unity/bin/python -r requirements/unity-macos.lock
 #
 # ML-Agents 1.1.0 pins Python<=3.10.12 and grpcio<=1.48.2; uv currently ships
 # Python 3.10.21, and grpcio 1.48.2 has no usable arm64 wheel here. The explicit

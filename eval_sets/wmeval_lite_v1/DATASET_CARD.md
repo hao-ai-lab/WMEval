@@ -272,7 +272,7 @@ Scoring a new model still needs the following, none of which ship in this
 dataset:
 
 - **The evaluator code** (WMEval repository) at the revision in
-  `MANIFEST.json`, with its Python dependencies (`requirements-*.lock`).
+  `MANIFEST.json`, with its Python dependencies (`requirements/*.lock`).
 - **A GPU** for the CV-based dimensions: SAM2, GroundingDINO, Depth Anything,
   DINOv2, RAFT and LPIPS. Suite validation and dry runs need only PyYAML.
 - **CV checkpoints**, downloaded on first use from their upstream hosts. The

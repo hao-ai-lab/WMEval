@@ -1,6 +1,6 @@
 # Exact local environment used for the 2026-09-30 M4 Pro preflight.
 # Python 3.11.16, macOS arm64. Install with:
-#   UV_CACHE_DIR=../.uv-cache uv pip install --python .venv/bin/python -r requirements-macos.lock
+#   UV_CACHE_DIR=../.uv-cache uv pip install --python .venv/bin/python -r requirements/macos.lock
 # CUDA/Modal runs remain pinned independently in tools/run_wmeval_lite_modal.py.
 aiohappyeyeballs==2.7.1
 aiohttp==3.14.3

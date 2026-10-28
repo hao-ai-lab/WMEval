@@ -1,13 +1,13 @@
 # Hermetic test environment used by .github/workflows/ci.yml
 # (`pytest -m "not integration" tests` + `run_wmeval_lite.py validate`).
-# Pins follow requirements-macos.lock (the reference Python 3.11 environment).
+# Pins follow requirements/macos.lock (the reference Python 3.11 environment).
 #
 # torch/torchvision are NOT listed here: `evaluation/__init__.py` imports every
 # metric module, so they are required, but CI installs the CPU-only wheels
 # first from the PyTorch index, which then satisfy lpips' torch requirement:
 #   pip install --index-url https://download.pytorch.org/whl/cpu \
 #       torch==2.14.1 torchvision==0.29.1
-#   pip install -r requirements-ci.txt
+#   pip install -r requirements/ci.txt
 #
 # Deliberately omitted (only needed to actually *run* GPU/VLM dimensions, never
 # by the hermetic tests): transformers, sam2, cjm-byte-track, openpiv, modal,

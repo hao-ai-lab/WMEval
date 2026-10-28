@@ -38,7 +38,7 @@ cross_cutting_gaps:
     priority: P2
     severity: high
     status: open
-    gap: The tested macOS environment is pinned in requirements-macos.lock, while there is no pyproject.toml/uv.lock project contract and CUDA dependencies are embedded separately in a Modal script.
+    gap: The tested macOS environment is pinned in requirements/macos.lock, while there is no pyproject.toml/uv.lock project contract and CUDA dependencies are embedded separately in a Modal script.
     remediation: Define supported CPU/macOS and CUDA extras in project metadata, produce uv locks for each platform, and add an offline checkpoint preflight.
   - id: candidate_normalization
     priority: P0
