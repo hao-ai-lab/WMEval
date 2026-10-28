@@ -239,7 +239,7 @@ def test_aggregate_keeps_synthetic_rows_out_of_core(tmp_path: Path) -> None:
 
 
 def test_synthetic_capture_segments() -> None:
-    from tools.detect_beamdomino_segments import detect_segments, log_from_synthetic_capture
+    from tools.dataset.detect_beamdomino_segments import detect_segments, log_from_synthetic_capture
 
     def frame(t: float, ball_z: float, roof_tilt: float, fallen: bool) -> dict:
         import math
@@ -287,7 +287,7 @@ def test_real_suite_synthetic_cases_build() -> None:
     assert by_family["liquid_container"] == {"fluid_mechanics", "lpips"}
 
 
-# Reference inputs authored with the hosted judge (tools/build_synthetic_reference_inputs.py).
+# Reference inputs authored with the hosted judge (tools/dataset/build_synthetic_reference_inputs.py).
 JUDGE_AUTHORED = ("contact_events.json", "qa_dataset.json", "rubric for")
 
 

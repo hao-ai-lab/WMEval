@@ -3,14 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from tools.model_adapters.lingbot_batch import (
+from tools.generation.model_adapters.lingbot_batch import (
     acquire_generation_claim,
     generation_complete as lingbot_adapter_complete,
     release_generation_claim,
 )
-from tools.run_lingbot_table7_batch import generation_complete as lingbot_complete
-from tools.run_matrix_game2 import generation_complete as matrix2_complete
-from tools.run_matrix_game3 import generation_complete as matrix3_complete
+from tools.generation.run_lingbot_table7_batch import generation_complete as lingbot_complete
+from tools.generation.run_matrix_game2 import generation_complete as matrix2_complete
+from tools.generation.run_matrix_game3 import generation_complete as matrix3_complete
 
 
 @pytest.mark.parametrize(

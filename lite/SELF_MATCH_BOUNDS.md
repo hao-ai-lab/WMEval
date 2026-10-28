@@ -84,17 +84,17 @@ model `azure/openai/gpt-5.4`, pinned prompts/rubrics/QA unchanged).
   less than 5 % of the time. MDD_1 compares single videos; MDD_5 is the paper's
   5-seed protocol. Judge noise only: generation (seed) variance comes on top.
 
-Machine-readable: `judge_noise_floor.json` in the [Hub dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite) (written here by `tools/measure_judge_floor.py`, not tracked in git). Raw rows, usage
+Machine-readable: `judge_noise_floor.json` in the [Hub dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite) (written here by `tools/dataset/measure_judge_floor.py`, not tracked in git). Raw rows, usage
 logs and the full per-video summary: `reports/judge_noise_floor/` (not tracked).
 Reproduce:
 
 ```bash
-python tools/measure_judge_floor.py plan --set core --repeats 5 --out reports/judge_noise_floor/core
-python tools/measure_judge_floor.py plan --set synthetic --repeats 3 --per-case 2 \
+python tools/dataset/measure_judge_floor.py plan --set core --repeats 5 --out reports/judge_noise_floor/core
+python tools/dataset/measure_judge_floor.py plan --set synthetic --repeats 3 --per-case 2 \
   --dimensions prompt_scene_consistency --out reports/judge_noise_floor/synthetic
-python tools/measure_judge_floor.py plan --set synthetic --repeats 3 --per-case 3 \
+python tools/dataset/measure_judge_floor.py plan --set synthetic --repeats 3 --per-case 3 \
   --dimensions lpips,physical_causality --out reports/judge_noise_floor/synthetic
-python tools/measure_judge_floor.py plan --set candidates --repeats 3 \
+python tools/dataset/measure_judge_floor.py plan --set candidates --repeats 3 \
   --from runs/odyssey/candidates_prompt_v2.jsonl --dimensions prompt_scene_consistency \
   --out reports/judge_noise_floor/odyssey
 # each manifest, e.g.:
@@ -102,7 +102,7 @@ WMEVAL_VLM_USAGE_LOG=reports/judge_noise_floor/core/usage.jsonl \
 python tools/judge_gateway.py --key-file ~/.credentials/nv_vlm_api_key -- run \
   --candidate-manifest reports/judge_noise_floor/core/lpips.jsonl --dimensions lpips \
   --output-dir reports/judge_noise_floor/runs/core_lpips --device mps   # (--split synthetic for synthetic)
-python tools/measure_judge_floor.py summarize --compact \
+python tools/dataset/measure_judge_floor.py summarize --compact \
   --selfmatch reports/judge_noise_floor/runs/{core,syn}_*/per_case_results.jsonl \
   --candidates reports/judge_noise_floor/runs/ody_*/per_case_results.jsonl \
   --stored nvidia_2026-10-15=reports/wmeval_lite/odyssey_v2_prompt/per_case_results.jsonl \

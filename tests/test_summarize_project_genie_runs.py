@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from evaluation.project_genie_alignment import sha256
-from tools.summarize_project_genie_runs import build_summary, write_summary
+from tools.paper_tables.summarize_project_genie_runs import build_summary, write_summary
 
 
 def _write_run(root: Path, repeat_id: str, video_bytes: bytes) -> None:

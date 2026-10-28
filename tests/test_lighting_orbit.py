@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from tools.prepare_lighting_orbit import orbit_poses
+from tools.trajectories.prepare_lighting_orbit import orbit_poses
 
 
 def test_orbit_translates_returns_home_and_keeps_table_on_optical_axis():

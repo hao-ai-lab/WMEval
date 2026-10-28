@@ -4,7 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-spec = importlib.util.spec_from_file_location('probe', Path(__file__).parents[1] / 'tools/analyze_lighting_control_probe.py')
+spec = importlib.util.spec_from_file_location('probe', Path(__file__).parents[1] / 'tools/analysis/analyze_lighting_control_probe.py')
 probe = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(probe)
 

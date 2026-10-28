@@ -48,7 +48,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools import lock_case_dependencies as lcd  # noqa: E402
+from tools.dataset import lock_case_dependencies as lcd# noqa: E402
 
 PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
 MIN_PYTHON = (3, 11)

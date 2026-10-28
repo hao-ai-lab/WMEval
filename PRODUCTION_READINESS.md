@@ -32,7 +32,7 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 - **P0 / HIGH — `candidate_normalization`:** Most non-liquid cases use candidate_normalization none even when metrics compare candidate frame f with reference frame f.
   Remediation: Every row records input_contract (candidate vs. reference fps, size, frames, duration) and flags unnormalized rows outside the reference spec. Normalization is not added where it would change paper-parity scores; decide per case before adding it.
 - **P0 / HIGH — `dependency_lock_content`:** Live case evaluator locks have dependency_versions but empty artifact_schema_versions, and they describe the macOS environment only.
-  Remediation: dependency_versions are filled for every live case (tools/lock_case_dependencies.py, macOS venv). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set.
+  Remediation: dependency_versions are filled for every live case (tools/dataset/lock_case_dependencies.py, macOS venv). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set.
 - **P0 / HIGH — `external_model_artifacts`:** Candidate-side VLM judging depends on a hosted provider snapshot; model weights are pinned.
   Remediation: Checkpoints are pinned with revisions and sha256 (evaluator_assets.lock.json) and checked by tools/preflight_lite.py; reference-side judgments are frozen fixtures. Remaining: candidate-side hosted judging depends on the provider's model snapshot.
 - **P0 / MEDIUM — `result_status_schema`:** Metric availability, primary source, tracked-label coverage, and diagnostic-only status are not represented uniformly across dimensions.
@@ -98,7 +98,7 @@ A valid case bundle is not automatically a portable or paper-parity experiment. 
 
 ```bash
 uv run python tools/run_wmeval_lite.py validate --suite lite
-uv run python tools/audit_production_readiness.py --markdown PRODUCTION_READINESS.md --json reports/production_readiness.json
+uv run python tools/analysis/audit_production_readiness.py --markdown PRODUCTION_READINESS.md --json reports/production_readiness.json
 ```
 
 `--fail-on-high` is intended as a future release gate; it currently fails because the documented high-severity backlog is still open.

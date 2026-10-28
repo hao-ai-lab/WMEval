@@ -16,8 +16,8 @@ model is calibrated and generated:
 Build and verify:
 
 ```bash
-uv run python tools/build_table_reference_package.py build
-uv run python tools/build_table_reference_package.py verify
+uv run python tools/paper_tables/build_table_reference_package.py build
+uv run python tools/paper_tables/build_table_reference_package.py verify
 ```
 
 Outputs are ignored by git:
@@ -41,8 +41,8 @@ On the source machine:
 git switch lanxiang/release-cleanup
 git pull --ff-only origin lanxiang/release-cleanup
 
-uv run python tools/build_table_reference_package.py build
-uv run python tools/build_table_reference_package.py verify
+uv run python tools/paper_tables/build_table_reference_package.py build
+uv run python tools/paper_tables/build_table_reference_package.py verify
 ```
 
 On the GPU machine, obtain the branch before overlaying the reference package:
@@ -105,8 +105,8 @@ rsync -a \
   /path/to/WMEval/
 
 cd /path/to/WMEval
-scripts/bootstrap_tables_4_7_gpu.sh
-.venv-gpu/bin/python tools/preflight_tables_4_7_gpu.py --reference-only
+scripts/bootstrap_gpu.sh
+.venv-gpu/bin/python tools/paper_tables/preflight_gpu.py --reference-only
 ```
 
 On macOS, replace `sha256sum -c` with `shasum -a 256 -c`.
@@ -132,5 +132,5 @@ After reference preflight succeeds:
    `paper_baseline.yaml`.
 
 The existing Project Genie orchestration demonstrates this contract in
-`tools/run_prepared_table_evaluations.py`. A new backend should implement its
+`tools/paper_tables/run_prepared_table_evaluations.py`. A new backend should implement its
 own generation adapter but reuse the fixed references and evaluator settings.

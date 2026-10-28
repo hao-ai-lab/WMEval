@@ -36,4 +36,4 @@ evaluator_lock:
     opencv-python-headless: 5.0.0.93
     pydantic: 2.13.5
     requests: 2.34.2
-    lock_source: tools/lock_case_dependencies.py
+    lock_source: tools/dataset/lock_case_dependencies.py

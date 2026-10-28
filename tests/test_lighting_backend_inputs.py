@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 
-from tools.prepare_lighting_backend_inputs import prepare
+from tools.generation.prepare_lighting_backend_inputs import prepare
 from evaluation.camera_orbit import orbit_poses
 import yaml
 

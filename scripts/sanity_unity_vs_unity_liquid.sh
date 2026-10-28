@@ -60,7 +60,7 @@ else
   normalize_video "$CAND_VIDEO" "$CAND_NORM"
 fi
 
-python tools/evaluate_world_model_liquid.py \
+python tools/legacy/evaluate_world_model_liquid.py \
   --video "$CAND_NORM" \
   --ref_video "$REF_NORM" \
   --modules liquid_velocity,liquid_volume_conservation,liquid_surface_orientation,slosh_spectrum \
@@ -79,4 +79,4 @@ python tools/evaluate_world_model_liquid.py \
   --liquid_max_pairs 0
 
 echo "wrote $OUT"
-echo "  inspect with: python tools/inspect_liquid_report.py \"$OUT\""
+echo "  inspect with: python tools/analysis/inspect_liquid_report.py \"$OUT\""

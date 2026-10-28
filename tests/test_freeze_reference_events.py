@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from evaluation.modules.lpips_causal_vlm import load_frozen_reference_events
-from tools.freeze_reference_events import select_consensus
+from tools.dataset.freeze_reference_events import select_consensus
 
 
 def _pass(*events: tuple[int, str, float]) -> dict:

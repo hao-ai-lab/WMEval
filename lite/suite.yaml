@@ -176,7 +176,7 @@ dimensions:
     - RacingCar/prompt_third
     - ChessBoard/walk_third
     - WanderingGarden/scene_first
-    # Table 7 cells (tools/build_table_lite_cases.py)
+    # Table 7 cells (tools/dataset/build_table_lite_cases.py)
     - WanderingGarden/scene_perturb_in
     - WanderingGarden/scene_perturb_out
     - WanderingGarden/scene_360_in
@@ -210,7 +210,7 @@ dimensions:
       kin_road_trajectory: true
     cases:
     - BallRoller/ctrl
-    # Table 4 cells (tools/build_table_lite_cases.py)
+    # Table 4 cells (tools/dataset/build_table_lite_cases.py)
     - RacingCar/kinematics_third
     - BilliardGame/kinematics_first
     aggregate:
@@ -286,7 +286,7 @@ dimensions:
       prompt version is refused rather than silently compared across
       protocols. Record
       or re-record with:
-        python tools/record_causal_reference_answers.py <case_dir> --passes 5
+        python tools/dataset/record_causal_reference_answers.py <case_dir> --passes 5
       A case with no recording still runs; it just pays the live judge on both
       sides. This mirrors what the liquid dimension already does with its SAM2
       and RAFT `.npz` artifacts.

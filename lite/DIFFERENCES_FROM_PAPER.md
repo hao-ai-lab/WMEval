@@ -35,10 +35,10 @@ tables are frozen; nothing below changes a published value unless it says so.
 
 ## Prompt corrections (2026-10-21 dataset audit)
 
-The audit (`audit/README.md`, `tools/audit_dataset.py`) compared every core prompt with its
+The audit (`audit/README.md`, `tools/dataset/audit_dataset.py`) compared every core prompt with its
 conditioning frame and Unity reference. Reference videos, first frames, actions and judge
 outputs are unchanged; only these sentences of `case.yaml` `prompt` changed (evaluator
-fingerprints re-authored with `tools/build_lite_case.py`). No prompt-consistency case
+fingerprints re-authored with `tools/dataset/build_lite_case.py`). No prompt-consistency case
 (`*/prompt_*`) changed, so rubrics and frozen prompt scores are unaffected; no other module
 reads the prompt. The paper's runs used the old text (`experiments/protocol/prompt_components.yaml`
 keeps the as-run Table 7 components).
@@ -69,7 +69,7 @@ Not in any paper table. Until now the cell tracked only the static dome and cube
 It now tracks the controlled **white ball** (`kin_text_prompt: white ball.`, bottom-centre track
 point, plane calibration for metric FDE/DTW, mass 1 kg) against new artifacts
 `reference/artifacts/kin_{object_transforms.json,poses.npy,intrinsics.npy,object_masses.json,plane_calibration.json}`
-built by `tools/build_ballroller_kinematics_gt.py`. The reference video is unchanged.
+built by `tools/dataset/build_ballroller_kinematics_gt.py`. The reference video is unchanged.
 
 A Unity replay of the core key script cannot supply the ball's ground truth: in the committed
 scene the rack differs from the recording (its untextured white balls and contact response), so
@@ -113,11 +113,11 @@ notes.
   targets a backend cannot express, and RacingCar's road FDE is withheld when road alignment
   fails, but no per-run target-success rate is recorded.
 - **Prompt cases.** The bundled trajectory is a 40 °/s left turn for 10 s; the paper models'
-  inputs (`tools/prepare_prompt_case_inputs.py`) reproduce their original rollouts instead.
+  inputs (`tools/generation/prepare_prompt_case_inputs.py`) reproduce their original rollouts instead.
   New models should compile the bundled turn.
 - **Physical causality** grades one rollout over five judge passes, a different estimator
   from the paper's five rollouts: it makes fractional CSR expressible but does not reproduce
   Table 12 exactly.
 - **Reproduction.** Re-scoring a paper model through the Lite cases and matching the
-  published Table 4/7 means (`tools/export_lite_table_results.py` →
-  `tools/compare_table_results.py compare`) has not been completed for every model.
+  published Table 4/7 means (`tools/paper_tables/export_lite_table_results.py` →
+  `tools/paper_tables/compare_table_results.py compare`) has not been completed for every model.

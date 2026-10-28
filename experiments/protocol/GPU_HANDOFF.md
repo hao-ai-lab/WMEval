@@ -18,11 +18,11 @@ checked-in `gpu_handoff_manifest.json` lists the minimal hashed evidence set:
 ## 1. Verify or copy the evidence on the source machine
 
 ```bash
-uv run python tools/build_table_gpu_handoff.py --verify
+uv run python tools/paper_tables/build_table_gpu_handoff.py --verify
 
 # Destination is the root of another checkout or a staging directory whose
 # contents will be overlaid on the GPU checkout.
-uv run python tools/build_table_gpu_handoff.py \
+uv run python tools/paper_tables/build_table_gpu_handoff.py \
   --copy-to /path/to/gpu-checkout
 ```
 
@@ -41,7 +41,7 @@ access for the first checkpoint download (or a pre-populated cache).
 git fetch origin lanxiang/release-cleanup
 git switch lanxiang/release-cleanup
 git pull --ff-only origin lanxiang/release-cleanup
-scripts/bootstrap_tables_4_7_gpu.sh
+scripts/bootstrap_gpu.sh
 ```
 
 This creates `.venv-gpu`, installs Torch 2.6.0 / torchvision 0.21.0 from the
@@ -62,7 +62,7 @@ cache must be retained with the results.
 ## 3. Run all active cells
 
 ```bash
-WMEVAL_REPORT_SUFFIX=cuda_release scripts/run_tables_4_7_gpu.sh
+WMEVAL_REPORT_SUFFIX=cuda_release scripts/run_paper_tables_gpu.sh
 ```
 
 The runner validates all five receipts per cell, normalizes candidate video to
@@ -73,8 +73,8 @@ writes five-run comparisons under `reports/table4/` and `reports/table7/`.
 For a preparation-only smoke test:
 
 ```bash
-.venv-gpu/bin/python tools/preflight_tables_4_7_gpu.py
-.venv-gpu/bin/python tools/run_prepared_table_evaluations.py \
+.venv-gpu/bin/python tools/paper_tables/preflight_gpu.py
+.venv-gpu/bin/python tools/paper_tables/run_prepared_table_evaluations.py \
   --device cuda --prepare-only --fail-incomplete
 ```
 

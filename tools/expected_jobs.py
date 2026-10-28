@@ -25,7 +25,7 @@ Usage::
 
 Then generate each job's video at its ``candidate_video`` path and run
 ``tools/run_wmeval_lite.py run --candidate-manifest <output>/candidates.template.jsonl``.
-See ``tools/model_adapters/TEMPLATE.md`` for the generator side.
+See ``tools/generation/model_adapters/TEMPLATE.md`` for the generator side.
 """
 from __future__ import annotations
 
@@ -163,7 +163,7 @@ def _add_synthetic_jobs(suite_root: Path, model: str, selected: list[str], seeds
                         jobs: list[dict[str, Any]], not_applicable: list[dict[str, Any]]) -> None:
     manifest = Path(suite_root) / "synthetic" / "manifest.json"
     if not manifest.is_file():
-        raise SystemExit(f"{manifest} not found; run tools/generate_synthetic_trajectories.py")
+        raise SystemExit(f"{manifest} not found; run tools/dataset/generate_synthetic_trajectories.py")
     for t in json.loads(manifest.read_text(encoding="utf-8"))["trajectories"]:
         dims = [d for d in t["dimensions"] if d in selected]
         if not dims:

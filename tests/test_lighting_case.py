@@ -9,8 +9,8 @@ import pytest
 import yaml
 
 from evaluation.camera_orbit import orbit_poses, validate_orbit
-from tools.build_lighting_case import CASE, CASE_ID, trajectory_spec
-from tools.render_synthetic_references import LIGHTING_NATIVE_UNITY
+from tools.dataset.build_lighting_case import CASE, CASE_ID, trajectory_spec
+from tools.dataset.render_synthetic_references import LIGHTING_NATIVE_UNITY
 
 ROOT = Path(__file__).resolve().parents[1]
 SUITE = ROOT / "lite"

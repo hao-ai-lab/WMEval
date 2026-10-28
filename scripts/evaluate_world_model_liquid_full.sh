@@ -56,7 +56,7 @@ WM_VIDEO_NORM="$WORK_DIR/wm_norm.mp4"
 normalize_video "$REF_VIDEO" "$REF_VIDEO_NORM"
 normalize_video "$WM_VIDEO"  "$WM_VIDEO_NORM"
 
-python tools/evaluate_world_model_liquid.py \
+python tools/legacy/evaluate_world_model_liquid.py \
   --video "$WM_VIDEO_NORM" \
   --ref_video "$REF_VIDEO_NORM" \
   --modules liquid_velocity,liquid_volume_conservation,liquid_surface_orientation,slosh_spectrum,lpips,control_motion,clip4clip \

@@ -47,7 +47,7 @@ def test_batch_keeps_one_model_and_preserves_completed_receipts(tmp_path, monkey
 
     native.generate = generate
     monkeypatch.setitem(sys.modules, 'lingbot_no_ui', SimpleNamespace(upstream=native))
-    source = Path(__file__).resolve().parents[1]/'tools/model_adapters/lingbot_batch_no_ui.py'
+    source = Path(__file__).resolve().parents[1]/'tools/generation/model_adapters/lingbot_batch_no_ui.py'
     loader = importlib.util.spec_from_file_location('batch_lifecycle_test', source)
     module = importlib.util.module_from_spec(loader)
     loader.loader.exec_module(module)

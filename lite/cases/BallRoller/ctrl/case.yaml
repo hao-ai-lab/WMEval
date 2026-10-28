@@ -79,4 +79,4 @@ evaluator_lock:
     asset:ptlflow_synthetic: 9397588204a48ad826ad168b9bd6961a78f09661
     asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
     asset:sam2: 2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318
-    lock_source: tools/lock_case_dependencies.py
+    lock_source: tools/dataset/lock_case_dependencies.py

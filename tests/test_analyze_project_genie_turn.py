@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "analyze_project_genie_turn.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "analysis" / "analyze_project_genie_turn.py"
 SPEC = importlib.util.spec_from_file_location("analyze_project_genie_turn", SCRIPT)
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)

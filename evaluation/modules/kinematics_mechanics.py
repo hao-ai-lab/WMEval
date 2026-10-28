@@ -8,7 +8,7 @@ rollout and compares them against Unity-side references:
      lightweight ByteTrack-style tracker (``bytetracker`` /
      ``cjm_byte_track`` if installed -- see the "Kinematics & Mechanics" section of ``README.md``
      for the exact optional dependency this repo expects, matching
-     ``tools/groundingdino_bytetrack.py``).
+     ``tools/legacy/groundingdino_bytetrack.py``).
   3. Estimate camera ego-motion between frames from the *static* anchor
      tracks (objects declared as ``kin_static_anchor_labels``) via the same
      median-translation flow-compensation strategy already used by
@@ -1153,7 +1153,7 @@ def analyze_kinematics_mechanics_from_context(
             "module": "kinematics_mechanics",
             "error": (
                 "ByteTrack is not installed. Install one of `cjm_byte_track` "
-                "(matches tools/groundingdino_bytetrack.py) or `bytetracker`."
+                "(matches tools/legacy/groundingdino_bytetrack.py) or `bytetracker`."
             ),
         }
 
@@ -1857,7 +1857,7 @@ def extended_kinematics_from_tracks(
     Pure function of the tracked trajectories (``result["trajectories"]``),
     the candidate video (for its camera motion) and the Unity artifacts, so
     stored results can be re-scored without re-running the detector
-    (``tools/rescore_kinematics_extended.py``).  Legacy fields are untouched.
+    (``tools/paper_tables/rescore_kinematics_extended.py``).  Legacy fields are untouched.
     """
     from . import kinematics_robust as kr
 

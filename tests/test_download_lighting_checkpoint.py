@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from tools.download_lighting_checkpoint import finalize_shard_indices, sha256
+from tools.generation.download_lighting_checkpoint import finalize_shard_indices, sha256
 
 
 def test_derived_index_normalizes_relative_shards(tmp_path: Path):

@@ -5,9 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from tools import unity_trajectory_runner as runner
-
-
+from tools.trajectories import unity_trajectory_runner as runner
 def test_export_evaluation_artifacts_matches_eoc_contract(
     tmp_path: Path, monkeypatch
 ) -> None:

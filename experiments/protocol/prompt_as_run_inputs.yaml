@@ -17,21 +17,21 @@ backends:
       161 camera poses at 16 fps (10 s). First person: one counter-clockwise
       turn in place (360 deg). Third person: two counter-clockwise look-at
       orbits around the character (720 deg).
-    source: tools/prepare_prompt_case_inputs.py (byte-identical to the rollout inputs)
+    source: tools/generation/prepare_prompt_case_inputs.py (byte-identical to the rollout inputs)
   matrix_game_3:
     matches_canonical: false
     as_run: >-
       177-frame key schedule for the deterministic adapter: `j` (turn left,
       upstream CAM_VALUE 0.1) every frame; third person adds `d` (strafe right)
       so the camera orbits the character (no native orbit control).
-    source: tools/prepare_prompt_case_inputs.py
+    source: tools/generation/prepare_prompt_case_inputs.py
   waypoint15:
     matches_canonical: false
     as_run: >-
       actions.txt ArrowLeft/ArrowRight mapped to a constant mouse yaw of 0.15
       per 66.7 ms step (the paper's Waypoint "turn left" value); no text channel,
       so the prompt is unused.
-    source: tools/generate_waypoint15_candidates_modal.py
+    source: tools/generation/generate_waypoint15_candidates_modal.py
   project_genie:
     matches_canonical: unknown
     as_run: Hosted browser session; key timing and turn rate of the paper rollouts are not recorded in this repository.

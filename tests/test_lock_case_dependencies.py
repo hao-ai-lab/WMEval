@@ -8,8 +8,7 @@ import pytest
 import yaml
 
 from tests.lite_suite_test_utils import build_default_suite_dir
-from tools import lock_case_dependencies as lcd
-
+from tools.dataset import lock_case_dependencies as lcd
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SUITE = REPO_ROOT / "lite"
 
@@ -55,7 +54,7 @@ def test_foreign_locks_are_kept_unless_forced(tmp_path: Path) -> None:
 
 
 def test_changed_cases_are_rebuilt(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    import tools.build_lite_case as build
+    import tools.dataset.build_lite_case as build
 
     calls: list[list[str]] = []
     monkeypatch.setattr(build, "main", lambda argv: calls.append(argv) or 0)

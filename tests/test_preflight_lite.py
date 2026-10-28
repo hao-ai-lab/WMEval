@@ -9,7 +9,7 @@ import pytest
 
 from tests.lite_suite_test_utils import build_default_suite_dir
 from tools import preflight_lite as pf
-from tools.lock_case_dependencies import load_assets_lock
+from tools.dataset.lock_case_dependencies import load_assets_lock
 
 
 def _statuses(rows: list[pf.Row]) -> dict[str, str]:

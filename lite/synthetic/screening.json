@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "note": "Plans whose Unity reference failed the dataset audit (tools/audit_dataset.py screen); tools/generate_synthetic_trajectories.py swaps each for the next-best plan of its stratum.",
+ "note": "Plans whose Unity reference failed the dataset audit (tools/dataset/audit_dataset.py screen); tools/dataset/generate_synthetic_trajectories.py swaps each for the next-best plan of its stratum.",
  "rejected": {
   "ball_force": [
    {

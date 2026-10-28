@@ -1,7 +1,7 @@
 """The synthetic trajectory set (``test_full``) as scoreable Lite cases.
 
 Each synthetic trajectory (``synthetic/manifest.json``, written by
-``tools/generate_synthetic_trajectories.py``) is replayed in the Unity scene of
+``tools/dataset/generate_synthetic_trajectories.py``) is replayed in the Unity scene of
 its *conditioning* core case, so it is scored exactly like that case except
 for what the trajectory itself changes:
 
@@ -21,7 +21,7 @@ for what the trajectory itself changes:
   for a trajectory whose ball never starts a chain).
 
 Reference files are checksummed in ``synthetic/references.json`` (written by
-``tools/render_synthetic_references.py publish``) and the generated trajectory
+``tools/dataset/render_synthetic_references.py publish``) and the generated trajectory
 files in the manifest; :func:`validate_synthetic_case` verifies both.
 """
 from __future__ import annotations
@@ -144,7 +144,7 @@ def load_trajectories(suite: Suite) -> list[SyntheticTrajectory]:
     manifest_path = suite.root / spec.manifest
     if not manifest_path.is_file():
         raise SyntheticSuiteError(
-            f"{manifest_path} not found; run tools/generate_synthetic_trajectories.py"
+            f"{manifest_path} not found; run tools/dataset/generate_synthetic_trajectories.py"
         )
     references_path = suite.root / spec.references
     references = (

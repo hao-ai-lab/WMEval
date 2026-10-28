@@ -8,7 +8,7 @@ import pytest
 from evaluation import action_backends
 from evaluation.lite.suite_loader import load_suite
 from evaluation.trajectories import load_trajectory, validate_trajectory
-from tools import generate_synthetic_trajectories as gen
+from tools.dataset import generate_synthetic_trajectories as gen
 from tools.expected_jobs import main as expected_jobs
 from tools.sync_lite_data import build_full_index, build_index, check_synthetic
 

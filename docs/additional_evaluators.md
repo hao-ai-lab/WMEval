@@ -4,7 +4,7 @@ Optional evaluators outside the eight released dimensions.
 
 ## CLIP4Clip video–text similarity
 
-Optional holistic video–text similarity baseline (`tools/evaluate_world_model_clip4clip.py`).
+Optional holistic video–text similarity baseline (`tools/legacy/evaluate_world_model_clip4clip.py`).
 
 *(formerly `README_clip4clip_eval.md`)*
 
@@ -12,7 +12,7 @@ This document explains how to run CLIP4Clip evaluation in the current `WMEval` f
 
 ### 1) Scope
 
-- Main entry: `tools/evaluate_world_model_clip4clip.py`
+- Main entry: `tools/legacy/evaluate_world_model_clip4clip.py`
 - Supports:
   - single video + prompt (`--video`, `--text_prompt`)
   - JSONL manifest batch mode (`--manifest_jsonl`, `--output_jsonl`)
@@ -37,7 +37,7 @@ If dependencies are missing, the tool returns an `error` field in output JSON/JS
 Run using the provided script template:
 
 ```bash
-python tools/evaluate_world_model_clip4clip.py \
+python tools/legacy/evaluate_world_model_clip4clip.py \
   --manifest_jsonl /path/to/world_model_clip4clip_manifest.jsonl \
   --output_jsonl reports/world_model_clip4clip/results.jsonl \
   --sample_mode timestamp \
@@ -80,7 +80,7 @@ The tool will pick the first non-empty key in that order and normalize it as `vi
 ### 5) Single Video Mode
 
 ```bash
-python tools/evaluate_world_model_clip4clip.py \
+python tools/legacy/evaluate_world_model_clip4clip.py \
   --video /abs/path/video.mp4 \
   --text_prompt "A ball rolls down a ramp" \
   --output_json reports/world_model_clip4clip/single.json \
@@ -117,7 +117,7 @@ Some large metadata keys are intentionally dropped in manifest output JSONL for 
 ### 9) Note on Framework Compatibility
 
 - CLIP4Clip currently runs through the shared evaluation context (`reference` + `candidate`).
-- In `tools/evaluate_world_model_clip4clip.py`, single-video use is implemented by assigning the same video to both internal slots.
+- In `tools/legacy/evaluate_world_model_clip4clip.py`, single-video use is implemented by assigning the same video to both internal slots.
 - This keeps compatibility with the existing framework design and does not require changing LPIPS paths.
 
 
@@ -139,8 +139,8 @@ a reference Unity video using:
 - `evaluation/modules/lighting.py`: DiffusionLight-based lighting module
 - `evaluation/modules/motion.py`: RAFT-based motion module
 - `evaluation/modules/shadow.py`: SAM2-based shadow module
-- `tools/evaluate_world_model_diffusionlight.py`: single-pair orchestrator
-- `tools/evaluate_world_model_metrics.py`: standalone alias for the same entrypoint
+- `tools/legacy/evaluate_world_model_diffusionlight.py`: single-pair orchestrator
+- `tools/legacy/evaluate_world_model_metrics.py`: standalone alias for the same entrypoint
 - `scripts/evaluate_world_model_diffusionlight_physics.sh`: runnable command template
 
 ### Dependencies
@@ -157,7 +157,7 @@ custom path with `--diffusionlight_repo`).
 ### Usage
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/legacy/evaluate_world_model_diffusionlight.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --modules lighting,motion,shadow \
@@ -228,7 +228,7 @@ They are organized as:
 ByteTrack pipeline:
 
 ```bash
-python tools/groundingdino_bytetrack.py \
+python tools/legacy/groundingdino_bytetrack.py \
   --video /path/to/video.mp4 \
   --text_prompt "ball . pendulum" \
   --grounding_cfg /path/to/GroundingDINO_SwinT_OGC.py \
@@ -240,7 +240,7 @@ python tools/groundingdino_bytetrack.py \
 SAM 2 pipeline:
 
 ```bash
-python tools/groundingdino_sam.py \
+python tools/legacy/groundingdino_sam.py \
   --video /path/to/video.mp4 \
   --text_prompt "ball . car" \
   --grounding_cfg /path/to/GroundingDINO_SwinT_OGC.py \

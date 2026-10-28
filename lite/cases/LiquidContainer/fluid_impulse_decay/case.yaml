@@ -76,7 +76,7 @@ evaluator_lock:
     asset:lpips_vgg: a78928a0af1e5f0fcb1f3b9e8f8c3a2a5a3de244d830ad5c1feddc79b8432868
     asset:raft_large: ff5fadd56d26b40647388883af1547351ea17868b765c05b27231e72dd16a322
     asset:sam2_small: 6d1aa6f30de5c92224f8172114de081d104bbd23dd9dc5c58996f0cad5dc4d38
-    lock_source: tools/lock_case_dependencies.py
+    lock_source: tools/dataset/lock_case_dependencies.py
 module_params:
   lpips:
     lpips_reference_events_json: reference/artifacts/contact_events.json

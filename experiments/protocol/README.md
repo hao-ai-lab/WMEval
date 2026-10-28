@@ -59,18 +59,18 @@ and exact paper parity is not implied for the four supplements.
 Regenerate the repository-wide readiness inventory with:
 
 ```bash
-uv run python tools/audit_trajectory_readiness.py \
+uv run python tools/trajectories/audit_trajectory_readiness.py \
   --output experiments/protocol/other_trajectory_inventory.json
 
-uv run python tools/prepare_other_trajectories.py
+uv run python tools/trajectories/prepare_other_trajectories.py
 ```
 
 ## Validate and compile
 
 ```bash
-uv run python tools/prepare_table_trajectories.py audit
-uv run python tools/prepare_table_trajectories.py audit --strict
-uv run python tools/prepare_table_trajectories.py compile
+uv run python tools/trajectories/prepare_table_trajectories.py audit
+uv run python tools/trajectories/prepare_table_trajectories.py audit --strict
+uv run python tools/trajectories/prepare_table_trajectories.py compile
 ```
 
 The ordinary audit proves structural coverage and reports parity caveats as
@@ -83,8 +83,8 @@ and the paper's unresolved internal conflicts. Create the result-ingestion
 template and, later, the JSON/CSV/Markdown cross-comparison with:
 
 ```bash
-uv run python tools/compare_table_results.py template
-uv run python tools/compare_table_results.py compare \
+uv run python tools/paper_tables/compare_table_results.py template
+uv run python tools/paper_tables/compare_table_results.py compare \
   --results experiments/protocol/rerun_results.template.json \
   --output runs/tables_4_7/comparison
 ```
@@ -115,14 +115,14 @@ checkpoints. Only a chronological, high-confidence mapping is trimmed to
 
 ```bash
 # Environment and Chrome/CDP readiness
-uv run python tools/project_genie_agent.py doctor
-uv run python tools/project_genie_agent.py launch
+uv run python tools/generation/project_genie_agent.py doctor
+uv run python tools/generation/project_genie_agent.py launch
 
 # Compile controls first
-uv run python tools/prepare_table_trajectories.py compile
+uv run python tools/trajectories/prepare_table_trajectories.py compile
 
 # Launch the dedicated Chrome profile, then execute one independent run
-uv run python tools/project_genie_agent.py run --launch \
+uv run python tools/generation/project_genie_agent.py run --launch \
   --first-frame lite/cases/RacingCar/prompt_third/reference/ref.png \
   --actions experiments/protocol/compiled/racing_car_drive.actions.jsonl \
   --environment-prompt "A wide straight highway lined with trees." \
@@ -170,7 +170,7 @@ alignment. A file left by an older session can be recovered explicitly only
 after nine-checkpoint visual validation:
 
 ```bash
-uv run python tools/recover_project_genie_download.py \
+uv run python tools/generation/recover_project_genie_download.py \
   --source ~/Downloads/Genie….mp4 \
   --run-dir runs/project_genie/table7/WanderingGarden/360_out/run0 \
   --endpoint-mode calibrated_visual_periodicity
@@ -182,8 +182,8 @@ in `receipt.json`.
 Plan or resume the full five-run queue with:
 
 ```bash
-uv run python tools/run_project_genie_tables.py plan
-uv run python tools/run_project_genie_tables.py run --resume
+uv run python tools/paper_tables/run_project_genie_tables.py plan
+uv run python tools/paper_tables/run_project_genie_tables.py run --resume
 ```
 
 The authenticated September 2026 UI has been exercised end to end: creation
@@ -215,7 +215,7 @@ The eight reconstructed scene/view cells are described in
 `WorldModelBenchScenePrivate` with one command:
 
 ```bash
-uv run python tools/run_unity_table_scenes.py all
+uv run python tools/trajectories/run_unity_table_scenes.py all
 ```
 
 This emits per-cell precompiled shell scripts, deterministic players, frame
@@ -232,7 +232,7 @@ The checked local Garden player includes a deterministic 150-frame, 15 fps,
 translation, yaw rate, frame count, and exact frame-zero hash with:
 
 ```bash
-.venv-unity/bin/python tools/unity_trajectory_runner.py \
+.venv-unity/bin/python tools/trajectories/unity_trajectory_runner.py \
   --output-dir runs/unity/garden_bridge_gt capture-ground-truth
 ```
 
@@ -240,7 +240,7 @@ The validated frame-zero PNG is now the manifest default for inward
 WanderingGarden cases (no JPEG conversion or crop):
 
 ```bash
-uv run python tools/run_project_genie_tables.py run --resume \
+uv run python tools/paper_tables/run_project_genie_tables.py run --resume \
   --case table7/WanderingGarden/360_in \
   --turn-calibration table7/WanderingGarden/360_in=runs/project_genie/calibration/garden_bridge_arrow_left_attempt4/turn_calibration.json
 ```
@@ -278,7 +278,7 @@ reconstructed-setting repeats, not exact-paper-parity claims, because the
 original prompt and numeric action timeline are unpublished.
 
 The earlier calibration-only `run0` is preserved under
-`run0_calibration_revisit`; `tools/relocate_project_genie_run.py` rewrites its
+`run0_calibration_revisit`; `tools/generation/relocate_project_genie_run.py` rewrites its
 internal absolute paths and refreshes dependent hashes. The canonical `run0`
 slot was regenerated independently, so calibration evidence is retained
 without contaminating the five table repeats.
@@ -302,7 +302,7 @@ Materialize a self-contained, hash-locked asset bundle and an 80-slot
 generation queue with:
 
 ```bash
-uv run python tools/prepare_table_assets.py
+uv run python tools/paper_tables/prepare_table_assets.py
 ```
 
 The command copies every source-backed conditioning frame and all five forms
@@ -340,7 +340,7 @@ key timing, checkpoint coverage, artifact hashes, repeat independence, and
 cross-run consistency, with:
 
 ```bash
-uv run python tools/audit_project_genie_trajectories.py \
+uv run python tools/paper_tables/audit_project_genie_trajectories.py \
   --output runs/tables_4_7/project_genie_trajectory_audit.json
 ```
 
@@ -352,7 +352,7 @@ conditioning-frame hashes, five-repeat execution, and semantic action-target
 gaps with:
 
 ```bash
-.venv/bin/python tools/audit_table4_action_coverage.py
+.venv/bin/python tools/paper_tables/audit_table4_action_coverage.py
 ```
 
 The report is written to
@@ -368,8 +368,8 @@ When detections and tracks are already cached, mechanics-only iterations can be
 reproduced without rerunning GroundingDINO:
 
 ```bash
-.venv/bin/python tools/recompute_table4_event_mechanics.py
-.venv/bin/python tools/build_table4_calibrated_results.py
+.venv/bin/python tools/paper_tables/recompute_table4_event_mechanics.py
+.venv/bin/python tools/paper_tables/build_table4_calibrated_results.py
 ```
 
 The first command writes new provenance-linked reports and never mutates the
@@ -381,7 +381,7 @@ standardizes the videos, remaps the trajectory-specific camera ground truth,
 and runs the available diagnostic evaluator:
 
 ```bash
-.venv/bin/python tools/run_prepared_table_evaluations.py --device auto
+.venv/bin/python tools/paper_tables/run_prepared_table_evaluations.py --device auto
 ```
 
 `auto` uses CUDA, then MPS, then CPU according to the installed PyTorch runtime.
@@ -400,7 +400,7 @@ pose-corrected, five-row-complete result files are eligible for that merge.
 At any point, rebuild the requirement-level status artifact with:
 
 ```bash
-uv run python tools/audit_table_reproduction.py
+uv run python tools/paper_tables/audit_table_reproduction.py
 ```
 
 This writes `runs/tables_4_7/reproduction_status.json`. It verifies the paper
@@ -430,7 +430,7 @@ frames without optical-flow interpolation; the native downloads remain
 unchanged and both hashes are recorded.
 
 ```bash
-.venv/bin/python tools/prepare_project_genie_table7_eval.py \
+.venv/bin/python tools/paper_tables/prepare_project_genie_table7_eval.py \
   --validation \
     runs/project_genie/table7/WanderingGarden/360_in/five_run_validation.json \
   --unity-receipt runs/unity/garden_bridge_gt/capture_receipt.json \
@@ -455,7 +455,7 @@ Convert the five evaluator rows to the paper comparison schema and render the
 cross-comparison:
 
 ```bash
-.venv/bin/python tools/build_table7_rerun_results.py \
+.venv/bin/python tools/paper_tables/build_table7_rerun_results.py \
   --results-jsonl \
     reports/table7/project_genie/WanderingGarden/360_in/five_run_reconstructed_pose_corrected/per_case_results.jsonl \
   --evaluation-inputs \
@@ -463,7 +463,7 @@ cross-comparison:
   --output \
     reports/table7/project_genie/WanderingGarden/360_in/rerun_results.json
 
-.venv/bin/python tools/compare_table_results.py compare --allow-incomplete \
+.venv/bin/python tools/paper_tables/compare_table_results.py compare --allow-incomplete \
   --results \
     reports/table7/project_genie/WanderingGarden/360_in/rerun_results.json \
   --output \

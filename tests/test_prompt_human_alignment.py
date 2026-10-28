@@ -6,9 +6,7 @@ from typing import Any
 
 import pytest
 
-from tools import check_prompt_human_alignment as checker
-
-
+from tools.dataset import check_prompt_human_alignment as checker
 def _fixture() -> dict[str, Any]:
     return json.loads(checker.DEFAULT_FIXTURE.read_text(encoding="utf-8"))
 

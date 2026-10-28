@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from evaluation.project_genie_alignment import sha256
-from tools.relocate_project_genie_run import relocate_run
+from tools.generation.relocate_project_genie_run import relocate_run
 
 
 def test_relocate_run_rewrites_paths_and_refreshes_hashes(tmp_path: Path) -> None:

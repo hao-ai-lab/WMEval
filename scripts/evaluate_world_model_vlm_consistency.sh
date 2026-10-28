@@ -25,11 +25,11 @@ PROMPT_VERSION="v1"
 OUTPUT="reports/world_model_vlm_consistency/$(basename "${VIEW_DIR}")_results.jsonl"
 
 # --- 1) Build manifest from scenes.csv + data/{scene}/*.mp4 ---
-python tools/evaluate_world_model_vlm_consistency.py build_manifest \
+python tools/legacy/evaluate_world_model_vlm_consistency.py build_manifest \
   --view_dir "${VIEW_DIR}"
 
 # --- 2) Generate and cache rubrics (once per rubric model / prompt_version) ---
-python tools/evaluate_world_model_vlm_consistency.py generate_rubrics \
+python tools/legacy/evaluate_world_model_vlm_consistency.py generate_rubrics \
   --manifest "${VIEW_DIR}/manifest.jsonl" \
   --rubric_dir "${RUBRIC_DIR}" \
   --provider "${PROVIDER}" \
@@ -37,7 +37,7 @@ python tools/evaluate_world_model_vlm_consistency.py generate_rubrics \
   --prompt_version "${PROMPT_VERSION}"
 
 # --- 3) Score all videos in the manifest ---
-python tools/evaluate_world_model_vlm_consistency.py evaluate \
+python tools/legacy/evaluate_world_model_vlm_consistency.py evaluate \
   --manifest "${VIEW_DIR}/manifest.jsonl" \
   --rubric_dir "${RUBRIC_DIR}" \
   --provider "${PROVIDER}" \
@@ -49,7 +49,7 @@ python tools/evaluate_world_model_vlm_consistency.py evaluate \
   --resume
 
 # Optional: skip reference image (rubrics + judge run on prompt + frames only)
-# python tools/evaluate_world_model_vlm_consistency.py evaluate \
+# python tools/legacy/evaluate_world_model_vlm_consistency.py evaluate \
 #   --manifest "${VIEW_DIR}/manifest.jsonl" \
 #   --rubric_dir "${RUBRIC_DIR}" \
 #   --provider "${PROVIDER}" --model "${JUDGE_MODEL}" \

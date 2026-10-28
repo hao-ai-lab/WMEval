@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tools._causal_qa_vlm import QADecoratorResult, decorate_qa
-from tools.generate_beamdomino_causal_step_qa import (
+from tools.dataset._causal_qa_vlm import QADecoratorResult, decorate_qa
+from tools.dataset.generate_beamdomino_causal_step_qa import (
     SHAPE_STAGE_CHAINS,
     STAGE_TEMPLATES,
     _shuffled_choices,
@@ -385,7 +385,7 @@ def test_decorate_qa_emits_corrected_answer_when_vlm_overrides(tmp_path: Path, c
         correct="actually it tipped left, not right",
         distractors=["a", "b", "c"],
     )
-    with caplog.at_level(_logging.WARNING, logger="tools._causal_qa_vlm"):
+    with caplog.at_level(_logging.WARNING, logger="tools.dataset._causal_qa_vlm"):
         out = decorate_qa(
             client=client,
             model="gpt-5.4",

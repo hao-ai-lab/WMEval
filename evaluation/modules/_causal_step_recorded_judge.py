@@ -195,7 +195,7 @@ def check_recording_matches_judge(
         raise RecordedAnswersError(
             f"the recording for {recorded.video_id!r} was made with a different "
             f"judge configuration ({'; '.join(mismatched)}). Re-record it with "
-            "tools/record_causal_reference_answers.py, or restore the settings."
+            "tools/dataset/record_causal_reference_answers.py, or restore the settings."
         )
 
 

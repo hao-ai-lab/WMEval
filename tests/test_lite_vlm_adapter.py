@@ -142,8 +142,7 @@ class _ScriptedJudge:
 def _freeze_toy_reference(tmp_path: Path, scores: list[tuple[float, float, float]]):
     from evaluation.lite.validation import validate_case_bundle
     from lite_suite_test_utils import regenerate_checksums
-    from tools import freeze_prompt_reference_scores as freezer
-
+    from tools.dataset import freeze_prompt_reference_scores as freezer
     suite, dimension, case, candidate, video = _setup(tmp_path)
     write_rubric(case.root)
     unity = case.root / "reference" / "unity_groundtruth.mp4"

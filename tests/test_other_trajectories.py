@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 
 from evaluation.trajectories import compile_trajectory, load_actions_jsonl
-from tools.prepare_other_trajectories import compile_manifest
+from tools.trajectories.prepare_other_trajectories import compile_manifest
 
 
 ROOT = Path(__file__).resolve().parents[1] / "experiments" / "trajectory_reconstructions"

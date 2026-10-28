@@ -51,7 +51,7 @@ git clone https://github.com/hao-ai-lab/WMEval.git && cd WMEval
 # macOS (Apple silicon)
 uv venv --python 3.11 .venv && uv pip install --python .venv/bin/python -r requirements/macos.lock
 # Linux + NVIDIA GPU: creates .venv-gpu and checks it; runs every dimension
-bash scripts/bootstrap_tables_4_7_gpu.sh
+bash scripts/bootstrap_gpu.sh
 ```
 
 Case metadata (`case.yaml`, checksums) lives in this repo; case data is on the Hub at [`lmgame/WMEval-Lite`](https://huggingface.co/datasets/lmgame/WMEval-Lite) (public, no token), pinned to `lite/DATASET_REVISION`:
@@ -73,13 +73,13 @@ python tools/run_wmeval_lite.py run --suite lite \
   --model-root runs/<model> --output-dir reports/wmeval_lite/<model> --resume
 ```
 
-`--dimensions` selects a subset; `--split full` adds the synthetic trajectories, reported apart from the core headline. Outputs: `per_case_results.jsonl` (one row per dimension × case × seed, with the case's evaluator lock), `aggregate_summary.json` (seed means per case, then across cases) and `aggregate_summary.csv`. A headline needs 5 seeds per applicable case, otherwise it is kept as `provisional_value`. Models that draw a HUD set `shadow_hud_preset` (`lingbot`, `mg2`, `mg3`, `genie`) for the lighting case. On Modal, `modal run tools/run_wmeval_lite_modal.py::main --model-root /cand/<model>`; `tools/generate_waypoint15_candidates_modal.py` generates candidates from the bundles without Unity.
+`--dimensions` selects a subset; `--split full` adds the synthetic trajectories, reported apart from the core headline. Outputs: `per_case_results.jsonl` (one row per dimension × case × seed, with the case's evaluator lock), `aggregate_summary.json` (seed means per case, then across cases) and `aggregate_summary.csv`. A headline needs 5 seeds per applicable case, otherwise it is kept as `provisional_value`. Models that draw a HUD set `shadow_hud_preset` (`lingbot`, `mg2`, `mg3`, `genie`) for the lighting case. On Modal, `modal run tools/run_wmeval_lite_modal.py::main --model-root /cand/<model>`; `tools/generation/generate_waypoint15_candidates_modal.py` generates candidates from the bundles without Unity.
 
 | Task | Command |
 | --- | --- |
-| Jobs and N/A cases for a new model | `tools/expected_jobs.py --model <name> --output runs/<name>` · [`TEMPLATE.md`](tools/model_adapters/TEMPLATE.md) |
+| Jobs and N/A cases for a new model | `tools/expected_jobs.py --model <name> --output runs/<name>` · [`TEMPLATE.md`](tools/generation/model_adapters/TEMPLATE.md) |
 | Environment check | `tools/preflight_lite.py --device <cuda\|mps\|cpu>` |
-| Compare with the paper's Table 4/7 | `tools/export_lite_table_results.py` → `tools/compare_table_results.py compare` |
+| Compare with the paper's Table 4/7 | `tools/paper_tables/export_lite_table_results.py` → `tools/paper_tables/compare_table_results.py compare` |
 | Hosted judge via a gateway | `tools/judge_gateway.py --key-file <key> -- <args>` |
 | Rebuild the leaderboard | `tools/build_leaderboard.py ... --readme README.md` (full command in its docstring) |
 
@@ -112,9 +112,9 @@ cases/<Scene>/<variant>/
     artifacts/              # actions.txt, action.npy/npz, trajectory.yaml, rubrics, QA, liquid masks/flow
 ```
 
-`tools/build_lite_case.py` (re)builds a case and its lock; `tools/sync_lite_data.py upload` publishes data (maintainers).
+`tools/dataset/build_lite_case.py` (re)builds a case and its lock; `tools/sync_lite_data.py upload` publishes data (maintainers).
 
-**Action trajectories.** Table 4/7 cases carry a canonical semantic `trajectory.yaml` (typed channels, units, segments) and its compiled forms; `tools/build_table_lite_cases.py` rebuilds them from the hash-locked trajectories in `experiments/protocol/trajectories/`. Backends are declared once in `experiments/protocol/action_backends.yaml`: the entity each trajectory actuates (`camera`, `ego_vehicle`, `cue_ball`, ...), each backend's native timeline and calibration, and which targets it cannot express. Input preparation (`tools/prepare_table_trajectories.py`, `prepare_matrix_game_inputs.py`, `prepare_lingbot_table7_inputs.py`) refuses an unsupported target/backend pair rather than substitute another control.
+**Action trajectories.** Table 4/7 cases carry a canonical semantic `trajectory.yaml` (typed channels, units, segments) and its compiled forms; `tools/dataset/build_table_lite_cases.py` rebuilds them from the hash-locked trajectories in `experiments/protocol/trajectories/`. Backends are declared once in `experiments/protocol/action_backends.yaml`: the entity each trajectory actuates (`camera`, `ego_vehicle`, `cue_ball`, ...), each backend's native timeline and calibration, and which targets it cannot express. Input preparation (`tools/trajectories/prepare_table_trajectories.py`, `prepare_matrix_game_inputs.py`, `prepare_lingbot_table7_inputs.py`) refuses an unsupported target/backend pair rather than substitute another control.
 
 | Backend | Native input | Camera | Vehicle / ball |
 | --- | --- | --- | --- |
@@ -137,7 +137,7 @@ cases/<Scene>/<variant>/
 | `liquid_container` | bottle | 25 | jolts, slides, shakes, rests (`LiquidContainer/fluid_rest`) |
 | `character` | character | 24 | walk in 8 directions, sprint, jump (`ChessBoard/walk_third`) |
 
-Maintainer commands for rendering references and reference inputs (Unity editor required) are documented in `tools/render_synthetic_references.py` and `tools/build_synthetic_reference_inputs.py`.
+Maintainer commands for rendering references and reference inputs (Unity editor required) are documented in `tools/dataset/render_synthetic_references.py` and `tools/dataset/build_synthetic_reference_inputs.py`.
 
 ## License
 

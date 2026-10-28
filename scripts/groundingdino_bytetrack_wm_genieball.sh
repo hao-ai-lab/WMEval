@@ -1,4 +1,4 @@
-python tools/groundingdino_bytetrack.py \
+python tools/legacy/groundingdino_bytetrack.py \
   --video /home/lah003/workspace/VideoScience/tmp/Genie2c72ec1ed75b42d5afccce4418d1ee02.mp4 \
   --text_prompt "ball" \
   --grounding_cfg /home/lah003/workspace/VideoScience/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py \

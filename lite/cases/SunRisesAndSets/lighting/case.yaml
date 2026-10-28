@@ -61,7 +61,7 @@ evaluator_lock:
     transformers: 5.18.0
     asset:grounding_dino: 1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3
     asset:sam2: 2647878d5dfa5098f2f8649825738a9345572bae2d4350a2468587ece47dd318
-    lock_source: tools/lock_case_dependencies.py
+    lock_source: tools/dataset/lock_case_dependencies.py
 module_params:
   shadow_consistency:
     shadow_text_prompt: table. chair. lamp.

@@ -10,9 +10,7 @@ import pytest
 from evaluation import action_backends
 from evaluation.lite.candidate_discovery import load_candidate_manifest
 from evaluation.trajectories import compile_trajectory, load_trajectory
-from tools import prepare_prompt_case_inputs as prep
-
-
+from tools.generation import prepare_prompt_case_inputs as prep
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -97,8 +95,7 @@ def test_prepare_writes_runner_queues_and_a_lite_candidate_manifest(tmp_path: Pa
 
 
 def test_runners_use_the_queue_seed_when_given() -> None:
-    from tools import run_lingbot_table7, run_matrix_game3
-
+    from tools.generation import run_lingbot_table7, run_matrix_game3
     for runner, default in ((run_lingbot_table7, 42003), (run_matrix_game3, 45003)):
         assert runner.seed_for({"generation_repeat": "run3", "seed": 3}) == 3
         assert runner.seed_for({"generation_repeat": "run3"}) == default

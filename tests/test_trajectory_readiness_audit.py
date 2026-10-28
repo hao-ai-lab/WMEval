@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "audit_trajectory_readiness.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "trajectories" / "audit_trajectory_readiness.py"
 SPEC = importlib.util.spec_from_file_location("audit_trajectory_readiness", SCRIPT)
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)

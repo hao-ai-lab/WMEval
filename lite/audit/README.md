@@ -2,14 +2,14 @@
 
 Every evaluation item -- the 32 core cases (`test_core`) and the 220 synthetic
 trajectories (`test_full`) -- was checked against its Unity reference, fixed where it
-was not sensible, and re-audited. Reproduce with `tools/audit_dataset.py`; `audit_summary.json`
+was not sensible, and re-audited. Reproduce with `tools/dataset/audit_dataset.py`; `audit_summary.json`
 (next to this file) holds the counts and initial findings; the final per-item verdicts, GT
 flags and VLM checks (`audit/audit_results.jsonl`) are in the
 [Hub dataset](https://huggingface.co/datasets/lmgame/WMEval-Lite/tree/main/audit).
 
 ## Method
 
-Per item, two independent checks (`tools/audit_dataset.py run`):
+Per item, two independent checks (`tools/dataset/audit_dataset.py run`):
 
 * **Unity ground truth** (`gt`): object transforms projected through the recorded camera
   (does the tracked/controlled object move, and is it in view while moving), per-family
@@ -61,17 +61,17 @@ No near-duplicate plans were found (the generator's distinct-signal test holds).
 
 **Core prompts** (17 cases): minimal sentence edits, listed old -> new in
 `DIFFERENCES_FROM_PAPER.md` (Prompt corrections); evaluator fingerprints re-authored with
-`tools/build_lite_case.py`. Reference videos, frames, actions and judge outputs untouched.
+`tools/dataset/build_lite_case.py`. Reference videos, frames, actions and judge outputs untouched.
 
 **BallRoller/ctrl kinematics** (Lite-only cell): now tracks the controlled white ball instead
-of the static dome/cube, against `kin_*` artifacts from `tools/build_ballroller_kinematics_gt.py`
+of the static dome/cube, against `kin_*` artifacts from `tools/dataset/build_ballroller_kinematics_gt.py`
 (see `DIFFERENCES_FROM_PAPER.md`). A Unity replay of the core key script could not provide the
 ground truth -- the committed scene's rack differs from the recording, and after contact the
 replayed ball is 100-400 px from the recorded one -- so the ball is tracked in the reference
 video (checked frame by frame) and lifted through the recovered Unity camera, with a floor-plane
 calibration for metric units. Self-match vs negative: FDE 0.24 vs 6.50 m, DTW 0.26 vs 2.70 m.
 
-**Synthetic** (`tools/generate_synthetic_trajectories.py`, `synthetic/screening.json`):
+**Synthetic** (`tools/dataset/generate_synthetic_trajectories.py`, `synthetic/screening.json`):
 
 * *Screening*: plans whose render fails a GT check are listed in `synthetic/screening.json`
   (210 render-verified rejections with reasons) and swapped, slot by slot, for the closest

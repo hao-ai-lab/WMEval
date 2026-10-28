@@ -32,7 +32,7 @@ CHECKSUMS = "checksums.sha256"
 # Case data lives under each case's reference/ directory; every suite (a companion suite
 # via `cases_root: ../cases`) uses the shared cases/ tree.
 DATA_PATTERNS = ["cases/*/*/reference/**"]
-# test_full adds the synthetic trajectory suite (tools/generate_synthetic_trajectories.py).
+# test_full adds the synthetic trajectory suite (tools/dataset/generate_synthetic_trajectories.py).
 SYNTHETIC_PATTERNS = ["synthetic/*/*/*/**"]
 SYNTHETIC_MANIFEST = SUITE_ROOT / "synthetic" / "manifest.json"
 
@@ -298,7 +298,7 @@ def cmd_upload(args: argparse.Namespace) -> int:
         n, missing, mism = check_synthetic()
         if missing or mism:
             print(f"refusing to upload: synthetic suite incomplete ({len(missing)} missing, {len(mism)} mismatched); "
-                  "run tools/generate_synthetic_trajectories.py")
+                  "run tools/dataset/generate_synthetic_trajectories.py")
             return 1
         patterns += [f"{t}/**" for t in synthetic_files()]
     api.upload_folder(

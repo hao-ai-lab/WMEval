@@ -1,4 +1,4 @@
-python tools/groundingdino_bytetrack.py \
+python tools/legacy/groundingdino_bytetrack.py \
   --video /home/lah003/workspace/VideoScience/tmp/Geniee57f31076ebd4cbbbd7234559da0a799.mp4 \
   --text_prompt "car" \
   --grounding_cfg /home/lah003/workspace/VideoScience/GroundingDINO/groundingdino/config/GroundingDINO_SwinT_OGC.py \

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "project_genie_agent.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "generation" / "project_genie_agent.py"
 SPEC = importlib.util.spec_from_file_location("project_genie_agent", SCRIPT)
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)

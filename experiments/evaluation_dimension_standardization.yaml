@@ -3,7 +3,7 @@ source_of_truth: lite/suite.yaml
 
 # This file records readiness claims that cannot be inferred from file presence
 # alone. Dynamic counts (case coverage, trajectory assets, normalization, and
-# evaluator-lock completeness) are computed by tools/audit_production_readiness.py.
+# evaluator-lock completeness) are computed by tools/analysis/audit_production_readiness.py.
 readiness_levels:
   ready: The dimension is self-contained, deterministic enough for comparison, and has a frozen execution contract.
   partial: The dimension runs, but one or more comparability or portability gaps remain.
@@ -33,7 +33,7 @@ cross_cutting_gaps:
     severity: high
     status: open
     gap: Live case evaluator locks have dependency_versions but empty artifact_schema_versions, and they describe the macOS environment only.
-    remediation: "dependency_versions are filled for every live case (tools/lock_case_dependencies.py, macOS venv). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set."
+    remediation: "dependency_versions are filled for every live case (tools/dataset/lock_case_dependencies.py, macOS venv). Remaining: populate artifact_schema_versions and add a CUDA-environment lock set."
   - id: install_contract
     priority: P2
     severity: high
@@ -163,13 +163,13 @@ dimensions:
       lighting_regime: true
     evidence:
       - lite/baselines/lighting_paper_native.json
-      - tools/build_lighting_case.py
+      - tools/dataset/build_lighting_case.py
     gaps:
       - priority: P1
         severity: high
         status: closed
         gap: The native lighting case lacked a Unity reference and a locked metric camera trajectory.
-        remediation: SunRisesAndSets/lighting (the paper's native case, the only lighting case) now ships a Unity reference orbit rendered from its own conditioning frame (frame 0 at 31 dB vs ref.png) with trajectory.yaml, action.npz, per-frame poses, intrinsics, calibration and loop-closure QA (tools/build_lighting_case.py). Scoring stays the paper's reference-free protocol, which reproduces all 180 per-run metrics of the paper's six-model lighting table (baselines/lighting_paper_native.json).
+        remediation: SunRisesAndSets/lighting (the paper's native case, the only lighting case) now ships a Unity reference orbit rendered from its own conditioning frame (frame 0 at 31 dB vs ref.png) with trajectory.yaml, action.npz, per-frame poses, intrinsics, calibration and loop-closure QA (tools/dataset/build_lighting_case.py). Scoring stays the paper's reference-free protocol, which reproduces all 180 per-run metrics of the paper's six-model lighting table (baselines/lighting_paper_native.json).
       - priority: P2
         severity: medium
         gap: The fixed-sun paper protocol and optional moving-sun interpretation require different metrics, but only the fixed-sun protocol is implemented.

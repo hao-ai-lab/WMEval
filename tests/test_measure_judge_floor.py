@@ -6,9 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tools import measure_judge_floor as mjf
-
-
+from tools.dataset import measure_judge_floor as mjf
 def _row(dim, case, seed, status="completed", model="m", **metrics):
     return {"dimension": dim, "case_id": case, "model": model, "seed": seed,
             "status": status, "metrics": metrics}

@@ -1,5 +1,5 @@
 import pytest
-from tools.audit_production_readiness import build_report, render_markdown
+from tools.analysis.audit_production_readiness import build_report, render_markdown
 
 
 @pytest.mark.integration("case_data")
@@ -50,7 +50,7 @@ def test_production_readiness_report_surfaces_portability_gaps() -> None:
     assert rows['lighting_shading']['readiness'] == 'ready'
     assert rows['lighting_shading']['evaluator_lock_nonempty_case_counts']['dependency_versions'] == 1
     # Every live case carries a dependency lock written by
-    # tools/lock_case_dependencies.py.
+    # tools/dataset/lock_case_dependencies.py.
     assert all(
         row["evaluator_lock_nonempty_case_counts"]["dependency_versions"] == row["case_count"]
         for row in report["dimensions"]

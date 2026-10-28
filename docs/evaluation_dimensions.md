@@ -2,7 +2,7 @@
 
 Detailed pipeline, metrics, flags and interpretation notes for each WMEval Lite dimension. The summary table is in the [README](../README.md#evaluation-dimensions).
 
-> **Judge noise floor (judge-scored dimensions).** Prompt-Scene Consistency, Physical Causality and causal LPIPS call a sampled `gpt-5.4` judge, so the same video scores differently on every run. Measured by re-judging the same videos (`tools/measure_judge_floor.py`; per-case numbers in [`SELF_MATCH_BOUNDS.md`](../lite/SELF_MATCH_BOUNDS.md#judge-scored-dimensions-2026-10-22), machine-readable in `lite/judge_noise_floor.json`): prompt `overall_score` moves by 0.02–0.04 (std) per call on ChessBoard / MirrorRollingBall and 0.04–0.08 on RacingCar, so 5-seed means closer than 0.02–0.10 (case-dependent MDD_5) are not separable; glancing CSR moves by ±17 points per 5-pass run; causal LPIPS is judge-stable on the reference (std ≤ 0.011) but BeamDomino/causal scores 0.34 against itself and MirrorRollingBall/lpips_collision pairs events ~7 s apart, both from the frozen reference event sets. The NVIDIA gateway and direct OpenAI agree within that noise.
+> **Judge noise floor (judge-scored dimensions).** Prompt-Scene Consistency, Physical Causality and causal LPIPS call a sampled `gpt-5.4` judge, so the same video scores differently on every run. Measured by re-judging the same videos (`tools/dataset/measure_judge_floor.py`; per-case numbers in [`SELF_MATCH_BOUNDS.md`](../lite/SELF_MATCH_BOUNDS.md#judge-scored-dimensions-2026-10-22), machine-readable in `lite/judge_noise_floor.json`): prompt `overall_score` moves by 0.02–0.04 (std) per call on ChessBoard / MirrorRollingBall and 0.04–0.08 on RacingCar, so 5-seed means closer than 0.02–0.10 (case-dependent MDD_5) are not separable; glancing CSR moves by ±17 points per 5-pass run; causal LPIPS is judge-stable on the reference (std ≤ 0.011) but BeamDomino/causal scores 0.34 against itself and MirrorRollingBall/lpips_collision pairs events ~7 s apart, both from the frozen reference event sets. The NVIDIA gateway and direct OpenAI agree within that noise.
 
 ### Environment Object & Character Consistency
 
@@ -38,7 +38,7 @@ analytical ground-truth artifact, so
 
 - `evaluation/modules/environment_object_consistency.py`: core metric implementation
 - `evaluation/registry.py` → `"environment_object_consistency"`: registry entry
-- `tools/evaluate_world_model_metrics.py --modules environment_object_consistency`: generic CLI
+- `tools/legacy/evaluate_world_model_metrics.py --modules environment_object_consistency`: generic CLI
 
 ##### Pipeline
 
@@ -150,7 +150,7 @@ network access to github.com on first run; no extra pip package).
 Does generated motion follow the commanded action or camera control?
 
 - **Metrics:** Ground-Truth RAFT (relative EPE ↓, cosine ↑ vs. Unity flow); synthetic-flow cosine ↑ / pixel EPE ↓ vs. commanded motion
-- **Suite dimension & tooling:** `action_controllability` — `control_motion` module, `tools/evaluate_world_model_controllability.py`
+- **Suite dimension & tooling:** `action_controllability` — `control_motion` module, `tools/legacy/evaluate_world_model_controllability.py`
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_controllability_eval.md</code>)</summary>
@@ -172,8 +172,8 @@ or Unity-exported dense flow artifacts in v1.
 
 ##### Main Entry Points
 
-- `tools/evaluate_world_model_controllability.py`: dedicated controllability CLI
-- `tools/evaluate_world_model_metrics.py --modules control_motion`: generic CLI
+- `tools/legacy/evaluate_world_model_controllability.py`: dedicated controllability CLI
+- `tools/legacy/evaluate_world_model_metrics.py --modules control_motion`: generic CLI
 - `evaluation/modules/control_motion.py`: core metric implementation
 
 ##### What The Metric Measures
@@ -250,7 +250,7 @@ world-frame trajectory analysis.
 ##### Quick Start
 
 ```bash
-python tools/evaluate_world_model_controllability.py \
+python tools/legacy/evaluate_world_model_controllability.py \
   --ref_video /abs/path/unity.mp4 \
   --video /abs/path/world_model.mp4 \
   --output_json reports/world_model_controllability/report.json \
@@ -261,7 +261,7 @@ python tools/evaluate_world_model_controllability.py \
 Equivalent generic runner usage:
 
 ```bash
-python tools/evaluate_world_model_metrics.py \
+python tools/legacy/evaluate_world_model_metrics.py \
   --ref_video /abs/path/unity.mp4 \
   --video /abs/path/world_model.mp4 \
   --modules control_motion \
@@ -317,7 +317,7 @@ actions, `control_motion` additionally reports `synthetic_vs_candidate`:
 Example:
 
 ```bash
-python tools/evaluate_world_model_controllability.py \
+python tools/legacy/evaluate_world_model_controllability.py \
   --ref_video /abs/unity.mp4 \
   --video /abs/world_model.mp4 \
   --synthetic_calibration /abs/ptlflow/calibration.json \
@@ -378,8 +378,8 @@ candidate-side pose recovery or a metric-depth model.
 
 - `evaluation/modules/kinematics_mechanics.py`: core metric implementation
 - `evaluation/registry.py` → `"kinematics_mechanics"`: registry entry
-- `tools/evaluate_world_model_metrics.py --modules kinematics_mechanics`: generic CLI
-- `tools/groundingdino_bytetrack.py`: the standalone GroundingDINO+ByteTrack
+- `tools/legacy/evaluate_world_model_metrics.py --modules kinematics_mechanics`: generic CLI
+- `tools/legacy/groundingdino_bytetrack.py`: the standalone GroundingDINO+ByteTrack
   visualization script this module's detection/tracking step mirrors
   (see [GroundingDINO tracking](../README.md#groundingdino-tracking))
 
@@ -499,13 +499,13 @@ static camera or for a moving camera whose tracked object it does not carry
 object (the chase-camera car) with an unreliable camera estimate.
 
 Overrides: any `EGO_DEFAULTS` / `ROBUST_DEFAULTS` key as `kin_ego_<key>` /
-`kin_robust_<key>` module parameters. `tools/rescore_kinematics_extended.py`
+`kin_robust_<key>` module parameters. `tools/paper_tables/rescore_kinematics_extended.py`
 recomputes everything from stored `per_case_results.jsonl` rows (no detector),
 optionally against another case's ground truth (`--gt-case`, negatives).
 
 **Validation (2026-10-21, Unity references as candidates; detector tracks from
 `run_wmeval_lite.py run`, negatives re-scored with
-`tools/rescore_kinematics_extended.py --gt-case`: each reference's tracks
+`tools/paper_tables/rescore_kinematics_extended.py --gt-case`: each reference's tracks
 against every other trajectory of its family).**
 
 Camera path recovered from the reference video vs the Unity camera
@@ -583,7 +583,7 @@ candidate `trajectories` for inspection.
 `shadow_consistency`), and a ByteTrack implementation:
 
 ```bash
-pip install cjm-byte-track   # matches tools/groundingdino_bytetrack.py
+pip install cjm-byte-track   # matches tools/legacy/groundingdino_bytetrack.py
 # or, if unavailable:
 pip install bytetracker
 ```
@@ -605,7 +605,7 @@ pip install bytetracker
 Does the liquid in a sealed, moving bottle slosh like the reference?
 
 - **Metrics:** flow cosine (diagnostic), area jitter Δσ_A ↓ / drift ↓, surface angle ↓, slosh-spectrum L1 ↓, LPIPS ↓
-- **Suite dimension & tooling:** `fluid_mechanics` — SAM 2 liquid mask, RAFT/OpenPIV; `tools/evaluate_world_model_liquid.py`
+- **Suite dimension & tooling:** `fluid_mechanics` — SAM 2 liquid mask, RAFT/OpenPIV; `tools/legacy/evaluate_world_model_liquid.py`
 
 <details>
 <summary><b>Full reference</b> (formerly <code>README_liquid_eval.md</code>)</summary>
@@ -649,7 +649,7 @@ scripts/sanity_unity_vs_unity_liquid.sh
 ```
 
 The Python entry point under those wrappers is
-[tools/evaluate_world_model_liquid.py](../tools/evaluate_world_model_liquid.py),
+[tools/legacy/evaluate_world_model_liquid.py](../tools/evaluate_world_model_liquid.py),
 which thinly wraps `evaluation.runner.run_world_model_evaluation` with
 the `--liquid_*` argument namespace. The Unity recording side (running
 the LiquidContainer scene to produce `Unity_<profile>.mp4`) lives in
@@ -659,13 +659,13 @@ mp4 and a world-model candidate mp4 on disk.
 
 ##### 2) Scope
 
-- Main entry: [tools/evaluate_world_model_liquid.py](../tools/evaluate_world_model_liquid.py)
+- Main entry: [tools/legacy/evaluate_world_model_liquid.py](../tools/evaluate_world_model_liquid.py)
 - Wrappers:
   - [scripts/evaluate_world_model_liquid_full.sh](../scripts/evaluate_world_model_liquid_full.sh) — single (REF, WM) pair, full headline set.
   - [scripts/run_liquid_leaderboard.sh](../scripts/run_liquid_leaderboard.sh) — fleet of WMs from a TSV manifest → CSV.
   - [scripts/sanity_unity_vs_unity_liquid.sh](../scripts/sanity_unity_vs_unity_liquid.sh) — Unity-vs-Unity noise floor.
-- Mask debugging: [tools/liquid_mask_qa.py](../tools/liquid_mask_qa.py) — render SAM2 liquid + bottle overlays at first / mid / last frame to verify the prompt before paying for a full eval.
-- Report inspection: [tools/inspect_liquid_report.py](../tools/inspect_liquid_report.py) — pretty-print one or many reports with sanity flags.
+- Mask debugging: [tools/analysis/liquid_mask_qa.py](../tools/liquid_mask_qa.py) — render SAM2 liquid + bottle overlays at first / mid / last frame to verify the prompt before paying for a full eval.
+- Report inspection: [tools/analysis/inspect_liquid_report.py](../tools/inspect_liquid_report.py) — pretty-print one or many reports with sanity flags.
 - The four sloshing modules registered in [evaluation/registry.py](../evaluation/registry.py):
   - `liquid_velocity` — RAFT (default) or OpenPIV flow inside the liquid mask.
   - `liquid_volume_conservation` — projected mask area jitter + drift.
@@ -732,7 +732,7 @@ mask poisons all four sloshing metrics silently — always eyeball this on
 at least one trajectory per WM before paying for a full leaderboard.
 
 ```bash
-python tools/liquid_mask_qa.py \
+python tools/analysis/liquid_mask_qa.py \
   --videos /path/to/wm_pred.mp4 \
   --out reports/liquid_qa/wm_pred \
   --liquid-prompt "the liquid inside the bottle" \
@@ -783,7 +783,7 @@ Equivalent direct invocation (skips fps normalization — be sure both
 videos are already at canonical 832×464 @ 16 fps):
 
 ```bash
-python tools/evaluate_world_model_liquid.py \
+python tools/legacy/evaluate_world_model_liquid.py \
   --video         outputs/.../video_norm.mp4 \
   --ref_video     unity/.../Unity_step_hold_norm.mp4 \
   --modules       liquid_velocity,liquid_volume_conservation,liquid_surface_orientation,slosh_spectrum \
@@ -801,7 +801,7 @@ python tools/evaluate_world_model_liquid.py \
 Inspect:
 
 ```bash
-python tools/inspect_liquid_report.py reports/liquid/lingbot_step_hold.json
+python tools/analysis/inspect_liquid_report.py reports/liquid/lingbot_step_hold.json
 ```
 
 ##### 8) Step 4 — Build a manifest
@@ -960,7 +960,7 @@ volume / orientation.
    `outputs/<wm>/LiquidContainer/<run>/<profile>-<ts>/video.mp4`.
 3. Eyeball masks for one trajectory per WM:
    ```bash
-   python tools/liquid_mask_qa.py --videos outputs/.../video.mp4 --out reports/liquid_qa/<wm>
+   python tools/analysis/liquid_mask_qa.py --videos outputs/.../video.mp4 --out reports/liquid_qa/<wm>
    ```
 4. Build / extend the manifest:
    ```bash
@@ -972,7 +972,7 @@ volume / orientation.
    ```
 6. Inspect:
    ```bash
-   python tools/inspect_liquid_report.py reports/world_model_liquid_full/<wm>.json
+   python tools/analysis/inspect_liquid_report.py reports/world_model_liquid_full/<wm>.json
    column -t -s, reports/world_model_liquid_full/leaderboard.csv | less -S
    ```
 
@@ -1035,9 +1035,9 @@ estimator identity.
 | [evaluation/modules/liquid_volume_conservation.py](../evaluation/modules/liquid_volume_conservation.py) | Mask-area std + drift, with `{unity, wm, delta}` per stat. |
 | [evaluation/modules/liquid_surface_orientation.py](../evaluation/modules/liquid_surface_orientation.py) | Per-frame topmost-pixel-per-column line fit → tilt RMS. |
 | [evaluation/modules/slosh_spectrum.py](../evaluation/modules/slosh_spectrum.py) | Centroid + meniscus FFT; dominant-frequency / spectral L1. |
-| [tools/evaluate_world_model_liquid.py](../tools/evaluate_world_model_liquid.py) | CLI: single-pair eval, `--liquid_*` namespace. |
-| [tools/liquid_mask_qa.py](../tools/liquid_mask_qa.py) | CLI: SAM2 mask overlay PNGs at 1st / mid / last frame. |
-| [tools/inspect_liquid_report.py](../tools/inspect_liquid_report.py) | CLI: pretty-print one or many reports with sanity flags. |
+| [tools/legacy/evaluate_world_model_liquid.py](../tools/evaluate_world_model_liquid.py) | CLI: single-pair eval, `--liquid_*` namespace. |
+| [tools/analysis/liquid_mask_qa.py](../tools/liquid_mask_qa.py) | CLI: SAM2 mask overlay PNGs at 1st / mid / last frame. |
+| [tools/analysis/inspect_liquid_report.py](../tools/inspect_liquid_report.py) | CLI: pretty-print one or many reports with sanity flags. |
 | [scripts/normalize_fps.sh](../scripts/normalize_fps.sh) | Sourced helper: `normalize_video` to 832×464 @ 16 fps. |
 | [scripts/evaluate_world_model_liquid_full.sh](../scripts/evaluate_world_model_liquid_full.sh) | Single-pair wrapper: normalize + eval + tag. |
 | [scripts/run_liquid_leaderboard.sh](../scripts/run_liquid_leaderboard.sh) | Manifest fan-out → per-model JSON + `leaderboard.csv`. |
@@ -1092,7 +1092,7 @@ estimator identity.
 Does an action propagate through a multi-stage causal chain (rolling → impact → topple → cascade)?
 
 - **Metrics:** Causal Success Rate ↑, AMCL/MCL, weighted score, DUA, ICRA — reported as deltas from the Unity reference judged the same way
-- **Suite dimension & tooling:** `physical_causality` — CausalStep protocol with a VLM judge (repeated passes); `tools/evaluate_world_model_causal_step.py`
+- **Suite dimension & tooling:** `physical_causality` — CausalStep protocol with a VLM judge (repeated passes); `tools/legacy/evaluate_world_model_causal_step.py`
 - **Judge noise:** Unity-as-candidate csr_delta is 0 ± 0 on canonical / direct-strike and -4 ± 17 on glancing per 5-pass run. See [SELF_MATCH_BOUNDS.md](../lite/SELF_MATCH_BOUNDS.md#physical-causality-csr_delta-lower-is-better-unity-side--recorded-fixture).
 
 <details>
@@ -1115,15 +1115,15 @@ Three CLIs hand data to each other through files. They all run in the WMEval
 venv:
 
 ```
-tools/detect_beamdomino_segments.py
+tools/dataset/detect_beamdomino_segments.py
     in:  unity_gt_log.json        (from GroundTruthRecorder.cs in Unity)
     out: segments.json            (4 events: rolling / impact / topple / cascade)
 
-tools/generate_beamdomino_causal_step_qa.py
+tools/dataset/generate_beamdomino_causal_step_qa.py
     in:  segments.json
     out: qa_dataset.json          (CausalStep schema; HUMAN-REVIEW REQUIRED)
 
-tools/evaluate_world_model_causal_step.py
+tools/legacy/evaluate_world_model_causal_step.py
     in:  manifest.jsonl           (unity_video, wm_video, qa_dataset per line)
     out: causal_step_results.json (per_video + aggregate metrics)
 ```
@@ -1137,10 +1137,10 @@ world model's `wm_pred.mp4` on disk.
 
 ##### 2) Scope
 
-- Main entry: `tools/evaluate_world_model_causal_step.py`
+- Main entry: `tools/legacy/evaluate_world_model_causal_step.py`
 - Supporting CLIs:
-  - `tools/detect_beamdomino_segments.py`
-  - `tools/generate_beamdomino_causal_step_qa.py`
+  - `tools/dataset/detect_beamdomino_segments.py`
+  - `tools/dataset/generate_beamdomino_causal_step_qa.py`
 - Batch mode only: JSONL manifest (`--manifest`), one trajectory per line.
 - Two judges are supported via `--judge`:
   - `openai` — `gpt-4o` by default, requires `OPENAI_API_KEY`.
@@ -1176,7 +1176,7 @@ If it fails, either `CausalStep/` is not at `imports/CausalStep/` or the
 
 ##### 4) Step 1 — Detect segment boundaries
 
-`tools/detect_beamdomino_segments.py` parses the per-frame physics log and
+`tools/dataset/detect_beamdomino_segments.py` parses the per-frame physics log and
 classifies the trajectory into one of three **shapes**, each emitting its own
 chain of segments. Each segment is bounded to capture the *visible dynamic
 phase* its QA template depicts, so the evenly-sampled frames the judge sees
@@ -1216,7 +1216,7 @@ The detector falls back gracefully when the log is minimal:
 minimal logs keep parsing.
 
 ```bash
-python tools/detect_beamdomino_segments.py \
+python tools/dataset/detect_beamdomino_segments.py \
   --log   runs/traj_001/unity_gt_log.json \
   --out   runs/traj_001/segments.json
 ```
@@ -1250,7 +1250,7 @@ if the defaults don't match your scene's physics.
 
 ##### 5) Step 2 — Generate a draft QA dataset (then review it)
 
-`tools/generate_beamdomino_causal_step_qa.py` turns each segment into a
+`tools/dataset/generate_beamdomino_causal_step_qa.py` turns each segment into a
 CausalStep `descriptive` + `causal` QA pair. Two modes are supported.
 
 If `segments.json` carries a `trajectory_shape` field (the detector emits
@@ -1283,7 +1283,7 @@ than easy rejects like "wind" or "magic", so the VLM judge has to look at
 the frames.
 
 ```bash
-python tools/generate_beamdomino_causal_step_qa.py \
+python tools/dataset/generate_beamdomino_causal_step_qa.py \
   --segments  runs/traj_001/segments.json \
   --video-id  traj_001 \
   --out       runs/traj_001/qa_dataset.json
@@ -1309,7 +1309,7 @@ behaviour, run in templates mode instead.
 
 ```bash
 export OPENAI_API_KEY=sk-...
-python tools/generate_beamdomino_causal_step_qa.py \
+python tools/dataset/generate_beamdomino_causal_step_qa.py \
   --segments  runs/traj_001/segments.json \
   --video-id  traj_001 \
   --out       runs/traj_001/qa_dataset.json \
@@ -1408,7 +1408,7 @@ events anywhere in the full clip rather than within a specific segment).
 ##### 8) Step 5 — Dry run with the fake judge on real videos
 
 ```bash
-python tools/evaluate_world_model_causal_step.py \
+python tools/legacy/evaluate_world_model_causal_step.py \
   --manifest   runs/manifest.jsonl \
   --cache-root runs/cache \
   --judge      fake_always_a \
@@ -1424,7 +1424,7 @@ for free.
 
 ```bash
 export OPENAI_API_KEY=sk-...
-python tools/evaluate_world_model_causal_step.py \
+python tools/legacy/evaluate_world_model_causal_step.py \
   --manifest   runs/manifest.jsonl \
   --cache-root runs/cache \
   --judge      openai \
@@ -1538,19 +1538,19 @@ for every metric, **positive means "WM is worse than Unity"**.
 2. Generate `wm_pred.mp4` from your world model on the same initial conditions.
 3. Run the three WMEval CLIs:
    ```bash
-   python tools/detect_beamdomino_segments.py \
+   python tools/dataset/detect_beamdomino_segments.py \
      --log .../unity_gt_log.json --out .../segments.json
 
    # Option A — templates (offline, free)
-   python tools/generate_beamdomino_causal_step_qa.py --segments .../segments.json --video-id traj_N --out .../qa_dataset.json
+   python tools/dataset/generate_beamdomino_causal_step_qa.py --segments .../segments.json --video-id traj_N --out .../qa_dataset.json
 
    # Option B — VLM hybrid (frame-grounded distractors; needs OPENAI_API_KEY)
-   # python tools/generate_beamdomino_causal_step_qa.py --segments .../segments.json --video-id traj_N --out .../qa_dataset.json \
+   # python tools/dataset/generate_beamdomino_causal_step_qa.py --segments .../segments.json --video-id traj_N --out .../qa_dataset.json \
    #     --mode vlm --video .../unity_gt.mp4 --vlm-model gpt-5.4
 
    $EDITOR .../qa_dataset.json   # human review
    echo '{"video_id":"traj_N","trajectory":"clean","unity_video":".../unity_gt.mp4","wm_video":".../wm_pred.mp4","qa_dataset":".../qa_dataset.json"}' >> runs/manifest.jsonl
-   python tools/evaluate_world_model_causal_step.py --manifest runs/manifest.jsonl --cache-root runs/cache \
+   python tools/legacy/evaluate_world_model_causal_step.py --manifest runs/manifest.jsonl --cache-root runs/cache \
      --judge openai --vlm-model gpt-5.4-mini --vlm-num-frames 8 --wm-full-video \
      --out runs/causal_step_results.json
    ```
@@ -1599,10 +1599,10 @@ prose regime.
 | `evaluation/modules/_causal_step_openai_judge.py` | Concrete OpenAI VLM judge with on-disk response cache (cache key includes the model id, so swapping `--vlm-model` doesn't collide with prior cached answers). |
 | `evaluation/modules/_causal_step_runner.py` | Bridges the judge to CausalStep's `PrecomputedModel` and runs `evaluate_chain` / `evaluate_descriptive_isolated` / `evaluate_causal_isolated`. |
 | `evaluation/modules/_causal_step_delta.py` | Polarity-correct delta between Unity and WM metric blocks. |
-| `tools/detect_beamdomino_segments.py` | CLI: physics log → `segments.json`. |
-| `tools/generate_beamdomino_causal_step_qa.py` | CLI: segments → draft `qa_dataset.json` (templates *or* VLM-hybrid mode; human-review needed). |
-| `tools/_causal_qa_vlm.py` | OpenAI VLM-based QA decoration: rewrites question + 3 distractors per segment from the actual frames, and may correct the template's answer when the frames contradict it (overrides logged to stderr). Imported lazily by the QA-gen CLI when `--mode vlm` is set. |
-| `tools/evaluate_world_model_causal_step.py` | CLI: manifest → `causal_step_results.json`. |
+| `tools/dataset/detect_beamdomino_segments.py` | CLI: physics log → `segments.json`. |
+| `tools/dataset/generate_beamdomino_causal_step_qa.py` | CLI: segments → draft `qa_dataset.json` (templates *or* VLM-hybrid mode; human-review needed). |
+| `tools/dataset/_causal_qa_vlm.py` | OpenAI VLM-based QA decoration: rewrites question + 3 distractors per segment from the actual frames, and may correct the template's answer when the frames contradict it (overrides logged to stderr). Imported lazily by the QA-gen CLI when `--mode vlm` is set. |
+| `tools/legacy/evaluate_world_model_causal_step.py` | CLI: manifest → `causal_step_results.json`. |
 | `docs/causal_step_qa_review_checklist.md` | What to look for when reviewing the draft QA. |
 | `tests/test_causal_step_delta.py` | CausalStep importability + metric polarity. |
 | `tests/test_beamdomino_segments.py` | Segment detector unit tests. |
@@ -1735,7 +1735,7 @@ Do cast shadows stay geometrically and temporally coherent with one light source
 
 The case also bundles a Unity rendering of the walk, `reference/unity_orbit.mp4` (10 s, 24 fps, 1280×1280), with its ground truth: `trajectory.yaml` (`camera_look_at_orbit`), `action.npz`, per-frame `poses.npy` (OpenCV camera-to-world, 241 poses including the loop-closing endpoint), `intrinsics.npy`, `calibration.json`, `frames.jsonl`, `scene_dependencies.json` and `unity_qa.json`. The score does not read it; it is there to show what a physically consistent answer looks like and to anchor the `camera_orbit` synthetic trajectories.
 
-`ref.png` is the SunRisesAndSets scene's own camera-rig start view (scene file of Unity revision 84a06a4; `CameraOrbitAgent`: look-at point on the tabletop at the scene's TrainingArea pivot, 3 m away, yaw 45°, pitch 20°, 60° vertical FOV; URP post-processing on; sun after the day-night script's first 12 fixed steps). Rendered that way, frame 0 matches `ref.png` at 31 dB PSNR. The reference turns that camera once counter-clockwise about the pivot's vertical axis in 10 s: radius 2.819 m and eye height 2.306 m, rather than the prompt's approximate 2 m and 1.6 m — the frame every model was conditioned on was taken from there. The pivot is 0.63 m from the table axis; a table-centred orbit through the same starting position would not reproduce `ref.png` (20.4 dB). Rebuild with `python tools/build_lighting_case.py` (needs the Unity editor and WorldModelBenchScenePrivate).
+`ref.png` is the SunRisesAndSets scene's own camera-rig start view (scene file of Unity revision 84a06a4; `CameraOrbitAgent`: look-at point on the tabletop at the scene's TrainingArea pivot, 3 m away, yaw 45°, pitch 20°, 60° vertical FOV; URP post-processing on; sun after the day-night script's first 12 fixed steps). Rendered that way, frame 0 matches `ref.png` at 31 dB PSNR. The reference turns that camera once counter-clockwise about the pivot's vertical axis in 10 s: radius 2.819 m and eye height 2.306 m, rather than the prompt's approximate 2 m and 1.6 m — the frame every model was conditioned on was taken from there. The pivot is 0.63 m from the table axis; a table-centred orbit through the same starting position would not reproduce `ref.png` (20.4 dB). Rebuild with `python tools/dataset/build_lighting_case.py` (needs the Unity editor and WorldModelBenchScenePrivate).
 
 #### Published lighting scores
 
@@ -1781,7 +1781,7 @@ analysis. No per-frame Unity ground-truth reference is required.
 ##### Quick Start
 
 ```bash
-python tools/evaluate_world_model_shadow_consistency.py \
+python tools/legacy/evaluate_world_model_shadow_consistency.py \
     --video path/to/generated_video.mp4 \
     --text_prompt "table. chair. lamp." \
     --anchor_label table \
@@ -1792,7 +1792,7 @@ python tools/evaluate_world_model_shadow_consistency.py \
 Or via the unified runner:
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/legacy/evaluate_world_model_diffusionlight.py \
     --video path/to/generated.mp4 \
     --ref_video path/to/unity_ref.mp4 \
     --modules shadow_consistency \
@@ -2300,7 +2300,7 @@ for Gemini).
 How perceptually close is the rollout to the reference around matched contact events?
 
 - **Metrics:** Causal LPIPS ↓ (offsets −2…+2 around chronologically matched events), temporal LPIPS ↓ as a separate fallback
-- **Suite dimension & tooling:** `lpips` — `tools/evaluate_world_model_lpips.py`
+- **Suite dimension & tooling:** `lpips` — `tools/legacy/evaluate_world_model_lpips.py`
 - **Judge noise / floor:** self-match 0.0005 (BallRoller), 0.027 (MirrorRollingBall, events mis-paired ~7 s apart) and 0.34 (BeamDomino/causal, frozen reference events miss the pillar strike); judge-sampling std ≤ 0.011. See [SELF_MATCH_BOUNDS.md](../lite/SELF_MATCH_BOUNDS.md#lpips-causal-reference-events-frozen-candidate-events-judged-live).
 
 <details>
@@ -2333,9 +2333,9 @@ For lighting, motion, and shadow physical evaluation, use
 - `evaluation/modules/shadow.py`: SAM2 shadow evaluation module used by the physical-eval pipeline
 - `evaluation/registry.py`: module registry for the orchestrator
 - `evaluation/runner.py`: shared report builder used by CLI tools
-- `tools/evaluate_world_model_diffusionlight.py`: per-video-pair runner
-- `tools/evaluate_world_model_metrics.py`: standalone alias for the same entrypoint
-- `tools/evaluate_world_model_lpips.py`: JSONL batch runner for LPIPS-only experiments
+- `tools/legacy/evaluate_world_model_diffusionlight.py`: per-video-pair runner
+- `tools/legacy/evaluate_world_model_metrics.py`: standalone alias for the same entrypoint
+- `tools/legacy/evaluate_world_model_lpips.py`: JSONL batch runner for LPIPS-only experiments
 - `scripts/evaluate_world_model_lpips.sh`: runnable batch command template
 
 ##### LPIPS sampling modes
@@ -2370,7 +2370,7 @@ under:
 - Temporal runs write `temporal/anchor_*` outputs with `ref.png`, `cand.png`, `pair.png`, `score.txt`, `meta.json`, and `README.md`.
 - Causal runs write `causal/` outputs with judge JSON, matched-event subfolders, and unmatched-event lists.
 
-For `tools/evaluate_world_model_lpips.py`, `inspection_run_id` defaults to each
+For `tools/legacy/evaluate_world_model_lpips.py`, `inspection_run_id` defaults to each
 manifest row's `run_id` (or `batch` if missing); `inspection_sample_id` is the
 row's `sample_id`.
 
@@ -2398,7 +2398,7 @@ For physical evaluation extras such as shadow evaluation, follow
 Temporal LPIPS:
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/legacy/evaluate_world_model_diffusionlight.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --text_prompt "A ball rolls down a ramp" \
@@ -2413,7 +2413,7 @@ python tools/evaluate_world_model_diffusionlight.py \
 Dense (time-aligned) LPIPS:
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/legacy/evaluate_world_model_diffusionlight.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --modules lpips \
@@ -2426,7 +2426,7 @@ python tools/evaluate_world_model_diffusionlight.py \
 Causal VLM collision:
 
 ```bash
-python tools/evaluate_world_model_diffusionlight.py \
+python tools/legacy/evaluate_world_model_diffusionlight.py \
   --video /path/to/world_model_video.mp4 \
   --ref_video /path/to/reference_video.mp4 \
   --modules lpips \
@@ -2464,7 +2464,7 @@ Example:
 ```
 
 ```bash
-python tools/evaluate_world_model_lpips.py \
+python tools/legacy/evaluate_world_model_lpips.py \
   --manifest_jsonl /path/to/world_model_lpips_manifest.jsonl \
   --output_jsonl reports/world_model_lpips/results.jsonl \
   --summary_csv reports/world_model_lpips/summary.csv \

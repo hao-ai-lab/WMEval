@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "prepare_project_genie_case_eval.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "paper_tables" / "prepare_project_genie_case_eval.py"
 SPEC = importlib.util.spec_from_file_location("prepare_project_genie_case_eval", SCRIPT)
 assert SPEC and SPEC.loader
 MODULE = importlib.util.module_from_spec(SPEC)

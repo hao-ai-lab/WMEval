@@ -1,6 +1,6 @@
 # Linux/CUDA evaluator environment for the Table 4/7 release handoff.
 # Install torch/torchvision from the CUDA 12.4 index first; see
-# scripts/bootstrap_tables_4_7_gpu.sh. Python 3.11 is the supported baseline.
+# scripts/bootstrap_gpu.sh. Python 3.11 is the supported baseline.
 numpy==1.26.4
 opencv-python-headless==4.10.0.84
 pillow==11.3.0

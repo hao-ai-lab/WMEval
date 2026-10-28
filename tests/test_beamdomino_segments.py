@@ -56,7 +56,7 @@ def _frame(idx, t, *, fallen_indices=(), collisions=()):
 
 
 def test_detect_segments_produces_four_canonical_events():
-    from tools.detect_beamdomino_segments import detect_segments
+    from tools.dataset.detect_beamdomino_segments import detect_segments
 
     with open(FIXTURE_DIR / "tiny_log.json") as f:
         log = json.load(f)
@@ -78,7 +78,7 @@ def test_detect_segments_produces_four_canonical_events():
 
 
 def test_detect_segments_raises_when_no_ball_impact():
-    from tools.detect_beamdomino_segments import detect_segments, SegmentDetectionError
+    from tools.dataset.detect_beamdomino_segments import detect_segments, SegmentDetectionError
 
     log = {
         "trajectory_id": "no_hit",
@@ -98,7 +98,7 @@ def test_detect_segments_raises_when_no_ball_impact():
 
 
 def test_detect_segments_raises_when_no_domino_falls():
-    from tools.detect_beamdomino_segments import detect_segments, SegmentDetectionError
+    from tools.dataset.detect_beamdomino_segments import detect_segments, SegmentDetectionError
 
     log = {
         "trajectory_id": "no_cascade",
@@ -124,7 +124,7 @@ def _shape_frame(idx, t, *, roof_tilt=0.0, fallen=0, collisions=()):
 
 
 def test_detect_segments_glancing_when_roof_never_tips():
-    from tools.detect_beamdomino_segments import detect_segments
+    from tools.dataset.detect_beamdomino_segments import detect_segments
 
     # Ball clips a leg at 0.5 s, the roof stays level, the ball strikes a
     # domino directly at 0.8 s, and the row falls from 1.0 s.
@@ -151,7 +151,7 @@ def test_detect_segments_glancing_when_roof_never_tips():
 
 
 def test_detect_segments_direct_strike_when_ball_hits_a_domino_first():
-    from tools.detect_beamdomino_segments import detect_segments
+    from tools.dataset.detect_beamdomino_segments import detect_segments
 
     # The ball never touches the platform: its first contact is a domino.
     log = {

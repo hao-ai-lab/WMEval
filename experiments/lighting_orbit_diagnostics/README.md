@@ -11,7 +11,7 @@ tested with the new controls, each at seed 42.
 
 The primary action is a 10-second, 360-degree CCW camera orbit at radius 2 m,
 height 1.6 m, looking at the table centre at height 0.75 m, with fixed sunlight.
-`tools/prepare_lighting_orbit.py` exports OpenCV camera-to-world poses, camera
+`tools/trajectories/prepare_lighting_orbit.py` exports OpenCV camera-to-world poses, camera
 intrinsics, timestamped JSONL, hashes and a preview derived from those arrays.
 The geometry is explicit; there is no implicit translation hidden in a yaw
 channel. Scene scale, target height and FOV are nominal assumptions pending
@@ -30,7 +30,7 @@ image/scene calibration. The seed frame remains the existing case's `ref.png`.
 
 Results are stored under `WMEval-lite-candidates:lighting_orbit_diagnostics/`
 in separate run directories, alongside commands, controls, hashes and logs.
-`tools/review_lighting_video.py` makes timestamped contact sheets from downloaded
+`tools/analysis/review_lighting_video.py` makes timestamped contact sheets from downloaded
 videos. Inspect both the scene and camera motion before promoting a control
 program to a benchmark action. Failure to follow a supported pose command is a
 model result; it is not automatically proof that the interface lacks support.
@@ -73,18 +73,18 @@ These commands require the existing Modal profile, `wm-hf-cache`, the
 Use a fresh run ID: the runners refuse to overwrite an existing cloud run.
 
 ```sh
-python tools/prepare_lighting_orbit.py --output /tmp/wmeval-orbit-input --preview
-WMEVAL_ORBIT_INPUT=/tmp/wmeval-orbit-input modal run tools/run_lighting_orbit_modal.py --run-id YOUR_FRESH_ORBIT_RUN
-modal run tools/run_lighting_waypoint_probe_modal.py --mode probes --steps 45 --run-id YOUR_FRESH_PROBE_RUN
-modal run tools/run_lighting_waypoint_probe_modal.py --mode compare_fallbacks --steps 150 --mouse-x -0.6 --strafe-duty 0.1 --run-id YOUR_FRESH_COMPARISON_RUN
-modal run tools/run_lighting_waypoint_probe_modal.py --mode yaw_sweep --steps 150 --mouse-x -0.3 --run-id YOUR_FRESH_SMALL_SWEEP_RUN
+python tools/trajectories/prepare_lighting_orbit.py --output /tmp/wmeval-orbit-input --preview
+WMEVAL_ORBIT_INPUT=/tmp/wmeval-orbit-input modal run tools/generation/run_lighting_orbit_modal.py --run-id YOUR_FRESH_ORBIT_RUN
+modal run tools/generation/run_lighting_waypoint_probe_modal.py --mode probes --steps 45 --run-id YOUR_FRESH_PROBE_RUN
+modal run tools/generation/run_lighting_waypoint_probe_modal.py --mode compare_fallbacks --steps 150 --mouse-x -0.6 --strafe-duty 0.1 --run-id YOUR_FRESH_COMPARISON_RUN
+modal run tools/generation/run_lighting_waypoint_probe_modal.py --mode yaw_sweep --steps 150 --mouse-x -0.3 --run-id YOUR_FRESH_SMALL_SWEEP_RUN
 ```
 
 To pin the historical native baseline again, pass the downloaded score JSONL
 from `lite-lighting-release-cleanup-20261009`:
 
 ```sh
-modal run tools/pin_lighting_paper_baseline_modal.py --output /tmp/lighting_paper_native.json --scores /absolute/path/per_case_results.jsonl
+modal run tools/analysis/pin_lighting_paper_baseline_modal.py --output /tmp/lighting_paper_native.json --scores /absolute/path/per_case_results.jsonl
 ```
 
 This CPU-only job verifies all 30 stored videos against the source volume's

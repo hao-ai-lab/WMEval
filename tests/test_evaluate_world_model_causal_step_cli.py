@@ -12,12 +12,7 @@ CAUSALSTEP_ROOT = ROOT / "imports" / "CausalStep"
 if str(CAUSALSTEP_ROOT) not in sys.path:
     sys.path.insert(0, str(CAUSALSTEP_ROOT))
 
-# Import as a top-level module by adding tools/ to sys.path.
-TOOLS = ROOT / "tools"
-if str(TOOLS) not in sys.path:
-    sys.path.insert(0, str(TOOLS))
-
-from evaluate_world_model_causal_step import _run_manifest  # type: ignore[import-not-found]
+from tools.legacy.evaluate_world_model_causal_step import _run_manifest
 
 
 def _tiny_qa_dataset(video_id: str = "vid1") -> dict:
