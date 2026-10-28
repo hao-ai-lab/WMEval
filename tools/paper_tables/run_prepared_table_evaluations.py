@@ -68,7 +68,7 @@ PLANS = (
         "perturbation",
         0,
         -45.0,
-        "experiments/protocol/conditioning_frames/garden_inward.png",
+        "lite/cases/WanderingGarden/scene_perturb_in/reference/ref.png",
     ),
     CasePlan(
         "table7/WanderingGarden/perturb_out",
@@ -78,7 +78,7 @@ PLANS = (
         "perturbation",
         75,
         45.0,
-        "experiments/protocol/conditioning_frames/garden_outward.png",
+        "lite/cases/WanderingGarden/scene_perturb_out/reference/ref.png",
     ),
     CasePlan(
         "table7/WanderingGarden/360_in",
@@ -88,7 +88,7 @@ PLANS = (
         "full_turn",
         0,
         -360.0,
-        "experiments/protocol/conditioning_frames/garden_inward.png",
+        "lite/cases/WanderingGarden/scene_360_in/reference/ref.png",
     ),
     CasePlan(
         "table7/WanderingGarden/360_out",
@@ -98,7 +98,7 @@ PLANS = (
         "full_turn",
         75,
         360.0,
-        "experiments/protocol/conditioning_frames/garden_outward.png",
+        "lite/cases/WanderingGarden/scene_360_out/reference/ref.png",
     ),
     CasePlan(
         "table7/BilliardGame/perturb_in",

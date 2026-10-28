@@ -22,6 +22,9 @@ if str(REPO_ROOT) not in sys.path:
 from evaluation.provenance_paths import resolve_recorded_path
 
 TABLE_ROOT = REPO_ROOT / "experiments/protocol"
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+from tools.paper_tables.build_table_gpu_handoff import hub_record  # noqa: E402
 HANDOFF_MANIFEST = TABLE_ROOT / "gpu_handoff_manifest.json"
 AUDIT_MANIFEST = TABLE_ROOT / "reference_package_manifest.json"
 DEFAULT_OUTPUT = REPO_ROOT / "dist/reference-packages"
@@ -80,7 +83,7 @@ def _add_file(files: dict[str, dict[str, Any]], path: Path, role: str) -> None:
 
 def discover_reference_files() -> dict[str, dict[str, Any]]:
     files: dict[str, dict[str, Any]] = {}
-    handoff = json.loads(HANDOFF_MANIFEST.read_text(encoding="utf-8"))
+    handoff = json.loads(hub_record(HANDOFF_MANIFEST).read_text(encoding="utf-8"))
     for row in handoff["files"]:
         if any(str(role).startswith("unity_capture") for role in row["roles"]):
             path = REPO_ROOT / row["path"]
@@ -324,7 +327,7 @@ def main() -> int:
         errors = verify(archive)
     else:
         archive = (args.archive or (args.output_dir / f"{PACKAGE_ROOT}.zip")).resolve()
-        manifest = json.loads(AUDIT_MANIFEST.read_text(encoding="utf-8"))
+        manifest = json.loads(hub_record(AUDIT_MANIFEST).read_text(encoding="utf-8"))
         errors = verify(archive)
         if sha256(archive) != manifest.get("archive_sha256"):
             errors.append("archive SHA-256 differs from the checked-in audit manifest")

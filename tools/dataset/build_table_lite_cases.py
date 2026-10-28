@@ -98,7 +98,8 @@ def _copy(source: Path, destination: Path) -> str:
     if not source.is_file():
         raise FileNotFoundError(source)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(source, destination)
+    if not (destination.exists() and destination.resolve() == source.resolve()):  # the bundle may be the source
+        shutil.copyfile(source, destination)
     return _sha256(source)
 
 

@@ -23,14 +23,14 @@ sources:
 
   table7/WanderingGarden/perturb_in: &garden_in
     kind: direct
-    path: conditioning_frames/garden_inward.png
+    path: ../../lite/cases/WanderingGarden/scene_perturb_in/reference/ref.png
     provenance: immutable_validated_unity_bridge_capture_used_by_existing_generations
     expected_sha256: 195a2384dac3aad0aea93b508d381b8162b37b3e7a60b8e68a047698593ae742
     status: reconstructed_validated
   table7/WanderingGarden/360_in: *garden_in
   table7/WanderingGarden/perturb_out: &garden_out
     kind: direct
-    path: conditioning_frames/garden_outward.png
+    path: ../../lite/cases/WanderingGarden/scene_perturb_out/reference/ref.png
     provenance: immutable_validated_unity_bridge_capture_half_turn_used_by_existing_generations
     expected_sha256: 60321e3b5bd810f12087f2029ba3c26757a4883df0d2cbc40dcb316fc12b89a3
     status: reconstructed_validated

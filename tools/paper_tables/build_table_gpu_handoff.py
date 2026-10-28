@@ -19,6 +19,19 @@ from evaluation.provenance_paths import resolve_recorded_path
 from tools.paper_tables.run_prepared_table_evaluations import PLANS
 
 DEFAULT_MANIFEST = REPO_ROOT / "experiments/protocol/gpu_handoff_manifest.json"
+HUB_DATASET = "lmgame/WMEval-Lite"
+
+
+def hub_record(path: Path) -> Path:
+    """A generated protocol record: the local file, else its copy in the Hub dataset's protocol/ folder."""
+    if path.is_file() or path.resolve().parent != (REPO_ROOT / "experiments/protocol").resolve():
+        return path
+    try:
+        from huggingface_hub import hf_hub_download
+
+        return Path(hf_hub_download(HUB_DATASET, f"protocol/{path.name}", repo_type="dataset"))
+    except Exception:  # offline or not published: callers report the missing local path
+        return path
 REPEATS = tuple(f"run{index}" for index in range(5))
 
 
@@ -220,7 +233,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     if args.verify:
-        manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+        manifest = json.loads(hub_record(args.manifest).read_text(encoding="utf-8"))
         errors = verify_manifest(manifest)
     else:
         manifest = build_manifest()
@@ -238,7 +251,7 @@ def main() -> int:
             shutil.copy2(source, target)
         target_manifest = destination / args.manifest.relative_to(REPO_ROOT)
         target_manifest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(args.manifest, target_manifest)
+        shutil.copy2(hub_record(args.manifest), target_manifest)
     print(
         json.dumps(
             {

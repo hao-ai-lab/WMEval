@@ -33,6 +33,45 @@ tables are frozen; nothing below changes a published value unless it says so.
 | Prompt Unity scores | frozen, 5 passes on the shipped captures (mean 0.938) | earlier capture (0.917) | Unity row differs; model rows reproduce within mean abs. diff 0.023 |
 | LPIPS contact events | frozen majority events (BallRoller, BeamDomino, MirrorRollingBall); LiquidContainer frozen with 0 consensus events (no candidate contact reached 3/5 passes) | re-judged per run | LingBot (Act) BeamDomino 0.547 offline vs. 0.61 (event-timing drift); LiquidContainer uses the temporal fallback |
 
+### How the frozen outputs are made and re-baselined
+
+Hosted VLM judges are sampled, so judging the Unity reference on every run would
+make the reference a moving target. The reference side is judged once, every
+pass is stored in the case bundle, and runtime reads the stored result.
+
+| Dimension | File (per case) | Tool | Passes | Stale when |
+|---|---|---|---|---|
+| Physical causality | `reference/artifacts/judge_answers.json` | `tools/dataset/record_causal_reference_answers.py` | 5 | judge model, frame count `K`, or prompt version differ from the live judge (runtime refuses the replay) |
+| Prompt consistency | `reference/artifacts/reference_scores.json` | `tools/dataset/freeze_prompt_reference_scores.py` | 5 | judge model, prompt version, alpha, rubric, system prompts, sampling, `ref.png` or the Unity video change (rows mark the reference `stale`) |
+| LPIPS | `reference/artifacts/contact_events.json` | `tools/dataset/freeze_reference_events.py` | 5, majority (3/5) | the reference video's SHA-256 changes (the loader rejects it) |
+
+#### Re-baselining
+
+Re-baseline only when the judge or the reference changes, and re-baseline every
+case of the dimension together.
+
+```bash
+# 1. Re-judge (hosted judge; explicit opt-in via OPENAI_API_KEY)
+python tools/dataset/record_causal_reference_answers.py lite/cases/BeamDomino/causal --passes 5
+python tools/dataset/freeze_prompt_reference_scores.py --passes 5 --register
+python tools/dataset/freeze_reference_events.py MirrorRollingBall/lpips_collision --passes 5 --register
+
+# Same, through an OpenAI-compatible gateway serving the same model:
+python tools/judge_gateway.py --key-file <key> --script tools/dataset/freeze_reference_events.py -- \
+    LiquidContainer/fluid_rest --passes 5 --register --allow-empty
+
+# 2. Re-lock each touched case (checksums + evaluator fingerprint)
+python tools/dataset/build_lite_case.py lite/cases/<Scene>/<variant>
+
+# 3. Verify
+python tools/run_wmeval_lite.py validate --suite lite
+python -m pytest -q tests
+```
+
+Record in the commit message: judge model and snapshot, pass count, transport,
+and the before/after reference numbers. Results scored against an older baseline
+are not comparable with results scored against the new one; re-score both sides.
+
 ## Prompt corrections (2026-10-21 dataset audit)
 
 The audit (`audit/README.md`, `tools/dataset/audit_dataset.py`) compared every core prompt with its

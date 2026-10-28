@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from tools.paper_tables.build_table_gpu_handoff import DEFAULT_MANIFEST, sha256, verify_manifest
+from tools.paper_tables.build_table_gpu_handoff import DEFAULT_MANIFEST, hub_record, sha256, verify_manifest
 
 
 def main() -> int:
@@ -32,7 +32,7 @@ def main() -> int:
     errors: list[str] = []
 
     if args.reference_only:
-        reference_manifest_path = (
+        reference_manifest_path = hub_record(
             REPO_ROOT / "experiments/protocol/reference_package_manifest.json"
         )
         if not reference_manifest_path.is_file():
@@ -61,10 +61,10 @@ def main() -> int:
                     "calibration_sample_count"
                 ),
             }
-    elif not args.manifest.is_file():
+    elif not hub_record(args.manifest).is_file():
         errors.append(f"handoff manifest is missing: {args.manifest}")
     else:
-        manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+        manifest = json.loads(hub_record(args.manifest).read_text(encoding="utf-8"))
         manifest_errors = verify_manifest(manifest)
         checks["handoff"] = {
             "file_count": manifest.get("file_count"),

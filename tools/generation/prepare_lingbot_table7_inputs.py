@@ -70,7 +70,7 @@ def _plans() -> tuple[Plan, ...]:
                 f"table7/WanderingGarden/{trajectory}",
                 f"{garden_root}/poses.npy",
                 f"{garden_root}/intrinsics.npy",
-                f"experiments/protocol/conditioning_frames/garden_{orientation}.png",
+                f"lite/cases/WanderingGarden/scene_{trajectory}/reference/ref.png",
                 "yaw_select",
                 start,
                 yaw,

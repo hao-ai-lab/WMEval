@@ -109,7 +109,7 @@ def execute(spec: dict[str, Any], dry_run: bool, gpu_index: int) -> dict[str, An
 
 def calibration_specs(probe: str | None, repeat: str | None) -> list[dict[str, Any]]:
     manifest = json.loads(CALIBRATION.read_text(encoding="utf-8"))
-    image = ROOT / "experiments/protocol/conditioning_frames/garden_inward.png"
+    image = ROOT / "lite/cases/WanderingGarden/scene_perturb_in/reference/ref.png"
     rows = []
     for entry in manifest["probes"]:
         if probe and entry["probe"] != probe:
